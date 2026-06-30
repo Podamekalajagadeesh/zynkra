@@ -1,0 +1,159 @@
+import { useState, useEffect } from 'react';
+import { PageShell } from '../components/PageShell';
+import { walletService, WalletInfo } from '../services/wallet';
+import { Button } from '../components/ui/button';
+import { LogOut, Copy, CheckCircle2, User, Wallet as WalletIcon, Receipt, Car } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import { getNftsForOwner, Nft } from '../services/nft';
+import { setNftPfp } from '../lib/api';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { SuperAppDashboard } from '../components/superapp/SuperAppDashboard';
+
+export function WalletPage() {
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
+  const [nfts, setNfts] = useState<Nft[]>([]);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { addToast } = useToast();
+
+  useEffect(() => {
+    const connectedWallet = walletService.getConnectedWallet();
+    setWallet(connectedWallet);
+    if (connectedWallet) {
+      fetchNfts(connectedWallet.address);
+    }
+  }, []);
+
+  const fetchNfts = async (address: string) => {
+    const fetchedNfts = await getNftsForOwner(address);
+    setNfts(fetchedNfts);
+  };
+
+  const handleDisconnect = async () => {
+    await walletService.disconnectWallet();
+    setWallet(null);
+    setNfts([]);
+    addToast('Wallet disconnected', 'success');
+  };
+
+  const handleSetPfp = async (nft: Nft) => {
+    try {
+      await setNftPfp({
+        nftPfpUrl: nft.media[0]?.gateway || nft.metadata.image,
+        nftPfpContractAddress: nft.contract.address,
+        nftPfpTokenId: nft.id.tokenId,
+      });
+      addToast('Profile picture updated!', 'success');
+    } catch (error) {
+      addToast('Failed to update profile picture', 'error');
+    }
+  };
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      addToast(`${field} copied to clipboard`, 'success');
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (error) {
+      addToast('Failed to copy', 'error');
+    }
+  };
+
+  return (
+    <PageShell
+      eyebrow="Wallet"
+      title="Super App Wallet & Services"
+      description="Manage your wallet, send money, pay bills, and book rides all in one place."
+    >
+      {wallet ? (
+        <Tabs defaultValue="superapp" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="superapp" className="flex items-center gap-2">
+              <WalletIcon size={16} />
+              Super App Services
+            </TabsTrigger>
+            <TabsTrigger value="nfts" className="flex items-center gap-2">
+              <User size={16} />
+              NFTs & Wallet
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="superapp" className="mt-0">
+            <SuperAppDashboard />
+          </TabsContent>
+
+          <TabsContent value="nfts" className="mt-0">
+            <div className="space-y-6">
+              <div className="surface">
+                <div className="p-5">
+                  <p className="section-title">Connected Wallet</p>
+                  <div className="flex items-center justify-between">
+                    <p className="font-mono text-sm text-dark-500 dark:text-dark-300">
+                      {wallet.address}
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(wallet.address, 'Wallet Address')}
+                      className="rounded-full border border-green-200 bg-white p-2 text-green-600 shadow-sm transition-colors hover:text-green-700 dark:border-green-900/40 dark:bg-dark-900 dark:text-green-300 dark:hover:text-green-200"
+                      aria-label="Copy wallet address"
+                    >
+                      {copiedField === 'Wallet Address' ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="surface-soft p-5">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary-700 dark:text-primary-300">
+                    Provider
+                  </p>
+                  <p className="text-lg font-semibold text-dark-900 dark:text-white">
+                    {wallet.providerType}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={handleDisconnect} variant="secondary" icon={<LogOut size={18} />}>
+                Disconnect Wallet
+              </Button>
+
+              <div className="surface">
+                <div className="p-5">
+                  <p className="section-title">Your NFTs</p>
+                  {nfts.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {nfts.map((nft) => (
+                        <div key={`${nft.contract.address}-${nft.id.tokenId}`} className="group relative">
+                          <img
+                            src={nft.media[0]?.gateway}
+                            alt={nft.metadata.name}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              onClick={() => handleSetPfp(nft)}
+                              variant="primary"
+                              size="sm"
+                              icon={<User size={16} />}
+                            >
+                              Set as PFP
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-dark-500 dark:text-dark-400">No NFTs found for this wallet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="surface p-8 text-center">
+          <p className="text-dark-600 dark:text-light-300 mb-md">No wallet connected.</p>
+          <p className="text-dark-500 dark:text-dark-400">
+            Connect a wallet on the login page to get started with our super app features.
+          </p>
+        </div>
+      )}
+    </PageShell>
+  );
+}

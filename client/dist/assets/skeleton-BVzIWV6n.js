@@ -1,0 +1,1 @@
+import{j as o}from"./vendor-react-BqrGeAYr.js";function a({width:e="100%",height:s=12,className:t=""}){const n={width:e,height:s};return o.jsx("div",{className:`bg-dark-100 animate-pulse rounded-md ${t}`,style:n})}export{a as S};
