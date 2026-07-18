@@ -25,6 +25,7 @@
   ,
   "exclude": [
   "test",
+  "archive",
   "**/*.spec.ts",
   "**/*.test.ts",
   "dist"

@@ -74,43 +74,12 @@ import { FormsModule } from './forms/forms.module';
 import { LiveKitModule } from './livekit/livekit.module';
 import { CollaborationModule } from './collaboration/collaboration.module';
 import { SnapMapModule } from './snapmap/snapmap.module';
-import { BerealModule } from './bereal/bereal.module';
 import { LiveshoppingModule } from './liveshopping/liveshopping.module';
-import { DataExportModule } from '../broken-modules/data-export/data-export.module';
+import { DataExportModule } from './data-export/data-export.module';
 import { ActivityModule } from './activity/activity.module';
 import { FederationModule } from './federation/federation.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { DigitalAssetsModule } from './digital-assets/digital-assets.module';
-import { VirtualRealEstateModule } from './virtual-real-estate/virtual-real-estate.module';
-import { NeuralCompensationModule } from './neural-compensation/neural-compensation.module';
-import { DigitalInheritanceModule } from './digital-inheritance/digital-inheritance.module';
-import { CrossWorldTradingModule } from './cross-world-trading/cross-world-trading.module';
-import { SpatialCommerceModule } from './spatial-commerce/spatial-commerce.module';
-import { NeuralProductReviewsModule } from './neural-product-reviews/neural-product-reviews.module';
-import { CollectivePurchasingModule } from './collective-purchasing/collective-purchasing.module';
-import { CarbonNeutralModule } from './carbon-neutral/carbon-neutral.module';
-import { SocialUBIModule } from './social-ubi/social-ubi.module';
-import { NeuralPrivacyModule } from './neural-privacy/neural-privacy.module';
-import { MindfulnessModule } from './mindfulness/mindfulness.module';
-import { MemoryConsentModule } from './memory-consent/memory-consent.module';
-import { GlobalRegulatoryModule } from './global-regulatory/global-regulatory.module';
-import { QuantumEncryptionModule } from './quantum-encryption/quantum-encryption.module';
-import { NeuralWellbeingModule } from './neural-wellbeing/neural-wellbeing.module';
-import { RightToBeForgottenModule } from './right-to-be-forgotten/right-to-be-forgotten.module';
-import { NeuralHarmPreventionModule } from './neural-harm-prevention/neural-harm-prevention.module';
-import { DataMinimizationModule } from './data-minimization/data-minimization.module';
-import { NeuralEthicsBoardsModule } from './neural-ethics-boards/neural-ethics-boards.module';
-import { PlanetaryCommunitiesModule } from './planetary-communities/planetary-communities.module';
-import { InterstellarConnectionModule } from './interstellar-connection/interstellar-connection.module';
-import { IntergenerationalSpacesModule } from './intergenerational-spaces/intergenerational-spaces.module';
-import { NeurodiverseCommunitiesModule } from './neurodiverse-communities/neurodiverse-communities.module';
-import { LocalizedCommunitiesModule } from './localized-communities/localized-communities.module';
-import { SpeciesCommunitiesModule } from './species-communities/species-communities.module';
-import { CulturalPreservationCommunitiesModule } from './cultural-preservation-communities/cultural-preservation-communities.module';
-import { SkillSharingModule } from './skill-sharing/skill-sharing.module';
-import { CrisisResponseCommunitiesModule } from './crisis-response-communities/crisis-response-communities.module';
-import { AccessibilityFirstCommunitiesModule } from './accessibility-first-communities/accessibility-first-communities.module';
-import { AdvancedFeaturesModule } from './advanced-features/advanced-features.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 
 @Module({
@@ -199,9 +168,9 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     PagesModule,
     // DatingModule, // DatingModule commented out - broken imports
     // AdsModule, // AdsModule commented out - broken imports
-    ReactionsModule, WebhooksModule,
-    SnapMapModule,
     ReactionsModule,
+    WebhooksModule,
+    SnapMapModule,
     SnoozeModule,
     CollectionsModule,
     SavedMarketplaceListingsModule,
@@ -213,41 +182,10 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     NonprofitsModule,
     // CrisisModule, // CrisisModule commented out - broken imports
     FormsModule,
-    BerealModule,
     LiveshoppingModule,
     DataExportModule,
     FederationModule,
     DigitalAssetsModule,
-    VirtualRealEstateModule,
-    NeuralCompensationModule,
-    DigitalInheritanceModule,
-    CrossWorldTradingModule,
-    SpatialCommerceModule,
-    NeuralProductReviewsModule,
-    CollectivePurchasingModule,
-    CarbonNeutralModule,
-    SocialUBIModule,
-    NeuralPrivacyModule,
-    MindfulnessModule,
-    MemoryConsentModule,
-    GlobalRegulatoryModule,
-    QuantumEncryptionModule,
-    NeuralWellbeingModule,
-    RightToBeForgottenModule,
-    NeuralHarmPreventionModule,
-    DataMinimizationModule,
-    NeuralEthicsBoardsModule,
-    PlanetaryCommunitiesModule,
-    InterstellarConnectionModule,
-    IntergenerationalSpacesModule,
-    NeurodiverseCommunitiesModule,
-    LocalizedCommunitiesModule,
-    SpeciesCommunitiesModule,
-    CulturalPreservationCommunitiesModule,
-    SkillSharingModule,
-    CrisisResponseCommunitiesModule,
-    AccessibilityFirstCommunitiesModule,
-    AdvancedFeaturesModule,
     InfrastructureModule,
   ],
   controllers: [AppController, InfrastructureController],
