@@ -1,0 +1,108 @@
+import { useEffect, useState } from 'react';
+import { useToast } from '../../hooks/useToast';
+import { Skeleton } from '../ui/skeleton';
+import { getConversations } from '../../lib/api';
+import { MessageSquare } from 'lucide-react';
+
+interface Participant {
+  id: string;
+  username?: string;
+  email?: string;
+  displayName?: string;
+}
+
+interface Conversation {
+  id: string;
+  participants: Participant[];
+  lastMessage?: {
+    content: string;
+    createdAt: string;
+  };
+}
+
+interface ConversationListProps {
+  onSelectConversation: (conversation: Conversation) => void;
+  selectedId?: string;
+}
+
+export const ConversationList = ({ onSelectConversation, selectedId }: ConversationListProps) => {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { addToast } = useToast();
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const data = await getConversations();
+        setConversations(data);
+      } catch (error) {
+        console.error('Failed to fetch conversations', error);
+        addToast('Failed to load conversations', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, [addToast]);
+
+  const getConversationName = (conv: Conversation) => {
+    return conv.participants.map((p) => p.displayName || p.username || p.email || 'Unknown').join(', ');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col overflow-hidden bg-white border-r border-dark-200">
+        <div className="p-lg border-b border-dark-200">
+          <h2 className="text-lg font-bold text-dark-900">Messages</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-2 p-md">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} height={80} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden bg-white border-r border-dark-200">
+      <div className="p-lg border-b border-dark-200 sticky top-0 bg-white z-10">
+        <h2 className="text-lg font-bold text-dark-900">Messages</h2>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full p-lg text-center">
+            <MessageSquare size={48} className="text-dark-300 mb-md" />
+            <p className="text-dark-600 font-medium">No conversations yet</p>
+            <p className="text-sm text-dark-500">Start messaging someone to begin</p>
+          </div>
+        ) : (
+          <div className="space-y-1 p-2">
+            {conversations.map((conv) => (
+              <button
+                key={conv.id}
+                onClick={() => onSelectConversation(conv)}
+                className={`w-full p-md rounded-lg text-left transition-colors ${
+                  selectedId === conv.id
+                    ? 'bg-primary-50 border border-primary-200'
+                    : 'hover:bg-dark-50 border border-transparent'
+                }`}
+              >
+                <p className="font-medium text-dark-900 truncate">
+                  {getConversationName(conv)}
+                </p>
+                {conv.lastMessage && (
+                  <p className="text-sm text-dark-500 truncate mt-xs">
+                    {conv.lastMessage.content}
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

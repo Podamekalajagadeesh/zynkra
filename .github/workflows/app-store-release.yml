@@ -1,0 +1,99 @@
+name: App Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build and submit'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - preview
+          - production
+      skip_submit:
+        description: 'Skip submission to stores (build only)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-and-submit:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'mobile/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Authenticate with Expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          mkdir -p ~/.expo
+          echo "{ \"auth_tokens\": \"$EXPO_TOKEN\" }" > ~/.expo/state.json
+
+      - name: Build for iOS
+        if: ${{ github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all' }}
+        working-directory: mobile
+        run: eas build --platform ios --profile ${{ github.event.inputs.profile }} --non-interactive
+
+      - name: Build for Android
+        if: ${{ github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all' }}
+        working-directory: mobile
+        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
+
+      - name: Submit iOS to App Store
+        if: |
+          github.event.inputs.skip_submit != 'true' &&
+          (github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all')
+        working-directory: mobile
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: eas submit --platform ios --profile ${{ github.event.inputs.profile }} --non-interactive
+
+      - name: Submit Android to Google Play
+        if: |
+          github.event.inputs.skip_submit != 'true' &&
+          (github.event.inputs.platform == 'android' || github.event.inputs.platform == 'all')
+        working-directory: mobile
+        env:
+          ANDROID_SERVICE_ACCOUNT: ${{ secrets.ANDROID_SERVICE_ACCOUNT }}
+        run: |
+          echo "$ANDROID_SERVICE_ACCOUNT" > /tmp/google-play-key.json
+          eas submit --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ App Store release failed. Check workflow logs for details.'
+            })

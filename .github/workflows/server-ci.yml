@@ -1,0 +1,32 @@
+name: Server CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+      - name: Lint server
+        working-directory: server
+        run: npm run lint
+      - name: Build server
+        working-directory: server
+        run: npm run build
+      - name: Run server tests
+        working-directory: server
+        run: npm run test -- --runTestsByPath test/payments.payouts.spec.ts test/qa-smoke.test.ts
+      - name: Run security audit script
+        working-directory: server
+        run: node scripts/security-audit.js

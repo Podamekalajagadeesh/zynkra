@@ -1,0 +1,44 @@
+version: '3.9'
+services:
+  zynkra-server:
+    build:
+      context: ./server
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: zynkra
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CDN_BASE_URL: https://cdn.example.com
+      PROMETHEUS_ENDPOINT: http://prometheus:9090
+      BACKUP_BUCKET: backups
+      KUBERNETES_NAMESPACE: zynkra-prod
+      LOAD_BALANCER_HOST: lb.zynkra.internal
+      AUTOSCALER_ENABLED: true
+      DATABASE_SHARDING_ENABLED: true
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+      - redis
+      - prometheus
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zynkra
+    ports:
+      - '5432:5432'
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - '9090:9090'

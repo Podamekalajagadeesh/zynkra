@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "ios": {
+      "bundleId": "com.zynkra.app",
+      "appName": "Zynkra",
+      "keywords": ["social", "network", "privacy", "decentralized", "communication"],
+      "description": "Zynkra is a decentralized social platform designed for the next generation. Connect, create, and collaborate in a privacy-first environment with end-to-end encryption, offline support, and no corporate data harvesting.",
+      "releaseNotes": {
+        "1.0.0": "Initial launch with core social features, messaging, and feed personalization"
+      },
+      "privacyUrl": "https://zynkra.com/privacy",
+      "termsUrl": "https://zynkra.com/terms",
+      "supportUrl": "https://support.zynkra.com",
+      "category": "SOCIAL_NETWORKING",
+      "ageRating": "4+"
+    },
+    "android": {
+      "packageName": "com.zynkra.app",
+      "appName": "Zynkra",
+      "shortDescription": "Decentralized social platform with privacy-first design and offline support",
+      "description": "Zynkra is a decentralized social platform designed for the next generation. Connect, create, and collaborate in a privacy-first environment with end-to-end encryption, offline support, and no corporate data harvesting.",
+      "releaseNotes": {
+        "1.0.0": "Initial launch with core social features, messaging, and feed personalization"
+      },
+      "privacyUrl": "https://zynkra.com/privacy",
+      "termsUrl": "https://zynkra.com/terms",
+      "supportUrl": "https://support.zynkra.com",
+      "category": "SOCIAL",
+      "contentRating": "Everyone",
+      "contactEmail": "support@zynkra.com"
+    }
+  },
+  "versioning": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0,
+    "buildNumber": 1,
+    "versionCode": 1
+  },
+  "environment": {
+    "development": {
+      "apiUrl": "http://localhost:3000",
+      "wsUrl": "ws://localhost:3001"
+    },
+    "staging": {
+      "apiUrl": "https://api-staging.zynkra.com",
+      "wsUrl": "wss://ws-staging.zynkra.com"
+    },
+    "production": {
+      "apiUrl": "https://api.zynkra.com",
+      "wsUrl": "wss://ws.zynkra.com"
+    }
+  }
+}

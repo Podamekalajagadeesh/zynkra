@@ -1,0 +1,63 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "resourceClass": "default"
+      },
+      "android": {
+        "resourceClass": "default"
+      }
+    },
+    "preview2": {
+      "ios": {
+        "resourceClass": "default"
+      }
+    },
+    "preview3": {
+      "ios": {
+        "resourceClass": "default"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "ios": {
+        "resourceClass": "default",
+        "image": "latest",
+        "node": "20.11.1"
+      },
+      "android": {
+        "resourceClass": "default",
+        "image": "latest",
+        "node": "20.11.1"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6670000001",
+        "appleId": "",
+        "appleTeamId": "",
+        "appleAppSpecificPassword": "",
+        "signingCertificateIssueCountry": "US"
+      },
+      "android": {
+        "serviceAccount": "@:googleplay-service-account",
+        "track": "production"
+      }
+    }
+  },
+  "resourceClass": {
+    "default": "free"
+  }
+}

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zynkra-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zynkra-server
+  template:
+    metadata:
+      labels:
+        app: zynkra-server
+    spec:
+      containers:
+        - name: zynkra-server
+          image: zynkra/server:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: REDIS_HOST
+              value: redis
+            - name: CDN_BASE_URL
+              value: https://cdn.example.com
+            - name: PROMETHEUS_ENDPOINT
+              value: http://prometheus:9090
+            - name: BACKUP_BUCKET
+              value: zynkra-backups
+            - name: KUBERNETES_NAMESPACE
+              value: zynkra-prod
+            - name: LOAD_BALANCER_HOST
+              value: lb.zynkra.internal
+            - name: AUTOSCALER_ENABLED
+              value: 'true'
+            - name: DATABASE_SHARDING_ENABLED
+              value: 'true'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zynkra-server
+spec:
+  selector:
+    app: zynkra-server
+  ports:
+    - port: 80
+      targetPort: 3000
