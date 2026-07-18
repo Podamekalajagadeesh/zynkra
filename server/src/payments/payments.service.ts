@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentTransaction } from './entities/payment-transaction.entity';
@@ -10,6 +11,7 @@ const Stripe = require('stripe');
 @Injectable()
 export class PaymentsService {
   private readonly stripe: any;
+  private readonly paymentsEnabled: boolean;
 
   constructor(
     @InjectRepository(PaymentTransaction)
@@ -17,29 +19,36 @@ export class PaymentsService {
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
     private readonly walletService: WalletService,
+    private readonly configService: ConfigService,
   ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_development', {
-      apiVersion: '2026-05-27.dahlia',
-    });
+    const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    this.paymentsEnabled =
+      this.configService.get<string>('PAYMENTS_ENABLED') === 'true' && !!stripeKey;
+
+    this.stripe = stripeKey
+      ? new Stripe(stripeKey, { apiVersion: '2026-05-27.dahlia' })
+      : null;
   }
 
-  async createPaymentIntent(amount: number, currency: string): Promise<any> {
-    try {
-      return await this.stripe.paymentIntents.create({
-        amount,
-        currency,
-      });
-    } catch (error) {
-      return {
-        id: `pi_${Date.now()}`,
-        amount,
-        currency,
-        status: 'requires_payment_method',
-      };
+  private assertPaymentsEnabled() {
+    if (!this.paymentsEnabled || !this.stripe) {
+      throw new ServiceUnavailableException(
+        'Payments are not enabled on this instance. Set PAYMENTS_ENABLED=true and STRIPE_SECRET_KEY to enable them.',
+      );
     }
   }
 
+  async createPaymentIntent(amount: number, currency: string): Promise<any> {
+    this.assertPaymentsEnabled();
+    // Let Stripe errors propagate — a failed intent must never look like a success.
+    return this.stripe.paymentIntents.create({
+      amount,
+      currency,
+    });
+  }
+
   async processPayment(userId: string, amount: number, purpose: string, options: { currency?: string; metadata?: Record<string, any>; payerId?: string; recipientId?: string } = {}) {
+    this.assertPaymentsEnabled();
     const currency = options.currency || 'usd';
     const paymentIntent = await this.createPaymentIntent(Math.round(amount * 100), currency);
 
@@ -57,13 +66,16 @@ export class PaymentsService {
 
     await this.paymentRepository.save(transaction);
 
-    if (options.recipientId && amount > 0) {
+    // Only move money on a confirmed payment. A newly created intent is almost
+    // never 'succeeded' — full confirmation belongs to a Stripe webhook handler
+    // (payment_intent.succeeded), which is the next step for this module.
+    if (paymentIntent.status === 'succeeded' && options.recipientId && amount > 0) {
       await this.walletService.credit(options.recipientId, amount, { purpose });
     }
 
     return {
-      success: true,
-      status: 'succeeded',
+      success: paymentIntent.status === 'succeeded',
+      status: paymentIntent.status,
       userId,
       amount,
       purpose,
@@ -73,23 +85,26 @@ export class PaymentsService {
   }
 
   async createDemoPaymentScenario(amount: number, currency = 'usd', recipientId: string, payerId: string) {
+    // Demo flow: never available in production, and never touches Stripe.
+    if (this.configService.get<string>('NODE_ENV') === 'production') {
+      throw new ServiceUnavailableException('Demo payments are disabled in production.');
+    }
+
     const safeAmount = Number(amount);
     if (!Number.isFinite(safeAmount) || safeAmount <= 0) {
       throw new BadRequestException('Payment amount must be greater than zero');
     }
 
-    const paymentIntent = await this.createPaymentIntent(Math.round(safeAmount * 100), currency);
     const transaction = this.paymentRepository.create({
       provider: 'demo',
-      status: paymentIntent.status === 'succeeded' ? 'succeeded' : 'requires_payment_method',
-      paymentId: paymentIntent.id,
+      status: 'succeeded',
+      paymentId: `demo_${Date.now()}`,
       purpose: 'demo-poc',
       amount: safeAmount,
       currency,
       metadata: {
         scenario: 'proof-of-concept',
         mode: 'demo',
-        paymentIntent,
       },
       payer: payerId ? ({ id: payerId } as any) : null,
       recipient: recipientId ? ({ id: recipientId } as any) : null,
@@ -117,6 +132,9 @@ export class PaymentsService {
       throw new BadRequestException('Payout amount must be greater than zero');
     }
 
+    // Debit first — if the creator lacks funds this throws and no payout row is created.
+    await this.walletService.debit(creatorId, payoutAmount, { purpose });
+
     const payout = this.payoutRepository.create({
       creator: { id: creatorId } as any,
       amount: payoutAmount,
@@ -126,7 +144,6 @@ export class PaymentsService {
     });
 
     await this.payoutRepository.save(payout);
-    await this.walletService.debit(creatorId, payoutAmount, { purpose });
 
     return {
       success: true,

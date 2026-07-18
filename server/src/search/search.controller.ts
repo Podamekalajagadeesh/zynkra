@@ -1,8 +1,10 @@
-import { Controller, Get, Query, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Query, Post, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SearchService } from './search.service';
 
 @Controller('search')
+@UseGuards(JwtAuthGuard)
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 

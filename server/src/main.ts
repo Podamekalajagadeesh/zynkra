@@ -32,8 +32,12 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type'],
   });
-  const sessionSecret =
-    configService.get<string>('SESSION_SECRET') || 'dev-session-secret-2026';
+  const sessionSecret = configService.get<string>('SESSION_SECRET');
+  if (!sessionSecret) {
+    throw new Error(
+      'SESSION_SECRET is not set. Refusing to start with an insecure default — see server/.env.example.',
+    );
+  }
 
   app.use(
     session({

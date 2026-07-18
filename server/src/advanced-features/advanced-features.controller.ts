@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdvancedFeaturesService } from './advanced-features.service';
 
 @Controller('advanced-features')
+@UseGuards(JwtAuthGuard)
 export class AdvancedFeaturesController {
   constructor(private readonly advancedFeaturesService: AdvancedFeaturesService) {}
 

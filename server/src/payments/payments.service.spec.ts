@@ -21,10 +21,16 @@ describe('PaymentsService demo scenario', () => {
       credit: jest.fn(async () => ({ success: true })),
     };
 
+    const configService = {
+      // NODE_ENV: undefined (non-production), PAYMENTS_ENABLED/STRIPE key unset
+      get: jest.fn(() => undefined),
+    };
+
     const service = new PaymentsService(
       paymentRepository as any,
       payoutRepository as any,
       walletService as any,
+      configService as any,
     );
 
     const result = await service.createDemoPaymentScenario(12.5, 'usd', 'creator-1', 'payer-1');

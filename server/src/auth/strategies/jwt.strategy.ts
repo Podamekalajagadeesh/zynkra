@@ -14,10 +14,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(LoginSession)
     private readonly loginSessionsRepository: Repository<LoginSession>,
   ) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error(
+        'JWT_SECRET is not set. Refusing to start with an insecure default — see server/.env.example.',
+      );
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'yourSuperSecretKey',
+      secretOrKey: jwtSecret,
     });
   }
 

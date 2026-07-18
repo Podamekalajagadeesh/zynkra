@@ -20,6 +20,19 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            # Required secrets — create with:
+            #   kubectl create secret generic zynkra-server-secrets \
+            #     --from-literal=jwt-secret=... --from-literal=session-secret=...
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: zynkra-server-secrets
+                  key: jwt-secret
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: zynkra-server-secrets
+                  key: session-secret
             - name: REDIS_HOST
               value: redis
             - name: CDN_BASE_URL

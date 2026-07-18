@@ -138,7 +138,9 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
         password: configService.get<string>('DB_PASSWORD', 'postgres'),
         database: configService.get<string>('DB_DATABASE', 'zynkra'),
         autoLoadEntities: true,
-        synchronize: true, // Note: synchronize should be false in production
+        // Schema sync is a dev convenience only — in production it can drop/alter
+        // columns and destroy data. Use TypeORM migrations for production changes.
+        synchronize: configService.get<string>('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
     }),

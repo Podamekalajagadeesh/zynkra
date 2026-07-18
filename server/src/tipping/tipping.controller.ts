@@ -1,9 +1,11 @@
 
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TippingService } from './tipping.service';
 import { CreateTipDto } from './dto/create-tip.dto';
 
 @Controller('tipping')
+@UseGuards(JwtAuthGuard)
 export class TippingController {
   constructor(private readonly tippingService: TippingService) {}
 

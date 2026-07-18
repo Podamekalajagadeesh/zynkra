@@ -14,11 +14,15 @@ describe('PaymentsService payouts', () => {
       debit: jest.fn().mockResolvedValue({ walletBalance: 0 }),
       credit: jest.fn().mockResolvedValue({ walletBalance: 100 }),
     };
+    const configService = {
+      get: jest.fn().mockReturnValue(undefined),
+    };
 
     const service = new PaymentsService(
       paymentRepository as any,
       payoutRepository as any,
       walletService as any,
+      configService as any,
     );
 
     const result = await service.requestPayout('creator-1', 25, 'monthly-payout');

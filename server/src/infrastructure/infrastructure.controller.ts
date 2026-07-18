@@ -1,4 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { InfrastructureService } from './infrastructure.service';
 import { BackupService } from './backup.service';
 
@@ -15,6 +17,7 @@ export class InfrastructureController {
   }
 
   @Get('backup')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async triggerBackup() {
     return this.backupService.createBackup('manual');
   }

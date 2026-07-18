@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Patch, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NeuralEthicsBoardsService } from './neural-ethics-boards.service';
 
 @Controller('neural-ethics-boards')
+@UseGuards(JwtAuthGuard)
 export class NeuralEthicsBoardsController {
   constructor(private readonly neuralEthicsBoardsService: NeuralEthicsBoardsService) {}
 

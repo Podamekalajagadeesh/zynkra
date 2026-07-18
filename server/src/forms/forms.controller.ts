@@ -1,8 +1,10 @@
 
-import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FormsService } from './forms.service';
 
 @Controller('forms')
+@UseGuards(JwtAuthGuard)
 export class FormsController {
   constructor(private readonly formsService: FormsService) {}
 
