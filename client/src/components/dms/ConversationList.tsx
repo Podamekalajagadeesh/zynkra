@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../hooks/useToast';
+import { useAuth } from '../../hooks/useAuth';
+import { usePresence } from '../../hooks/usePresence';
+import { PresenceDot } from '../PresenceDot';
 import { Skeleton } from '../ui/skeleton';
 import { getConversations } from '../../lib/api';
 import { MessageSquare } from 'lucide-react';
@@ -46,6 +49,17 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
     fetchConversations();
   }, [addToast]);
 
+  const participantIds = useMemo(
+    () => [...new Set(conversations.flatMap((c) => c.participants.map((p) => p.id)))],
+    [conversations],
+  );
+  const { isOnline } = usePresence(participantIds);
+  const { activeAccount } = useAuth();
+  const currentUserId = activeAccount?.user.id;
+
+  const otherParticipantOnline = (conv: Conversation) =>
+    conv.participants.some((p) => p.id !== currentUserId && isOnline(p.id));
+
   const getConversationName = (conv: Conversation) => {
     return conv.participants.map((p) => p.displayName || p.username || p.email || 'Unknown').join(', ');
   };
@@ -90,8 +104,9 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
                     : 'hover:bg-dark-50 border border-transparent'
                 }`}
               >
-                <p className="font-medium text-dark-900 truncate">
+                <p className="font-medium text-dark-900 truncate flex items-center gap-xs">
                   {getConversationName(conv)}
+                  <PresenceDot online={otherParticipantOnline(conv)} />
                 </p>
                 {conv.lastMessage && (
                   <p className="text-sm text-dark-500 truncate mt-xs">

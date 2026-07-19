@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext, createContext, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useUser } from './useUser';
+import { API_BASE_URL } from '../lib/api';
 
 interface SocketContextProps {
   socket: Socket | null;
@@ -21,13 +22,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
-        query: { userId: user.id },
+      // useUser returns the active account; the profile lives on .user
+      const userId = user.user.id;
+      const newSocket = io(API_BASE_URL, {
+        query: { userId },
         transports: ['websocket', 'polling'],
       });
 
       newSocket.on('connect', () => {
         setIsConnected(true);
+        // Announce presence so the activity gateway can track online status.
+        newSocket.emit('user-online', { userId });
       });
 
       newSocket.on('disconnect', () => {

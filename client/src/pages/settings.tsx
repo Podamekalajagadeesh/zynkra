@@ -27,6 +27,7 @@ import { NotificationSettings } from '../components/settings/notification-settin
 import { FaceRecognitionSettings } from '../components/settings/face-recognition-settings';
 import AdPreferences from '../components/settings/ad-preferences';
 import { AppIconSettings } from '../components/settings/app-icon-settings';
+import { ActivityStatusSettings } from '../components/settings/ActivityStatusSettings';
 import { NeuralEthicalGuardrails } from '../components/ethical-ai-guardrails/NeuralEthicalGuardrails';
 import { LANGUAGE_METADATA, translateTextKey } from '../lib/i18n';
 
@@ -527,6 +528,8 @@ export function SettingsPage() {
                 Automatically show warnings for potentially triggering content (violence, self-harm, etc.).
               </p>
             </div>
+
+            <ActivityStatusSettings />
 
             <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70 lg:col-span-2">
               <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">

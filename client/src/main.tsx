@@ -11,6 +11,7 @@ import { config } from './lib/web3';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { initializeOfflineSync } from './lib/offlineSync';
+import { SocketProvider } from './hooks/useSocket';
 
 // Color blindness correction SVG filters
 const ColorBlindFilters = () => (
@@ -71,10 +72,12 @@ root.render(
         <QueryClientProvider client={queryClient}>
           <PreferencesProvider>
             <AuthProvider>
+              <SocketProvider>
               <NotificationsProvider>
                 <ColorBlindFilters />
                 <App />
               </NotificationsProvider>
+              </SocketProvider>
             </AuthProvider>
           </PreferencesProvider>
         </QueryClientProvider>
