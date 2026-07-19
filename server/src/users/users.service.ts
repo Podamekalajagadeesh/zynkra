@@ -887,19 +887,52 @@ export class UsersService {
     }
 
     const followingIds = user.following.map((f) => f.id);
-    followingIds.push(userId); // Don't suggest the user themselves
+    const excludedIds = [...followingIds, userId]; // Don't suggest the user themselves
 
-    // Find users that are not already followed and have public profiles
-    const suggestions = await this.usersRepository.find({
-      where: {
-        id: Not(In(followingIds)),
-        profilePrivacy: ProfilePrivacy.PUBLIC,
-      },
-      take: 10,
-      order: {
-        createdAt: 'DESC', // Prioritize newer users, or could use engagement metrics
-      },
-    });
+    // Friends-of-friends: users followed by people the user follows, ranked by
+    // how many of the user's follows also follow them (mutual count).
+    let suggestions: User[] = [];
+    if (followingIds.length > 0) {
+      const rows: { id: string }[] = await this.usersRepository
+        .createQueryBuilder('candidate')
+        .select('candidate.id', 'id')
+        .innerJoin('follows', 'f', 'f."followingId" = candidate.id')
+        .where('f."followerId" IN (:...followingIds)', { followingIds })
+        .andWhere('candidate.id NOT IN (:...excludedIds)', { excludedIds })
+        .andWhere('candidate.profilePrivacy = :privacy', { privacy: ProfilePrivacy.PUBLIC })
+        .groupBy('candidate.id')
+        .orderBy('COUNT(f."followerId")', 'DESC')
+        .limit(10)
+        .getRawMany();
+
+      if (rows.length > 0) {
+        const ordered = rows.map((r) => r.id);
+        const found = await this.usersRepository.find({ where: { id: In(ordered) } });
+        suggestions = ordered
+          .map((id) => found.find((u) => u.id === id))
+          .filter((u): u is User => !!u);
+      }
+    }
+
+    // Fall back to (or top up with) recently joined public accounts.
+    if (suggestions.length < 10) {
+      const fill = await this.usersRepository.find({
+        where: {
+          id: Not(In([...excludedIds, ...suggestions.map((s) => s.id)])),
+          profilePrivacy: ProfilePrivacy.PUBLIC,
+        },
+        take: 10 - suggestions.length,
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+      suggestions = [...suggestions, ...fill];
+    }
+
+    // Never expose credentials in suggestion payloads.
+    for (const s of suggestions) {
+      (s as any).password_hash = undefined;
+    }
 
     return suggestions;
   }

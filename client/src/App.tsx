@@ -822,7 +822,8 @@ function FollowerSuggestions() {
     const fetchSuggestions = async () => {
       try {
         const data = await getFollowSuggestions();
-        setSuggestions(data);
+        // Endpoint returns { users, pages }; render the user suggestions.
+        setSuggestions(Array.isArray(data) ? data : data.users ?? []);
       } catch (error) {
         console.error('Failed to fetch follow suggestions:', error);
       } finally {

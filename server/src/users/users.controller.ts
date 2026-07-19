@@ -192,6 +192,15 @@ export class UsersController {
     return this.usersService.getBlockedContentTypes(req.user.userId);
   }
 
+  // Must be declared before the ':username' catch-all route below.
+  @UseGuards(JwtAuthGuard)
+  @Get('suggestions')
+  async getFollowSuggestions(@Request() req): Promise<{ users: User[], pages: Page[] }> {
+    const users = await this.usersService.findFollowSuggestions(req.user.userId);
+    const pages = await this.pagesService.findPageSuggestions(req.user.userId);
+    return { users, pages };
+  }
+
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
   async findByUsername(
@@ -336,14 +345,6 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async denyFollowRequest(@Request() req, @Param('id') id: string): Promise<void> {
     return this.usersService.denyFollowRequest(req.user.userId, id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('suggestions')
-  async getFollowSuggestions(@Request() req): Promise<{ users: User[], pages: Page[] }> {
-    const users = await this.usersService.findFollowSuggestions(req.user.userId);
-    const pages = await this.pagesService.findPageSuggestions(req.user.userId);
-    return { users, pages };
   }
 
   @UseGuards(JwtAuthGuard)
