@@ -410,6 +410,16 @@ export interface ReadReceipt {
   readAt: string;
 }
 
+export interface Conversation {
+  id: string;
+  name?: string | null;
+  participants: PostAuthor[];
+  vanishMode: boolean;
+  /** Disappearing messages TTL in seconds; null when off. */
+  messageTtlSeconds: number | null;
+  lastMessage?: { content: string; createdAt: string };
+}
+
 export interface User {
   id: string;
   username: string;

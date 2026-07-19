@@ -40,6 +40,10 @@ export class Message {
   @Column({ type: 'jsonb', nullable: true })
   media: { url: string; type: 'image' | 'video' | 'audio' }[] | null;
 
+  /** Disappearing messages: when set, the message is hidden and swept after this time. */
+  @Column({ type: 'timestamptz', nullable: true })
+  expiresAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

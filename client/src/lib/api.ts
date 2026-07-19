@@ -1892,6 +1892,16 @@ export const setVanishMode = async (conversationId: string, vanishMode: boolean)
   return response.data;
 };
 
+export const setMessageTtl = async (
+  conversationId: string,
+  messageTtlSeconds: number | null,
+) => {
+  const response = await api.patch(`/dms/conversations/${conversationId}/message-ttl`, {
+    messageTtlSeconds,
+  });
+  return response.data;
+};
+
 export const updateMessage = async (messageId: string, content: string) => {
   const response = await api.patch(`/dms/messages/${messageId}`, { content });
   return response.data;

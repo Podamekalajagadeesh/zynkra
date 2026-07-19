@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getMessages, sendMessage, updateMessage, deleteMessage, uploadMedia, setVanishMode, getConversations } from '../../lib/api';
+import { getMessages, sendMessage, updateMessage, deleteMessage, uploadMedia, setVanishMode, setMessageTtl, getConversations } from '../../lib/api';
 import { Message, Conversation as ConversationType } from '../../lib/types';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebRTC } from '../../hooks/useWebRTC';
@@ -8,7 +8,7 @@ import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Edit, Mic, MoreHorizontal, Paperclip, Trash2, Video, Ghost } from 'lucide-react';
+import { Edit, Mic, MoreHorizontal, Paperclip, Trash2, Video, Ghost, Timer } from 'lucide-react';
 import { CallModal } from '../../components/dms/CallModal/CallModal';
 import MessageContent from '../../components/dms/MessageContent';
 import { formatDateTime } from '../../lib/preferences';
@@ -41,6 +41,7 @@ export function ConversationPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [conversation, setConversation] = useState<ConversationType | null>(null);
   const [vanishMode, setVanishModeState] = useState(false);
+  const [messageTtl, setMessageTtlState] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -53,6 +54,7 @@ export function ConversationPage() {
         if (currentConv) {
           setConversation(currentConv);
           setVanishModeState(currentConv.vanishMode);
+          setMessageTtlState(currentConv.messageTtlSeconds ?? null);
         }
       });
     }
@@ -172,6 +174,17 @@ export function ConversationPage() {
     }
   };
 
+  const handleMessageTtlChange = async (value: string) => {
+    if (!id) return;
+    const ttl = value === '' ? null : Number(value);
+    try {
+      await setMessageTtl(id, ttl);
+      setMessageTtlState(ttl);
+    } catch (error) {
+      console.error('Failed to update disappearing messages timer:', error);
+    }
+  };
+
   useEffect(() => {
     if (vanishMode) {
       const readMessages = messages.filter(
@@ -201,6 +214,23 @@ export function ConversationPage() {
         <div className="flex items-center justify-between border-b p-4">
           <h2 className="text-xl font-bold">Conversation</h2>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Timer
+                size={18}
+                className={messageTtl ? 'text-blue-500' : 'text-gray-400'}
+              />
+              <select
+                aria-label="Disappearing messages timer"
+                value={messageTtl ?? ''}
+                onChange={(e) => handleMessageTtlChange(e.target.value)}
+                className="rounded-lg border border-dark-200 bg-white px-2 py-1 text-sm dark:border-dark-700 dark:bg-dark-900"
+              >
+                <option value="">Off</option>
+                <option value={86400}>24 hours</option>
+                <option value={604800}>7 days</option>
+                <option value={7776000}>90 days</option>
+              </select>
+            </div>
             <div className="flex items-center space-x-2">
               <Ghost
                 className={vanishMode ? 'text-blue-500' : 'text-gray-400'}

@@ -21,6 +21,7 @@ import { AddReactionDto } from './dto/add-reaction.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { ForwardMessageDto } from './dto/forward-message.dto';
 import { VanishModeDto } from './dto/vanish-mode.dto';
+import { MessageTtlDto } from './dto/message-ttl.dto';
 
 @Controller('dms')
 @UseGuards(JwtAuthGuard)
@@ -41,6 +42,20 @@ export class DmsController {
       user,
       conversationId,
       vanishModeDto.vanishMode,
+    );
+  }
+
+  @Patch('conversations/:conversationId/message-ttl')
+  async setMessageTtl(
+    @Request() req,
+    @Param('conversationId') conversationId: string,
+    @Body() messageTtlDto: MessageTtlDto,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.dmsService.setMessageTtl(
+      user,
+      conversationId,
+      messageTtlDto.messageTtlSeconds ?? null,
     );
   }
 

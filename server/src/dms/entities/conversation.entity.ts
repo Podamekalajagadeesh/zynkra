@@ -40,6 +40,10 @@ export class Conversation {
   @Column({ default: false })
   vanishMode: boolean;
 
+  /** Disappearing messages: TTL in seconds for new messages (null = off). */
+  @Column({ type: 'int', nullable: true })
+  messageTtlSeconds: number | null;
+
   @Column({ default: false })
   isEncrypted: boolean;
 

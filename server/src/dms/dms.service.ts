@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, LessThan, MoreThan, Repository } from 'typeorm';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
 import { User } from '../users/entities/user.entity';
@@ -267,6 +269,10 @@ export class DmsService {
       // Legacy single-attachment columns, kept in sync with the first item.
       mediaType: firstMedia?.type ?? 'text',
       mediaUrl: firstMedia?.url,
+      // Disappearing messages: stamp expiry from the conversation timer.
+      expiresAt: conversation.messageTtlSeconds
+        ? new Date(Date.now() + conversation.messageTtlSeconds * 1000)
+        : null,
     });
 
     return this.messagesRepository.save(message);
@@ -302,7 +308,14 @@ export class DmsService {
     }
 
     return this.messagesRepository.find({
-      where: { conversation: { id: conversationId } },
+      // Hide expired disappearing messages that the sweep hasn't caught yet.
+      where: [
+        { conversation: { id: conversationId }, expiresAt: IsNull() },
+        {
+          conversation: { id: conversationId },
+          expiresAt: MoreThan(new Date()),
+        },
+      ],
       relations: [
         'sender',
         'reactions',
@@ -310,7 +323,6 @@ export class DmsService {
         'replyTo',
         'replyTo.sender',
         'readBy',
-        'media',
       ],
       order: { createdAt: 'ASC' },
     });
@@ -387,5 +399,54 @@ export class DmsService {
 
     conversation.vanishMode = vanishMode;
     return this.conversationsRepository.save(conversation);
+  }
+
+  /** Allowed disappearing-message timers, in seconds (Instagram/WhatsApp-style). */
+  static readonly ALLOWED_TTLS = [
+    24 * 60 * 60, // 24 hours
+    7 * 24 * 60 * 60, // 7 days
+    90 * 24 * 60 * 60, // 90 days
+  ];
+
+  async setMessageTtl(
+    user: User,
+    conversationId: string,
+    ttlSeconds: number | null,
+  ): Promise<Conversation> {
+    if (ttlSeconds !== null && !DmsService.ALLOWED_TTLS.includes(ttlSeconds)) {
+      throw new BadRequestException(
+        `messageTtlSeconds must be null or one of: ${DmsService.ALLOWED_TTLS.join(', ')}`,
+      );
+    }
+
+    const conversation = await this.conversationsRepository.findOne({
+      where: { id: conversationId },
+      relations: ['participants'],
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    const isParticipant = conversation.participants.some(
+      (p) => p.id === user.id,
+    );
+    if (!isParticipant) {
+      throw new UnauthorizedException(
+        'You are not a participant of this conversation.',
+      );
+    }
+
+    conversation.messageTtlSeconds = ttlSeconds;
+    return this.conversationsRepository.save(conversation);
+  }
+
+  /** Sweep expired disappearing messages (soft delete, matching message deletion). */
+  @Cron(CronExpression.EVERY_MINUTE, { name: 'disappearing-messages-sweep' })
+  async sweepExpiredMessages(): Promise<void> {
+    await this.messagesRepository.softDelete({
+      expiresAt: LessThan(new Date()),
+      deletedAt: IsNull(),
+    });
   }
 }
