@@ -7,13 +7,17 @@ import { ModerationQueue } from '../components/moderation/ModerationQueue';
 
 interface PendingVerification {
   id: string;
-  username: string;
-  displayName: string | null;
-  email: string | null;
-  idDocumentUrl: string;
-  verificationSubmittedAt: string;
-  isPremium: boolean;
-  subscriptionTier?: string;
+  category: string;
+  justification: string;
+  links: string[];
+  createdAt: string;
+  user: {
+    id: string;
+    username: string | null;
+    displayName?: string | null;
+    email: string | null;
+    isPremium?: boolean;
+  };
 }
 
 export function AdminPage() {
@@ -23,7 +27,7 @@ export function AdminPage() {
 
   const fetchPendingVerifications = async () => {
     try {
-      const response = await api.get('/users/verification-requests/pending');
+      const response = await api.get('/verification/pending');
       setPendingVerifications(response.data);
     } catch (error) {
       addToast('Failed to load pending verification requests', 'error');
@@ -32,9 +36,9 @@ export function AdminPage() {
     }
   };
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (requestId: string) => {
     try {
-      await api.post(`/users/${userId}/verify`);
+      await api.post(`/verification/${requestId}/review`, { decision: 'approved' });
       addToast('User verified successfully!', 'success');
       fetchPendingVerifications();
     } catch (error) {
@@ -42,9 +46,10 @@ export function AdminPage() {
     }
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (requestId: string) => {
+    const reviewNote = window.prompt('Reason for rejection (shown to the applicant):') ?? undefined;
     try {
-      await api.post(`/users/${userId}/reject-verification`);
+      await api.post(`/verification/${requestId}/review`, { decision: 'rejected', reviewNote });
       addToast('Verification request rejected', 'success');
       fetchPendingVerifications();
     } catch (error) {
@@ -92,26 +97,38 @@ export function AdminPage() {
             ) : (
               <div className="space-y-4">
                 {pendingVerifications.map((request) => (
-            <div key={request.id} className={`p-4 border rounded-lg space-y-3 ${request.isPremium ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-800' : ''}`}>
+            <div key={request.id} className={`p-4 border rounded-lg space-y-3 ${request.user.isPremium ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-800' : ''}`}>
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-semibold flex items-center gap-2">
-                    {request.displayName || request.username}
-                    {request.isPremium && (
+                    {request.user.displayName || request.user.username || request.user.email}
+                    <span className="text-xs bg-dark-200 text-dark-700 px-2 py-0.5 rounded-full capitalize dark:bg-dark-700 dark:text-dark-200">
+                      {request.category}
+                    </span>
+                    {request.user.isPremium && (
                       <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
                         Premium - Priority
                       </span>
                     )}
                   </h3>
-                  <p className="text-sm text-gray-500">{request.email}</p>
+                  <p className="text-sm text-gray-500">{request.user.email}</p>
                   <p className="text-sm text-gray-500">
-                    Submitted: {new Date(request.verificationSubmittedAt).toLocaleString()}
+                    Submitted: {new Date(request.createdAt).toLocaleString()}
                   </p>
+                  <p className="text-sm mt-2 whitespace-pre-wrap">{request.justification}</p>
+                  {request.links.length > 0 && (
+                    <ul className="mt-1 space-y-0.5">
+                      {request.links.map((link) => (
+                        <li key={link}>
+                          <a href={link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline break-all">
+                            {link}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                       <div className="flex gap-2">
-                        <Button onClick={() => window.open(request.idDocumentUrl, '_blank')}>
-                          View ID
-                        </Button>
                         <Button variant="default" onClick={() => handleApprove(request.id)}>
                           Approve
                         </Button>

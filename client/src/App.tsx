@@ -137,6 +137,7 @@ const AdSetDetailsPage = lazy(() => import('./pages/ads/AdSetDetailsPage').then(
 const AffiliateDashboardPage = lazy(() => import('./pages/affiliates/AffiliateDashboardPage').then((module) => ({ default: module.AffiliateDashboardPage })));
 const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/BrandCollabsDashboardPage').then((module) => ({ default: module.BrandCollabsDashboardPage })));
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
+const RequestVerificationPage = lazy(() => import('./pages/request-verification'));
 const CollectionsPage = lazy(() => import('./pages/collections').then((module) => ({ default: module.default })));
 const NewCollectionPage = lazy(() => import('./pages/NewCollectionsPage').then((module) => ({ default: module.default })));
 const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage').then((module) => ({ default: module.default })));
@@ -1466,6 +1467,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SnoozePage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/request-verification"
+                      element={
+                        <ProtectedRoute>
+                          <RequestVerificationPage />
                         </ProtectedRoute>
                       }
                     />

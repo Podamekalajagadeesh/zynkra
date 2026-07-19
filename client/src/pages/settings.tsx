@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, Cog, FileText, Globe, Keyboard, KeyRound, MoonStar, Shield, ShieldAlert, SunMedium, Trash2, User as UserIcon, UserCheck, Users, ArrowUpDown, Heart, Brain, Timer, Eye, Mic, Expand, Accessibility, Contrast, Minimize2, Lock } from 'lucide-react';
+import { Clock, Cog, FileText, Globe, Keyboard, KeyRound, MoonStar, Shield, ShieldAlert, SunMedium, Trash2, User as UserIcon, UserCheck, Users, ArrowUpDown, Heart, Brain, Timer, Eye, Mic, Expand, Accessibility, Contrast, Minimize2, Lock, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
@@ -687,6 +687,17 @@ export function SettingsPage() {
           action={
             <Link to="/edit-profile">
               <Button variant="secondary">Edit Profile</Button>
+            </Link>
+          }
+        />
+
+        <SettingItem
+          icon={<BadgeCheck size={20} />}
+          title="Request Verification"
+          description="Apply for the verified badge on your profile."
+          action={
+            <Link to="/request-verification">
+              <Button variant="secondary">Apply</Button>
             </Link>
           }
         />

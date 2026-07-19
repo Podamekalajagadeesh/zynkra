@@ -64,6 +64,7 @@ import { BrandCollabsModule } from './brand-collabs/brand-collabs.module';
 import { ReactionsModule } from './reactions/reactions.module';
 import { SavedMarketplaceListingsModule } from './saved-marketplace-listings/saved-marketplace-listings.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { VerificationModule } from './verification/verification.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { KeysModule } from './keys/keys.module';
 import { TimelineModule } from './timeline/timeline.module';
@@ -170,6 +171,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     // AdsModule, // AdsModule commented out - broken imports
     ReactionsModule,
     WebhooksModule,
+    VerificationModule,
     SnapMapModule,
     SnoozeModule,
     CollectionsModule,
