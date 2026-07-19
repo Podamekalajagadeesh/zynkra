@@ -16,7 +16,8 @@ import { Switch } from '../../components/ui/switch';
 import { Label } from '../../components/ui/label';
 
 export function ConversationPage() {
-  const { id } = useParams<{ id: string }>();
+  // Route is /dms/:conversationId (see App.tsx).
+  const { conversationId: id } = useParams<{ conversationId: string }>();
   const { user: currentUser } = useAuth();
   const {
     isMuted,

@@ -58,13 +58,13 @@ import { FundraisersModule } from './fundraisers/fundraisers.module';
 import { PagesModule } from './pages/pages.module';
 import { AffiliatesModule } from './affiliates/affiliates.module';
 import { BrandCollabsModule } from './brand-collabs/brand-collabs.module';
-// import { DatingModule } from './dating/dating.module'; // DatingModule moved to broken-modules
 // import { AdsModule } from './ads/ads.module'; // AdsModule commented out - broken imports
 
 import { ReactionsModule } from './reactions/reactions.module';
 import { SavedMarketplaceListingsModule } from './saved-marketplace-listings/saved-marketplace-listings.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { VerificationModule } from './verification/verification.module';
+import { DatingModule } from './dating/dating.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { KeysModule } from './keys/keys.module';
 import { TimelineModule } from './timeline/timeline.module';
@@ -167,11 +167,11 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     AffiliatesModule,
     BrandCollabsModule,
     PagesModule,
-    // DatingModule, // DatingModule commented out - broken imports
     // AdsModule, // AdsModule commented out - broken imports
     ReactionsModule,
     WebhooksModule,
     VerificationModule,
+    DatingModule,
     SnapMapModule,
     SnoozeModule,
     CollectionsModule,
