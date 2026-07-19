@@ -36,6 +36,10 @@ export class Message {
   @Column({ type: 'text', nullable: true })
   mediaUrl: string;
 
+  /** Media attachments in the shape the client renders (images/videos/audio). */
+  @Column({ type: 'jsonb', nullable: true })
+  media: { url: string; type: 'image' | 'video' | 'audio' }[] | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

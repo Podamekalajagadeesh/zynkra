@@ -256,12 +256,17 @@ export class DmsService {
       }
     }
 
+    const firstMedia = sendMessageDto.media?.[0];
     const message = this.messagesRepository.create({
-      content: sendMessageDto.content,
+      content: sendMessageDto.content ?? '',
       sender,
       conversation,
       replyTo,
       senderPublicKey: sendMessageDto.senderPublicKey,
+      media: sendMessageDto.media ?? null,
+      // Legacy single-attachment columns, kept in sync with the first item.
+      mediaType: firstMedia?.type ?? 'text',
+      mediaUrl: firstMedia?.url,
     });
 
     return this.messagesRepository.save(message);

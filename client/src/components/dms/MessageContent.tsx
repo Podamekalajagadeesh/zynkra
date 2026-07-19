@@ -3,6 +3,10 @@ import { Message } from '../../lib/types';
 import { Brain, Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { decryptMessage, getKeys } from '../../services/encryption.service';
+import { API_BASE_URL } from '../../lib/api';
+
+/** Server-relative upload paths need the API origin prefixed. */
+const resolveMediaUrl = (url: string) => (url.startsWith('/') ? `${API_BASE_URL}${url}` : url);
 
 interface MessageContentProps {
   message: Message;
@@ -119,13 +123,13 @@ export default function MessageContent({ message }: MessageContentProps) {
         <div className="mt-2 grid gap-2 grid-cols-1">
           {message.media.map((media, index) => {
             if (media.type === 'image') {
-              return <img key={index} src={media.url} alt="media" className="max-w-xs rounded-lg" />;
+              return <img key={index} src={resolveMediaUrl(media.url)} alt="media" className="max-w-xs rounded-lg" />;
             }
             if (media.type === 'video') {
-              return <video key={index} src={media.url} controls className="max-w-xs rounded-lg" />;
+              return <video key={index} src={resolveMediaUrl(media.url)} controls className="max-w-xs rounded-lg" />;
             }
             if (media.type === 'audio') {
-              return <audio key={index} src={media.url} controls />;
+              return <audio key={index} src={resolveMediaUrl(media.url)} controls />;
             }
             return null;
           })}

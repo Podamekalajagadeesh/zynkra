@@ -142,6 +142,8 @@ export function ConversationPage() {
       };
 
       mediaRecorder.onstop = async () => {
+        // Release the microphone so the browser's recording indicator clears.
+        stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
         if (!id) return;
@@ -322,7 +324,12 @@ export function ConversationPage() {
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button type="button" onClick={handleRecord}>
+            <Button
+              type="button"
+              onClick={handleRecord}
+              className={isRecording ? 'animate-pulse !bg-red-600 hover:!bg-red-700' : ''}
+              title={isRecording ? 'Stop and send voice message' : 'Record voice message'}
+            >
               {isRecording ? 'Stop' : <Mic />}
             </Button>
             <Button type="submit">Send</Button>

@@ -151,14 +151,7 @@ export const SendMessageForm = ({
         }
       }
 
-      await sendMessage({
-        conversationId,
-        channelId,
-        content: contentToSend,
-        replyToId: replyTo?.id,
-        isNeural: isNeuralCaptureActive,
-        neuralMetadata: neuralMetadata
-      });
+      await sendMessage(conversationId, channelId, contentToSend, replyTo?.id);
       setContent('');
       addToast('Message sent!', 'success');
       onMessageSent?.();
