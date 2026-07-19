@@ -10,12 +10,14 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { StorageModule } from '../storage/storage.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PagesModule } from '../pages/pages.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Post, FollowRequest, Follow, LifeEvent, Poke]),
     StorageModule,
     forwardRef(() => NotificationsModule),
+    PagesModule,
   ],
   providers: [UsersService],
   exports: [UsersService, TypeOrmModule],

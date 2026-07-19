@@ -10,7 +10,9 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
 
-@Entity('favorites')
+// 'post_favorites': the plain 'favorites' table is the favorite-USERS join
+// table declared on User (user.entity.ts @JoinTable) — this one is favorite posts.
+@Entity('post_favorites')
 export class Favorite {
   @PrimaryGeneratedColumn('uuid')
   id: string;

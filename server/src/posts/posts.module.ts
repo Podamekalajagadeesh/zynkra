@@ -28,10 +28,11 @@ import { MediaModule } from '../media/media.module';
 import { ProfileReviewModule } from '../tags/profile-review.module';
 import { Media } from '../media/entities/media.entity';
 import { TimelineReview } from '../timeline-review/entities/timeline-review.entity';
+import { Subscription } from '../subscriptions/entities/subscription.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostReaction, Comment, Report, Poll, PollOption, Media, ReelEffect, TimelineReview]),
+    TypeOrmModule.forFeature([Post, PostReaction, Comment, Report, Poll, PollOption, Media, ReelEffect, TimelineReview, Subscription]),
     UsersModule,
     StorageModule,
     TokenGatedContentModule,

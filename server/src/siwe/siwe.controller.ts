@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Session, Res } from '@nestjs/common';
-import { SiweMessage } from 'siwe';
+import { SiweMessage, generateNonce } from 'siwe';
 import { Response } from 'express';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -13,7 +13,8 @@ export class SiweController {
 
   @Get('nonce')
   getNonce(@Session() session: Record<string, any>): string {
-    const nonce = Math.random().toString(36).substring(2);
+    // generateNonce() is cryptographically secure (Math.random is guessable).
+    const nonce = generateNonce();
     session.nonce = nonce;
     return nonce;
   }
@@ -30,6 +31,7 @@ export class SiweController {
         signature,
         nonce: session.nonce,
       });
+      session.nonce = null; // single use
 
       let user = await this.usersService.findByWalletAddress(fields.address);
       if (!user) {

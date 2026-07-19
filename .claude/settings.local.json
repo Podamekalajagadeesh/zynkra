@@ -3,7 +3,18 @@
     "allow": [
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(node *)",
+      "Bash(git -C /d/zynkra status --short)",
+      "Bash(git -C /d/zynkra log --oneline -10)",
+      "Bash(git -C /d/zynkra diff --cached --stat)",
+      "WebSearch",
+      "Bash(npx vite *)",
+      "Bash(npx tsc *)",
+      "Bash(git -C /d/zynkra diff --stat)",
+      "Bash(git *)",
+      "Bash(npm run *)"
     ]
   }
 }

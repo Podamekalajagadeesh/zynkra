@@ -2,7 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'ty
 import { DAO } from './dao.entity';
 import { Vote } from './vote.entity';
 
-@Entity()
+// Distinct table name: groups/entities/proposal.entity.ts already owns "proposal".
+@Entity('dao_proposal')
 export class Proposal {
   @PrimaryGeneratedColumn('uuid')
   id: string;

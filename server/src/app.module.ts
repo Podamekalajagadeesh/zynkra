@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import { HttpThrottlerGuard } from './common/http-throttler.guard';
+import { envValidationSchema } from './common/env.validation';
 import { NonprofitsModule } from './nonprofits/nonprofits.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -97,8 +103,38 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validationSchema: envValidationSchema,
+      // Modules read many optional vars (Stripe, LiveKit, SMTP, ...) — only
+      // reject values that are present but malformed.
+      validationOptions: { allowUnknown: true, abortEarly: false },
+    }),
+    // Error tracking — no-op unless SENTRY_DSN is set (init in instrument.ts).
+    SentryModule.forRoot(),
+    // Structured JSON logs (pretty-printed in dev). Request logging with
+    // sensitive headers redacted.
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+        redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+        autoLogging: {
+          // Health checks and static assets are noise.
+          ignore: (req) => req.url === '/health' || req.url?.startsWith('/uploads/'),
+        },
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
+      },
     }),
     ScheduleModule.forRoot(),
+    // Global rate limit: 300 requests/min per IP. Sensitive endpoints (login,
+    // OTP, SIWE, wallet linking) declare stricter @Throttle overrides.
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 300,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
@@ -108,9 +144,14 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
         password: configService.get<string>('DB_PASSWORD', 'postgres'),
         database: configService.get<string>('DB_DATABASE', 'zynkra'),
         autoLoadEntities: true,
-        // Schema sync is a dev convenience only — in production it can drop/alter
-        // columns and destroy data. Use TypeORM migrations for production changes.
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        // Schema changes go through migrations (src/migrations, npm run migration:generate).
+        // NEVER enable synchronize — with 140+ entities it can drop/alter columns and
+        // destroy data. Existing dev DBs created under synchronize: run
+        // `npm run migration:adopt` once to mark the baseline as applied.
+        synchronize: false,
+        // *{.ts,.js}: compiled dist runs .js, ts-node dev runs the .ts sources.
+        migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
+        migrationsRun: configService.get<string>('DB_MIGRATIONS_RUN', 'true') !== 'false',
       }),
       inject: [ConfigService],
     }),
@@ -191,6 +232,17 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     InfrastructureModule,
   ],
   controllers: [AppController, InfrastructureController],
-  providers: [],
+  providers: [
+    {
+      // Reports unhandled exceptions to Sentry (no-op without SENTRY_DSN),
+      // then delegates to the default exception handling.
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: HttpThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

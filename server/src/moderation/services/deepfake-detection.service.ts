@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import * as tf from '@tensorflow/tfjs-node';
-import * as nsfw from 'nsfwjs';
-import { createCanvas, loadImage } from 'canvas';
+import type * as tfType from '@tensorflow/tfjs-node';
+import type * as nsfwType from 'nsfwjs';
+
+// @tensorflow/tfjs-node and canvas are native addons whose prebuilt binaries
+// are unavailable on some platforms/Node versions. Load them lazily so a
+// missing binding degrades this service (analyzeImage throws) instead of
+// crashing the whole server at import time.
 
 export interface DeepfakeDetectionResult {
   isDeepfake: boolean;
@@ -17,8 +21,10 @@ export interface DeepfakeDetectionResult {
 
 @Injectable()
 export class DeepfakeDetectionService {
-  private model: nsfw.NSFWJS | null = null;
-  private deepfakeModel: tf.LayersModel | null = null;
+  private tf: typeof tfType | null = null;
+  private canvasMod: typeof import('canvas') | null = null;
+  private model: nsfwType.NSFWJS | null = null;
+  private deepfakeModel: tfType.LayersModel | null = null;
   private modelLoaded = false;
 
   constructor() {
@@ -27,15 +33,20 @@ export class DeepfakeDetectionService {
 
   private async initializeModels() {
     try {
+      // Native addons — may fail to load; see header comment.
+      this.tf = require('@tensorflow/tfjs-node');
+      this.canvasMod = require('canvas');
+      const nsfw: typeof nsfwType = require('nsfwjs');
+
       // Load NSFW model for inappropriate content detection
       this.model = await nsfw.load();
-      
+
       // Load our custom deepfake detection model (in production, this would be a properly trained model)
       // For this implementation, we'll simulate the detection while maintaining the API structure
       this.modelLoaded = true;
       console.log('Deepfake detection models initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize deepfake detection models:', error);
+      console.error('Failed to initialize deepfake detection models:', error.message || error);
     }
   }
 
@@ -46,13 +57,13 @@ export class DeepfakeDetectionService {
 
     try {
       // Load the image for analysis
-      const image = await loadImage(imageUrl);
-      const canvas = createCanvas(image.width, image.height);
+      const image = await this.canvasMod.loadImage(imageUrl);
+      const canvas = this.canvasMod.createCanvas(image.width, image.height);
       const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
-      
+
       // Convert to tensor for analysis
-      const tensor = tf.browser.fromPixels(canvas as any);
+      const tensor = this.tf.browser.fromPixels(canvas as any);
       
       // Run NSFW classification first
       const predictions = await this.model.classify(tensor);

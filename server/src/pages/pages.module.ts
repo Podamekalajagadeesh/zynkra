@@ -21,5 +21,6 @@ import { InsightsService } from './insights.service';
   ],
   controllers: [PagesController, PageInboxController],
   providers: [PagesService, PageInboxService, PageInboxGateway, InsightsService],
+  exports: [PagesService],
 })
 export class PagesModule {}

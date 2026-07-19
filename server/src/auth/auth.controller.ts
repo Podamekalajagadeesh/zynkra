@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request, Session, BadRequestException, UnauthorizedException, Get, Delete, Param, Req, Res, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import { WebauthnService } from './webauthn.service';
@@ -7,6 +8,11 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
+// Strict limits for credential-guessing surfaces (per IP).
+const STRICT = { default: { ttl: 60_000, limit: 10 } };
+// Endpoints that send email (signup, resends, password reset) — keep abuse low.
+const EMAIL_SENDING = { default: { ttl: 300_000, limit: 5 } };
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +46,7 @@ export class AuthController {
     return this.authService.enable2FA(req.user.userId, body.token);
   }
 
+  @Throttle(STRICT)
   @Post('2fa/verify')
   async verifyTwoFactor(@Req() req, @Body() body: { tempToken: string; token: string }) {
     return this.authService.verify2FALogin(body.tempToken, body.token, req);
@@ -51,6 +58,7 @@ export class AuthController {
     return this.authService.generateRecoveryCodes(req.user.userId);
   }
 
+  @Throttle(STRICT)
   @Post('recover')
   async recoverAccount(
     @Req() req,
@@ -76,11 +84,13 @@ export class AuthController {
     return this.authService.setTrustedRecoveryContacts(req.user.userId, body.contacts || []);
   }
 
+  @Throttle(EMAIL_SENDING)
   @Post('recovery/contact/request')
   async requestTrustedContactRecovery(@Body() body: { identifier: string; contactEmail: string }) {
     return this.authService.requestTrustedContactRecovery(body.identifier, body.contactEmail);
   }
 
+  @Throttle(STRICT)
   @Post('recovery/contact/verify')
   async verifyTrustedContactRecovery(
     @Req() req,
@@ -89,27 +99,32 @@ export class AuthController {
     return this.authService.verifyTrustedContactRecovery(body.identifier, body.contactEmail, body.code, req);
   }
 
+  @Throttle(EMAIL_SENDING)
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
 
+  @Throttle(EMAIL_SENDING)
   @Post('resend-verification')
   async resendVerification(@Body() body: { email: string }) {
     return this.authService.resendVerification(body.email);
   }
 
+  @Throttle(STRICT)
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   signIn(@Req() req, @Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto, req);
   }
 
+  @Throttle(EMAIL_SENDING)
   @Post('forgot-password')
   async forgotPassword(@Body() { email }: { email: string }) {
     return this.authService.forgotPassword(email);
   }
 
+  @Throttle(STRICT)
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: any) {
     return this.authService.resetPassword(

@@ -1,6 +1,10 @@
+// Sentry instrumentation must load before any other import.
+import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import session from 'express-session';
+import helmet from 'helmet';
+import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -12,8 +16,24 @@ if (!(globalThis as any).crypto) {
 
 async function bootstrap() {
   // rawBody is required for Stripe webhook signature verification.
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  // bufferLogs holds early logs until the pino logger is attached.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
+  app.useGlobalInterceptors(new LoggerErrorInterceptor());
   const configService = app.get(ConfigService);
+
+  // Security headers. CSP and COEP are disabled: the server serves the SPA
+  // and user-uploaded media cross-origin (client dev server, mobile app).
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
@@ -33,12 +53,8 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type'],
   });
+  // SESSION_SECRET presence/strength is enforced by env validation (common/env.validation.ts).
   const sessionSecret = configService.get<string>('SESSION_SECRET');
-  if (!sessionSecret) {
-    throw new Error(
-      'SESSION_SECRET is not set. Refusing to start with an insecure default — see server/.env.example.',
-    );
-  }
 
   app.use(
     session({
@@ -48,6 +64,6 @@ async function bootstrap() {
       cookie: { secure: configService.get('NODE_ENV') === 'production' },
     }),
   );
-  await app.listen(3000);
+  await app.listen(configService.get<number>('PORT', 3000));
 }
 bootstrap();

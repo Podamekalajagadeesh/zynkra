@@ -19,7 +19,9 @@ export class Sticker {
   @Column()
   animated: boolean;
 
-  @Column('decimal', { precision: 10, scale: 2, default: 0.99 })
+  // Raw SQL default: TypeORM mis-compares decimal literal defaults against
+  // Postgres and flags phantom drift on every migration:generate.
+  @Column('decimal', { precision: 10, scale: 2, default: () => '0.99' })
   price: number;
 
   @Column({ default: 0 })
