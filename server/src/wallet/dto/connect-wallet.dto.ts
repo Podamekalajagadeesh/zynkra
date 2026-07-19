@@ -1,6 +1,11 @@
-import { IsString } from 'class-validator';
+import { IsEthereumAddress, IsNotEmpty, IsString } from 'class-validator';
 
 export class ConnectWalletDto {
-  @IsString()
+  @IsEthereumAddress()
   walletAddress: string;
+
+  /** Signature of the server-issued link message, proving ownership of the wallet. */
+  @IsString()
+  @IsNotEmpty()
+  signature: string;
 }

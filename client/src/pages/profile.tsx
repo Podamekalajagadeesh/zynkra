@@ -8,7 +8,7 @@ import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getN
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useSignMessage } from 'wagmi';
 import { ConnectButton } from '../components/wallet/ConnectButton';
 import { FollowRequests } from '../components/FollowRequests';
 import { themes, Theme } from '../themes';
@@ -52,6 +52,7 @@ export function ProfilePage() {
   const { addToast } = useToast();
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
+  const { signMessageAsync } = useSignMessage();
   const { id: userId } = useParams<{ id: string }>();
   const [followersCount, setFollowersCount] = useState(0);
   const [mutualFollows, setMutualFollows] = useState<ExtendedUserProfile[]>([]);
@@ -121,7 +122,10 @@ export function ProfilePage() {
     if (isConnected && address && !user?.walletAddress && !userId) {
       const connect = async () => {
         try {
-          const updatedUser = await linkWallet({ walletAddress: address });
+          const updatedUser = await linkWallet({
+            walletAddress: address,
+            signMessage: (message) => signMessageAsync({ message }),
+          });
           setUser(updatedUser);
 setCurrentUser(updatedUser);
           addToast('Wallet linked successfully!', 'success');
@@ -132,7 +136,7 @@ setCurrentUser(updatedUser);
       };
       connect();
     }
-  }, [isConnected, address, user?.walletAddress, addToast, setCurrentUser, userId]);
+  }, [isConnected, address, user?.walletAddress, addToast, setCurrentUser, userId, signMessageAsync]);
 
   useEffect(() => {
     const fetchNfts = async () => {

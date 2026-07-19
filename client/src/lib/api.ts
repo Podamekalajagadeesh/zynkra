@@ -369,8 +369,19 @@ export const verify2FA = async (data: { tempToken: string; token: string }) => {
   return response.data;
 };
 
-export const linkWallet = async (data: { walletAddress: string }) => {
-  const response = await api.post('/wallet/connect', data);
+export const linkWallet = async (data: {
+  walletAddress: string;
+  signMessage: (message: string) => Promise<string>;
+}) => {
+  // Prove wallet ownership: fetch a one-time challenge, sign it, submit signature.
+  const challenge = await api.get('/wallet/connect/challenge', {
+    params: { walletAddress: data.walletAddress },
+  });
+  const signature = await data.signMessage(challenge.data.message);
+  const response = await api.post('/wallet/connect', {
+    walletAddress: data.walletAddress,
+    signature,
+  });
   return response.data;
 };
 
@@ -1107,10 +1118,12 @@ export const getModMailMessages = async (groupId: string, conversationId: string
 export const sendModMailMessage = async (
   groupId: string,
   conversationId: string,
-  content: string
+  content: string,
+  isInternal = false
 ) => {
   const response = await api.post(`/groups/${groupId}/modmail/${conversationId}/messages`, {
-    content
+    content,
+    isInternal
   });
   return response.data;
 };
