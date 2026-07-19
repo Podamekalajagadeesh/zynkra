@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck } from 'lucide-react';
+import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
@@ -13,6 +13,7 @@ import { ConnectButton } from '../components/wallet/ConnectButton';
 import { FollowRequests } from '../components/FollowRequests';
 import { themes, Theme } from '../themes';
 import { PostList } from '../components/post-list';
+import { ProfileQrModal } from '../components/ProfileQrModal';
 import type { Post, UserProfile } from '../lib/types';
 
 interface ExtendedUserProfile extends UserProfile {
@@ -45,6 +46,7 @@ export function ProfilePage() {
   const [reputation, setReputation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isQrOpen, setIsQrOpen] = useState(false);
   const { addToast } = useToast();
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
@@ -276,14 +278,34 @@ setCurrentUser(updatedUser);
               {user.username && <p className="text-lg text-gray-500">@{user.username}</p>}
             </div>
             {!userId && (
-              <Link to="/edit-profile">
-                <Button variant="secondary" className="profile-accent">Edit Profile</Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsQrOpen(true)}
+                  icon={<QrCode size={16} />}
+                  ariaLabel="Show profile QR code"
+                >
+                  QR
+                </Button>
+                <Link to="/edit-profile">
+                  <Button variant="secondary" className="profile-accent">Edit Profile</Button>
+                </Link>
+              </div>
             )}
             {userId && currentUser && currentUser.id !== user.id && (
-              <Button onClick={handleFollow}>
-                {followStatus === 'following' ? 'Unfollow' : followStatus === 'requested' ? 'Requested' : 'Follow'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsQrOpen(true)}
+                  icon={<QrCode size={16} />}
+                  ariaLabel="Show profile QR code"
+                >
+                  QR
+                </Button>
+                <Button onClick={handleFollow}>
+                  {followStatus === 'following' ? 'Unfollow' : followStatus === 'requested' ? 'Requested' : 'Follow'}
+                </Button>
+              </div>
             )}
           </div>
           <div className="grid gap-4 lg:grid-cols-4">
@@ -570,6 +592,14 @@ setCurrentUser(updatedUser);
             <p className="section-subtitle">Please try again after refreshing the page.</p>
           </div>
         </div>
+      )}
+      {user && (
+        <ProfileQrModal
+          isOpen={isQrOpen}
+          onClose={() => setIsQrOpen(false)}
+          profileId={user.id}
+          displayName={user.displayName || user.username}
+        />
       )}
     </PageShell>
   );
