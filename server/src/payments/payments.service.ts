@@ -12,6 +12,7 @@ const Stripe = require('stripe');
 export class PaymentsService {
   private readonly stripe: any;
   private readonly paymentsEnabled: boolean;
+  private readonly webhookSecret: string | undefined;
 
   constructor(
     @InjectRepository(PaymentTransaction)
@@ -24,6 +25,7 @@ export class PaymentsService {
     const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     this.paymentsEnabled =
       this.configService.get<string>('PAYMENTS_ENABLED') === 'true' && !!stripeKey;
+    this.webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
 
     this.stripe = stripeKey
       ? new Stripe(stripeKey, { apiVersion: '2026-05-27.dahlia' })
@@ -67,8 +69,8 @@ export class PaymentsService {
     await this.paymentRepository.save(transaction);
 
     // Only move money on a confirmed payment. A newly created intent is almost
-    // never 'succeeded' — full confirmation belongs to a Stripe webhook handler
-    // (payment_intent.succeeded), which is the next step for this module.
+    // never 'succeeded' — confirmation normally arrives asynchronously via the
+    // Stripe webhook (payment_intent.succeeded → confirmPaymentSucceeded).
     if (paymentIntent.status === 'succeeded' && options.recipientId && amount > 0) {
       await this.walletService.credit(options.recipientId, amount, { purpose });
     }
@@ -164,5 +166,85 @@ export class PaymentsService {
 
   async sendPayout(creatorId: string, amount: number, purpose: string) {
     return this.requestPayout(creatorId, amount, purpose);
+  }
+
+  /**
+   * Verify a Stripe webhook payload against STRIPE_WEBHOOK_SECRET and return
+   * the parsed event. Throws if payments/webhooks are not configured or the
+   * signature is invalid.
+   */
+  constructWebhookEvent(rawBody: Buffer, signature: string): any {
+    this.assertPaymentsEnabled();
+    if (!this.webhookSecret) {
+      throw new ServiceUnavailableException(
+        'Stripe webhooks are not configured. Set STRIPE_WEBHOOK_SECRET to enable them.',
+      );
+    }
+    try {
+      return this.stripe.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
+    } catch (err) {
+      throw new BadRequestException(`Invalid Stripe webhook signature: ${err.message}`);
+    }
+  }
+
+  async handleWebhookEvent(event: any): Promise<{ received: true; handled: boolean }> {
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await this.confirmPaymentSucceeded(event.data.object);
+        return { received: true, handled: true };
+      case 'payment_intent.payment_failed':
+      case 'payment_intent.canceled':
+        await this.markPaymentFailed(event.data.object, event.type);
+        return { received: true, handled: true };
+      default:
+        // Acknowledge unhandled event types so Stripe stops retrying them.
+        return { received: true, handled: false };
+    }
+  }
+
+  /**
+   * Idempotently confirm a payment: flip the transaction to 'succeeded' and
+   * credit the recipient's wallet exactly once.
+   */
+  private async confirmPaymentSucceeded(paymentIntent: any): Promise<void> {
+    const transaction = await this.paymentRepository.findOne({
+      where: { paymentId: paymentIntent.id },
+    });
+    if (!transaction || transaction.status === 'succeeded') {
+      return;
+    }
+
+    transaction.status = 'succeeded';
+    transaction.metadata = {
+      ...transaction.metadata,
+      confirmedByWebhookAt: new Date().toISOString(),
+    };
+    await this.paymentRepository.save(transaction);
+
+    const amount = Number(transaction.amount);
+    if (transaction.recipient?.id && amount > 0) {
+      await this.walletService.credit(transaction.recipient.id, amount, {
+        purpose: transaction.purpose ?? 'payment',
+        paymentId: transaction.paymentId,
+      });
+    }
+  }
+
+  private async markPaymentFailed(paymentIntent: any, eventType: string): Promise<void> {
+    const transaction = await this.paymentRepository.findOne({
+      where: { paymentId: paymentIntent.id },
+    });
+    // Never regress a succeeded transaction — Stripe can deliver events out of order.
+    if (!transaction || transaction.status === 'succeeded') {
+      return;
+    }
+
+    transaction.status = eventType === 'payment_intent.canceled' ? 'canceled' : 'failed';
+    transaction.metadata = {
+      ...transaction.metadata,
+      failureEvent: eventType,
+      failureMessage: paymentIntent.last_payment_error?.message ?? null,
+    };
+    await this.paymentRepository.save(transaction);
   }
 }

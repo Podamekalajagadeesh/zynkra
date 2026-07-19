@@ -11,7 +11,8 @@ if (!(globalThis as any).crypto) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // rawBody is required for Stripe webhook signature verification.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   const configService = app.get(ConfigService);
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
