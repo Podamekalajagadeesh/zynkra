@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { api } from '../../../lib/api';
+import { api } from '../../lib/api';
 
 interface AffiliateLink {
   id: string;

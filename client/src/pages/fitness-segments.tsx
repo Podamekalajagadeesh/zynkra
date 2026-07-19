@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { MapPin, Trophy, User } from 'lucide-react';
 import { getNearbyFitnessSegments, getUserSegmentPRs } from '../lib/api';
 import { FitnessSegment } from '../lib/types';

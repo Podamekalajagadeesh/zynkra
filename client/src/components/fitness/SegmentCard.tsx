@@ -11,8 +11,7 @@ import {
   Footprints,
   Bike,
   Waves,
-  Mountain,
-  WalkIcon
+  Mountain
 } from 'lucide-react';
 import { FitnessSegment, SegmentLeaderboard } from '../../lib/types';
 import { getSegmentLeaderboard, createSegmentAttempt } from '../../lib/api';
@@ -31,7 +30,7 @@ const getSegmentTypeIcon = (type: string) => {
     case 'ride': return <Bike className="h-5 w-5" />;
     case 'swim': return <Waves className="h-5 w-5" />;
     case 'hike': return <Mountain className="h-5 w-5" />;
-    case 'walk': return <WalkIcon className="h-5 w-5" />;
+    case 'walk': return <Footprints className="h-5 w-5" />;
     default: return <Route className="h-5 w-5" />;
   }
 };

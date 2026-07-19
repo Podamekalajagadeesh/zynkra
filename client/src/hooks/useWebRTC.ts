@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
-import { API_BASE_URL } from '../../lib/api';
-import { LiveKitService } from '../services/livekit'; // Our new LiveKit integration
+import { API_BASE_URL } from '../lib/api';
 
 // Enhanced ICE servers for better connectivity
 const ICE_SERVERS = {
@@ -233,8 +232,8 @@ export function useWebRTC(conversationId: string | undefined) {
     if (!conversationId) return;
     
     try {
-      const { createRoom } = await import('livekit-client');
-      const room = await createRoom();
+      const { Room } = await import('livekit-client');
+      const room = new Room();
       liveKitRoomRef.current = room;
       
       // Connect to LiveKit server with token from our backend

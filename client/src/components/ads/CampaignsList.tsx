@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { AdSetsList } from './AdSetsList';
+import AdSetsList from './AdSetsList';
 
 export function CampaignsList() {
   const [campaigns, setCampaigns] = useState([]);

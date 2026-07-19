@@ -1,5 +1,5 @@
 import React from 'react';
-import PageShell from '../components/PageShell';
+import { PageShell } from '../components/PageShell';
 import DigitalTwinPersona from '../components/digital-twin/DigitalTwinPersona';
 
 const DigitalTwinPage: React.FC = () => {

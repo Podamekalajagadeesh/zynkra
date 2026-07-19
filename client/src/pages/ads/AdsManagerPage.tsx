@@ -1,5 +1,5 @@
 
-import { CampaignsList } from '../components/ads/CampaignsList';
+import { CampaignsList } from '../../components/ads/CampaignsList';
 
 export function AdsManagerPage() {
   return (

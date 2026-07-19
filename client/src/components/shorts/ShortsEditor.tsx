@@ -521,6 +521,9 @@ const ShortsEditor = ({ postId }: { postId?: string }) => {
       };
 
       setClips([...clips, newClip]);
+      if (activeClipIndex === null) {
+        setActiveClipIndex(0);
+      }
       addToast(`Video added successfully (${detectedResolution})`, 'success');
     }
   };
@@ -603,32 +606,6 @@ const ShortsEditor = ({ postId }: { postId?: string }) => {
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isTrimming, trimmingClipIndex, trimmingHandle, clips]);
-
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      newFiles.forEach(file => {
-        const video = document.createElement('video');
-        video.preload = 'metadata';
-        video.onloadedmetadata = () => {
-          window.URL.revokeObjectURL(video.src);
-          const newClip: Clip = {
-            file,
-            url: URL.createObjectURL(file),
-            startTime: 0,
-            endTime: video.duration,
-            duration: video.duration,
-            playbackRate: 1,
-          };
-          setClips(prev => [...prev, newClip]);
-          if (activeClipIndex === null) {
-            setActiveClipIndex(0);
-          }
-        };
-        video.src = URL.createObjectURL(file);
-      });
-    }
-  };
 
   const handleRemoveClip = (index: number) => {
     setClips(prev => prev.filter((_, i) => i !== index));

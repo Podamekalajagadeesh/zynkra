@@ -7,7 +7,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Avatar, Image, Upload, Share2, Globe, CheckCircle2, XCircle } from 'lucide-react';
+import { UserCircle, Image, Upload, Share2, Globe, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import { AssetType } from '../../types/digital-assets';
@@ -105,7 +105,7 @@ const DigitalAssetsGallery: React.FC = () => {
   const getAssetIcon = (type: AssetType) => {
     switch (type) {
       case AssetType.AVATAR:
-        return <Avatar className="h-8 w-8" />;
+        return <UserCircle className="h-8 w-8" />;
       case AssetType.VIRTUAL_POSSESSION:
         return <Image className="h-8 w-8" />;
       case AssetType.CREATION:
@@ -327,7 +327,7 @@ const DigitalAssetsGallery: React.FC = () => {
                 {/* Same card content as above */}
                 <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Avatar className="h-16 w-16 text-gray-400" />
+                    <UserCircle className="h-16 w-16 text-gray-400" />
                   </div>
                 </div>
                 <div className="p-4">

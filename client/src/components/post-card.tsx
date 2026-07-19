@@ -38,11 +38,12 @@ import {
 } from '../lib/api';
 import { Button } from './ui/button';
 import Avatar from './ui/avatar';
-import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain } from 'lucide-react';
+import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone } from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { formatDateTime } from '../lib/preferences';
 import { ReactionButtons } from './ReactionButtons';
 import { CommunityNotes } from './CommunityNotes';
+import { PromotionModal } from './PromotionModal';
 import { ContentWarningBanner } from './moderation/ContentWarningBanner';
 import { LowBandwidthMedia } from './LowBandwidthMedia';
 
@@ -1027,6 +1028,13 @@ export function PostCard({
                 title={post.isFeatured ? 'Unfeature' : 'Feature'}
               >
                 <Star size={18} />
+              </button>
+              <button
+                onClick={() => setIsPromoting(true)}
+                className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                title="Promote"
+              >
+                <Megaphone size={18} />
               </button>
               <button
                 onClick={handleDelete}

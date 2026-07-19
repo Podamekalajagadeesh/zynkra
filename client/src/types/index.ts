@@ -30,3 +30,22 @@ export interface User {
   profileTheme: string | null;
   profileHeaderImageUrl: string | null;
 }
+export interface Donation {
+  id: string;
+  amount: number;
+  message: string | null;
+  donor: User;
+  createdAt: string;
+}
+
+export interface Fundraiser {
+  id: string;
+  title: string;
+  description: string;
+  goalAmount: number;
+  currentAmount: number;
+  coverImageUrl: string | null;
+  organizer: User;
+  donations: Donation[];
+  createdAt: string;
+}

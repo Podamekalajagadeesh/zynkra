@@ -1,7 +1,13 @@
 
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { QuestionType } from '../../../../question.entity'; // Assuming this path is correct
+// Mirrors server/src/forms/entities/question.entity.ts
+enum QuestionType {
+  SHORT_TEXT = 'SHORT_TEXT',
+  EMAIL = 'EMAIL',
+  MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
+  PHONE_NUMBER = 'PHONE_NUMBER',
+}
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 

@@ -4,14 +4,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../ui/dialog';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import {
   Card,
   CardContent,
-} from '../../ui/card';
+} from '../ui/card';
 import {
   BarChart,
   Bar,

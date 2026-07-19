@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Post } from '../lib/types';
 import { getLocalFeed } from '../lib/api';
-import PostList from '../components/post-list';
+import { PostList } from '../components/post-list';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { MapPin, ArrowUpDown } from 'lucide-react';
-import { usePreferences } from '../contexts/PreferencesContext';
+import { useAppPreferences } from '../contexts/PreferencesContext';
 
 export default function LocalFeedPage() {
   const [posts, setPosts] = useState<(Post & { distance?: number })[]>([]);
@@ -14,7 +14,7 @@ export default function LocalFeedPage() {
   const [error, setError] = useState<string | null>(null);
   const [radius, setRadius] = useState(50); // Default radius in km
   const { user } = useAuth();
-  const { feedSort, setFeedSort } = usePreferences();
+  const { feedSort, setFeedSort } = useAppPreferences();
 
   const fetchLocalFeed = async () => {
     try {

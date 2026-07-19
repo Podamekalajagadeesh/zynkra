@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import { useCart } from '../../contexts/CartContext';
 import { Download, ShoppingCart, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { addToast } from '../../components/ui/use-toast';
+import { useToast } from '../../contexts/ToastContext';
 import { ARTryOnModal } from '../../components/marketplace/ARTryOnModal';
 
 export function ProductDetailPage() {
@@ -18,6 +18,7 @@ export function ProductDetailPage() {
   const [isArModalOpen, setIsArModalOpen] = useState(false);
   const { dispatch } = useCart();
   const { user } = useAuth();
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -32,7 +33,7 @@ export function ProductDetailPage() {
 
   const handleDownload = async () => {
     if (!user) {
-      addToast({ title: 'Please login to download', variant: 'error' });
+      addToast('Please login to download', 'error');
       return;
     }
     
@@ -40,12 +41,12 @@ export function ProductDetailPage() {
       setDownloading(true);
       const response = await api.get(`/products/${id}/download`);
       window.open(response.data.downloadUrl, '_blank');
-      addToast({ title: 'Download started!', variant: 'success' });
+      addToast('Download started!', 'success');
     } catch (error: any) {
       if (error.response?.data?.message === 'This product is not available for download') {
-        addToast({ title: 'Only digital products can be downloaded', variant: 'error' });
+        addToast('Only digital products can be downloaded', 'error');
       } else {
-        addToast({ title: 'You must purchase this product to download it', variant: 'error' });
+        addToast('You must purchase this product to download it', 'error');
       }
     } finally {
       setDownloading(false);
@@ -61,7 +62,7 @@ export function ProductDetailPage() {
         quantity: 1 
       } 
     });
-    addToast({ title: 'Added to cart!', variant: 'success' });
+    addToast('Added to cart!', 'success');
   };
 
   if (!product) {

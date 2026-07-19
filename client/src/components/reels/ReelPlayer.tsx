@@ -1,7 +1,7 @@
 import { Post, UserProfile } from '../../lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Share2 } from 'lucide-react';
-import { useToast } from '../ui/use-toast';
+import { useToast } from '../../contexts/ToastContext';
 import { getProfile, shareReel, trackReelView } from '../../lib/api';
 import { useEffect, useRef, useState } from 'react';
 import { InsightsModal } from './InsightsModal';
@@ -11,7 +11,7 @@ interface ReelPlayerProps {
 }
 
 export function ReelPlayer({ reel }: ReelPlayerProps) {
-  const { toast } = useToast();
+  const { addToast } = useToast();
   const [viewTracked, setViewTracked] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,14 +40,9 @@ export function ReelPlayer({ reel }: ReelPlayerProps) {
       await shareReel(reel.id);
       const reelUrl = `${window.location.origin}/reel/${reel.id}`;
       navigator.clipboard.writeText(reelUrl);
-      toast({
-        title: 'Link copied to clipboard',
-      });
+      addToast('Link copied to clipboard', 'success');
     } catch (error) {
-      toast({
-        title: 'Failed to share reel',
-        variant: 'destructive',
-      });
+      addToast('Failed to share reel', 'error');
     }
   };
 

@@ -9,7 +9,7 @@ import { ShoppingCart, Users, Monitor, Settings, X, Tag, Clock, Play, Pause, Cir
 import { useAccount, useBalance } from 'wagmi';
 import LiveStreamChat from '../components/LiveStreamChat';
 import { LiveShoppingProductPanel } from '../components/liveshopping/LiveShoppingProductPanel';
-import { Room, createRoom, LocalVideoTrack, VideoPresets } from 'livekit-client';
+import { Room, LocalVideoTrack, VideoPresets } from 'livekit-client';
 import { io } from 'socket.io-client';
 import { api } from '../lib/api';
 
@@ -136,7 +136,7 @@ export const LiveShoppingPage = () => {
       }
 
       // Connect to LiveKit
-      const newRoom = await createRoom();
+      const newRoom = new Room();
       await newRoom.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', 'stream-token');
       setRoom(newRoom);
 

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
 const CreateDonationDriveForm = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -21,7 +21,7 @@ const CreateDonationDriveForm = () => {
         location,
         endDate: new Date(endDate),
       });
-      history.push(`/donation-drives/${response.data.id}`);
+      navigate(`/donation-drives/${response.data.id}`);
     } catch (error) {
       console.error('Error creating donation drive:', error);
     }

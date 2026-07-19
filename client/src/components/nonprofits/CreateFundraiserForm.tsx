@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
 const CreateFundraiserForm = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [goalAmount, setGoalAmount] = useState('');
@@ -23,7 +23,7 @@ const CreateFundraiserForm = () => {
         endDate: new Date(endDate),
         coverImageUrl,
       });
-      history.push(`/fundraisers/${response.data.id}`);
+      navigate(`/fundraisers/${response.data.id}`);
     } catch (error) {
       console.error('Error creating fundraiser:', error);
     }

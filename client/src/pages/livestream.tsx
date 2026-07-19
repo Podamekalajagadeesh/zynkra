@@ -10,7 +10,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { parseEther } from 'viem';
 import LiveStreamChat from '../components/LiveStreamChat';
 import SpatialAudioControls from '../components/SpatialAudioControls';
-import { Room, createRoom, LocalVideoTrack, VideoPresets } from 'livekit-client';
+import { Room, LocalVideoTrack, VideoPresets } from 'livekit-client';
 import { io } from 'socket.io-client';
 import { spatialAudioService } from '../services/spatialAudio';
 
@@ -85,7 +85,7 @@ export const LiveStreamPage = () => {
 
   const connectToLiveKit = async (token: string, roomName: string) => {
     try {
-      const newRoom = await createRoom();
+      const newRoom = new Room();
       await newRoom.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', token);
       setRoom(newRoom);
 

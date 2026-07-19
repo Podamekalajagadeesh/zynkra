@@ -1,5 +1,5 @@
 import { X, Mic, MicOff, Video, VideoOff, Monitor, Square, Film, Sparkles } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '../../ui/button';
 
 interface CallModalProps {
   isOpen: boolean;

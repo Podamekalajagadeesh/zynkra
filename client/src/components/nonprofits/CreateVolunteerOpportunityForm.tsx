@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 
 const CreateVolunteerOpportunityForm = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -21,7 +21,7 @@ const CreateVolunteerOpportunityForm = () => {
         location,
         date: new Date(date),
       });
-      history.push(`/volunteer-opportunities/${response.data.id}`);
+      navigate(`/volunteer-opportunities/${response.data.id}`);
     } catch (error) {
       console.error('Error creating volunteer opportunity:', error);
     }
