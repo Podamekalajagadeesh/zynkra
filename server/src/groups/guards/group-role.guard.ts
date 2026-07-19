@@ -21,7 +21,8 @@ export class GroupRoleGuard implements CanActivate {
     const { user, params } = context.switchToHttp().getRequest();
     const groupId = params.groupId;
     const member = await this.groupsService.getGroupMembers(groupId);
-    const userMember = member.find((m) => m.user.id === user.id);
+    // JWT payload carries userId (see JwtStrategy.validate), not id.
+    const userMember = member.find((m) => m.user.id === user.userId);
     if (!userMember) {
       return false;
     }

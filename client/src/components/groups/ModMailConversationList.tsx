@@ -3,6 +3,9 @@ import { getModMailConversations } from '../../lib/api';
 import { useEffect, useState } from 'react';
 import { Shield, Mail } from 'lucide-react';
 
+/** Modmail thread as returned by the server (subject stored in `name`). */
+type ModMailThread = Conversation & { name?: string };
+
 interface ModMailConversationListProps {
   groupId: string;
   onSelectConversation: (conversation: Conversation) => void;
@@ -14,7 +17,7 @@ export function ModMailConversationList({
   onSelectConversation, 
   selectedId 
 }: ModMailConversationListProps) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ModMailThread[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,12 +57,7 @@ export function ModMailConversationList({
               }`}
             >
               <Mail className="h-4 w-4" />
-              <span className="truncate">{conversation.title || 'New conversation'}</span>
-              {conversation.unreadCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                  {conversation.unreadCount}
-                </span>
-              )}
+              <span className="truncate">{conversation.name || 'New conversation'}</span>
             </li>
           ))
         )}

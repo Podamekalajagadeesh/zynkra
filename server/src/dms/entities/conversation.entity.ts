@@ -11,6 +11,7 @@ import { User } from '../../users/entities/user.entity';
 import { Message } from './message.entity';
 import { ConversationType } from '../conversation-type.enum';
 import { Page } from '../../pages/entities/page.entity';
+import { Group } from '../../groups/entities/group.entity';
 
 @Entity()
 export class Conversation {
@@ -49,4 +50,12 @@ export class Conversation {
 
   @ManyToOne(() => Page, { nullable: true })
   page: Page;
+
+  /** Modmail: the group whose moderation inbox this thread belongs to. */
+  @ManyToOne(() => Group, { nullable: true })
+  group: Group;
+
+  /** Modmail: the member the mods are talking to (internal notes are hidden from them). */
+  @ManyToOne(() => User, { nullable: true })
+  modmailRecipient: User;
 }

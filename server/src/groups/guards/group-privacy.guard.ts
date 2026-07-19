@@ -32,7 +32,8 @@ export class GroupPrivacyGuard implements CanActivate {
       throw new ForbiddenException('You must be logged in to view this group');
     }
 
-    const isMember = await this.groupsService.isMember(user.id, groupId);
+    // JWT payload carries userId (see JwtStrategy.validate), not id.
+    const isMember = await this.groupsService.isMember(user.userId, groupId);
 
     if (group.privacy === GroupPrivacy.PRIVATE) {
       if (!isMember) {

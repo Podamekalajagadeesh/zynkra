@@ -11,6 +11,7 @@ import { ModMailComposer } from '../components/groups/ModMailComposer';
 import { ModMailInternalNoteForm } from '../components/groups/ModMailInternalNoteForm';
 import { getGroupMembers } from '../lib/api';
 import { Conversation } from '../components/dms/ConversationList';
+import { Message } from '../lib/types';
 
 export const GroupsPage = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
@@ -20,6 +21,7 @@ export const GroupsPage = () => {
   const [selectedModMailConversation, setSelectedModMailConversation] = useState<Conversation | null>(null);
   const [isUserModerator, setIsUserModerator] = useState(false);
   const [modMailRefreshKey, setModMailRefreshKey] = useState(0);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
 
   const handleSelectGroup = (id: string) => {
     setSelectedGroupId(id);
@@ -32,7 +34,7 @@ export const GroupsPage = () => {
     if (selectedGroupId) {
       getGroupMembers(selectedGroupId).then(members => {
         const currentUserId = localStorage.getItem('currentUserId');
-        const currentMember = members.find(m => m.user.id === currentUserId);
+        const currentMember = members.find((m: any) => m.user.id === currentUserId);
         if (currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator')) {
           setIsUserModerator(true);
         } else {
@@ -92,12 +94,19 @@ export const GroupsPage = () => {
           <div className="flex flex-col h-full">
             {selectedChannelId ? (
               <>
-                <MessageList channelId={selectedChannelId} />
-                <SendMessageForm channelId={selectedChannelId} />
+                <MessageList channelId={selectedChannelId} onReply={setReplyTo} />
+                <SendMessageForm
+                  channelId={selectedChannelId}
+                  replyTo={replyTo}
+                  onClearReply={() => setReplyTo(null)}
+                />
               </>
             ) : selectedModMailConversation ? (
               <>
-                <MessageList conversationId={selectedModMailConversation.id} />
+                <MessageList
+                  conversationId={selectedModMailConversation.id}
+                  onReply={setReplyTo}
+                />
                 {isUserModerator && (
                   <div className="p-3 border-t border-dark-200 dark:border-dark-700">
                     <ModMailInternalNoteForm
@@ -107,9 +116,11 @@ export const GroupsPage = () => {
                     />
                   </div>
                 )}
-                <SendMessageForm 
+                <SendMessageForm
                   conversationId={selectedModMailConversation.id}
                   onMessageSent={() => {}}
+                  replyTo={replyTo}
+                  onClearReply={() => setReplyTo(null)}
                 />
               </>
             ) : (

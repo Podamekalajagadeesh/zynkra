@@ -44,6 +44,10 @@ export class Message {
   @Column({ type: 'timestamptz', nullable: true })
   expiresAt: Date | null;
 
+  /** Modmail internal note: only visible to moderators, never to the recipient. */
+  @Column({ default: false })
+  isInternal: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

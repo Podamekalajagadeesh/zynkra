@@ -11,6 +11,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
+import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
@@ -29,25 +30,33 @@ import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
 import { CreateTodoItemDto } from './dto/create-todo-item.dto';
 import { UpdateTodoItemDto } from './dto/update-todo-item.dto';
+// ModMail imports
+import { CreateModMailConversationDto } from './dto/create-modmail-conversation.dto';
+import { ModMailMessageDto } from './dto/modmail-message.dto';
 
 import { GroupPrivacyGuard } from './guards/group-privacy.guard';
 
 @Controller('groups')
 export class GroupsController {
-  constructor(private readonly groupsService: GroupsService) {}
+  constructor(
+    private readonly groupsService: GroupsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get()
   async getGroups(@Request() req) {
-    return this.groupsService.getGroups(req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getGroups(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
   async createGroup(@Request() req, @Body() createGroupDto: CreateGroupDto) {
+    const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.createGroup(
       createGroupDto.name,
-      req.user,
+      user,
       createGroupDto.privacy,
       createGroupDto.isDao,
       createGroupDto.votingSystem,
@@ -72,10 +81,11 @@ export class GroupsController {
     @Param('groupId') groupId: string,
     @Body() createChannelDto: CreateChannelDto,
   ) {
+    const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.createChannel(
       groupId,
       createChannelDto.name,
-      req.user,
+      user,
       createChannelDto.type,
     );
   }
@@ -83,13 +93,14 @@ export class GroupsController {
   @UseGuards(JwtAuthGuard)
   @Post('channels/:channelId/join')
   async joinChannel(@Request() req, @Param('channelId') channelId: string) {
-    return this.groupsService.joinChannel(channelId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.joinChannel(channelId, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('channels/:channelId/leave')
   async leaveChannel(@Request() req, @Param('channelId') channelId: string) {
-    return this.groupsService.leaveChannel(channelId, req.user.id);
+    return this.groupsService.leaveChannel(channelId, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -105,10 +116,11 @@ export class GroupsController {
     @Param('channelId') channelId: string,
     @Body() sendMessageDto: SendMessageDto,
   ) {
+    const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.addMessage(
       channelId,
       sendMessageDto.content,
-      req.user,
+      user,
     );
   }
 
@@ -140,9 +152,10 @@ export class GroupsController {
     @Param('groupId') groupId: string,
     @Body() createProposalDto: CreateProposalDto,
   ) {
+    const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.createProposal(
       groupId,
-      req.user,
+      user,
       createProposalDto,
     );
   }
@@ -160,7 +173,8 @@ export class GroupsController {
     @Param('proposalId') proposalId: string,
     @Body() createVoteDto: CreateVoteDto,
   ) {
-    return this.groupsService.vote(proposalId, req.user, createVoteDto);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.vote(proposalId, user, createVoteDto);
   }
 
   // Community Challenges Endpoints
@@ -173,7 +187,8 @@ export class GroupsController {
     @Body() createChallengeDto: CreateChallengeDto,
   ) {
     createChallengeDto.groupId = groupId;
-    return this.groupsService.createChallenge(createChallengeDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.createChallenge(createChallengeDto, user);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
@@ -196,7 +211,8 @@ export class GroupsController {
     @Param('challengeId') challengeId: string,
     @Body() updateChallengeDto: UpdateChallengeDto,
   ) {
-    return this.groupsService.updateChallenge(challengeId, updateChallengeDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.updateChallenge(challengeId, updateChallengeDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -207,7 +223,8 @@ export class GroupsController {
     @Body() createContributionDto: CreateContributionDto,
   ) {
     createContributionDto.challengeId = challengeId;
-    return this.groupsService.addContribution(createContributionDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.addContribution(createContributionDto, user);
   }
 
   @UseGuards(JwtAuthGuard, GroupRoleGuard)
@@ -217,7 +234,8 @@ export class GroupsController {
     @Request() req,
     @Param('challengeId') challengeId: string,
   ) {
-    return this.groupsService.deleteChallenge(challengeId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.deleteChallenge(challengeId, user);
   }
 
   // Calendar Events Endpoints
@@ -229,7 +247,8 @@ export class GroupsController {
     @Body() createCalendarEventDto: CreateCalendarEventDto,
   ) {
     createCalendarEventDto.groupId = groupId;
-    return this.groupsService.createCalendarEvent(createCalendarEventDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.createCalendarEvent(createCalendarEventDto, user);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
@@ -238,7 +257,8 @@ export class GroupsController {
     @Request() req,
     @Param('groupId') groupId: string,
   ) {
-    return this.groupsService.getGroupCalendarEvents(groupId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getGroupCalendarEvents(groupId, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -248,7 +268,8 @@ export class GroupsController {
     @Param('eventId') eventId: string,
     @Body() updateCalendarEventDto: UpdateCalendarEventDto,
   ) {
-    return this.groupsService.updateCalendarEvent(eventId, updateCalendarEventDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.updateCalendarEvent(eventId, updateCalendarEventDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -257,7 +278,8 @@ export class GroupsController {
     @Request() req,
     @Param('eventId') eventId: string,
   ) {
-    return this.groupsService.deleteCalendarEvent(eventId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.deleteCalendarEvent(eventId, user);
   }
 
   // Todo Items Endpoints
@@ -269,7 +291,8 @@ export class GroupsController {
     @Body() createTodoItemDto: CreateTodoItemDto,
   ) {
     createTodoItemDto.groupId = groupId;
-    return this.groupsService.createTodoItem(createTodoItemDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.createTodoItem(createTodoItemDto, user);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
@@ -278,7 +301,8 @@ export class GroupsController {
     @Request() req,
     @Param('groupId') groupId: string,
   ) {
-    return this.groupsService.getGroupTodoItems(groupId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getGroupTodoItems(groupId, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -288,7 +312,8 @@ export class GroupsController {
     @Param('todoId') todoId: string,
     @Body() updateTodoItemDto: UpdateTodoItemDto,
   ) {
-    return this.groupsService.updateTodoItem(todoId, updateTodoItemDto, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.updateTodoItem(todoId, updateTodoItemDto, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -297,6 +322,64 @@ export class GroupsController {
     @Request() req,
     @Param('todoId') todoId: string,
   ) {
-    return this.groupsService.deleteTodoItem(todoId, req.user);
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.deleteTodoItem(todoId, user);
+  }
+
+  // ModMail Endpoints
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
+  @Post(':groupId/modmail')
+  async createModmailConversation(
+    @Request() req,
+    @Param('groupId') groupId: string,
+    @Body() dto: CreateModMailConversationDto,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.createModmailConversation(
+      groupId,
+      user,
+      dto.subject,
+      dto.recipientId,
+      dto.initialMessage,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
+  @Get(':groupId/modmail')
+  async getModmailConversations(
+    @Request() req,
+    @Param('groupId') groupId: string,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getModmailConversations(groupId, user);
+  }
+
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
+  @Get(':groupId/modmail/:conversationId/messages')
+  async getModmailMessages(
+    @Request() req,
+    @Param('groupId') groupId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getModmailMessages(groupId, conversationId, user);
+  }
+
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
+  @Post(':groupId/modmail/:conversationId/messages')
+  async sendModmailMessage(
+    @Request() req,
+    @Param('groupId') groupId: string,
+    @Param('conversationId') conversationId: string,
+    @Body() dto: ModMailMessageDto,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.sendModmailMessage(
+      groupId,
+      conversationId,
+      user,
+      dto.content,
+      dto.isInternal ?? false,
+    );
   }
 }

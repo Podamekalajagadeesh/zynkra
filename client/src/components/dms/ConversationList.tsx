@@ -14,7 +14,7 @@ interface Participant {
   displayName?: string;
 }
 
-interface Conversation {
+export interface Conversation {
   id: string;
   participants: Participant[];
   lastMessage?: {

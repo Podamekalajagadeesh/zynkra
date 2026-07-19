@@ -7,6 +7,7 @@ import { GroupsService } from './groups.service';
 import { GroupsController } from './groups.controller';
 import { UsersModule } from '../users/users.module';
 import { Message } from '../dms/entities/message.entity';
+import { Conversation } from '../dms/entities/conversation.entity';
 import { Proposal } from './entities/proposal.entity';
 import { Vote } from './entities/vote.entity';
 import { TokenGatedContentModule } from '../token-gated-content/token-gated-content.module';
@@ -25,6 +26,7 @@ import { TodoItem } from './entities/todo-item.entity';
       Group,
       Channel,
       Message,
+      Conversation,
       GroupMember,
       Proposal,
       Vote,

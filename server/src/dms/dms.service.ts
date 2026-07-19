@@ -291,7 +291,7 @@ export class DmsService {
   ): Promise<Message[]> {
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
-      relations: ['participants'],
+      relations: ['participants', 'modmailRecipient'],
     });
 
     if (!conversation) {
@@ -307,7 +307,7 @@ export class DmsService {
       );
     }
 
-    return this.messagesRepository.find({
+    const messages = await this.messagesRepository.find({
       // Hide expired disappearing messages that the sweep hasn't caught yet.
       where: [
         { conversation: { id: conversationId }, expiresAt: IsNull() },
@@ -326,6 +326,16 @@ export class DmsService {
       ],
       order: { createdAt: 'ASC' },
     });
+
+    // Modmail: internal mod notes are hidden from the recipient.
+    if (
+      conversation.type === ConversationType.MODMAIL &&
+      conversation.modmailRecipient?.id === user.id
+    ) {
+      return messages.filter((m) => !m.isInternal);
+    }
+
+    return messages;
   }
 
   async updateMessage(

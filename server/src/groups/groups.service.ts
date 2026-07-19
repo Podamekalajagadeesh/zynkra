@@ -7,6 +7,8 @@ import { Channel, ChannelMember } from './entities/channel.entity';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { Message } from '../dms/entities/message.entity';
+import { Conversation } from '../dms/entities/conversation.entity';
+import { ConversationType } from '../dms/conversation-type.enum';
 import { GroupMember } from './entities/group-member.entity';
 import { GroupRole } from './group-role.enum';
 import { Proposal, ProposalStatus } from './entities/proposal.entity';
@@ -45,6 +47,8 @@ export class GroupsService {
     private readonly channelMembersRepository: Repository<ChannelMember>,
     @InjectRepository(Message)
     private readonly messagesRepository: Repository<Message>,
+    @InjectRepository(Conversation)
+    private readonly conversationsRepository: Repository<Conversation>,
     @InjectRepository(GroupMember)
     private readonly groupMembersRepository: Repository<GroupMember>,
     @InjectRepository(Proposal)
@@ -676,7 +680,7 @@ export class GroupsService {
       where: { id: todoId },
       relations: ['group'],
     });
-    
+
     if (!todo) {
       throw new NotFoundException('Todo item not found');
     }
@@ -685,11 +689,193 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: todo.group.id }, user: { id: deleter.id } },
     });
-    
+
     if (!membership || (membership.role !== GroupRole.ADMIN && todo.creator.id !== deleter.id)) {
       throw new ForbiddenException('Only group admins or the todo creator can delete this item');
     }
 
     await this.todoItemsRepository.remove(todo);
+  }
+
+  // ModMail Methods
+  private async getMemberRole(groupId: string, userId: string): Promise<GroupRole | null> {
+    const membership = await this.groupMembersRepository.findOne({
+      where: { group: { id: groupId }, user: { id: userId } },
+    });
+    return membership ? membership.role : null;
+  }
+
+  private isModRole(role: GroupRole | null): boolean {
+    return role === GroupRole.ADMIN || role === GroupRole.MODERATOR;
+  }
+
+  async createModmailConversation(
+    groupId: string,
+    creator: User,
+    subject: string,
+    recipientId: string,
+    initialMessage: string,
+  ): Promise<Conversation> {
+    const group = await this.getGroupById(groupId);
+
+    const creatorRole = await this.getMemberRole(groupId, creator.id);
+    if (!creatorRole) {
+      throw new ForbiddenException('Only group members can use modmail');
+    }
+
+    // Mods can open a thread with any member; a regular member can only open
+    // a thread about themselves (i.e. contact the mod team).
+    if (!this.isModRole(creatorRole) && recipientId !== creator.id) {
+      throw new ForbiddenException(
+        'Members can only open modmail threads for themselves',
+      );
+    }
+
+    const recipientRole = await this.getMemberRole(groupId, recipientId);
+    if (!recipientRole) {
+      throw new NotFoundException('Recipient is not a member of this group');
+    }
+    const recipient = await this.usersService.findOneById(recipientId);
+
+    // Participants: the recipient plus the whole mod team, so any mod can reply.
+    const members = await this.getGroupMembers(groupId);
+    const mods = members
+      .filter((m) => this.isModRole(m.role))
+      .map((m) => m.user);
+    const participants = [
+      recipient,
+      ...mods.filter((mod) => mod.id !== recipient.id),
+    ];
+
+    const conversation = this.conversationsRepository.create({
+      type: ConversationType.MODMAIL,
+      name: subject,
+      owner: creator,
+      group,
+      modmailRecipient: recipient,
+      participants,
+    });
+    const savedConversation =
+      await this.conversationsRepository.save(conversation);
+
+    const message = this.messagesRepository.create({
+      content: initialMessage,
+      sender: creator,
+      conversation: savedConversation,
+    });
+    await this.messagesRepository.save(message);
+
+    return savedConversation;
+  }
+
+  async getModmailConversations(
+    groupId: string,
+    user: User,
+  ): Promise<Conversation[]> {
+    await this.getGroupById(groupId);
+
+    const role = await this.getMemberRole(groupId, user.id);
+    if (!role) {
+      throw new ForbiddenException('Only group members can use modmail');
+    }
+
+    if (this.isModRole(role)) {
+      // Mods see every modmail thread in the group.
+      return this.conversationsRepository.find({
+        where: {
+          type: ConversationType.MODMAIL,
+          group: { id: groupId },
+        },
+        relations: ['modmailRecipient', 'owner'],
+      });
+    }
+
+    // Regular members only see threads where they are the recipient.
+    return this.conversationsRepository.find({
+      where: {
+        type: ConversationType.MODMAIL,
+        group: { id: groupId },
+        modmailRecipient: { id: user.id },
+      },
+      relations: ['modmailRecipient', 'owner'],
+    });
+  }
+
+  private async getModmailConversation(
+    groupId: string,
+    conversationId: string,
+  ): Promise<Conversation> {
+    const conversation = await this.conversationsRepository.findOne({
+      where: {
+        id: conversationId,
+        type: ConversationType.MODMAIL,
+        group: { id: groupId },
+      },
+      relations: ['group', 'modmailRecipient'],
+    });
+    if (!conversation) {
+      throw new NotFoundException('Modmail conversation not found');
+    }
+    return conversation;
+  }
+
+  async getModmailMessages(
+    groupId: string,
+    conversationId: string,
+    user: User,
+  ): Promise<Message[]> {
+    const conversation = await this.getModmailConversation(
+      groupId,
+      conversationId,
+    );
+
+    const role = await this.getMemberRole(groupId, user.id);
+    const isMod = this.isModRole(role);
+    if (!isMod && conversation.modmailRecipient.id !== user.id) {
+      throw new ForbiddenException(
+        'You do not have access to this modmail conversation',
+      );
+    }
+
+    const messages = await this.messagesRepository.find({
+      where: { conversation: { id: conversationId } },
+      relations: ['sender'],
+      order: { createdAt: 'ASC' },
+    });
+
+    // Internal notes are hidden from the recipient.
+    return isMod ? messages : messages.filter((m) => !m.isInternal);
+  }
+
+  async sendModmailMessage(
+    groupId: string,
+    conversationId: string,
+    user: User,
+    content: string,
+    isInternal = false,
+  ): Promise<Message> {
+    const conversation = await this.getModmailConversation(
+      groupId,
+      conversationId,
+    );
+
+    const role = await this.getMemberRole(groupId, user.id);
+    const isMod = this.isModRole(role);
+    if (!isMod && conversation.modmailRecipient.id !== user.id) {
+      throw new ForbiddenException(
+        'You do not have access to this modmail conversation',
+      );
+    }
+    if (isInternal && !isMod) {
+      throw new ForbiddenException('Only moderators can post internal notes');
+    }
+
+    const message = this.messagesRepository.create({
+      content,
+      sender: user,
+      conversation,
+      isInternal,
+    });
+    return this.messagesRepository.save(message);
   }
 }
