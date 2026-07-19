@@ -14,6 +14,7 @@ import { FollowRequests } from '../components/FollowRequests';
 import { themes, Theme } from '../themes';
 import { PostList } from '../components/post-list';
 import { ProfileQrModal } from '../components/ProfileQrModal';
+import { useEnsName } from '../hooks/useEnsName';
 import type { Post, UserProfile } from '../lib/types';
 
 interface ExtendedUserProfile extends UserProfile {
@@ -47,6 +48,7 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isQrOpen, setIsQrOpen] = useState(false);
+  const ensName = useEnsName(user?.walletAddress);
   const { addToast } = useToast();
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
@@ -498,9 +500,16 @@ setCurrentUser(updatedUser);
                     Wallet address
                   </p>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="min-w-0 truncate font-mono text-sm text-green-900 dark:text-green-200">
-                      {user.walletAddress}
-                    </p>
+                    <div className="min-w-0">
+                      {ensName && (
+                        <p className="truncate font-semibold text-green-900 dark:text-green-200">
+                          {ensName}
+                        </p>
+                      )}
+                      <p className="min-w-0 truncate font-mono text-sm text-green-900 dark:text-green-200">
+                        {user.walletAddress}
+                      </p>
+                    </div>
                     <button
                       onClick={() => copyToClipboard(user.walletAddress!, 'Wallet')}
                       className="rounded-full border border-green-200 bg-white p-2 text-green-600 shadow-sm transition-colors hover:text-green-700 dark:border-green-900/40 dark:bg-dark-900 dark:text-green-300 dark:hover:text-green-200"

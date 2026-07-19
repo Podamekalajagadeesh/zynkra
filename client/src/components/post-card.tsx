@@ -44,6 +44,7 @@ import { formatDateTime } from '../lib/preferences';
 import { ReactionButtons } from './ReactionButtons';
 import { CommunityNotes } from './CommunityNotes';
 import { PromotionModal } from './PromotionModal';
+import { useEnsName } from '../hooks/useEnsName';
 import { ContentWarningBanner } from './moderation/ContentWarningBanner';
 import { LowBandwidthMedia } from './LowBandwidthMedia';
 
@@ -842,7 +843,16 @@ export function PostCard({
   }
 
   const originalPost = post.repostedFrom || post;
-  const displayName = originalPost.user.displayName || originalPost.user.email || originalPost.user.walletAddress || 'Anonymous';
+  // Prefer ENS name over raw wallet address for wallet-only accounts.
+  const authorEns = useEnsName(
+    originalPost.user.displayName || originalPost.user.email ? null : originalPost.user.walletAddress,
+  );
+  const displayName =
+    originalPost.user.displayName ||
+    originalPost.user.email ||
+    authorEns ||
+    originalPost.user.walletAddress ||
+    'Anonymous';
 
   const renderContent = (content: string) => {
     const parts = content.split(/(#\w+|@\w+)/g);
