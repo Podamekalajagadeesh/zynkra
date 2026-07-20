@@ -13,6 +13,7 @@ import { UserInterestsService } from '../user-interests/user-interests.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { SentimentService } from '../sentiment/sentiment.service';
 import { SentimentType as ServiceSentimentType } from '../sentiment/sentiment.service';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 @Injectable()
 export class CommentsService {
@@ -25,6 +26,7 @@ export class CommentsService {
     private readonly usersService: UsersService,
     private readonly userInterestsService: UserInterestsService,
     private readonly sentimentService: SentimentService,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   private canUserComment(commentingUser: User, postOwner: User): boolean {
@@ -85,6 +87,10 @@ export class CommentsService {
     // Check comment privacy settings
     const postOwner = await this.usersService.findOneById(post.user.id);
     if (postOwner && postOwner.id !== user.id) { // Skip check if user is commenting on their own post
+      // Blocks (either direction) trump comment privacy settings.
+      if (await this.visibilityService.isBlockedEither(user.id, postOwner.id)) {
+        throw new UnauthorizedException('You are not allowed to comment on this user\'s posts');
+      }
       const canComment = this.canUserComment(user, postOwner);
       if (!canComment) {
         throw new UnauthorizedException('You are not allowed to comment on this user\'s posts');
@@ -157,8 +163,8 @@ export class CommentsService {
     return savedComment;
   }
 
-  async findByPost(postId: string): Promise<Comment[]> {
-    return this.commentsRepository.find({
+  async findByPost(postId: string, viewerId?: string): Promise<Comment[]> {
+    const comments = await this.commentsRepository.find({
       where: { post: { id: postId }, parent: null },
       relations: ['user', 'replies', 'replies.user'],
       order: {
@@ -166,6 +172,20 @@ export class CommentsService {
         createdAt: 'ASC',
       },
     });
+
+    if (!viewerId) return comments;
+
+    // Hide comments (and replies) from users involved in a block with the viewer.
+    const blocked = await this.visibilityService.getBlockedIdSet(viewerId);
+    if (blocked.size === 0) return comments;
+    return comments
+      .filter((c) => !c.user?.id || !blocked.has(c.user.id))
+      .map((c) => {
+        if (c.replies?.length) {
+          c.replies = c.replies.filter((r) => !r.user?.id || !blocked.has(r.user.id));
+        }
+        return c;
+      });
   }
 
   async findOne(id: string): Promise<Comment | undefined> {

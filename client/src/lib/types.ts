@@ -372,6 +372,9 @@ export interface Post {
   bookmarked?: boolean;
   shareCount?: number;
   viewCount?: number;
+  /** X-style quote post: the post this one quotes (null author/content if deleted). */
+  quotedPost?: Post | null;
+  quoteCount?: number;
   place?: Place;
   distance?: number; // Distance from user's location (for local feed)
   autoTags?: AutoTag[]; // AI-generated auto-tags for content categorization
@@ -401,6 +404,8 @@ export interface Message {
   replyTo?: Message;
   readBy: ReadReceipt[];
   media?: { url: string; type: 'image' | 'video' | 'audio' }[];
+  /** Voice note metadata: set when the message is a recorded voice message. */
+  voiceNote?: { durationSeconds: number; waveform: number[] } | null;
   gift?: { id: string; name: string; imageUrl: string; message?: string };
 }
 

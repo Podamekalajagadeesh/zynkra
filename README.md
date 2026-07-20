@@ -1,11 +1,10 @@
 # Zynkra — Universal Social Media
-**Universal social media platform.** Offline-first, decentralized, and truly user-owned.
+**Universal social media platform.**
 
 ## Quick Links
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Setup & running locally
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design & tech stack
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Backend API reference
-- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - What's built, what's not
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
 
 ## Project Structure
@@ -92,7 +91,6 @@ npm run dev
 - [ ] Offline-first sync engine
 - [ ] Full ActivityPub interop
 - [ ] Creator payouts system
-- See [PROJECT_STATUS.md](PROJECT_STATUS.md) for complete roadmap
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
@@ -106,7 +104,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Setup, debugging, troubleshooting
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design, module structure
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Backend API endpoints
-- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - Feature completion status
 
 ## License
 MIT

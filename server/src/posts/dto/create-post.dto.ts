@@ -193,4 +193,8 @@ export class CreatePostDto {
   @IsOptional()
   @IsBoolean()
   enableScreenshotProtection?: boolean;
+
+  @IsOptional()
+  @IsString()
+  quotedPostId?: string;
 }

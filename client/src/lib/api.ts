@@ -630,6 +630,7 @@ export const createPost = async (
   isSensitive = false,
   requiresScreenshotProtection = false,
   autoTags?: AutoTag[], // AI-generated auto-tags for content categorization
+  quotedPostId?: string,
 ) => {
   const mediaPayload = await Promise.all(
     media.map(async (mediaFile) => {
@@ -691,6 +692,7 @@ export const createPost = async (
     showLikes,
     activity,
     reelEffectId,
+    quotedPostId,
   };
 
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -987,12 +989,14 @@ export const sendMessage = async (
   content: string,
   replyToId?: string,
   media?: { url: string; type: 'image' | 'video' | 'audio' }[],
+  voiceNote?: { durationSeconds: number; waveform: number[] },
 ) => {
   if (conversationId) {
     const response = await api.post(`/dms/${conversationId}/messages`, {
       content,
       replyToId,
       media,
+      voiceNote,
     });
     return response.data;
   }
@@ -2052,6 +2056,12 @@ export const repost = async (postId: string) => {
 
 export const undoRepost = async (postId: string) => {
   const response = await api.post(`/posts/${postId}/undo-repost`);
+  return response.data;
+};
+
+/** Quote post: new post with own content embedding another post. */
+export const quotePost = async (quotedPostId: string, content: string) => {
+  const response = await api.post('/posts', { content, quotedPostId, visibility: 'public' });
   return response.data;
 };
 

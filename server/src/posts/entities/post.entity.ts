@@ -226,6 +226,17 @@ export class Post {
   @OneToMany(() => Post, (post) => post.repostedFrom)
   reposts: Post[];
 
+  // Quote post: own content referencing another post (X-style quote).
+  // SET NULL so quotes survive deletion of the quoted post ("post unavailable").
+  @ManyToOne(() => Post, (post) => post.quotes, { nullable: true, onDelete: 'SET NULL' })
+  quotedPost: Post;
+
+  @OneToMany(() => Post, (post) => post.quotedPost)
+  quotes: Post[];
+
+  @Column({ type: 'int', default: 0 })
+  quoteCount: number;
+
   @Column({ type: 'int', default: 0 })
   repostCount: number;
 

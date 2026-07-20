@@ -28,6 +28,7 @@ import {
   searchUsers,
   repost,
   undoRepost,
+  quotePost,
   createLead,
   pinComment,
   deleteComment,
@@ -38,7 +39,7 @@ import {
 } from '../lib/api';
 import { Button } from './ui/button';
 import Avatar from './ui/avatar';
-import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone } from 'lucide-react';
+import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone, Quote } from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { formatDateTime } from '../lib/preferences';
 import { ReactionButtons } from './ReactionButtons';
@@ -131,6 +132,8 @@ interface Post {
   repostedFrom?: Post;
   reposts?: Post[];
   repostCount?: number;
+  quotedPost?: Post | null;
+  quoteCount?: number;
   poll?: Poll[];
   isSponsored?: boolean;
   isPinned?: boolean;
@@ -485,6 +488,26 @@ export function PostCard({
     } catch (error) {
       console.error('Failed to undo repost:', error);
       addToast('Failed to undo repost', 'error');
+    }
+  };
+
+  const [isQuoting, setIsQuoting] = useState(false);
+  const [quoteContent, setQuoteContent] = useState('');
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
+
+  const handleQuote = async () => {
+    if (!quoteContent.trim()) return;
+    setIsSubmittingQuote(true);
+    try {
+      await quotePost(post.id, quoteContent.trim());
+      setIsQuoting(false);
+      setQuoteContent('');
+      addToast('Quote posted!', 'success');
+    } catch (error) {
+      console.error('Failed to quote post:', error);
+      addToast('Failed to quote post', 'error');
+    } finally {
+      setIsSubmittingQuote(false);
     }
   };
 
@@ -1177,6 +1200,50 @@ export function PostCard({
         </div>
       )}
 
+      {/* Quote composer */}
+      {isQuoting && (
+        <div className="mb-md rounded-2xl border border-dark-200 p-4 dark:border-dark-700">
+          <textarea
+            className="textarea-field mb-md w-full rounded-2xl border-dark-200 bg-white/90 dark:border-dark-700 dark:bg-dark-900/70"
+            placeholder="Add a comment..."
+            value={quoteContent}
+            onChange={(e) => setQuoteContent(e.target.value)}
+            maxLength={280}
+            autoFocus
+          />
+          <div className="mb-2 rounded-xl border border-dark-200 p-3 text-sm text-dark-600 dark:border-dark-700 dark:text-dark-300">
+            <span className="font-semibold">{displayName}</span>: {post.content?.slice(0, 140)}
+          </div>
+          <div className="flex gap-sm">
+            <Button variant="primary" size="sm" onClick={handleQuote} disabled={isSubmittingQuote || !quoteContent.trim()}>
+              {isSubmittingQuote ? 'Posting...' : 'Quote'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setIsQuoting(false)} icon={<X size={16} />}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Quoted post embed (X-style quote) */}
+      {post.quotedPost && (
+        <Link
+          to={`/posts/${post.quotedPost.id}`}
+          className="mb-md block rounded-2xl border border-dark-200 p-4 transition-colors hover:bg-dark-50 dark:border-dark-700 dark:hover:bg-dark-800/50"
+        >
+          <div className="mb-1 flex items-center gap-2">
+            <Avatar name={post.quotedPost.user?.displayName || post.quotedPost.user?.email || 'Unknown'} size={20} />
+            <span className="text-sm font-semibold text-dark-900 dark:text-dark-100">
+              {post.quotedPost.user?.displayName || post.quotedPost.user?.email || post.quotedPost.user?.walletAddress}
+            </span>
+            <span className="text-xs text-dark-500">{formatDate(post.quotedPost.createdAt)}</span>
+          </div>
+          <p className="line-clamp-4 whitespace-pre-wrap text-sm text-dark-700 dark:text-dark-300">
+            {post.quotedPost.content}
+          </p>
+        </Link>
+      )}
+
       {/* Algorithmic Transparency - Why this post? */}
       {post.algorithmReasons && post.algorithmReasons.length > 0 && (
         <div className="mb-md">
@@ -1440,6 +1507,18 @@ export function PostCard({
         >
           <Repeat size={18} />
           <span className="text-sm font-medium">{repostCount}</span>
+        </button>
+
+        <button
+          onClick={() => setIsQuoting(true)}
+          className="flex items-center gap-2 rounded-xl px-3 py-2 text-dark-600 transition-all hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
+          aria-label="Quote this post"
+          title="Quote"
+        >
+          <Quote size={18} />
+          {(post.quoteCount ?? 0) > 0 && (
+            <span className="text-sm font-medium">{post.quoteCount}</span>
+          )}
         </button>
 
         {post.media.some(m => m.type === 'video') && (

@@ -11,6 +11,7 @@ import { SponsoredPostsService } from '../sponsored-posts/sponsored-posts.servic
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
 import { SnapMapGateway } from '../snapmap/snapmap.gateway';
+import { VisibilityService } from '../common/visibility/visibility.service';
 // import { AdsService } from '../ads/ads.service'; // AdsService commented out - broken imports
 
 @Injectable()
@@ -25,6 +26,7 @@ export class FeedService {
     private readonly storiesService: StoriesService,
     private readonly snapMapGateway: SnapMapGateway,
     private readonly trendsService: TrendsService,
+    private readonly visibilityService: VisibilityService,
     // private readonly adsService: AdsService, // AdsService commented out - broken imports
   ) {}
 
@@ -61,7 +63,7 @@ export class FeedService {
       where: { visibility: PostVisibility.PUBLIC },
       relations: ['user', 'reactions', 'comments', 'tags', 'place'],
       order: { createdAt: 'DESC' },
-    });
+    }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts));
 
     // Filter posts that are within the radius and calculate their distance from user
     const blockedKeywords = user.blockedKeywords || [];
@@ -111,7 +113,7 @@ export class FeedService {
       this.postsRepository.find({
         where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
-      }),
+      }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts)),
       user ? (this.userInterestsService?.getInterests?.(user) ?? Promise.resolve([])) : Promise.resolve([]),
       user ? (this.usersService?.findFollowingIds?.(user.id) ?? Promise.resolve([])) : Promise.resolve([]),
     ]);
@@ -234,11 +236,12 @@ export class FeedService {
   }
 
   async getChronologicalFeed(user: User): Promise<Post[]> {
-    return this.postsRepository.find({
+    const posts = await this.postsRepository.find({
       where: { visibility: PostVisibility.PUBLIC },
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
+    return this.visibilityService.filterVisiblePosts(user?.id ?? null, posts);
   }
 
   async getRecommendedFeed(user: User, limit: number = 20): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[] })[]> {
@@ -251,7 +254,7 @@ export class FeedService {
         where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
-      }),
+      }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts)),
       this.userInterestsService.getInterests(user, 20),
       this.usersService.findFollowingIds(user.id),
     ]);
@@ -351,7 +354,7 @@ export class FeedService {
         // mediaType: 'video', // Commented out - Post entity doesn't have mediaType property
       },
       relations: ['user', 'reactions', 'comments', 'tags'],
-    });
+    }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts));
 
     const userInterests = await this.userInterestsService.getInterests(user);
 
@@ -394,7 +397,9 @@ export class FeedService {
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
 
-    return posts.filter((post) => post.user?.id && followingIds.includes(post.user.id));
+    const visiblePosts = posts.filter((post) => post.user?.id && followingIds.includes(post.user.id));
+    // Followed users can still be blocked (block after follow) — filter them out.
+    return this.visibilityService.filterVisiblePosts(user.id, visiblePosts);
   }
 
   async getSubscriptionsFeed(user: User): Promise<Post[]> {
@@ -410,7 +415,7 @@ export class FeedService {
       return [];
     }
 
-    return this.postsRepository.find({
+    const posts = await this.postsRepository.find({
       where: {
         user: { id: In(subscribedCreatorIds) },
         visibility: PostVisibility.PUBLIC,
@@ -418,6 +423,7 @@ export class FeedService {
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
+    return this.visibilityService.filterVisiblePosts(user.id, posts);
   }
 
   async getStoryFeed(user: User): Promise<any[]> {
@@ -488,7 +494,7 @@ export class FeedService {
         where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
-      }),
+      }).then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found)),
       this.trendsService.getTrending(Math.max(limit, 10), 7),
     ]);
 
@@ -529,8 +535,9 @@ export class FeedService {
       .leftJoinAndSelect('post.tags', 'tags')
       .orderBy('post.createdAt', 'DESC')
       .limit(30)
-      .getMany();
-      
+      .getMany()
+      .then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found));
+
     return { posts, hasMore: posts.length === 30 };
   }
 
@@ -558,8 +565,9 @@ export class FeedService {
       .orderBy('post.createdAt', 'DESC')
       .skip(skip)
       .take(30)
-      .getMany();
-      
+      .getMany()
+      .then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found));
+
     return { posts, hasMore: posts.length === 30 };
   }
 

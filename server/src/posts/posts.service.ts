@@ -27,6 +27,7 @@ import { GroupsService } from '../groups/groups.service';
 import { TimelineReview, ReviewStatus } from '../timeline-review/entities/timeline-review.entity';
 import { TimelineReviewService } from '../timeline-review/timeline-review.service';
 import { ProfileReviewService } from '../tags/profile-review.service';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 
 import { ReelEffect } from '../reels/entities/reel-effect.entity';
@@ -69,7 +70,8 @@ export class PostsService {
     private readonly userInterestsService: UserInterestsService,
     private readonly groupsService: GroupsService,
     private readonly timelineReviewService: TimelineReviewService,
-    private readonly profileReviewService: ProfileReviewService
+    private readonly profileReviewService: ProfileReviewService,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   async create(
@@ -140,6 +142,24 @@ export class PostsService {
       post.isAnonymous = true;
     }
 
+    // Quote post: attach the quoted post, respecting blocks/private-account visibility.
+    if (createPostDto.quotedPostId) {
+      const quoted = await this.postsRepository.findOne({
+        where: { id: createPostDto.quotedPostId },
+        relations: ['user'],
+      });
+      if (!quoted) {
+        throw new NotFoundException('Quoted post not found.');
+      }
+      if (quoted.user?.id && !(await this.visibilityService.canViewAuthor(user.id, quoted.user.id))) {
+        throw new NotFoundException('Quoted post not found.');
+      }
+      if (quoted.visibility !== PostVisibility.PUBLIC) {
+        throw new BadRequestException('Only public posts can be quoted.');
+      }
+      post.quotedPost = quoted;
+    }
+
     if (reelEffectId) {
       const reelEffect = await this.reelEffectRepository.findOne({ where: { id: reelEffectId } });
       if (reelEffect) {
@@ -173,6 +193,10 @@ export class PostsService {
 
     const savedPost = await this.postsRepository.save(post);
 
+    if (post.quotedPost) {
+      await this.postsRepository.increment({ id: post.quotedPost.id }, 'quoteCount', 1);
+    }
+
     const mentionedUsers = await this.mentionsService.createMentions(
       savedPost.content,
       savedPost,
@@ -205,15 +229,27 @@ export class PostsService {
         'comments.awards',
         'comments.awards.gift',
         'comments.awards.sender',
-        'awards', 
-        'awards.gift', 
+        'awards',
+        'awards.gift',
         'awards.sender',
-        'tags'
+        'tags',
+        'quotedPost',
+        'quotedPost.user'
       ],
     });
 
     if (!post) {
       return undefined;
+    }
+
+    // Blocked either way → act as if the post doesn't exist (don't leak existence).
+    if (userId && post.user?.id && (await this.visibilityService.isBlockedEither(userId, post.user.id))) {
+      throw new NotFoundException('Post not found.');
+    }
+
+    // Private accounts: only the owner and accepted followers may view.
+    if (post.user?.id && !(await this.visibilityService.canViewAuthor(userId ?? null, post.user.id))) {
+      throw new NotFoundException('Post not found.');
     }
 
     if (post.visibility === PostVisibility.PRIVATE) {
@@ -319,7 +355,7 @@ export class PostsService {
           pinnedAt: 'DESC',
           createdAt: 'DESC',
         },
-        relations: ['user', 'likes', 'likes.user'],
+        relations: ['user', 'likes', 'likes.user', 'quotedPost', 'quotedPost.user'],
         take,
         skip,
       });
@@ -351,13 +387,13 @@ export class PostsService {
           pinnedAt: 'DESC',
           createdAt: 'DESC',
         },
-        relations: ['user', 'likes', 'likes.user'],
+        relations: ['user', 'likes', 'likes.user', 'quotedPost', 'quotedPost.user'],
         take,
         skip,
       });
     }
 
-    return posts;
+    return this.visibilityService.filterVisiblePosts(userId ?? null, posts);
   }
 
   async like(postId: string, userPayload: { userId: string }): Promise<Post> {

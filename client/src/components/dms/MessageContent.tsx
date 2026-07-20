@@ -129,7 +129,26 @@ export default function MessageContent({ message }: MessageContentProps) {
               return <video key={index} src={resolveMediaUrl(media.url)} controls className="max-w-xs rounded-lg" />;
             }
             if (media.type === 'audio') {
-              return <audio key={index} src={resolveMediaUrl(media.url)} controls />;
+              return (
+                <div key={index}>
+                  {message.voiceNote && (
+                    <div className="mb-1 flex items-end gap-[2px]" aria-hidden>
+                      {message.voiceNote.waveform.map((v, i) => (
+                        <span
+                          key={i}
+                          className="w-1 rounded-full bg-primary-500/70"
+                          style={{ height: `${Math.max(3, Math.round(v * 24))}px` }}
+                        />
+                      ))}
+                      <span className="ml-2 text-xs text-gray-500">
+                        {Math.floor(message.voiceNote.durationSeconds / 60)}:
+                        {String(Math.round(message.voiceNote.durationSeconds % 60)).padStart(2, '0')}
+                      </span>
+                    </div>
+                  )}
+                  <audio src={resolveMediaUrl(media.url)} controls />
+                </div>
+              );
             }
             return null;
           })}

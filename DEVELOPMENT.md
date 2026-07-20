@@ -515,7 +515,6 @@ npm run lint            # Lint code
 1. Read [ARCHITECTURE.md](ARCHITECTURE.md) for system design
 2. Read [CONTRIBUTING.md](CONTRIBUTING.md) for code guidelines
 3. Check [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for backend endpoints
-4. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for what to work on
 
 ---
 

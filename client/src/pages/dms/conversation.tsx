@@ -140,20 +140,54 @@ export function ConversationPage() {
       mediaRecorderRef.current = mediaRecorder;
       const chunks: Blob[] = [];
 
+      // Sample mic amplitude while recording to build the waveform preview.
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      const amplitudeSamples: number[] = [];
+      const sampleBuffer = new Uint8Array(analyser.frequencyBinCount);
+      const sampler = setInterval(() => {
+        analyser.getByteTimeDomainData(sampleBuffer);
+        let peak = 0;
+        for (const v of sampleBuffer) {
+          peak = Math.max(peak, Math.abs(v - 128) / 128);
+        }
+        amplitudeSamples.push(peak);
+      }, 100);
+      const startedAt = Date.now();
+
       mediaRecorder.ondataavailable = (e) => {
         chunks.push(e.data);
       };
 
       mediaRecorder.onstop = async () => {
+        clearInterval(sampler);
+        audioContext.close();
         // Release the microphone so the browser's recording indicator clears.
         stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
         if (!id) return;
 
+        const durationSeconds = Math.round((Date.now() - startedAt) / 100) / 10;
+        // Downsample the amplitude trace to a fixed number of bars.
+        const BARS = 32;
+        const waveform = Array.from({ length: BARS }, (_, i) => {
+          const start = Math.floor((i * amplitudeSamples.length) / BARS);
+          const end = Math.max(start + 1, Math.floor(((i + 1) * amplitudeSamples.length) / BARS));
+          const slice = amplitudeSamples.slice(start, end);
+          const peak = slice.length ? Math.max(...slice) : 0;
+          return Math.round(peak * 100) / 100;
+        });
+
         try {
           const { url } = await uploadMedia(file);
-          const sentMessage = await sendMessage(id, undefined, '', undefined, [{ url, type: 'audio' }]);
+          const sentMessage = await sendMessage(id, undefined, '', undefined, [{ url, type: 'audio' }], {
+            durationSeconds,
+            waveform,
+          });
           setMessages((prev) => [...prev, sentMessage]);
         } catch (error) {
           console.error('Failed to send voice message:', error);

@@ -24,6 +24,7 @@ import { DmsModule } from './dms/dms.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { StoriesModule } from './stories/stories.module';
 import { FeedModule } from './feed/feed.module';
+import { VisibilityModule } from './common/visibility/visibility.module';
 import { GroupsModule } from './groups/groups.module';
 import { SnoozeModule } from './snooze/snooze.module';
 import { CollectionsModule } from './collections/collections.module';
@@ -159,6 +160,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     UsersModule,
     AuthModule,
     SiweModule,
+    VisibilityModule,
     PostsModule,
     ReportsModule,
     DmsModule,

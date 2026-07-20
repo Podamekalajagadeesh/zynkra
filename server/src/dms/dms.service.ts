@@ -16,6 +16,7 @@ import { MessageReceipt } from './entities/message-receipt.entity';
 
 import { SendMessageDto } from './dto/send-message.dto';
 import { ForwardMessageDto } from './dto/forward-message.dto';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 @Injectable()
 export class DmsService {
@@ -30,6 +31,7 @@ export class DmsService {
     private readonly messageReactionsRepository: Repository<MessageReaction>,
     @InjectRepository(MessageReceipt)
     private readonly messageReceiptsRepository: Repository<MessageReceipt>,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   async forwardMessage(
@@ -63,6 +65,14 @@ export class DmsService {
       );
     }
 
+    // Same block rule as sendMessage — forwarding is just another send path.
+    if (conversation.type === ConversationType.ONE_TO_ONE) {
+      const other = conversation.participants.find((p) => p.id !== user.id);
+      if (other && (await this.visibilityService.isBlockedEither(user.id, other.id))) {
+        throw new UnauthorizedException('You cannot send messages in this conversation.');
+      }
+    }
+
     const message = this.messagesRepository.create({
       sender: user,
       conversation,
@@ -70,6 +80,8 @@ export class DmsService {
       content: originalMessage.content,
       mediaType: originalMessage.mediaType,
       mediaUrl: originalMessage.mediaUrl,
+      media: originalMessage.media,
+      voiceNote: originalMessage.voiceNote,
     });
 
     return this.messagesRepository.save(message);
@@ -183,7 +195,13 @@ export class DmsService {
     const { MessagePrivacy } = require('../users/entities/user.entity');
     for (const recipient of recipients) {
       if (recipient.id === starter.id) continue; // Skip self
-      
+
+      // Blocks (either direction) trump privacy settings. Same message as the
+      // privacy denial so a block isn't distinguishable from "messages off".
+      if (await this.visibilityService.isBlockedEither(starter.id, recipient.id)) {
+        throw new UnauthorizedException(`You are not allowed to send messages to ${recipient.username}`);
+      }
+
       const privacy = recipient.messagePrivacy;
       // Default to everyone if no privacy set
       if (!privacy || privacy === MessagePrivacy.EVERYONE) {
@@ -248,6 +266,14 @@ export class DmsService {
       );
     }
 
+    // Blocks after the conversation exists still stop new one-to-one messages.
+    if (conversation.type === ConversationType.ONE_TO_ONE) {
+      const other = conversation.participants.find((p) => p.id !== sender.id);
+      if (other && (await this.visibilityService.isBlockedEither(sender.id, other.id))) {
+        throw new UnauthorizedException('You cannot send messages in this conversation.');
+      }
+    }
+
     let replyTo: Message | undefined;
     if (sendMessageDto.replyToId) {
       replyTo = await this.messagesRepository.findOne({
@@ -266,6 +292,7 @@ export class DmsService {
       replyTo,
       senderPublicKey: sendMessageDto.senderPublicKey,
       media: sendMessageDto.media ?? null,
+      voiceNote: sendMessageDto.voiceNote ?? null,
       // Legacy single-attachment columns, kept in sync with the first item.
       mediaType: firstMedia?.type ?? 'text',
       mediaUrl: firstMedia?.url,

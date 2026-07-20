@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { PostsService } from '../posts/posts.service';
 import { UsersService } from '../users/users.service';
@@ -40,9 +41,10 @@ export class CommentsController {
     );
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async findByPost(@Param('postId') postId: string) {
-    return this.commentsService.findByPost(postId);
+  async findByPost(@Request() req, @Param('postId') postId: string) {
+    return this.commentsService.findByPost(postId, req.user?.userId);
   }
 
   @UseGuards(JwtAuthGuard)
