@@ -53,6 +53,9 @@ html[data-high-contrast="true"] body {
 }
 
 .dark html[data-high-contrast="true"] body {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
 
 /* Neural consciousness avatar animations */
 @keyframes pulse-slow {
@@ -83,9 +86,6 @@ html[data-high-contrast="true"] body {
 
 .animate-pulse-fast {
   animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-  background: #000000 !important;
-  color: #ffffff !important;
 }
 
 html[data-high-contrast="true"] a,

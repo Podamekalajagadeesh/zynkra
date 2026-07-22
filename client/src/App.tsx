@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { ToastProvider } from './contexts/ToastContext';
 import { ToastContainer } from './components/ToastContainer';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import { CreatePostForm } from './components/create-post-form';
 import { CreatePost } from './components/CreatePost';
@@ -11,7 +11,8 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, Home, ShoppingBag, Plus, Coins } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
 import { NotificationDropdown } from './components/notifications/notification-dropdown';
@@ -64,6 +65,7 @@ const AccessibilityFirstCommunitiesPage = lazy(() =>
 );
 const ShortsPage = lazy(() => import('./pages/shorts').then((module) => ({ default: module.default })));
 const WalletPage = lazy(() => import('./pages/wallet').then((module) => ({ default: module.WalletPage })));
+const EarningsPage = lazy(() => import('./pages/earnings').then((module) => ({ default: module.EarningsPage })));
 const BlockchainIdentityPage = lazy(() => import('./pages/blockchain-identity').then((module) => ({ default: module.default })));
 const SearchResultsPage = lazy(() => import('./pages/search').then((module) => ({ default: module.default })));
 const NotificationsPage = lazy(() => import('./pages/notifications').then((module) => ({ default: module.default })));
@@ -170,25 +172,133 @@ function RouteLoader() {
 
 import { Avatar } from './components/Avatar';
 
+// ---- Navigation model (data-driven so desktop + mobile stay in sync) ----
+type NavLeaf = { to: string; label: string; icon: LucideIcon };
+
+const PRIMARY_NAV: NavLeaf[] = [
+  { to: '/', label: 'Home', icon: Home },
+  { to: '/explore', label: 'Explore', icon: Compass },
+  { to: '/dms', label: 'Messages', icon: MessageSquare },
+  { to: '/groups', label: 'Groups', icon: Users },
+  { to: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+];
+
+const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
+  {
+    title: 'Watch & listen',
+    items: [
+      { to: '/shorts', label: 'Shorts', icon: Video },
+      { to: '/reels', label: 'Reels', icon: Zap },
+      { to: '/livestream', label: 'Live Stream', icon: Video },
+      { to: '/liveshopping', label: 'Live Shopping', icon: Video },
+      { to: '/watch-later', label: 'Watch Later', icon: Clock },
+    ],
+  },
+  {
+    title: 'Discover',
+    items: [
+      { to: '/local-feed', label: 'Local Feed', icon: MapPin },
+      { to: '/fitness-segments', label: 'Fitness Segments', icon: Compass },
+      { to: '/snapmap', label: 'Snap Map', icon: MapPin },
+      { to: '/dating/discover', label: 'Dating', icon: UserPlus },
+      { to: '/metaverse', label: 'Metaverse', icon: Globe },
+      { to: '/digital-assets', label: 'Digital Assets', icon: Globe },
+      { to: '/digital-twin', label: 'Digital Twin', icon: Bot },
+      { to: '/advanced-vision', label: 'Vision', icon: Compass },
+      { to: '/devices', label: 'Devices', icon: Bot },
+    ],
+  },
+  {
+    title: 'Communities',
+    items: [
+      { to: '/communities', label: 'Forums', icon: MessageSquare },
+      { to: '/cultural-preservation-communities', label: 'Cultural Preservation', icon: Building2 },
+      { to: '/skill-sharing', label: 'Skill Sharing', icon: Users },
+      { to: '/crisis-response-communities', label: 'Crisis Response', icon: HandHeart },
+      { to: '/accessibility-first-communities', label: 'Accessibility First', icon: Users },
+    ],
+  },
+  {
+    title: 'Library',
+    items: [
+      { to: '/read-later', label: 'Read Later', icon: Bookmark },
+      { to: '/memories', label: 'Memories', icon: Clock },
+      { to: '/marketplace/saved', label: 'Saved', icon: Heart },
+      { to: '/events', label: 'Events', icon: Calendar },
+      { to: '/fundraisers', label: 'Fundraisers', icon: HandHeart },
+    ],
+  },
+  {
+    title: 'Creator & business',
+    items: [
+      { to: '/earnings', label: 'Earnings & Payouts', icon: Coins },
+      { to: '/scheduler', label: 'Content Scheduler', icon: CalendarDays },
+      { to: '/livestream/schedule', label: 'Schedule Stream', icon: Calendar },
+      { to: '/ads', label: 'Ads Manager', icon: Megaphone },
+      { to: '/ads/audiences', label: 'Ad Audiences', icon: Megaphone },
+      { to: '/nonprofit', label: 'Nonprofit Tools', icon: Building2 },
+      { to: '/timeline-review', label: 'Timeline Review', icon: Clock },
+    ],
+  },
+];
+
+const CREATE_ITEMS: { to: string; label: string }[] = [
+  { to: '/create-post', label: 'Create Post' },
+  { to: '/create-reel', label: 'Create Reel' },
+  { to: '/forms/new', label: 'Create Form' },
+];
+
+const navLinkBase =
+  'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 dark:focus:ring-offset-dark-900';
+const navLinkIdle =
+  'text-dark-700 hover:bg-dark-100 hover:text-primary-600 dark:text-light-100 dark:hover:bg-dark-800 dark:hover:text-primary-400';
+const navLinkActive =
+  'bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300';
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `${navLinkBase} ${isActive ? navLinkActive : navLinkIdle}`;
+
+const menuItemBase =
+  'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500';
+const menuItemClass = ({ isActive }: { isActive: boolean }) =>
+  `${menuItemBase} ${
+    isActive
+      ? 'bg-primary-50 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300'
+      : 'text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800'
+  }`;
+
 function Navbar({ isLoggedIn, toggleTheme, theme }: { isLoggedIn: boolean; toggleTheme: () => void; theme: string }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [, setIsBoostModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setIsMoreMenuOpen(false);
-      setIsCreateMenuOpen(false);
-    };
+  const closeDropdowns = () => {
+    setIsMoreMenuOpen(false);
+    setIsCreateMenuOpen(false);
+    setIsProfileOpen(false);
+    setIsNotificationsOpen(false);
+  };
 
+  // Close dropdowns when clicking outside or pressing Escape.
+  useEffect(() => {
+    const handleClickOutside = () => closeDropdowns();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeDropdowns();
+        setIsMenuOpen(false);
+      }
+    };
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
+
   const { activeAccount, logout } = useAuth();
 
   const handleLogoutClick = () => {
@@ -199,8 +309,8 @@ function Navbar({ isLoggedIn, toggleTheme, theme }: { isLoggedIn: boolean; toggl
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/70 bg-white/75 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-dark-700/70 dark:bg-dark-900/75">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-3 group">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <Link to="/" className="flex shrink-0 items-center gap-3 group" aria-label="Zynkra home">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 via-cyan-500 to-accent-600 shadow-lg shadow-primary-500/25">
             <span className="text-2xl font-bold text-white">Z</span>
           </div>
@@ -208,339 +318,110 @@ function Navbar({ isLoggedIn, toggleTheme, theme }: { isLoggedIn: boolean; toggl
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-md">
-          <div className="w-64">
-            <Search />
-          </div>
-          <button onClick={toggleTheme} className="rounded-full border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100 dark:hover:bg-dark-700">
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
-          <div className="relative">
-            <NotificationIcon onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} />
-            <NotificationDropdown isOpen={isNotificationsOpen} />
-          </div>
-          {isLoggedIn ? (
-            <>
-              {/* Primary Navigation - Core features */}
-              <Link
-                to="/"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors"
-              >
-                Feed
-              </Link>
-              <Link
-                to="/devices"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors"
-              >
-                Devices
-              </Link>
-              <Link
-                to="/advanced-vision"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors"
-              >
-                Vision
-              </Link>
-              <Link
-                to="/dms"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <MessageSquare size={18} />
-                Messages
-              </Link>
-              <Link
-                to="/groups"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Users size={18} />
-                Groups
-              </Link>
-              <Link
-                to="/communities"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <MessageSquare size={18} />
-                Forums
-              </Link>
-              <Link
-                to="/shorts"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Video size={18} />
-                Shorts
-              </Link>
-              <Link
-                to="/local-feed"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <MapPin size={18} />
-                Local Feed
-              </Link>
-              <Link
-                to="/fitness-segments"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Compass size={18} />
-                Fitness Segments
-              </Link>
-              <Link
-                to="/explore"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Compass size={18} />
-                Explore
-              </Link>
-              <Link
-                to="/metaverse"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Globe size={18} />
-                Metaverse
-              </Link>
-              <Link
-                to="/digital-assets"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Avatar size={18} />
-                Digital Assets
-              </Link>
-              <Link
-                to="/digital-twin"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Bot size={18} />
-                Digital Twin
-              </Link>
-              <Link
-                to="/reels"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Zap size={18} />
-                Reels
-              </Link>
-              <Link
-                to="/watch-later"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Clock size={18} />
-                Watch Later
-              </Link>
-              <Link
-                to="/read-later"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Bookmark size={18} />
-                Read Later
-              </Link>
-              <Link
-                to="/marketplace"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                Marketplace
-              </Link>
-              <Link
-                to="/livestream"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                Live Stream
-              </Link>
+        <div className="hidden md:flex flex-1 items-center justify-end gap-2">
+          {isLoggedIn && (
+            <div className="flex items-center gap-1">
+              {PRIMARY_NAV.map(({ to, label, icon: Icon }) => (
+                <NavLink key={to} to={to} end={to === '/'} className={navLinkClass}>
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
 
-              {/* More Dropdown for Secondary Navigation */}
+              {/* More mega-menu */}
               <div className="relative">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setIsMoreMenuOpen(!isMoreMenuOpen); }}
-                  className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setIsMoreMenuOpen((v) => !v); setIsCreateMenuOpen(false); setIsProfileOpen(false); }}
+                  className={`${navLinkBase} ${isMoreMenuOpen ? navLinkActive : navLinkIdle}`}
+                  aria-haspopup="menu"
+                  aria-expanded={isMoreMenuOpen}
                 >
-                  <MoreHorizontal size={18} />
-                  More
+                  <MoreHorizontal size={18} aria-hidden="true" />
+                  <span>More</span>
                 </button>
                 {isMoreMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-dark-200 bg-white shadow-lg dark:border-dark-700 dark:bg-dark-900 z-50">
-                    <div className="p-2">
-                      <Link
-                        to="/marketplace/saved"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Heart size={16} />
-                        Saved
-                      </Link>
-                      <Link
-                        to="/events"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Calendar size={16} />
-                        Events
-                      </Link>
-                      <Link
-                        to="/scheduler"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <CalendarDays size={16} />
-                        Content Scheduler
-                      </Link>
-                      <Link
-                        to="/livestream/schedule"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Calendar size={16} />
-                        Schedule Stream
-                      </Link>
-                      <Link
-                        to="/memories"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Clock size={16} />
-                        Memories
-                      </Link>
-                      <Link
-                        to="/snapmap"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                          <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        Snap Map
-                      </Link>
-                      <Link
-                        to="/fundraisers"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <HandHeart size={16} />
-                        Fundraisers
-                      </Link>
-                      <Link
-                        to="/dating/discover"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <UserPlus size={16} />
-                        Dating
-                      </Link>
-                      <div className="my-1 border-t border-dark-200 dark:border-dark-700" />
-                      <Link
-                        to="/ads/audiences"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Megaphone size={16} />
-                        Ad Audiences
-                      </Link>
-                      <Link
-                        to="/ads"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Megaphone size={16} />
-                        Ads Manager
-                      </Link>
-                      <Link
-                        to="/nonprofit"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        <Building2 size={16} />
-                        Nonprofit Tools
-                      </Link>
-                      <div className="my-1 border-t border-dark-200 dark:border-dark-700" />
-                      <Link
-                        to="/timeline-review"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        Timeline Review
-                      </Link>
-                      <Link
-                        to="/cultural-preservation-communities"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        Cultural Preservation
-                      </Link>
-                      <Link
-                        to="/skill-sharing"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        Skill Sharing
-                      </Link>
-                      <Link
-                        to="/crisis-response-communities"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        Crisis Response
-                      </Link>
-                      <Link
-                        to="/accessibility-first-communities"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
-                        onClick={() => setIsMoreMenuOpen(false)}
-                      >
-                        Accessibility First
-                      </Link>
-                    </div>
+                  <div
+                    className="absolute right-0 top-full mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-2xl border border-dark-200 bg-white p-2 shadow-xl dark:border-dark-700 dark:bg-dark-900 z-50"
+                    role="menu"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {MORE_SECTIONS.map((section, i) => (
+                      <div key={section.title} className={i > 0 ? 'mt-1 border-t border-dark-100 pt-1 dark:border-dark-800' : ''}>
+                        <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-dark-400 dark:text-dark-500">
+                          {section.title}
+                        </p>
+                        {section.items.map(({ to, label, icon: Icon }) => (
+                          <NavLink key={to} to={to} className={menuItemClass} role="menuitem" onClick={() => setIsMoreMenuOpen(false)}>
+                            <Icon size={16} aria-hidden="true" />
+                            {label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
-              {/* Settings Link */}
-              <Link
-                to="/settings"
-                className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors flex items-center gap-xs"
-              >
-                <Settings size={18} />
-                Settings
-              </Link>
+          <div className="w-56 lg:w-64">
+            <Search />
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            className="rounded-full border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm hover:bg-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100 dark:hover:bg-dark-700"
+          >
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
+
+          {isLoggedIn ? (
+            <>
+              <div className="relative">
+                <NotificationIcon onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} />
+                <NotificationDropdown isOpen={isNotificationsOpen} />
+              </div>
 
               {/* Create Menu */}
               <div className="relative">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setIsCreateMenuOpen(!isCreateMenuOpen); }}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-xs"
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setIsCreateMenuOpen((v) => !v); setIsMoreMenuOpen(false); setIsProfileOpen(false); }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary-500/20 transition-all hover:shadow-xl hover:shadow-primary-500/25 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-dark-900"
+                  aria-haspopup="menu"
+                  aria-expanded={isCreateMenuOpen}
                 >
+                  <Plus size={18} aria-hidden="true" />
                   Create
                 </button>
                 {isCreateMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-dark-200 bg-white shadow-lg dark:border-dark-700 dark:bg-dark-900 z-50">
-                    <div className="p-2">
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-dark-200 bg-white p-2 shadow-xl dark:border-dark-700 dark:bg-dark-900 z-50" role="menu" onClick={(e) => e.stopPropagation()}>
+                    {CREATE_ITEMS.map(({ to, label }) => (
                       <button
-                        onClick={() => { navigate('/create-post'); setIsCreateMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800 text-left"
+                        key={to}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { navigate(to); setIsCreateMenuOpen(false); }}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800"
                       >
-                        Create Post
+                        {label}
                       </button>
-                      <button
-                        onClick={() => { navigate('/create-reel'); setIsCreateMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800 text-left"
-                      >
-                        Create Reel
-                      </button>
-                      <button
-                        onClick={() => { setIsBoostModalOpen(true); setIsCreateMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800 text-left"
-                      >
-                        Boost Post
-                      </button>
-                      <button
-                        onClick={() => { navigate('/forms/new'); setIsCreateMenuOpen(false); }}
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800 text-left"
-                      >
-                        Create Form
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
 
               {/* Profile Dropdown */}
               <div className="relative">
-                <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-xs">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsProfileOpen((v) => !v); setIsMoreMenuOpen(false); setIsCreateMenuOpen(false); }}
+                  className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-dark-900"
+                  aria-label="Account menu"
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileOpen}
+                >
                   <Avatar className="h-8 w-8" />
                 </button>
                 <ProfileDropdown isOpen={isProfileOpen} />
@@ -548,260 +429,114 @@ function Navbar({ isLoggedIn, toggleTheme, theme }: { isLoggedIn: boolean; toggl
             </>
           ) : (
             <>
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={() => navigate('/login')}
-                icon={<LogIn size={18} />}
-              >
+              <Button variant="secondary" size="md" onClick={() => navigate('/login')} icon={<LogIn size={18} />}>
                 Log In
               </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => navigate('/signup')}
-              >
+              <Button variant="primary" size="md" onClick={() => navigate('/signup')}>
                 Sign Up
               </Button>
             </>
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="rounded-xl border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm transition-colors hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100 dark:hover:bg-dark-700 md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Mobile actions */}
+        <div className="flex items-center gap-2 md:hidden">
+          {isLoggedIn && (
+            <div className="relative">
+              <NotificationIcon onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} />
+              <NotificationDropdown isOpen={isNotificationsOpen} />
+            </div>
+          )}
+          <button
+            className="rounded-xl border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm transition-colors hover:bg-dark-50 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100 dark:hover:bg-dark-700"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="absolute left-0 right-0 top-full border-b border-white/70 bg-white/90 backdrop-blur-xl dark:border-dark-700/70 dark:bg-dark-900/90 md:hidden">
-            <div className="flex flex-col gap-3 p-4">
-              <div className="mb-2">
-                <Search />
-              </div>
-              <button onClick={toggleTheme} className="self-start rounded-full border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100">
+          <div className="absolute left-0 right-0 top-full max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-white/70 bg-white/95 backdrop-blur-xl dark:border-dark-700/70 dark:bg-dark-900/95 md:hidden">
+            <div className="flex flex-col gap-2 p-4">
+              <Search />
+              <button
+                onClick={toggleTheme}
+                aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                className="flex items-center gap-2 self-start rounded-full border border-dark-200 bg-white/80 p-2.5 text-dark-700 shadow-sm dark:border-dark-700 dark:bg-dark-800/80 dark:text-light-100"
+              >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
+
               {isLoggedIn ? (
                 <>
-                  <Link
-                    to="/"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Feed
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  {PRIMARY_NAV.map(({ to, label, icon: Icon }) => (
+                    <NavLink key={to} to={to} end={to === '/'} className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
+                      <Icon size={18} aria-hidden="true" />
+                      {label}
+                    </NavLink>
+                  ))}
+                  <NavLink to="/profile" className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
+                    <UserPlus size={18} aria-hidden="true" />
                     Profile
-                  </Link>
-                  <Link
-                    to="/dms"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Messages
-                  </Link>
-                  <Link
-                    to="/groups"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Groups
-                  </Link>
-                  <Link
-                    to="/shorts"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Shorts
-                  </Link>
-                  <Link
-                    to="/local-feed"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Local Feed
-                  </Link>
-                  <Link
-                    to="/fitness-segments"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Fitness Segments
-                  </Link>
-                  <Link
-                    to="/reels"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Reels
-                  </Link>
-                  <Link
-                    to="/watch-later"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Watch Later
-                  </Link>
-                  <Link
-                    to="/read-later"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Read Later
-                  </Link>
-                  <Link
-                    to="/marketplace"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Marketplace
-                  </Link>
-                  <Link
-                    to="/marketplace/saved"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Saved
-                  </Link>
-                  <Link
-                    to="/events"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Events
-                  </Link>
-                  <Link
-                    to="/livestream"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Live Stream
-                  </Link>
-                  <Link
-                    to="/livestream/schedule"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Schedule Stream
-                  </Link>
-                  <Link
-                    to="/liveshopping"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Live Shopping
-                  </Link>
-                  <Link
-                    to="/memories"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Memories
-                  </Link>
-                  <Link
-                    to="/fundraisers"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Fundraisers
-                  </Link>
-                  <Link
-                    to="/dating/discover"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dating
-                  </Link>
-                  <Link
-                    to="/ads"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Ads Manager
-                  </Link>
-                  <Link
-                    to="/cultural-preservation-communities"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Cultural Preservation
-                  </Link>
-                  <Link
-                    to="/skill-sharing"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skill Sharing
-                  </Link>
-                  <Link
-                    to="/crisis-response-communities"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Crisis Response
-                  </Link>
-                  <Link
-                    to="/accessibility-first-communities"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Accessibility First
-                  </Link>
-                  <div className="my-2 border-t border-dark-200 dark:border-dark-700" />
-                  <Link
-                    to="/settings"
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    onClick={() => {
-                      navigate('/login');
-                      setIsMenuOpen(false);
-                    }}
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2 text-left"
-                  >
-                    Add an existing account
-                  </button>
-                  <button
-                    onClick={handleLogoutClick}
-                    className="text-dark-700 dark:text-light-100 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors py-2 text-left"
-                  >
-                    Log out @{activeAccount?.user.username}
-                  </button>
+                  </NavLink>
+
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {CREATE_ITEMS.map(({ to, label }) => (
+                      <button
+                        key={to}
+                        type="button"
+                        onClick={() => { navigate(to); setIsMenuOpen(false); }}
+                        className="rounded-lg bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 dark:bg-primary-950/50 dark:text-primary-300"
+                      >
+                        {label.replace('Create ', '+ ')}
+                      </button>
+                    ))}
+                  </div>
+
+                  {MORE_SECTIONS.map((section) => (
+                    <div key={section.title} className="mt-1 border-t border-dark-100 pt-1 dark:border-dark-800">
+                      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-dark-400 dark:text-dark-500">
+                        {section.title}
+                      </p>
+                      {section.items.map(({ to, label, icon: Icon }) => (
+                        <NavLink key={to} to={to} className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
+                          <Icon size={16} aria-hidden="true" />
+                          {label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  ))}
+
+                  <div className="mt-1 border-t border-dark-100 pt-1 dark:border-dark-800">
+                    <NavLink to="/settings" className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
+                      <Settings size={16} aria-hidden="true" />
+                      Settings
+                    </NavLink>
+                    <button
+                      onClick={() => { navigate('/login'); setIsMenuOpen(false); }}
+                      className={`${menuItemBase} text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800`}
+                    >
+                      <UserPlus size={16} aria-hidden="true" />
+                      Add an existing account
+                    </button>
+                    <button
+                      onClick={handleLogoutClick}
+                      className={`${menuItemBase} text-dark-700 hover:bg-dark-100 dark:text-light-100 dark:hover:bg-dark-800`}
+                    >
+                      <LogOut size={16} aria-hidden="true" />
+                      Log out @{activeAccount?.user.username}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    className="w-full justify-center"
-                    onClick={() => {
-                      navigate('/login');
-                      setIsMenuOpen(false);
-                    }}
-                    icon={<LogIn size={18} />}
-                  >
+                  <Button variant="secondary" size="md" className="w-full justify-center" onClick={() => { navigate('/login'); setIsMenuOpen(false); }} icon={<LogIn size={18} />}>
                     Log In
                   </Button>
-                  <Button
-                    variant="primary"
-                    size="md"
-                    className="w-full justify-center"
-                    onClick={() => {
-                      navigate('/signup');
-                      setIsMenuOpen(false);
-                    }}
-                  >
+                  <Button variant="primary" size="md" className="w-full justify-center" onClick={() => { navigate('/signup'); setIsMenuOpen(false); }}>
                     Sign Up
                   </Button>
                 </>
@@ -1251,6 +986,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <WalletPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/earnings"
+                      element={
+                        <ProtectedRoute>
+                          <EarningsPage />
                         </ProtectedRoute>
                       }
                     />
