@@ -1,10 +1,47 @@
-import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Param } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  // ---- Stripe Connect onboarding (creator-facing) ------------------------
+
+  @Get('connect/status')
+  @UseGuards(JwtAuthGuard)
+  async getConnectStatus(@Req() req) {
+    const userId = req.user?.userId || req.user?.id;
+    return this.paymentsService.getConnectStatus(userId);
+  }
+
+  @Post('connect/onboard')
+  @UseGuards(JwtAuthGuard)
+  async createOnboardingLink(@Req() req) {
+    const userId = req.user?.userId || req.user?.id;
+    return this.paymentsService.createOnboardingLink(userId);
+  }
+
+  // ---- Admin manual payout queue -----------------------------------------
+
+  @Get('admin/payouts/pending')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async listPendingPayouts() {
+    return this.paymentsService.listPendingPayouts();
+  }
+
+  @Post('admin/payouts/:id/approve')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async approvePayout(@Param('id') id: string) {
+    return this.paymentsService.approvePayout(id);
+  }
+
+  @Post('admin/payouts/:id/reject')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async rejectPayout(@Param('id') id: string, @Body() body: { reason?: string }) {
+    return this.paymentsService.rejectPayout(id, body?.reason);
+  }
 
   @Get('payouts')
   @UseGuards(JwtAuthGuard)

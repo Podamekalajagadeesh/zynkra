@@ -266,6 +266,14 @@ export class User {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   walletBalance: number;
 
+  /** Stripe Connect (Express) account used to pay out creator earnings. */
+  @Column({ type: 'varchar', nullable: true })
+  stripeConnectAccountId: string | null;
+
+  /** True once Stripe onboarding is complete and the account can receive transfers. */
+  @Column({ type: 'boolean', default: false })
+  payoutsEnabled: boolean;
+
   @Column({ type: 'varchar', length: 50, nullable: true, unique: true })
   username: string | null;
 

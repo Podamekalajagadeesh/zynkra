@@ -64,6 +64,12 @@ export class WalletController {
     return this.walletService.getBalance(req.user.userId);
   }
 
+  @Get('ledger')
+  getLedger(@Req() req, @Query('limit') limit?: string) {
+    const parsed = limit ? Math.min(Math.max(parseInt(limit, 10) || 0, 1), 500) : 100;
+    return this.walletService.getLedger(req.user.userId, parsed);
+  }
+
   @Get('nfts/:walletAddress')
   getNfts(@Param('walletAddress') walletAddress: string) {
     return this.walletService.getNfts(walletAddress);

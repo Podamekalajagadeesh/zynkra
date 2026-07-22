@@ -4,15 +4,25 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { verifyMessage } from 'ethers';
 import { User } from '../users/entities/user.entity';
+import { LedgerEntry, LedgerEntryType } from './entities/ledger-entry.entity';
 import { HttpService } from '@nestjs/axios';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
 import { firstValueFrom } from 'rxjs';
 
 export interface WalletBalanceSummary {
   walletBalance: number;
+}
+
+/** Optional tagging for a ledger movement so callers can classify entries. */
+export interface WalletMovementOptions {
+  purpose?: string;
+  type?: LedgerEntryType;
+  reference?: string | null;
+  currency?: string;
+  metadata?: Record<string, any>;
 }
 
 type AlchemyNftResponse = {
@@ -27,6 +37,9 @@ export class WalletService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(LedgerEntry)
+    private readonly ledgerRepository: Repository<LedgerEntry>,
+    private readonly dataSource: DataSource,
     private readonly httpService: HttpService,
   ) {}
 
@@ -109,30 +122,85 @@ export class WalletService {
     };
   }
 
-  async credit(userId: string, amount: number, metadata?: Record<string, any>): Promise<WalletBalanceSummary> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    const currentBalance = Number(user.walletBalance ?? 0);
-    user.walletBalance = currentBalance + Number(amount);
-    await this.usersRepository.save(user);
-
-    return { walletBalance: Number(user.walletBalance ?? 0) };
+  async credit(
+    userId: string,
+    amount: number,
+    options: WalletMovementOptions = {},
+  ): Promise<WalletBalanceSummary> {
+    return this.applyMovement(userId, Number(amount), {
+      type: options.type ?? 'earning',
+      ...options,
+    });
   }
 
-  async debit(userId: string, amount: number, metadata?: Record<string, any>): Promise<WalletBalanceSummary> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+  async debit(
+    userId: string,
+    amount: number,
+    options: WalletMovementOptions = {},
+  ): Promise<WalletBalanceSummary> {
+    return this.applyMovement(userId, -Math.abs(Number(amount)), {
+      type: options.type ?? 'payout',
+      ...options,
+    });
+  }
+
+  /**
+   * Atomically move `delta` (signed) against a user's balance and record a
+   * matching ledger entry in the same transaction. A pessimistic row lock on
+   * the user prevents concurrent movements (e.g. two payout requests) from
+   * racing the balance. A debit that would overdraw the balance throws — it is
+   * never silently capped, which previously let a payout record more than it
+   * actually debited.
+   */
+  private async applyMovement(
+    userId: string,
+    delta: number,
+    options: WalletMovementOptions,
+  ): Promise<WalletBalanceSummary> {
+    if (!Number.isFinite(delta)) {
+      throw new BadRequestException('Invalid wallet movement amount');
     }
 
-    const currentBalance = Number(user.walletBalance ?? 0);
-    user.walletBalance = Math.max(0, currentBalance - Number(amount));
-    await this.usersRepository.save(user);
+    return this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
 
-    return { walletBalance: Number(user.walletBalance ?? 0) };
+      const currentBalance = Number(user.walletBalance ?? 0);
+      const nextBalance = currentBalance + delta;
+      if (nextBalance < 0) {
+        throw new BadRequestException('Insufficient balance');
+      }
+
+      user.walletBalance = nextBalance;
+      await manager.save(User, user);
+
+      const entry = manager.create(LedgerEntry, {
+        user: { id: userId } as User,
+        type: options.type ?? (delta >= 0 ? 'earning' : 'payout'),
+        amount: delta,
+        balanceAfter: nextBalance,
+        currency: options.currency ?? 'usd',
+        reference: options.reference ?? null,
+        purpose: options.purpose ?? null,
+        metadata: options.metadata ?? null,
+      });
+      await manager.save(LedgerEntry, entry);
+
+      return { walletBalance: nextBalance };
+    });
+  }
+
+  async getLedger(userId: string, limit = 100): Promise<LedgerEntry[]> {
+    return this.ledgerRepository.find({
+      where: { user: { id: userId } as User },
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
   }
 
   async getNfts(walletAddress: string) {

@@ -395,7 +395,9 @@ export const getProfile = async () => {
   }
   const postsResponse = await api.get(`/users/${profile.id}/posts`);
   profile.posts = postsResponse.data;
-  profile.featuredPosts = postsResponse.data.filter(p => p.isFeatured);
+  profile.featuredPosts = postsResponse.data.filter(
+    (p: { isFeatured?: boolean }) => p.isFeatured,
+  );
   return profile;
 };
 
@@ -410,7 +412,9 @@ export const getUserProfile = async (
   const profile = normalizeUserProfile(response.data);
   const postsResponse = await api.get(`/users/${userId}/posts`);
   profile.posts = postsResponse.data;
-  profile.featuredPosts = postsResponse.data.filter(p => p.isFeatured);
+  profile.featuredPosts = postsResponse.data.filter(
+    (p: { isFeatured?: boolean }) => p.isFeatured,
+  );
   return profile;
 };
 
@@ -643,11 +647,12 @@ export const createPost = async (
 
       let captionsDataUrl: string | undefined;
       if (mediaFile.captionsFile) {
+        const captionsFile = mediaFile.captionsFile;
         captionsDataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = () => reject(new Error('Failed to read caption file'));
-          reader.readAsDataURL(mediaFile.captionsFile);
+          reader.readAsDataURL(captionsFile);
         });
       }
 
@@ -2092,5 +2097,99 @@ export const uploadProfilePicture = async (file: File) => {
     },
   });
 
+  return response.data;
+};
+// ---- Earnings: wallet balance, ledger, payouts & Stripe Connect --------------
+
+export interface WalletBalance {
+  walletBalance: number;
+}
+
+export type LedgerEntryType =
+  | 'earning'
+  | 'payout'
+  | 'payout_reversal'
+  | 'adjustment';
+
+export interface LedgerEntry {
+  id: string;
+  type: LedgerEntryType;
+  amount: number;
+  balanceAfter: number;
+  currency: string;
+  reference: string | null;
+  purpose: string | null;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+}
+
+export type PayoutStatus =
+  | 'pending'
+  | 'processing'
+  | 'paid'
+  | 'rejected'
+  | 'failed';
+
+export interface Payout {
+  id: string;
+  amount: number;
+  currency: string;
+  status: PayoutStatus;
+  purpose: string | null;
+  payoutId: string | null;
+  failureReason: string | null;
+  processedAt: string | null;
+  createdAt: string;
+}
+
+export interface ConnectStatus {
+  enabled: boolean;
+  mode: 'manual' | 'stripe';
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  hasAccount?: boolean;
+}
+
+export interface PayoutResult {
+  success: boolean;
+  status: PayoutStatus;
+  amount: number;
+  currency: string;
+  payoutId: string | null;
+  failureReason?: string | null;
+  mode?: 'manual' | 'stripe';
+}
+
+export const getWalletBalance = async (): Promise<WalletBalance> => {
+  const response = await api.get('/wallet/balance');
+  return response.data;
+};
+
+export const getWalletLedger = async (limit = 100): Promise<LedgerEntry[]> => {
+  const response = await api.get(`/wallet/ledger?limit=${limit}`);
+  return response.data;
+};
+
+export const getConnectStatus = async (): Promise<ConnectStatus> => {
+  const response = await api.get('/payments/connect/status');
+  return response.data;
+};
+
+/** Returns a Stripe-hosted onboarding URL the caller should redirect to. */
+export const createConnectOnboarding = async (): Promise<{ url: string }> => {
+  const response = await api.post('/payments/connect/onboard');
+  return response.data;
+};
+
+export const getMyPayouts = async (): Promise<Payout[]> => {
+  const response = await api.get('/payments/payouts');
+  return response.data;
+};
+
+export const requestPayout = async (
+  amount: number,
+  purpose = 'creator-payout',
+): Promise<PayoutResult> => {
+  const response = await api.post('/payments/payouts/request', { amount, purpose });
   return response.data;
 };
