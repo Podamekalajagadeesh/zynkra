@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface PageShellProps {
   eyebrow?: string;
-  title: string;
+  title?: string;
   description?: string;
   action?: ReactNode;
   children: ReactNode;
@@ -39,9 +39,11 @@ export function PageShell({
               </p>
             )}
             <div className="space-y-2">
-              <h1 className="font-display text-3xl font-semibold tracking-tight text-dark-900 dark:text-white sm:text-4xl">
-                {title}
-              </h1>
+              {title && (
+                <h1 className="font-display text-3xl font-semibold tracking-tight text-dark-900 dark:text-white sm:text-4xl">
+                  {title}
+                </h1>
+              )}
               {description && (
                 <p className="max-w-2xl text-sm leading-6 text-dark-600 dark:text-dark-300 sm:text-base">
                   {description}
