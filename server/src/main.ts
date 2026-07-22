@@ -25,12 +25,36 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   const configService = app.get(ConfigService);
 
-  // Security headers. CSP and COEP are disabled: the server serves the SPA
-  // and user-uploaded media cross-origin (client dev server, mobile app).
+  const clientUrl = configService.get<string>('CLIENT_URL') || 'http://127.0.0.1:5173';
+  const devOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:8081', // For mobile app development
+    'http://127.0.0.1:8081',
+  ];
+  const allowedOrigins = [...new Set([clientUrl, ...devOrigins].filter(Boolean))];
+
+  // Security headers. CSP is configured to allow resources from the server
+  // itself ('self') and the configured client applications. COEP is set to
+  // 'credentialless' as a safer default than 'disabled', which helps
+  // mitigate some cross-origin attacks without the strictness of 'require-corp'.
   app.use(
     helmet({
-      contentSecurityPolicy: false,
-      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          scriptSrc: [`'self'`, ...allowedOrigins],
+          // 'unsafe-inline' is needed for some libraries. A long-term fix would be to remove it.
+          styleSrc: [`'self'`, `'unsafe-inline'`, ...allowedOrigins],
+          imgSrc: [`'self'`, 'data:', ...allowedOrigins],
+          connectSrc: [`'self'`, ...allowedOrigins],
+          fontSrc: [`'self'`, ...allowedOrigins],
+          objectSrc: [`'none'`],
+          frameSrc: [`'self'`, ...allowedOrigins],
+          upgradeInsecureRequests: [],
+        },
+      },
+      crossOriginEmbedderPolicy: { policy: 'credentialless' },
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
@@ -38,15 +62,6 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
-
-  const clientUrl = configService.get<string>('CLIENT_URL') || 'http://127.0.0.1:5173';
-  const allowedOrigins = [
-    clientUrl,
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:8081',
-    'http://127.0.0.1:8081',
-  ].filter(Boolean);
 
   app.enableCors({
     origin: allowedOrigins,
