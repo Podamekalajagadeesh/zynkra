@@ -14,7 +14,17 @@
       "Bash(npx tsc *)",
       "Bash(git -C /d/zynkra diff --stat)",
       "Bash(git *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cmd //c \"dir /b D:\\\\zynkra\")",
+      "Bash(/usr/bin/ls *)",
+      "Bash(/usr/bin/head -100)",
+      "Bash(/usr/bin/find D:/zynkra/client/src -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.css\")",
+      "Bash(/usr/bin/wc -l)",
+      "Read(//d/Program Files/**)",
+      "Read(//c/Users/podam/AppData/Roaming/**)",
+      "Bash(/usr/bin/python --version)",
+      "Bash(/usr/bin/python3 --version)",
+      "Bash(py --version)"
     ]
   }
 }
