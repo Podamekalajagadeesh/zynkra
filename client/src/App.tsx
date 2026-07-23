@@ -25,7 +25,6 @@ import { useToast } from './contexts/ToastContext';
 import { CartProvider } from './contexts/CartContext';
 import { useAppPreferences } from './contexts/PreferencesContext';
 import AIChatbotWidget from './components/ai-chatbot/AIChatbotWidget';
-import { AIConsciousCompanion } from './components/ai-companion';
 import { useScreenTimeTracker } from './hooks/useScreenTimeTracker';
 import { DeviceModeRoute } from './components/DeviceModeRoute';
 
@@ -47,9 +46,6 @@ const EmailVerificationPage = lazy(() =>
 );
 const GroupsPage = lazy(() =>
   import('./pages/groups').then(module => ({ default: module.GroupsPage }))
-);
-const CommunitiesPage = lazy(() =>
-  import('./pages/communities').then(module => ({ default: module.CommunitiesPage }))
 );
 const CulturalPreservationCommunitiesPage = lazy(() =>
   import('./components/cultural-preservation-communities/CulturalPreservationCommunities').then((module) => ({ default: module.CulturalPreservationCommunities }))
@@ -95,9 +91,7 @@ const ConnectedAccountsPage = lazy(() => import('./pages/ConnectedAccountsPage')
 const LiveStreamPage = lazy(() => import('./pages/livestream').then((module) => ({ default: module.LiveStreamPage })));
 const AnalyticsPage = lazy(() => import('./pages/analytics').then((module) => ({ default: module.AnalyticsPage })));
 const SchedulerPage = lazy(() => import('./pages/scheduler').then((module) => ({ default: module.SchedulerPage })));
-const DaoPage = lazy(() => import('./pages/dao').then((module) => ({ default: module.DaoPage })));
 const CreatorTiersPage = lazy(() => import('./pages/creator-tiers').then((module) => ({ default: module.default })));
-const TokenGatedPage = lazy(() => import('./pages/token-gated').then((module) => ({ default: module.default })));
 const BlockedUsersPage = lazy(() => import('./pages/blocked-users').then((module) => ({ default: module.BlockedUsersPage })));
 const BookmarkedPostsPage = lazy(() => import('./pages/BookmarkedPostsPage').then((module) => ({ default: module.BookmarkedPostsPage })));
 const SessionsPage = lazy(() => import('./pages/SessionsPage').then((module) => ({ default: module.SessionsPage })));
@@ -112,7 +106,6 @@ const OpenSourcePlatformPage = lazy(() => import('./pages/opensource/OpenSourceP
 const DigitalAssetsPage = lazy(() => import('./pages/digital-assets/DigitalAssetsPage').then((module) => ({ default: module.default })));
 const CreateListingPage = lazy(() => import('./pages/marketplace/CreateListingPage').then((module) => ({ default: module.CreateListingPage })));
 const SellerDashboardPage = lazy(() => import('./pages/marketplace/SellerDashboardPage').then((module) => ({ default: module.SellerDashboardPage })));
-const FullSensoryMetaversePage = lazy(() => import('./components/FullSensoryMetaverseDashboard').then((module) => ({ default: module.FullSensoryMetaverseDashboard })));
 const CreateProductPage = lazy(() => import('./pages/marketplace/CreateProductPage').then((module) => ({ default: module.CreateProductPage })));
 const EditProductPage = lazy(() => import('./pages/marketplace/EditProductPage').then((module) => ({ default: module.EditProductPage })));
 const ProductDetailPage = lazy(() => import('./pages/marketplace/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })));
@@ -125,17 +118,12 @@ const WatchLaterPage = lazy(() => import('./pages/watch').then((module) => ({ de
 const ReadLaterPage = lazy(() => import('./pages/read-later').then((module) => ({ default: module.default })));
 const MemoriesPage = lazy(() => import('./pages/memories').then((module) => ({ default: module.default })));
 const FundraisersDiscoveryPage = lazy(() => import('./pages/fundraisers/discover').then((module) => ({ default: module.default })));
-const SnapMapPage = lazy(() => import('./components/snapmap/SnapMapPage').then((module) => ({ default: module.SnapMapPage })));
 const FundraiserPage = lazy(() => import('./pages/fundraisers/id').then((module) => ({ default: module.default })));
 const CreateFundraiserPage = lazy(() => import('./pages/fundraisers/create').then((module) => ({ default: module.default })));
 const DatingOnboardingPage = lazy(() => import('./pages/dating/onboarding').then((module) => ({ default: module.default })));
 const DatingDiscoveryPage = lazy(() => import('./pages/dating/discover').then((module) => ({ default: module.default })));
 const DatingMatchesPage = lazy(() => import('./pages/dating/matches').then((module) => ({ default: module.default })));
 const DatingCrushPage = lazy(() => import('./pages/dating/crush').then((module) => ({ default: module.default })));
-const AdAudiencesPage = lazy(() => import('./pages/ad-audiences').then((module) => ({ default: module.AdAudiencesPage })));
-const AdsManagerPage = lazy(() => import('./pages/ads/AdsManagerPage').then((module) => ({ default: module.AdsManagerPage })));
-const CampaignDetailsPage = lazy(() => import('./pages/ads/CampaignDetailsPage').then((module) => ({ default: module.default })));
-const AdSetDetailsPage = lazy(() => import('./pages/ads/AdSetDetailsPage').then((module) => ({ default: module.default })));
 const AffiliateDashboardPage = lazy(() => import('./pages/affiliates/AffiliateDashboardPage').then((module) => ({ default: module.AffiliateDashboardPage })));
 const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/BrandCollabsDashboardPage').then((module) => ({ default: module.BrandCollabsDashboardPage })));
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
@@ -153,10 +141,8 @@ const PageInboxPage = lazy(() => import('./components/PageInbox/PageInboxPage').
 const TimelineReviewPage = lazy(() => import('./pages/timeline-review').then((module) => ({ default: module.default })));
 const TimelineReviewSettingsPage = lazy(() => import('./pages/timeline-review/settings').then((module) => ({ default: module.default })));
 const ExplorePage = lazy(() => import('./pages/explore').then((module) => ({ default: module.default })));
-const DigitalTwinPage = lazy(() => import('./pages/digital-twin').then((module) => ({ default: module.default })));
 const EInkReaderPage = lazy(() => import('./pages/eink-reader').then((module) => ({ default: module.EInkReaderPage })));
 const AdvancedFeaturesPage = lazy(() => import('./pages/advanced-features').then((module) => ({ default: module.AdvancedFeaturesPage })));
-const AdvancedVisionPage = lazy(() => import('./pages/advanced-vision').then((module) => ({ default: module.AdvancedVisionPage })));
 
 
 function RouteLoader() {
@@ -199,19 +185,14 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
     items: [
       { to: '/local-feed', label: 'Local Feed', icon: MapPin },
       { to: '/fitness-segments', label: 'Fitness Segments', icon: Compass },
-      { to: '/snapmap', label: 'Snap Map', icon: MapPin },
       { to: '/dating/discover', label: 'Dating', icon: UserPlus },
-      { to: '/metaverse', label: 'Metaverse', icon: Globe },
       { to: '/digital-assets', label: 'Digital Assets', icon: Globe },
-      { to: '/digital-twin', label: 'Digital Twin', icon: Bot },
-      { to: '/advanced-vision', label: 'Vision', icon: Compass },
       { to: '/devices', label: 'Devices', icon: Bot },
     ],
   },
   {
     title: 'Communities',
     items: [
-      { to: '/communities', label: 'Forums', icon: MessageSquare },
       { to: '/cultural-preservation-communities', label: 'Cultural Preservation', icon: Building2 },
       { to: '/skill-sharing', label: 'Skill Sharing', icon: Users },
       { to: '/crisis-response-communities', label: 'Crisis Response', icon: HandHeart },
@@ -234,8 +215,6 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
       { to: '/earnings', label: 'Earnings & Payouts', icon: Coins },
       { to: '/scheduler', label: 'Content Scheduler', icon: CalendarDays },
       { to: '/livestream/schedule', label: 'Schedule Stream', icon: Calendar },
-      { to: '/ads', label: 'Ads Manager', icon: Megaphone },
-      { to: '/ads/audiences', label: 'Ad Audiences', icon: Megaphone },
       { to: '/nonprofit', label: 'Nonprofit Tools', icon: Building2 },
       { to: '/timeline-review', label: 'Timeline Review', icon: Clock },
     ],
@@ -790,7 +769,6 @@ function App() {
                     <Route path="/privacy/shortcuts" element={<PrivacyShortcutsPage />} />
                     <Route path="/search" element={<SearchResultsPage />} />
                     <Route path="/devices" element={<DeviceModeRoute />} />
-                    <Route path="/advanced-vision" element={<ProtectedRoute><AdvancedVisionPage /></ProtectedRoute>} />
                     <Route path="/eink-reader" element={<ProtectedRoute><EInkReaderPage /></ProtectedRoute>} />
                     <Route path="/advanced-features" element={<ProtectedRoute><AdvancedFeaturesPage /></ProtectedRoute>} />
                     <Route path="/hashtag/:hashtag" element={<HashtagPage />} />
@@ -798,7 +776,6 @@ function App() {
                     <Route path="/events/:id" element={<EventPage />} />
                     <Route path="/liveshopping" element={<LiveShoppingEventsPage />} />
                     <Route path="/liveshopping/:id" element={<LiveShoppingPage />} />
-                    <Route path="/snapmap" element={<SnapMapPage />} />
                     <Route path="/reels" element={<ReelsPage />} />
                     <Route path="/marketplace" element={<MarketplacePage />} />
                     <Route path="/marketplace/new" element={<CreateListingPage />} />
@@ -811,15 +788,9 @@ function App() {
                     <Route path="/marketplace/orders" element={<OrdersPage />} />
                     <Route path="/marketplace/saved" element={<SavedMarketplaceListingsPage />} />
                     <Route path="/explore" element={<ExplorePage />} />
-                    <Route path="/metaverse" element={<FullSensoryMetaversePage />} />
                     <Route path="/digital-assets" element={
                       <ProtectedRoute>
                         <DigitalAssetsPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/digital-twin" element={
-                      <ProtectedRoute>
-                        <DigitalTwinPage />
                       </ProtectedRoute>
                     } />
                     <Route path="/watch-later" element={<WatchLaterPage />} />
@@ -832,10 +803,6 @@ function App() {
                     <Route path="/dating/discover" element={<DatingDiscoveryPage />} />
                     <Route path="/dating/matches" element={<DatingMatchesPage />} />
                     <Route path="/dating/crush" element={<DatingCrushPage />} />
-                    <Route path="/ads/audiences" element={<AdAudiencesPage />} />
-                    <Route path="/ads" element={<AdsManagerPage />} />
-                    <Route path="/ads/campaigns/:id" element={<CampaignDetailsPage />} />
-                    <Route path="/ads/adsets/:id" element={<AdSetDetailsPage />} />
                     <Route path="/affiliates" element={<AffiliateDashboardPage />} />
                     <Route
                       path="/brand-collabs"
@@ -914,14 +881,6 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <GroupsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/communities"
-                      element={
-                        <ProtectedRoute>
-                          <CommunitiesPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1142,14 +1101,6 @@ function App() {
                       }
                     />
                     <Route
-                      path="/dao"
-                      element={
-                        <ProtectedRoute>
-                          <DaoPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
                       path="/opensource"
                       element={
                         <ProtectedRoute>
@@ -1162,14 +1113,6 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <CreatorTiersPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/token-gated"
-                      element={
-                        <ProtectedRoute>
-                          <TokenGatedPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1307,7 +1250,7 @@ function ProfileDropdown({ isOpen }: { isOpen: boolean }) {
           Log out @{activeAccount?.user.username}
         </button>
       </div>
-    </div><AIChatbotWidget /><AIConsciousCompanion /></>
+    </div><AIChatbotWidget /></>
   );
 }
 

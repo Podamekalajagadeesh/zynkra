@@ -7,7 +7,7 @@ import { PageShell } from '../PageShell';
 import { CreateGroupDm } from './CreateGroupDm';
 import { Conversation } from './ConversationList';
 import { getProfile, getPosts } from '../../lib/api';
-import { PostAuthor, Message } from '../../lib/types';
+import { Post, PostAuthor, Message } from '../../lib/types';
 import { NotesBar } from '../notes/NotesBar';
 
 export const DmsPage = () => {
@@ -22,7 +22,7 @@ export const DmsPage = () => {
   useEffect(() => {
     // A bit of a hack to get some users to select from.
     // In a real app, you'd probably have a dedicated user search endpoint.
-    getPosts().then((posts) => {
+    getPosts().then((posts: Post[]) => {
       const users = posts.map((p) => p.user);
       const uniqueUsers = Array.from(new Set(users.map((u) => u.id))).map(
         (id) => {
@@ -71,7 +71,7 @@ export const DmsPage = () => {
             </button>
             {showCreateGroup && (
               <CreateGroupDm
-                users={users as User[]}
+                users={users}
                 onGroupCreated={handleGroupCreated}
               />
             )}

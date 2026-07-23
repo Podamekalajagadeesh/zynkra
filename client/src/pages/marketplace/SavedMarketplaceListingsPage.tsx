@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getSavedMarketplaceListings } from '../../lib/api';
+import { MarketplaceListing } from '../../lib/types';
 import { PageShell } from '../../components/PageShell';
 
 export function SavedMarketplaceListingsPage() {
-  const [listings, setListings] = useState([]);
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
 
   useEffect(() => {
     getSavedMarketplaceListings().then((savedListings) => {

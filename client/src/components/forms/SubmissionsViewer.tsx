@@ -3,7 +3,19 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
-const fetchSubmissions = async (id) => {
+interface SubmissionAnswer {
+  id: string;
+  value: string;
+  question: { label: string };
+}
+
+interface FormSubmission {
+  id: string;
+  submittedAt: string;
+  answers: SubmissionAnswer[];
+}
+
+const fetchSubmissions = async (id: string | undefined): Promise<FormSubmission[]> => {
   const res = await fetch(`/api/forms/${id}/submissions`);
   if (!res.ok) {
     throw new Error('Network response was not ok');
@@ -14,7 +26,10 @@ const fetchSubmissions = async (id) => {
 export const SubmissionsViewer = () => {
   const { id } = useParams();
 
-  const { data: submissions, isLoading, error } = useQuery(['submissions', id], () => fetchSubmissions(id));
+  const { data: submissions, isLoading, error } = useQuery({
+    queryKey: ['submissions', id],
+    queryFn: () => fetchSubmissions(id),
+  });
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>An error has occurred: {error.message}</div>;
@@ -22,7 +37,7 @@ export const SubmissionsViewer = () => {
   return (
     <div>
       <h2>Form Submissions</h2>
-      {submissions.map((submission) => (
+      {submissions?.map((submission) => (
         <div key={submission.id}>
           <p>Submitted at: {new Date(submission.submittedAt).toLocaleString()}</p>
           <ul>

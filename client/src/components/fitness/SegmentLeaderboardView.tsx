@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { Avatar } from '../avatar';
+import { Avatar } from '../Avatar';
 import { Clock, Timer, Award } from 'lucide-react';
 import { SegmentLeaderboard, SegmentLeaderboardEntry } from '../../lib/types';
 

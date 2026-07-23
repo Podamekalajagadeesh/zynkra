@@ -23,11 +23,20 @@ export function ConversationPage() {
     isMuted,
     isVideoEnabled,
     isCallActive,
+    isScreenSharing,
+    isRecording: isCallRecording,
+    isBackgroundBlurEnabled,
+    participants,
     localVideoRef,
     remoteVideoRef,
     startCall,
     toggleMute,
     toggleVideo,
+    toggleBackgroundBlur,
+    startScreenShare,
+    stopScreenShare,
+    startCallRecording,
+    stopCallRecording,
     endCall,
   } = useWebRTC(id!);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,7 +60,7 @@ export function ConversationPage() {
         .catch((err) => console.error('Failed to fetch messages:', err))
         .finally(() => setLoading(false));
       getConversations().then((convs) => {
-        const currentConv = convs.find((c) => c.id === id);
+        const currentConv = convs.find((c: ConversationType) => c.id === id);
         if (currentConv) {
           setConversation(currentConv);
           setVanishModeState(currentConv.vanishMode);
@@ -277,7 +286,7 @@ export function ConversationPage() {
                 onCheckedChange={handleToggleVanishMode}
               />
             </div>
-            <Button onClick={startCall} size="icon" variant="outline">
+            <Button onClick={() => startCall()} size="icon" variant="outline">
               <Video />
             </Button>
           </div>
@@ -406,8 +415,17 @@ export function ConversationPage() {
         onClose={endCall}
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
+        onToggleBackgroundBlur={toggleBackgroundBlur}
+        onStartScreenShare={startScreenShare}
+        onStopScreenShare={stopScreenShare}
+        onStartRecording={startCallRecording}
+        onStopRecording={stopCallRecording}
         isMuted={isMuted}
         isVideoEnabled={isVideoEnabled}
+        isScreenSharing={isScreenSharing}
+        isRecording={isCallRecording}
+        isBackgroundBlurEnabled={isBackgroundBlurEnabled}
+        participants={participants}
         localVideoRef={localVideoRef}
         remoteVideoRef={remoteVideoRef}
       />

@@ -134,7 +134,10 @@ export function OpenSourcePlatformPage() {
   };
 
   const canModify = (contribution: Contribution) => {
-    return activeAccount?.id === contribution.authorId || activeAccount?.isAdmin;
+    return (
+      activeAccount?.user?.id === contribution.authorId ||
+      (activeAccount?.user as { isAdmin?: boolean } | undefined)?.isAdmin
+    );
   };
 
   if (loading) {
@@ -185,8 +188,8 @@ export function OpenSourcePlatformPage() {
                   <label className="text-sm font-medium mb-1 block">Type *</label>
                   <Select
                     value={newContribution.type}
-                    onValueChange={(value: ContributionType) => 
-                      setNewContribution({ ...newContribution, type: value })
+                    onValueChange={(value: string) =>
+                      setNewContribution({ ...newContribution, type: value as ContributionType })
                     }
                   >
                     <SelectTrigger>

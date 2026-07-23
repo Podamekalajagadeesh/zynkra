@@ -29,7 +29,6 @@ import {
 } from '../components/ui/tabs';
 
 const WebAuthn = lazy(() => import('../components/WebAuthn'));
-const BrainwaveAuth = lazy(() => import('../components/BrainwaveAuth'));
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -307,7 +306,6 @@ export function LoginPage() {
           <TabsTrigger value="password">Password</TabsTrigger>
           <TabsTrigger value="recovery">Recovery</TabsTrigger>
           <TabsTrigger value="passkey">Passkey</TabsTrigger>
-          <TabsTrigger value="brainwave">Neural</TabsTrigger>
           <TabsTrigger value="wallet">Wallet</TabsTrigger>
         </TabsList>
         <TabsContent value="password">
@@ -498,56 +496,6 @@ export function LoginPage() {
               >
                 Sign in with Passkey
               </WebAuthn>
-            </Suspense>
-          </div>
-        </TabsContent>
-        <TabsContent value="brainwave">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="brainwave-email">Email</Label>
-              <Input
-                id="brainwave-email"
-                type="email"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                required
-                placeholder="Enter email to authenticate with your brainwave pattern"
-              />
-            </div>
-            <div className="rounded-lg bg-primary-50 dark:bg-primary-950/30 p-3 border border-primary-200 dark:border-primary-900">
-              <p className="text-xs text-primary-700 dark:text-primary-300">
-                🧠 Neural authentication uses your unique brainwave pattern for unhackable account security. 
-                Ensure your NeuralSync Pro headset is connected and you're in a quiet environment.
-              </p>
-            </div>
-            <Suspense
-              fallback={
-                <Button className="w-full" variant="outline" disabled>
-                  Loading neural authentication...
-                </Button>
-              }
-            >
-              <BrainwaveAuth
-                mode="login"
-                email={identifier}
-                onSuccess={async (data) => {
-                  if ('access_token' in data) {
-                    setAuthToken(data.access_token);
-                    const user = await getProfile();
-                    addAccount({ user, token: data.access_token });
-                    addToast('Logged in with brainwave authentication!', 'success');
-                    navigate('/');
-                  }
-                }}
-                onError={(err) => {
-                  setError(err);
-                  addToast(err, 'error');
-                }}
-                className="w-full"
-                variant="outline"
-              >
-                Sign in with Brainwave
-              </BrainwaveAuth>
             </Suspense>
           </div>
         </TabsContent>

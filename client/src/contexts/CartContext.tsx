@@ -1,8 +1,14 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, ReactNode, Dispatch } from 'react';
+import { CartState, CartAction } from '../lib/types';
 
-const CartContext = createContext();
+interface CartContextValue {
+  state: CartState;
+  dispatch: Dispatch<CartAction>;
+}
 
-const cartReducer = (state, action) => {
+const CartContext = createContext<CartContextValue | undefined>(undefined);
+
+const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM':
       // Add logic to handle adding items, including checking for existing items
@@ -16,7 +22,7 @@ const cartReducer = (state, action) => {
   }
 };
 
-export const CartProvider = ({ children }) => {
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
   return (
@@ -26,4 +32,10 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = (): CartContextValue => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};

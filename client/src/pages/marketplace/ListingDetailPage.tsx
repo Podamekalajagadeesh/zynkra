@@ -8,10 +8,11 @@ import {
 } from '../../lib/api';
 import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
+import { MarketplaceListing } from '../../lib/types';
 
 export function ListingDetailPage() {
   const { id } = useParams();
-  const [listing, setListing] = useState(null);
+  const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export function ListingDetailPage() {
   }, [id]);
 
   const handleSave = async () => {
+    if (!id) return;
     if (isSaved) {
       await unsaveMarketplaceListing(id);
       setIsSaved(false);

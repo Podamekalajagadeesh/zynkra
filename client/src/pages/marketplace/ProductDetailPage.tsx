@@ -97,9 +97,9 @@ export function ProductDetailPage() {
                 id="variant"
                 name="variant"
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                onChange={(e) => setSelectedVariant(product.printOnDemandSettings.variants.find(v => `${v.size}-${v.color}` === e.target.value))}
+                onChange={(e) => setSelectedVariant(product.printOnDemandSettings.variants.find((v: any) => `${v.size}-${v.color}` === e.target.value))}
               >
-                {product.printOnDemandSettings.variants.map((variant, idx) => (
+                {product.printOnDemandSettings.variants.map((variant: any, idx: number) => (
                   <option key={idx} value={`${variant.size}-${variant.color}`}>
                     {variant.size} / {variant.color} - ${variant.price}
                   </option>
@@ -116,9 +116,9 @@ export function ProductDetailPage() {
                 id="variant"
                 name="variant"
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                onChange={(e) => setSelectedVariant(product.variants.find(v => v.id === e.target.value))}
+                onChange={(e) => setSelectedVariant(product.variants.find((v: any) => v.id === e.target.value))}
               >
-                {product.variants.map(variant => (
+                {product.variants.map((variant: any) => (
                   <option key={variant.id} value={variant.id}>{variant.name}</option>
                 ))}
               </select>

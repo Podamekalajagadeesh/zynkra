@@ -90,7 +90,7 @@ export default function MessageContent({ message }: MessageContentProps) {
                 <p>📍 {message.neuralMetadata.context.location.name}</p>
               )}
               {message.neuralMetadata.context.activity && (
-                <p>🏃 {message.neuralMetadata.context.context.activity}</p>
+                <p>🏃 {message.neuralMetadata.context.activity}</p>
               )}
             </div>
           )}

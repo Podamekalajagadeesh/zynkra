@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { Order } from '../../lib/types';
 import { PageShell } from '../../components/PageShell';
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     const fetchOrders = async () => {

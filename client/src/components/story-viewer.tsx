@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Story, UserProfile } from '../lib/types';
+import { Story, UserProfile, PostAuthor, ScreenshotProtectionSettings, StoryElement } from '../lib/types';
 import { X, Send, Crown, EyeOff, Users, Search } from 'lucide-react';
 import { Mention } from './Mention';
 import { Poll } from './poll';
@@ -66,11 +66,14 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   });
   
   // Apply screenshot protection if enabled for this story
-  const shouldApplyProtection = activeStory.user.screenshotProtection?.enabled && activeStory.user.screenshotProtection?.applyToStories;
-  
+  // `Story.user` is typed as the minimal `PostAuthor`; the API also returns
+  // screenshot-protection settings on it, so widen locally to read them.
+  const storyUser = activeStory.user as PostAuthor & { screenshotProtection?: ScreenshotProtectionSettings };
+  const shouldApplyProtection = storyUser.screenshotProtection?.enabled && storyUser.screenshotProtection?.applyToStories;
+
   const { protectionRef } = useScreenshotProtection({
     enabled: shouldApplyProtection,
-    level: (activeStory.user.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
+    level: (storyUser.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
     contentTitle: 'this story',
   });
 
@@ -150,7 +153,12 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   }
 
   const pollElement = activeStory.elements?.find((e) => e.type === 'poll');
-  const mentionElement = activeStory.elements?.find((e) => e.type === 'mention');
+  // The shared `StoryElement` type does not model 'mention' elements, but the
+  // API returns them with a `username` field. Widen locally to read them.
+  type MentionElement = Omit<StoryElement, 'type' | 'data'> & { type: 'mention'; data: { username: string } };
+  const mentionElement = (activeStory.elements as Array<StoryElement | MentionElement> | undefined)?.find(
+    (e): e is MentionElement => e.type === 'mention'
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>

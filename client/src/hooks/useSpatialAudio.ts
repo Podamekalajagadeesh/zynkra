@@ -22,6 +22,7 @@ export const useSpatialAudio = () => {
     setEnabled: spatialAudioService.setEnabled.bind(spatialAudioService),
     updateListenerPosition: spatialAudioService.updateListenerPosition.bind(spatialAudioService),
     setParticipantPosition: spatialAudioService.setParticipantPosition.bind(spatialAudioService),
+    getAllParticipantPositions: spatialAudioService.getAllParticipantPositions.bind(spatialAudioService),
     animateParticipantToPosition: spatialAudioService.animateParticipantToPosition.bind(spatialAudioService),
     arrangeParticipantsInCircle: spatialAudioService.arrangeParticipantsInCircle.bind(spatialAudioService),
     arrangeParticipantsInTheater: spatialAudioService.arrangeParticipantsInTheater.bind(spatialAudioService),

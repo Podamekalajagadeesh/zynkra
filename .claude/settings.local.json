@@ -24,7 +24,10 @@
       "Read(//c/Users/podam/AppData/Roaming/**)",
       "Bash(/usr/bin/python --version)",
       "Bash(/usr/bin/python3 --version)",
-      "Bash(py --version)"
+      "Bash(py --version)",
+      "Bash(ls -la /tmp/)",
+      "Read(//root/.claude/projects/-tmp/memory/**)",
+      "Bash(grep -ri \"zynkra\" /tmp/)"
     ]
   }
 }

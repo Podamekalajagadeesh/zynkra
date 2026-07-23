@@ -6,14 +6,15 @@ interface AvatarProps {
   className?: string;
   size?: number;
   user?: Partial<UserProfile> | null;
+  userId?: string;
   src?: string;
   alt?: string;
   name?: string;
 }
 
-export function Avatar({ className, size = 40, user, src, alt, name }: AvatarProps) {
+export function Avatar({ className, size = 40, user, userId, src, alt, name }: AvatarProps) {
   const { user: authUser } = useAuth();
-  const avatarUser = user ?? authUser;
+  const avatarUser = user ?? (userId ? { id: userId } : null) ?? authUser;
   const displayName = name || avatarUser?.displayName || avatarUser?.username || 'User';
 
   const isNft = avatarUser?.nftPfpUrl && avatarUser.nftPfpContractAddress && avatarUser.nftPfpTokenId;

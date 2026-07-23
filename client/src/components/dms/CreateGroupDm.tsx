@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { createConversation } from '../../lib/api';
-import { User } from '../../lib/types';
+import { PostAuthor } from '../../lib/types';
 
 interface CreateGroupDmProps {
-  users: User[];
+  users: PostAuthor[];
   onGroupCreated: () => void;
 }
 
@@ -24,7 +24,7 @@ export const CreateGroupDm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createConversation(selectedUserIds, groupName, true);
+    await createConversation(selectedUserIds, groupName);
     onGroupCreated();
   };
 

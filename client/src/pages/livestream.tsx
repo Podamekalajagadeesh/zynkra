@@ -10,7 +10,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { parseEther } from 'viem';
 import LiveStreamChat from '../components/LiveStreamChat';
 import SpatialAudioControls from '../components/SpatialAudioControls';
-import { Room, LocalVideoTrack, VideoPresets } from 'livekit-client';
+import { Room, LocalVideoTrack, RoomEvent, Track } from 'livekit-client';
 import { io } from 'socket.io-client';
 import { spatialAudioService } from '../services/spatialAudio';
 
@@ -96,13 +96,11 @@ export const LiveStreamPage = () => {
       });
 
       // Handle remote participants (guests)
-      newRoom.on('participant-connected', (participant) => {
-        participant.tracks.forEach(async (publication) => {
-          if (publication.track) {
-            const mediaStream = await publication.track.attach();
-            if (guestVideos.current[participant.identity]) {
-              guestVideos.current[participant.identity]!.srcObject = mediaStream;
-            }
+      newRoom.on(RoomEvent.ParticipantConnected, (participant) => {
+        participant.trackPublications.forEach((publication) => {
+          const el = guestVideos.current[participant.identity];
+          if (publication.track && el) {
+            publication.track.attach(el);
           }
         });
       });
@@ -206,7 +204,7 @@ export const LiveStreamPage = () => {
 
       // Add screen share track to LiveKit room
       if (room) {
-        const track = await LocalVideoTrack.createStreamTrack(screenStream.getVideoTracks()[0], VideoPresets.hd1080);
+        const track = new LocalVideoTrack(screenStream.getVideoTracks()[0]);
         await room.localParticipant.publishTrack(track);
       }
 
@@ -230,9 +228,10 @@ export const LiveStreamPage = () => {
 
     // Unpublish screen share track from LiveKit room
     if (room) {
-      room.localParticipant.tracks.forEach(publication => {
-        if (publication.track?.source === 'screen_share') {
-          room.localParticipant.unpublishTrack(publication.track);
+      room.localParticipant.trackPublications.forEach((publication) => {
+        const track = publication.track;
+        if (track && track.source === Track.Source.ScreenShare) {
+          room.localParticipant.unpublishTrack(track);
         }
       });
     }
@@ -284,6 +283,10 @@ export const LiveStreamPage = () => {
     }
     if (parseFloat(tipAmount) <= 0) {
       addToast('Please enter a valid tip amount', 'warning');
+      return;
+    }
+    if (!window.ethereum) {
+      addToast('No wallet provider found', 'error');
       return;
     }
 
@@ -341,7 +344,7 @@ export const LiveStreamPage = () => {
             )}
 
             <div className="flex flex-wrap gap-4 mt-6">
-              <Button onClick={handleStopStream} variant="danger">
+              <Button onClick={handleStopStream} variant="destructive">
                 Stop Stream
               </Button>
               {!isScreenSharing ? (
@@ -350,7 +353,7 @@ export const LiveStreamPage = () => {
                   Start Screen Share
                 </Button>
               ) : (
-                <Button onClick={handleStopScreenShare} variant="danger">
+                <Button onClick={handleStopScreenShare} variant="destructive">
                   <Monitor size={18} className="mr-2" />
                   Stop Screen Share
                 </Button>
@@ -437,7 +440,7 @@ export const LiveStreamPage = () => {
                 />
               </div>
               <div className="flex-1">
-                <LiveStreamChat streamId="zynkra-main-stream" userId={currentUser?.id} />
+                <LiveStreamChat streamId="zynkra-main-stream" userId={currentUser?.id ?? ''} />
               </div>
             </div>
           </>

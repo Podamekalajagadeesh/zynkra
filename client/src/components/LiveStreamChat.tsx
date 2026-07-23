@@ -1,8 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const LiveStreamChat = ({ streamId, userId }) => {
-  const [messages, setMessages] = useState([]);
+interface StreamComment {
+  id: string;
+  content: string;
+  user: { id: string; username: string };
+}
+
+interface LiveStreamChatProps {
+  streamId: string;
+  userId: string;
+}
+
+const LiveStreamChat = ({ streamId, userId }: LiveStreamChatProps) => {
+  const [messages, setMessages] = useState<StreamComment[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const socketRef = useRef<Socket | null>(null);
 
@@ -12,15 +23,15 @@ const LiveStreamChat = ({ streamId, userId }) => {
     socketRef.current.emit('join-room', streamId);
     socketRef.current.emit('get-comments', streamId);
 
-    socketRef.current.on('comments', (comments) => {
+    socketRef.current.on('comments', (comments: StreamComment[]) => {
       setMessages(comments);
     });
 
-    socketRef.current.on('new-comment', (comment) => {
+    socketRef.current.on('new-comment', (comment: StreamComment) => {
       setMessages((prevMessages) => [...prevMessages, comment]);
     });
 
-    socketRef.current.on('comment-deleted', (commentId) => {
+    socketRef.current.on('comment-deleted', (commentId: string) => {
       setMessages((prevMessages) =>
         prevMessages.filter((msg) => msg.id !== commentId)
       );
@@ -31,7 +42,7 @@ const LiveStreamChat = ({ streamId, userId }) => {
     };
   }, [streamId]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = (e: FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
       socketRef.current?.emit('new-comment', {
@@ -43,7 +54,7 @@ const LiveStreamChat = ({ streamId, userId }) => {
     }
   };
 
-  const handleDeleteMessage = (commentId) => {
+  const handleDeleteMessage = (commentId: string) => {
     socketRef.current?.emit('delete-comment', { commentId, userId });
   };
 

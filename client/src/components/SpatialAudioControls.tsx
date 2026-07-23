@@ -5,11 +5,10 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
 import { 
-  Volume2, 
-  VolumeX, 
-  Move3d, 
-  headphones, 
-  Settings, 
+  Volume2,
+  VolumeX,
+  Move3d,
+  Settings,
   MapPin,
   Volume,
   Zap

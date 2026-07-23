@@ -39,7 +39,7 @@ export interface BiasAnalysisResult {
 
 export interface ContentFlag {
   id: string;
-  type: 'harmful' | 'misinformation' | 'hate_speech' | 'violence' | 'adult_content' | 'spam' | 'fraud' | 'deepfake' | 'synthetic_content' | 'neural_harmful_intent' | 'algorithmic_bias' | 'human_bias';
+  type: 'harmful' | 'misinformation' | 'hate_speech' | 'violence' | 'adult_content' | 'spam' | 'fraud' | 'deepfake' | 'synthetic_content' | 'neural_harmful_intent' | 'algorithmic_bias' | 'human_bias' | 'manipulation';
   description: string;
   confidence: number;
   deepfakeAnalysis?: {

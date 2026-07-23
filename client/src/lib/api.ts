@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { enqueueOfflineOperation } from './offlineSync';
-import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy } from './types';
+import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing } from './types';
 
 // Enhanced universal translation service - supports all human languages, dialects, and animal communication
 export const translateText = async (text: string, targetLanguage: string): Promise<{ translatedText: string; detectedSourceLanguage: string; sourceType: 'human' | 'animal' | 'dialect'; confidence: number }> => {
@@ -1738,7 +1738,7 @@ export const createAd = async (adSetId: string, data: { name: string; creative: 
   return response.data;
 };
 
-export const getMarketplaceListings = async (query?: string) => {
+export const getMarketplaceListings = async (query?: string): Promise<MarketplaceListing[]> => {
   const params = query ? { params: { q: query } } : {};
   const response = await api.get('/marketplace/listings', params);
   return response.data;
@@ -1749,7 +1749,7 @@ export const createMarketplaceListing = async (listingData: { title: string; des
   return response.data;
 };
 
-export const getMarketplaceListing = async (id: string) => {
+export const getMarketplaceListing = async (id: string): Promise<MarketplaceListing> => {
   const response = await api.get(`/marketplace/listings/${id}`);
   return response.data;
 };
@@ -1764,7 +1764,7 @@ export const deleteMarketplaceListing = async (id: string) => {
   return response.data;
 };
 
-export const getSavedMarketplaceListings = async () => {
+export const getSavedMarketplaceListings = async (): Promise<SavedListing[]> => {
   const response = await api.get('/saved-marketplace-listings');
   return response.data;
 };

@@ -40,7 +40,7 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
         setPost(fetchedPost);
         // Calculate current sentiment
         if (fetchedPost.reactions.length > 0) {
-          const totalScore = fetchedPost.reactions.reduce((sum, r) => {
+          const totalScore = fetchedPost.reactions.reduce((sum: number, r: PostReaction) => {
             return sum + (SENTIMENT_SCORES[r.reaction] || 0);
           }, 0);
           setSentiment(totalScore / fetchedPost.reactions.length);
@@ -66,7 +66,7 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
       setPost(updatedPost);
       // Recalculate sentiment
       if (updatedPost.reactions.length > 0) {
-        const totalScore = updatedPost.reactions.reduce((sum, r) => {
+        const totalScore = updatedPost.reactions.reduce((sum: number, r: PostReaction) => {
           return sum + (SENTIMENT_SCORES[r.reaction] || 0);
         }, 0);
         setSentiment(totalScore / updatedPost.reactions.length);

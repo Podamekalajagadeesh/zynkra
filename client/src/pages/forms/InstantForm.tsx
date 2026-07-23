@@ -3,7 +3,24 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
-const fetchForm = async (id) => {
+interface FormQuestion {
+  id: string;
+  label: string;
+  type: string;
+}
+
+interface FormData {
+  title: string;
+  description: string;
+  questions: FormQuestion[];
+}
+
+interface SubmissionAnswer {
+  questionId: string;
+  value: unknown;
+}
+
+const fetchForm = async (id: string | undefined): Promise<FormData> => {
   const res = await fetch(`/api/forms/${id}`);
   if (!res.ok) {
     throw new Error('Network response was not ok');
@@ -11,7 +28,7 @@ const fetchForm = async (id) => {
   return res.json();
 };
 
-const submitForm = async ({ id, answers }) => {
+const submitForm = async ({ id, answers }: { id: string | undefined; answers: SubmissionAnswer[] }) => {
   const res = await fetch(`/api/forms/${id}/submissions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -25,9 +42,12 @@ const submitForm = async ({ id, answers }) => {
 
 export const InstantForm = () => {
   const { id } = useParams();
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState<Record<string, unknown>>({});
 
-  const { data: form, isLoading, error } = useQuery(['form', id], () => fetchForm(id));
+  const { data: form, isLoading, error } = useQuery({
+    queryKey: ['form', id],
+    queryFn: () => fetchForm(id),
+  });
 
   const mutation = useMutation({
     mutationFn: submitForm,
@@ -36,11 +56,11 @@ export const InstantForm = () => {
     },
   });
 
-  const handleAnswerChange = (questionId, value) => {
+  const handleAnswerChange = (questionId: string, value: unknown) => {
     setAnswers({ ...answers, [questionId]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submissionData = {
       id,
@@ -57,10 +77,10 @@ export const InstantForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>{form.title}</h2>
-      <p>{form.description}</p>
+      <h2>{form?.title}</h2>
+      <p>{form?.description}</p>
 
-      {form.questions.map((q) => (
+      {form?.questions.map((q) => (
         <div key={q.id}>
           <label>{q.label}</label>
           <input
@@ -71,8 +91,8 @@ export const InstantForm = () => {
         </div>
       ))}
 
-      <button type="submit" disabled={mutation.isLoading}>
-        {mutation.isLoading ? 'Submitting...' : 'Submit'}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Submitting...' : 'Submit'}
       </button>
     </form>
   );

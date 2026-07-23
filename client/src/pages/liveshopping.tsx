@@ -288,7 +288,7 @@ export const LiveShoppingPage = () => {
 
           {/* Live chat */}
           <div className="h-64 border-t border-dark-700">
-            <LiveStreamChat roomName={`live-shopping-${id}`} />
+            <LiveStreamChat streamId={`live-shopping-${id}`} userId={currentUser?.id ?? ''} />
           </div>
         </div>
 

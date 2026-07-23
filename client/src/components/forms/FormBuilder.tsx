@@ -11,7 +11,13 @@ enum QuestionType {
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 
-const createForm = async (formData) => {
+interface FormQuestion {
+  label: string;
+  type: QuestionType;
+  options: string[];
+}
+
+const createForm = async (formData: unknown) => {
   const res = await fetch('/api/forms', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,7 +32,7 @@ const createForm = async (formData) => {
 export const FormBuilder = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const { activeAccount } = useAuth();
   const { addToast } = useToast();
 
@@ -48,13 +54,13 @@ export const FormBuilder = () => {
     setQuestions([...questions, { label: '', type: QuestionType.SHORT_TEXT, options: [] }]);
   };
 
-  const handleQuestionChange = (index, field, value) => {
+  const handleQuestionChange = (index: number, field: keyof FormQuestion, value: string) => {
     const newQuestions = [...questions];
-    newQuestions[index][field] = value;
+    newQuestions[index] = { ...newQuestions[index], [field]: value };
     setQuestions(newQuestions);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeAccount?.user?.id) {
       addToast('You must be logged in to create a form', 'error');
@@ -104,8 +110,8 @@ export const FormBuilder = () => {
       <button type="button" onClick={addQuestion}>
         Add Question
       </button>
-      <button type="submit" disabled={mutation.isLoading}>
-        {mutation.isLoading ? 'Saving...' : 'Save Form'}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Saving...' : 'Save Form'}
       </button>
     </form>
   );

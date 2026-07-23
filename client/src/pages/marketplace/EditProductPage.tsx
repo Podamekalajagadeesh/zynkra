@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { PageShell } from '../../components/PageShell';
@@ -24,7 +24,7 @@ export function EditProductPage() {
     fetchProduct();
   }, [id]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await api.patch(`/products/${id}`, { name, description, price: parseFloat(price) });
     navigate('/marketplace/dashboard');

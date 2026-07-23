@@ -51,7 +51,7 @@ export const CompetitorAnalytics = ({ userAnalytics }: CompetitorAnalyticsProps)
     setIsSearching(true);
     try {
       const results = await searchUsers(searchQuery);
-      setSearchResults(results.filter(r => !competitors.find(c => c.id === r.id)));
+      setSearchResults(results.filter((r: CompetitorProfile) => !competitors.find(c => c.id === r.id)));
     } catch (error) {
       console.error('Failed to search users:', error);
     } finally {

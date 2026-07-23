@@ -159,12 +159,37 @@ export interface UserProfile {
   blockedHashtags?: string[];
   lifeEvents?: LifeEvent[];
   screenshotProtection?: ScreenshotProtectionSettings;
+  relationshipStatus?: string;
+  profileBioFont?: string;
+  name?: string;
 }
 
 export interface PostAuthor {
   id: string;
   email: string | null;
   walletAddress: string | null;
+  username?: string;
+  displayName?: string | null;
+  publicKey?: string;
+  profile?: {
+    avatarUrl?: string;
+  };
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: PostAuthor;
+  parentId?: string;
+  isPinned?: boolean;
+  isLocked?: boolean;
+  replies?: Comment[];
+  awards?: {
+    id: string;
+    gift: { id: string; name: string; iconUrl: string };
+    sender: PostAuthor;
+  }[];
 }
 
 export interface PostLike {
@@ -198,17 +223,6 @@ export interface NeuralMessageMetadata {
   emotions: EmotionData;
   context: ContextualData;
   rawNeuralSignal?: string; // For advanced processing
-}
-
-export interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: PostAuthor;
-  replies?: Comment[];
-  isPinned?: boolean;
-  isNeural?: boolean;
-  neuralMetadata?: NeuralMessageMetadata;
 }
 
 export interface Place {
@@ -400,13 +414,24 @@ export interface Message {
   id: string;
   content: string;
   createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
   sender: PostAuthor;
+  /** Legacy alias for sender used by some community/neural message views. */
+  user?: PostAuthor;
   replyTo?: Message;
+  replies?: Comment[];
   readBy: ReadReceipt[];
+  reactions?: { id: string; reaction: string; user: PostAuthor }[];
   media?: { url: string; type: 'image' | 'video' | 'audio' }[];
   /** Voice note metadata: set when the message is a recorded voice message. */
   voiceNote?: { durationSeconds: number; waveform: number[] } | null;
   gift?: { id: string; name: string; imageUrl: string; message?: string };
+  /** Original message when this one was forwarded from another conversation. */
+  forwardedFrom?: PostAuthor | null;
+  isPinned?: boolean;
+  isNeural?: boolean;
+  neuralMetadata?: NeuralMessageMetadata;
 }
 
 export interface ReadReceipt {
@@ -874,10 +899,86 @@ export interface Product {
   imageUrls?: string[];
 }
 
+export interface NftMetadata {
+  blockchain: string;
+  contractAddress: string;
+  tokenId: string;
+  isLimitedEdition?: boolean;
+  editionNumber?: number;
+  totalEditions?: number;
+}
+
+export interface MarketplaceSeller {
+  id: string;
+  displayName: string;
+  avatar?: string;
+}
+
+export interface MarketplaceListing {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  location?: string;
+  imageUrls?: string[];
+  productType?: string;
+  nftMetadata?: NftMetadata;
+  seller: MarketplaceSeller;
+}
+
+export interface SavedListing {
+  id?: string;
+  listing: MarketplaceListing;
+}
+
+export interface SellerProduct {
+  id: string;
+  name: string;
+  imageUrls?: string[];
+}
+
+export interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  productVariant: { name: string };
+}
+
+export interface Order {
+  id: string;
+  total: number;
+  status: string;
+  items: OrderItem[];
+}
+
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  [key: string]: unknown;
+}
+
+export interface CartState {
+  items: CartItem[];
+}
+
+export type CartAction =
+  | { type: 'ADD_ITEM'; payload: CartItem }
+  | { type: 'REMOVE_ITEM'; payload: { id: string } }
+  | { type: 'CLEAR_CART' };
+
 export interface Event {
   id: string;
   title: string;
   description: string;
   date: string;
   location: string;
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  bookmarks: { id?: string; post: Post }[];
 }

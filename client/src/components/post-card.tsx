@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useScreenshotProtection } from '../hooks/useScreenshotProtection';
 import { ScreenshotProtectionLevel } from '../lib/types';
@@ -36,6 +36,8 @@ import {
   getGifts,
   sendGift,
   translateText,
+  voteOnPoll,
+  api,
 } from '../lib/api';
 import { Button } from './ui/button';
 import Avatar from './ui/avatar';
@@ -47,6 +49,8 @@ import { CommunityNotes } from './CommunityNotes';
 import { PromotionModal } from './PromotionModal';
 import { useEnsName } from '../hooks/useEnsName';
 import { ContentWarningBanner } from './moderation/ContentWarningBanner';
+import { ContentAnalysisResult } from '../services/contentModerationService';
+import { GiftButton } from './monetization/GiftButton';
 import { LowBandwidthMedia } from './LowBandwidthMedia';
 
 interface PostAuthor {
@@ -54,6 +58,8 @@ interface PostAuthor {
   email: string | null;
   walletAddress: string | null;
   displayName: string | null;
+  subscription?: { active: boolean };
+  isPremium?: boolean;
 }
 
 interface PostReaction {
@@ -101,7 +107,7 @@ interface Poll {
 
 interface Media {
   url: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
   altText?: string;
   captionsUrl?: string;
 }
@@ -115,9 +121,18 @@ interface ProductTag {
 interface Post {
   id: string;
   content: string;
-  media: Media[];
+  media?: Media[];
   filter?: string;
   createdAt: string;
+  updatedAt?: string;
+  editHistory?: { id: string; editedAt: string; content: string }[];
+  creative?: {
+    instantForm?: {
+      name: string;
+      callToAction?: string;
+      fields: { name: string; label: string; type: string; options?: string[] }[];
+    };
+  };
   algorithmReasons?: string[];
   user: PostAuthor & {
     screenshotProtection?: {
@@ -126,7 +141,7 @@ interface Post {
       applyToPosts: boolean;
     };
   };
-  reactions: PostReaction[];
+  reactions?: PostReaction[];
   comments: Comment[];
   bookmarked?: boolean;
   repostedFrom?: Post;
@@ -151,16 +166,7 @@ interface Post {
     category: 'topic' | 'genre' | 'format';
     confidence: number;
   }[];
-  contentAnalysis?: {
-    isHarmful: boolean;
-    isMisinformation: boolean;
-    harmfulCategories?: string[];
-    misinformationTopics?: string[];
-    confidenceScore: number;
-    flags: any[];
-    recommendedAction: string;
-    analyzedAt: string;
-  };
+  contentAnalysis?: ContentAnalysisResult;
 }
 
 interface UserProfile {
@@ -170,10 +176,10 @@ interface UserProfile {
 
 interface PostCardProps {
   post: Post;
-  currentUser: UserProfile | null;
-  onDelete: (postId: string) => void;
-  onSave: (postId: string) => void;
-  isFollowing: boolean;
+  currentUser?: UserProfile | null;
+  onDelete?: (postId: string) => void;
+  onSave?: (postId: string) => void;
+  isFollowing?: boolean;
   onToggleFeatured?: (postId: string, isFeatured: boolean) => void;
   display?: 'list' | 'grid';
 }
@@ -197,12 +203,12 @@ export function PostCard({
     (post.user.screenshotProtection?.enabled && post.user.screenshotProtection?.applyToPosts);
   
   const { protectionRef } = useScreenshotProtection({
-    enabled: shouldApplyProtection,
+    enabled: !!shouldApplyProtection,
     level: (post.user.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
     contentTitle: 'this post',
   });
   const { autoTranslate, language, contentWarningsEnabled } = useAppPreferences();
-  const [isFollowing, setIsFollowing] = useState(isFollowingProp);
+  const [isFollowing, setIsFollowing] = useState(isFollowingProp ?? false);
   const { addToast } = useToast();
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
@@ -299,7 +305,7 @@ export function PostCard({
         // Generate full sensory metadata for neural consumption
         const sensoryMetadata = {
           contentTransmitted: post.content,
-          mediaUrls: post.media.map(m => m.url),
+          mediaUrls: post.media?.map(m => m.url) ?? [],
           emotionalContext: extractEmotionalContext(post.content),
           sensoryCues: generateSensoryCues(post.content),
           transmissionComplete: true,
@@ -515,7 +521,7 @@ export function PostCard({
     try {
       const updatedPoll = await voteOnPoll(pollOptionId);
       // Find the poll in the post and update it
-      const newPolls = post.poll.map(p => p.id === updatedPoll.id ? updatedPoll : p);
+      const newPolls = (post.poll ?? []).map(p => p.id === updatedPoll.id ? updatedPoll : p);
       // This is a bit of a hack, but it's the easiest way to update the post
       // without having to refetch the entire post
       post.poll = newPolls;
@@ -711,7 +717,7 @@ export function PostCard({
     try {
       await deletePost(post.id);
       addToast('Post deleted successfully', 'success');
-      onDelete(post.id);
+      onDelete?.(post.id);
     } catch (error) {
       console.error('Failed to delete post:', error);
       addToast('Failed to delete post', 'error');
@@ -733,7 +739,7 @@ export function PostCard({
     }
 
     try {
-      const tx = (await window.ethereum.request({
+      const tx = (await window.ethereum!.request({
         method: 'eth_sendTransaction',
         params: [
           {
@@ -908,14 +914,18 @@ export function PostCard({
     });
   };
 
-  const InstantFormModal = ({ form, onClose, onSubmit }) => {
-    const [formData, setFormData] = useState({});
+  const InstantFormModal = ({ form, onClose, onSubmit }: {
+    form: NonNullable<NonNullable<Post['creative']>['instantForm']>;
+    onClose: () => void;
+    onSubmit: (data: Record<string, string>) => void | Promise<void>;
+  }) => {
+    const [formData, setFormData] = useState<Record<string, string>>({});
 
-    const handleChange = (e) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: FormEvent) => {
       e.preventDefault();
       onSubmit(formData);
     };
@@ -958,7 +968,7 @@ export function PostCard({
                     onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
-                    {field.options.map((option) => (
+                    {field.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -1005,7 +1015,7 @@ export function PostCard({
                 {post.taggedUsers.map((user, index) => (
                   <Link key={user.id} to={`/users/${user.id}`} className="font-semibold hover:underline ml-1">
                     {user.displayName}
-                    {index < post.taggedUsers.length - 1 ? ',' : ''}
+                    {index < post.taggedUsers!.length - 1 ? ',' : ''}
                   </Link>
                 ))}
               </span>
@@ -1275,9 +1285,9 @@ export function PostCard({
           <h4 className="font-semibold text-dark-900 mb-sm">{post.poll[0].question}</h4>
           <div className="space-y-2">
             {post.poll[0].options.map((option) => {
-              const totalVotes = post.poll[0].options.reduce((acc, o) => acc + o.voteCount, 0);
+              const totalVotes = post.poll![0].options.reduce((acc, o) => acc + o.voteCount, 0);
               const percentage = totalVotes > 0 ? (option.voteCount / totalVotes) * 100 : 0;
-              const hasVoted = post.poll[0].options.some(o => o.votes.some(v => v.id === currentUser?.id));
+              const hasVoted = post.poll![0].options.some(o => o.votes.some(v => v.id === currentUser?.id));
 
               return (
                 <div key={option.id}>
@@ -1476,7 +1486,7 @@ export function PostCard({
         </Button>
 
         <button
-          onClick={() => onSave(post.id)}
+          onClick={() => onSave?.(post.id)}
           className="flex items-center gap-2 rounded-xl px-3 py-2 text-dark-600 transition-all hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
           title="Save to collection"
         >
@@ -1631,7 +1641,7 @@ export function PostCard({
           <div className="ml-auto flex items-center gap-2">
             <GiftButton recipientId={originalPost.user.id} postId={originalPost.id} />
             <button
-              onClick={loadGifts}
+              onClick={() => loadGifts()}
               className="flex items-center gap-2 rounded-xl px-3 py-2 text-dark-600 transition-all hover:bg-yellow-50 hover:text-yellow-600 dark:text-dark-300 dark:hover:bg-yellow-950/40 dark:hover:text-yellow-300"
               aria-label="Award post"
               title="Award post"

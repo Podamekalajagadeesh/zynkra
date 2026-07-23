@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { API_BASE_URL } from '../lib/api';
 
 // Enhanced ICE servers for better connectivity
@@ -33,7 +34,7 @@ export function useWebRTC(conversationId: string | undefined) {
   const recordedChunksRef = useRef<Blob[]>([]);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const socketRef = useRef<SocketIOClient.Socket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const liveKitRoomRef = useRef<any>(null); // For group calls using LiveKit
   const blurCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const blurStreamRef = useRef<MediaStream | null>(null);
@@ -123,11 +124,8 @@ export function useWebRTC(conversationId: string | undefined) {
       
       // For LiveKit group calls
       if (liveKitRoomRef.current) {
-        const { LocalVideoTrack, VideoPresets } = await import('livekit-client');
-        const track = await LocalVideoTrack.createStreamTrack(
-          screenStream.getVideoTracks()[0], 
-          VideoPresets.hd1080
-        );
+        const { LocalVideoTrack } = await import('livekit-client');
+        const track = new LocalVideoTrack(screenStream.getVideoTracks()[0]);
         await liveKitRoomRef.current.localParticipant.publishTrack(track);
       }
       
@@ -232,7 +230,7 @@ export function useWebRTC(conversationId: string | undefined) {
     if (!conversationId) return;
     
     try {
-      const { Room } = await import('livekit-client');
+      const { Room, RoomEvent } = await import('livekit-client');
       const room = new Room();
       liveKitRoomRef.current = room;
       
@@ -250,11 +248,11 @@ export function useWebRTC(conversationId: string | undefined) {
       });
       
       // Handle participants joining/leaving
-      room.on('participant-connected', (participant: any) => {
+      room.on(RoomEvent.ParticipantConnected, (participant) => {
         setParticipants(prev => [...prev, participant.identity]);
       });
-      
-      room.on('participant-disconnected', (participant: any) => {
+
+      room.on(RoomEvent.ParticipantDisconnected, (participant) => {
         setParticipants(prev => prev.filter(id => id !== participant.identity));
       });
       

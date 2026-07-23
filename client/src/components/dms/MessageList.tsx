@@ -2,9 +2,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Skeleton } from '../ui/skeleton';
 import Avatar from '../ui/avatar';
-import { getMessages, addReaction, markMessageAsRead, getPublicKey, getProfile } from '../../lib/api';
-import { Smile, CornerUpLeft, CheckCheck } from 'lucide-react';
-import { Message, ScreenshotProtectionLevel } from '../../lib/types';
+import { getMessages, addReaction, markMessageAsRead, getPublicKey, getProfile, getConversations, forwardMessage } from '../../lib/api';
+import { Smile, CornerUpLeft, CheckCheck, Send } from 'lucide-react';
+import { Message, Conversation, ScreenshotProtectionLevel } from '../../lib/types';
 import { formatDateTime } from '../../lib/preferences';
 import MessageContent from './MessageContent';
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,6 +30,8 @@ export const MessageList = ({
   const [showReactions, setShowReactions] = useState<string | null>(null);
   const observer = useRef<IntersectionObserver>();
   const [me, setMe] = useState<any>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
   
   // Load current user's profile to check screenshot protection settings
   useEffect(() => {
@@ -160,7 +162,7 @@ export const MessageList = ({
         ) : (
           messages.map((msg) => {
             const isOwn = msg.sender.id === user?.id;
-            const reactions = msg.reactions.reduce(
+            const reactions = (msg.reactions ?? []).reduce(
               (acc, reaction) => {
                 acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
                 return acc;

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMarketplaceListings } from '../../lib/api';
+import { MarketplaceListing } from '../../lib/types';
 import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 
 export function MarketplacePage() {
-  const [listings, setListings] = useState([]);
+  const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {

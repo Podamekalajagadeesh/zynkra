@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, uploadMedia } from '../../lib/api';
 import { PageShell } from '../../components/PageShell';
@@ -26,7 +26,7 @@ export function CreateProductPage() {
   const [editionNumber, setEditionNumber] = useState('');
   const [totalEditions, setTotalEditions] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUploading(true);
     

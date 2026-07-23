@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
+import { SellerProduct } from '../../lib/types';
 import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 
 export function SellerDashboardPage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<SellerProduct[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {

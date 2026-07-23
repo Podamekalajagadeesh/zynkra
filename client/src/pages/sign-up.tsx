@@ -9,7 +9,6 @@ import { signUp, API_BASE_URL } from '../lib/api';
 import axios from 'axios';
 
 const WebAuthn = lazy(() => import('../components/WebAuthn'));
-const BrainwaveAuth = lazy(() => import('../components/BrainwaveAuth'));
 
 export function SignUpPage() {
   const navigate = useNavigate();
@@ -141,24 +140,6 @@ export function SignUpPage() {
           >
             Register with Passkey
           </WebAuthn>
-        </Suspense>
-        <Suspense fallback={<Button className="w-full" variant="outline" disabled>Loading neural authentication...</Button>}>
-          <BrainwaveAuth
-            mode="register"
-            email={email}
-            onSuccess={() => {
-              addToast('Brainwave authentication registered successfully!', 'success');
-              navigate('/login?brainwave=success');
-            }}
-            onError={(err) => {
-              setError(err);
-              addToast(err, 'error');
-            }}
-            className="w-full"
-            variant="outline"
-          >
-            Register with Brainwave ID
-          </BrainwaveAuth>
         </Suspense>
       </div>
 
