@@ -25,7 +25,7 @@ export default function LocalFeedPage() {
       // Apply sorting based on user preference
       if (feedSort === 'chronological') {
         // Sort by createdAt in descending order (newest first)
-        localPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        localPosts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
       setPosts(localPosts);
     } catch (err) {

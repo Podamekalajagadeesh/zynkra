@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Sliders, Image, Scissors, Sparkles, Download, RotateCcw } from 'lucide-react';
+import { X, Sliders, Image as ImageIcon, Scissors, Sparkles, Download, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface PhotoEditorProps {
@@ -158,7 +158,7 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
               {/* Filters section */}
               <div>
                 <h3 className="text-lg font-semibold mb-3 flex items-center">
-                  <Image className="h-5 w-5 mr-2" /> Filters
+                  <ImageIcon className="h-5 w-5 mr-2" /> Filters
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
                   {Object.keys(FILTER_PRESETS).map((filterKey) => (

@@ -4,8 +4,6 @@ import { useToast } from '../../hooks/useToast';
 import { Skeleton } from '../ui/skeleton';
 import { getGroups } from '../../lib/api';
 import { Hash, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '../ui/button';
 import { GroupPrivacy } from '../../types';
 
 interface Group {
@@ -85,11 +83,6 @@ export const GroupList = ({ onSelectGroup, selectedId }: GroupListProps) => {
                     )}
                   </div>
                 </div>
-                <Link to={`/dao?groupId=${group.id}`}>
-                  <Button variant="secondary" size="sm">
-                    View DAO
-                  </Button>
-                </Link>
               </div>
             </div>
           ))

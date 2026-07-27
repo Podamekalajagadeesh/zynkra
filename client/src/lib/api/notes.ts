@@ -8,18 +8,21 @@ export interface Note {
   createdAt: string;
 }
 
-export const createNote = (content: string) => {
-  return post<Note>('/notes', { content });
+export const createNote = async (content: string): Promise<Note> => {
+  const res = await post<Note>('/notes', { content });
+  return res.data;
 };
 
-export const getFollowingNotes = () => {
-  return get<Note[]>('/notes/following');
+export const getFollowingNotes = async (): Promise<Note[]> => {
+  const res = await get<Note[]>('/notes/following');
+  return res.data;
 };
 
-export const getUserNote = (userId: string) => {
-  return get<Note | null>(`/notes/user/${userId}`);
+export const getUserNote = async (userId: string): Promise<Note | null> => {
+  const res = await get<Note | null>(`/notes/user/${userId}`);
+  return res.data;
 };
 
-export const deleteNote = (id: string) => {
-  return del(`/notes/${id}`);
+export const deleteNote = async (id: string): Promise<void> => {
+  await del(`/notes/${id}`);
 };

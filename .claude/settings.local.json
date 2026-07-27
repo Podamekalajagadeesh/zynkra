@@ -27,7 +27,13 @@
       "Bash(py --version)",
       "Bash(ls -la /tmp/)",
       "Read(//root/.claude/projects/-tmp/memory/**)",
-      "Bash(grep -ri \"zynkra\" /tmp/)"
+      "Bash(grep -ri \"zynkra\" /tmp/)",
+      "Bash(dir /b \"D:\\\\zynkra\\\\client\\\\src\\\\pages\")",
+      "Bash(dir *)",
+      "Bash(npx jest *)",
+      "Bash(npx vitest *)",
+      "Bash(npm test *)",
+      "Bash(xargs grep -l \"forgot\\\\|reset.*password\")"
     ]
   }
 }

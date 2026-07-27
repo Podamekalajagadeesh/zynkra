@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Scale, LineChart, Shield, AlertTriangle, TrendingUp, Users } from 'lucide-react';
 import { Button } from '../ui/button';

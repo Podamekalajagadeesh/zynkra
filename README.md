@@ -72,25 +72,49 @@ npm run dev
 ```
 
 ## Key Features
-✅ End-to-end encryption (all DMs, messages, content)
-✅ Offline-first architecture (works without internet)
-✅ ActivityPub federation (connects with Mastodon, Pixelfed, etc.)
-✅ 90/10 creator revenue split
-✅ Community-led moderation (no corporate control)
-✅ Full data export & portability
-✅ Local-first AI (Llama 3 on-device)
-✅ Decentralized identity (blockchain-based)
+✅ Core social (posts, comments, reactions, stories, reels, polls, bookmarks)
+✅ User auth (JWT, OAuth, Passkeys, 2FA, Sign-In with Ethereum)
+✅ DMs with Signal Protocol key infrastructure (encrypted in transit; full E2EE in progress)
+✅ ActivityPub federation (inbound + outbound with HTTP Signatures)
+✅ Creator monetization (Stripe Connect payouts, 90/10 revenue split)
+✅ Real-time messaging with Socket.IO
+✅ Marketplace with listings, cart, orders
+✅ Long-form articles, podcast hosting, course platform, newsletter system
+✅ Community-led moderation (spam, harassment, hate speech detection via NSFWJS)
+✅ Data export & portability
+✅ Web3 (crypto wallet, WalletConnect, NFTs, token-gated content)
+✅ AI chatbot (FAQ-based); on-device LLM is **Preview** (requires `@mlc-ai/web-llm`)
+✅ Offline-first (IndexedDB queue + Service Worker)
 
 ## Development Status
-- [x] Core social features (posts, comments, reactions)
-- [x] Direct messaging with E2EE
-- [x] Content creation & editing
-- [x] User profiles & follows
-- [x] Feed algorithm
-- [ ] Mobile apps (iOS/Android native)
-- [ ] Offline-first sync engine
-- [ ] Full ActivityPub interop
-- [ ] Creator payouts system
+See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assessment.
+
+### ✅ Working (Core loop)
+- [x] Authentication (JWT, OAuth, Passkeys, 2FA, SIWE)
+- [x] User profiles, follows, blocking
+- [x] Posts, comments, reactions, bookmarks
+- [x] Feed algorithms (For You, Following, Chronological, Trending)
+- [x] DMs (encrypted in transit via TLS; Signal Protocol key exchange)
+- [x] Groups, events, fundraisers
+- [x] Media uploads
+- [x] Notifications
+- [x] Search, hashtags, trends
+- [x] Admin dashboard, moderation
+
+### 🔄 Working (Differentiators)
+- [x] Creator payouts (Stripe Connect, wallet ledger)
+- [x] ActivityPub federation (HTTP Signatures, WebFinger, NodeInfo)
+- [x] Offline sync queue
+- [x] AI chatbot (Preview)
+- [x] Real-time translation (26 languages)
+
+### 🔄 Preview (visible but shallow)
+- Stories, Reels, Marketplace, Dating, DAO governance, Courses, Newsletters, Podcasts
+
+### ❌ Not started
+- Mobile apps (iOS/Android native)
+- On-device LLM (requires `@mlc-ai/web-llm` dependency)
+- Full end-to-end encryption (server-side enforcement)
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:

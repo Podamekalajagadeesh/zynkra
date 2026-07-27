@@ -49,3 +49,16 @@ export interface Fundraiser {
   donations: Donation[];
   createdAt: string;
 }
+
+export interface DonationDrive {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  endDate: string;
+  goalAmount?: number;
+  currentAmount?: number;
+  imageUrl?: string;
+  donations?: Donation[];
+  createdAt: string;
+}

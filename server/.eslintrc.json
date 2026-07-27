@@ -13,11 +13,12 @@
     "node": true,
     "jest": true
   },
-  "ignorePatterns": [".eslintrc.json"],
+  "ignorePatterns": [".eslintrc.json", "src/**/*.spec.ts", "src/**/*.test.ts", "test/"],
   "rules": {
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": "warn"
   }
 }

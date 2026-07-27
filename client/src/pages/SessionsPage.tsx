@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { getSessions, revokeSession } from '../lib/api';
+import { getLoginSessions, revokeLoginSession } from '../lib/api';
 
 interface Session {
   id: string;
@@ -17,7 +17,7 @@ export function SessionsPage() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const fetchedSessions = await getSessions();
+        const fetchedSessions = await getLoginSessions();
         setSessions(fetchedSessions);
       } catch (error) {
         console.error('Failed to fetch sessions:', error);
@@ -31,7 +31,7 @@ export function SessionsPage() {
 
   const handleRevokeSession = async (sessionId: string) => {
     try {
-      await revokeSession(sessionId);
+      await revokeLoginSession(sessionId);
       setSessions(sessions.filter((s) => s.id !== sessionId));
     } catch (error) {
       console.error('Failed to revoke session:', error);

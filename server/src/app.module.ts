@@ -30,14 +30,11 @@ import { SnoozeModule } from './snooze/snooze.module';
 import { CollectionsModule } from './collections/collections.module';
 import { WalletModule } from './wallet/wallet.module';
 import { TippingModule } from './tipping/tipping.module';
-// import { LivestreamModule } from './livestream/livestream.module'; // LivestreamModule commented out - broken imports
 import { AnalyticsModule } from './analytics/analytics.module';
-import { DaoModule } from './dao/dao.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { StorageModule } from './storage/storage.module';
 import { TokenModule } from './token/token.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
-import { TokenGatedContentModule } from './token-gated-content/token-gated-content.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { SearchModule } from './search/search.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -50,7 +47,6 @@ import { HashtagsModule } from './hashtags/hashtags.module';
 import { PollsModule } from './polls/polls.module';
 import { EventsModule } from './events/events.module';
 import { SponsoredPostsModule } from './sponsored-posts/sponsored-posts.module';
-// import { SessionsModule } from './sessions/sessions.module'; // SessionsModule commented out - broken imports
 import { MediaModule } from './media/media.module';
 import { MonetizationModule } from './monetization/monetization.module';
 import { NotesModule } from './notes/notes.module';
@@ -65,7 +61,6 @@ import { FundraisersModule } from './fundraisers/fundraisers.module';
 import { PagesModule } from './pages/pages.module';
 import { AffiliatesModule } from './affiliates/affiliates.module';
 import { BrandCollabsModule } from './brand-collabs/brand-collabs.module';
-// import { AdsModule } from './ads/ads.module'; // AdsModule commented out - broken imports
 
 import { ReactionsModule } from './reactions/reactions.module';
 import { SavedMarketplaceListingsModule } from './saved-marketplace-listings/saved-marketplace-listings.module';
@@ -77,7 +72,6 @@ import { KeysModule } from './keys/keys.module';
 import { TimelineModule } from './timeline/timeline.module';
 import { TimelineReviewModule } from './timeline-review/timeline-review.module';
 import { ProfileReviewModule } from './tags/profile-review.module';
-// import { CrisisModule } from './crisis/crisis.module'; // CrisisModule commented out - broken imports
 import { FormsModule } from './forms/forms.module';
 import { LiveKitModule } from './livekit/livekit.module';
 import { CollaborationModule } from './collaboration/collaboration.module';
@@ -87,8 +81,16 @@ import { DataExportModule } from './data-export/data-export.module';
 import { ActivityModule } from './activity/activity.module';
 import { FederationModule } from './federation/federation.module';
 import { ModerationModule } from './moderation/moderation.module';
+import { ArticlesModule } from './articles/articles.module';
+import { PodcastsModule } from './podcasts/podcasts.module';
+import { CoursesModule } from './courses/courses.module';
+import { NewslettersModule } from './newsletters/newsletters.module';
+import { TranslationModule } from './translation/translation.module';
+import { SyncModule } from './sync/sync.module';
+import { AiContentModule } from './ai/ai-content.module';
 import { DigitalAssetsModule } from './digital-assets/digital-assets.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -174,14 +176,12 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     TippingModule,
     LiveKitModule, // New LiveKit module replacing broken old LivestreamModule
     AnalyticsModule,
-    DaoModule,
     ReputationModule,
     StorageModule,
     TokenModule,
     SubscriptionsModule,
     CollaborationModule,
     ActivityModule,
-    TokenGatedContentModule,
     ModerationModule,
     IpfsModule,
     SearchModule,
@@ -195,7 +195,6 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     PollsModule,
     EventsModule,
     SponsoredPostsModule,
-    // SessionsModule, // SessionsModule commented out - broken imports
     MediaModule,
     MonetizationModule,
     NotesModule,
@@ -210,7 +209,6 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     AffiliatesModule,
     BrandCollabsModule,
     PagesModule,
-    // AdsModule, // AdsModule commented out - broken imports
     ReactionsModule,
     WebhooksModule,
     VerificationModule,
@@ -225,13 +223,20 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     TimelineReviewModule,
     ProfileReviewModule,
     NonprofitsModule,
-    // CrisisModule, // CrisisModule commented out - broken imports
     FormsModule,
     LiveshoppingModule,
     DataExportModule,
     FederationModule,
     DigitalAssetsModule,
     InfrastructureModule,
+    ArticlesModule,
+    PodcastsModule,
+    CoursesModule,
+    NewslettersModule,
+    TranslationModule,
+    SyncModule,
+    AiContentModule,
+    CommonModule,
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

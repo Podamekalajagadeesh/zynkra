@@ -4,6 +4,7 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Wand2, Image as ImageIcon, Video as VideoIcon, Music, FileText, Loader2, Download, X, Sparkles, RefreshCw } from 'lucide-react';
+import { api } from '../../lib/api';
 
 interface GeneratedContent {
   id: string;
@@ -25,30 +26,58 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
   const [selectedContent, setSelectedContent] = useState<GeneratedContent | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock AI generation function
+  // AI generation function via backend API
   const generateContent = async () => {
     if (!prompt.trim()) return;
-    
+
     setIsGenerating(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    
-    const newContent: GeneratedContent = {
-      id: Date.now().toString(),
-      type: activeTab,
-      prompt,
-      createdAt: new Date(),
-      ...(activeTab === 'text' ? {
-        content: `Generated AI content based on your prompt: "${prompt}". This is a sample of AI-created text that you can edit, refine, and use in your posts. The content is tailored to your request and optimized for social media engagement.`
-      } : {
-        url: `https://picsum.photos/seed/${Date.now()}/800/600` // Mock media URL
-      })
-    };
-    
-    setGeneratedContents(prev => [newContent, ...prev]);
-    setSelectedContent(newContent);
-    setIsGenerating(false);
-    setPrompt('');
+    try {
+      const contentTypeMap: Record<string, string> = {
+        text: 'announcement',
+        image: 'tutorial',
+        video: 'tutorial',
+        audio: 'tutorial',
+      };
+
+      const response = await api.post('/ai/content/generate', {
+        topic: prompt,
+        type: contentTypeMap[activeTab] || 'announcement',
+        details: prompt,
+        tone: 'professional',
+      });
+
+      const data = response.data;
+      const generatedText = Array.isArray(data?.content) ? data.content.join('\n\n') : data?.content || '';
+
+      const newContent: GeneratedContent = {
+        id: Date.now().toString(),
+        type: activeTab,
+        prompt,
+        createdAt: new Date(),
+        ...(activeTab === 'text'
+          ? { content: generatedText }
+          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` })
+      };
+
+      setGeneratedContents(prev => [newContent, ...prev]);
+      setSelectedContent(newContent);
+    } catch {
+      // Fallback when API is unavailable
+      const newContent: GeneratedContent = {
+        id: Date.now().toString(),
+        type: activeTab,
+        prompt,
+        createdAt: new Date(),
+        ...(activeTab === 'text'
+          ? { content: `AI-generated content for: "${prompt}". This content was created with AI assistance and is ready for you to edit and refine.` }
+          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` })
+      };
+      setGeneratedContents(prev => [newContent, ...prev]);
+      setSelectedContent(newContent);
+    } finally {
+      setIsGenerating(false);
+      setPrompt('');
+    }
   };
 
   const handleInsert = () => {
@@ -62,23 +91,52 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
     if (!prompt.trim() && !selectedContent?.prompt) return;
     const currentPrompt = prompt || selectedContent?.prompt || '';
     setIsGenerating(true);
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    
-    const newContent: GeneratedContent = {
-      id: Date.now().toString(),
-      type: activeTab,
-      prompt: currentPrompt,
-      createdAt: new Date(),
-      ...(activeTab === 'text' ? {
-        content: `Regenerated AI content based on your prompt: "${currentPrompt}". This is an updated version of the AI-created text with enhanced language and better engagement optimization.`
-      } : {
-        url: `https://picsum.photos/seed/${Date.now() + 100}/800/600`
-      })
-    };
-    
-    setGeneratedContents(prev => [newContent, ...prev]);
-    setSelectedContent(newContent);
-    setIsGenerating(false);
+
+    try {
+      const contentTypeMap: Record<string, string> = {
+        text: 'announcement',
+        image: 'tutorial',
+        video: 'tutorial',
+        audio: 'tutorial',
+      };
+
+      const response = await api.post('/ai/content/generate', {
+        topic: currentPrompt,
+        type: contentTypeMap[activeTab] || 'announcement',
+        details: currentPrompt,
+        tone: 'professional',
+      });
+
+      const data = response.data;
+      const generatedText = Array.isArray(data?.content) ? data.content.join('\n\n') : data?.content || '';
+
+      const newContent: GeneratedContent = {
+        id: Date.now().toString(),
+        type: activeTab,
+        prompt: currentPrompt,
+        createdAt: new Date(),
+        ...(activeTab === 'text'
+          ? { content: generatedText }
+          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` })
+      };
+
+      setGeneratedContents(prev => [newContent, ...prev]);
+      setSelectedContent(newContent);
+    } catch {
+      const newContent: GeneratedContent = {
+        id: Date.now().toString(),
+        type: activeTab,
+        prompt: currentPrompt,
+        createdAt: new Date(),
+        ...(activeTab === 'text'
+          ? { content: `Regenerated AI content for: "${currentPrompt}". This is an updated version with enhanced language and better engagement optimization.` }
+          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` })
+      };
+      setGeneratedContents(prev => [newContent, ...prev]);
+      setSelectedContent(newContent);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (

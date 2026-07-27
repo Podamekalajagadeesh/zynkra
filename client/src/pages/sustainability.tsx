@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Leaf, TreeDeciduous, TrendingUp, Recycle, Globe, Award } from 'lucide-react';
 import { formatCarbonEmissions, getPlatformSustainabilityMetrics } from '../lib/carbonCalculator';
 import { Badge } from '../components/ui/badge';
+import { api } from '../lib/api';
 
 type UserContentEmissions = {
   postId: string;
@@ -44,46 +45,50 @@ const EMPTY_SUSTAINABILITY_DATA: UserSustainabilityData = {
   recentContent: [],
 };
 
-// Mock data for demonstration
-const MOCK_SUSTAINABILITY_DATA: UserSustainabilityData = {
-  totalEmissions: 125.5,
-  totalOffset: 50.2,
-  netEmissions: 75.3,
-  totalEmissionsSaved: 45.8,
-  averageSustainabilityScore: 78,
-  monthlyEmissions: [
-    { month: 'Jan', emissions: 18, offset: 7.2 },
-    { month: 'Feb', emissions: 16, offset: 6.4 },
-    { month: 'Mar', emissions: 14, offset: 5.6 },
-    { month: 'Apr', emissions: 15, offset: 6 },
-    { month: 'May', emissions: 13, offset: 5.2 },
-    { month: 'Jun', emissions: 12, offset: 4.8 },
-    { month: 'Jul', emissions: 10, offset: 4 },
-    { month: 'Aug', emissions: 9, offset: 3.6 },
-    { month: 'Sep', emissions: 11, offset: 4.4 },
-    { month: 'Oct', emissions: 8, offset: 3.2 },
-  ],
-  contentBreakdown: [
-    { type: 'video', emissions: 78.2, count: 12 },
-    { type: 'image', emissions: 32.1, count: 45 },
-    { type: 'audio', emissions: 10.2, count: 8 },
-    { type: 'text', emissions: 5.0, count: 67 },
-  ],
-  userRank: 1247,
-  totalUsers: 150000,
-  achievements: [
+// Generate realistic demo data that varies each session
+function generateDemoSustainabilityData(): UserSustainabilityData {
+  const rand = (min: number, max: number) => Math.round((Math.random() * (max - min) + min) * 10) / 10;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+  const monthlyEmissions = months.map((month) => {
+    const emissions = rand(8, 20);
+    return { month, emissions, offset: Math.round(emissions * 0.4 * 10) / 10 };
+  });
+  const totalEmissions = monthlyEmissions.reduce((s, m) => s + m.emissions, 0);
+  const totalOffset = monthlyEmissions.reduce((s, m) => s + m.offset, 0);
+  const videoCount = Math.floor(Math.random() * 10) + 5;
+  const imageCount = Math.floor(Math.random() * 40) + 20;
+  const audioCount = Math.floor(Math.random() * 10) + 2;
+  const textCount = Math.floor(Math.random() * 50) + 30;
+  const achievements = [
     { id: 'first-post', name: 'First Step', description: 'Created your first piece of content', unlockedAt: '2025-01-15' },
-    { id: 'eco-warrior', name: 'Eco Warrior', description: 'Maintained an average sustainability score above 70 for 3 months', unlockedAt: '2025-04-20' },
-    { id: 'carbon-cutter', name: 'Carbon Cutter', description: 'Reduced your monthly emissions by 50%', unlockedAt: '2025-10-05' },
+    { id: 'eco-warrior', name: 'Eco Warrior', description: 'Maintained an average sustainability score above 70 for 3 months', unlockedAt: Math.random() > 0.3 ? '2025-04-20' : null },
+    { id: 'carbon-cutter', name: 'Carbon Cutter', description: 'Reduced your monthly emissions by 50%', unlockedAt: Math.random() > 0.5 ? '2025-10-05' : null },
     { id: 'tree-planter', name: 'Tree Planter', description: 'Your usage has contributed to planting 10 trees', unlockedAt: null },
-  ],
-  recentContent: [
-    { postId: '1', postType: 'video', createdAt: '2025-10-20', emissions: 2.5, offset: 1.0, netEmissions: 1.5, sustainabilityScore: 82 },
-    { postId: '2', postType: 'image', createdAt: '2025-10-18', emissions: 0.015, offset: 0.006, netEmissions: 0.009, sustainabilityScore: 95 },
-    { postId: '3', postType: 'video', createdAt: '2025-10-15', emissions: 1.8, offset: 0.72, netEmissions: 1.08, sustainabilityScore: 88 },
-    { postId: '4', postType: 'text', createdAt: '2025-10-12', emissions: 0.001, offset: 0.0004, netEmissions: 0.0006, sustainabilityScore: 100 },
-  ],
-};
+  ];
+  return {
+    totalEmissions: Math.round(totalEmissions * 10) / 10,
+    totalOffset: Math.round(totalOffset * 10) / 10,
+    netEmissions: Math.round((totalEmissions - totalOffset) * 10) / 10,
+    totalEmissionsSaved: rand(20, 60),
+    averageSustainabilityScore: Math.floor(Math.random() * 25) + 65,
+    monthlyEmissions,
+    contentBreakdown: [
+      { type: 'video', emissions: rand(50, 90), count: videoCount },
+      { type: 'image', emissions: rand(20, 45), count: imageCount },
+      { type: 'audio', emissions: rand(5, 15), count: audioCount },
+      { type: 'text', emissions: rand(2, 8), count: textCount },
+    ],
+    userRank: Math.floor(Math.random() * 5000) + 500,
+    totalUsers: 150000,
+    achievements,
+    recentContent: [
+      { postId: '1', postType: 'video', createdAt: '2025-10-20', emissions: rand(1, 4), offset: rand(0.5, 1.5), netEmissions: rand(0.5, 2.5), sustainabilityScore: Math.floor(Math.random() * 20) + 75 },
+      { postId: '2', postType: 'image', createdAt: '2025-10-18', emissions: rand(0.005, 0.03), offset: rand(0.002, 0.012), netEmissions: rand(0.003, 0.018), sustainabilityScore: Math.floor(Math.random() * 10) + 90 },
+      { postId: '3', postType: 'video', createdAt: '2025-10-15', emissions: rand(1, 3), offset: rand(0.4, 1.2), netEmissions: rand(0.6, 1.8), sustainabilityScore: Math.floor(Math.random() * 15) + 80 },
+      { postId: '4', postType: 'text', createdAt: '2025-10-12', emissions: rand(0.0005, 0.002), offset: rand(0.0002, 0.0008), netEmissions: rand(0.0003, 0.0012), sustainabilityScore: Math.floor(Math.random() * 5) + 95 },
+    ],
+  };
+}
 
 const formatTooltipValue = (value: number | string | readonly (number | string)[] | undefined) => {
   if (typeof value === 'number') {
@@ -105,15 +110,32 @@ const formatTooltipValue = (value: number | string | readonly (number | string)[
 export const SustainabilityPage = () => {
   const [sustainabilityData, setSustainabilityData] = useState<UserSustainabilityData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<'api' | 'demo'>('demo');
   const platformMetrics = getPlatformSustainabilityMetrics();
 
   useEffect(() => {
-    // Simulate API call to fetch user's sustainability data
-    setTimeout(() => {
-      setSustainabilityData(MOCK_SUSTAINABILITY_DATA);
-      setLoading(false);
-    }, 1000);
+    let cancelled = false;
+    async function fetchData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await api.get('/analytics/sustainability');
+        if (cancelled) return;
+        setSustainabilityData(res.data);
+        setDataSource('api');
+      } catch {
+        // No real API endpoint yet -- fall back to dynamic demo data
+        if (!cancelled) {
+          setSustainabilityData(generateDemoSustainabilityData());
+          setDataSource('demo');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchData();
+    return () => { cancelled = true; };
   }, []);
 
   const data = sustainabilityData ?? EMPTY_SUSTAINABILITY_DATA;
@@ -121,7 +143,45 @@ export const SustainabilityPage = () => {
   if (loading) {
     return (
       <PageShell title="Sustainability Dashboard">
-        <p>Loading your carbon footprint data...</p>
+        <div className="space-y-8">
+          {/* Skeleton: platform impact cards */}
+          <div>
+            <div className="h-7 w-48 rounded bg-gray-200 dark:bg-gray-700 animate-pulse mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="h-8 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="h-3 w-32 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+          {/* Skeleton: personal impact cards */}
+          <div>
+            <div className="h-7 w-56 rounded bg-gray-200 dark:bg-gray-700 animate-pulse mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i}>
+                  <div className="p-6 space-y-3">
+                    <div className="h-4 w-28 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="h-8 w-20 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                    <div className="h-3 w-36 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+          {/* Skeleton: chart area */}
+          <Card>
+            <div className="p-6 space-y-4">
+              <div className="h-5 w-48 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div className="h-80 rounded bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            </div>
+          </Card>
+        </div>
       </PageShell>
     );
   }
@@ -129,7 +189,15 @@ export const SustainabilityPage = () => {
   if (error) {
     return (
       <PageShell title="Sustainability Dashboard">
-        <p className="text-sm text-dark-600 dark:text-dark-300">{error}</p>
+        <div className="text-center py-16 space-y-4">
+          <p className="text-sm text-dark-600 dark:text-dark-300">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm underline opacity-70 hover:opacity-100"
+          >
+            Retry
+          </button>
+        </div>
       </PageShell>
     );
   }
@@ -137,6 +205,11 @@ export const SustainabilityPage = () => {
   return (
     <PageShell title="Sustainability Dashboard">
       <div className="space-y-8">
+        {dataSource === 'demo' && (
+          <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20 px-4 py-2 text-sm text-yellow-800 dark:text-yellow-200">
+            Showing demo data for illustration. Real sustainability tracking will be available soon.
+          </div>
+        )}
         {/* Platform Impact Overview */}
         <div>
           <h2 className="text-2xl font-bold mb-4">Platform Impact</h2>

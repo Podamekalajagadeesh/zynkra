@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, LessThan, MoreThan, Repository } from 'typeorm';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
-import { User } from '../users/entities/user.entity';
+import { User, MessagePrivacy } from '../users/entities/user.entity';
 import { ConversationType } from './conversation-type.enum';
 import { MessageReaction } from './entities/message-reaction.entity';
 import { MessageReceipt } from './entities/message-receipt.entity';
@@ -192,7 +192,6 @@ export class DmsService {
     const participants = [starter, ...recipients];
 
     // Check message privacy settings for each recipient before creating conversation
-    const { MessagePrivacy } = require('../users/entities/user.entity');
     for (const recipient of recipients) {
       if (recipient.id === starter.id) continue; // Skip self
 

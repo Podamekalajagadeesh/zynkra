@@ -40,4 +40,22 @@ export const envValidationSchema = Joi.object({
   // Payments
   PAYMENTS_ENABLED: Joi.string().valid('true', 'false').optional(),
   STRIPE_SECRET_KEY: Joi.string().allow('').optional(),
+
+  // Federation / ActivityPub
+  FEDERATION_ENABLED: Joi.string().valid('true', 'false').optional().default('false'),
+  INSTANCE_DOMAIN: Joi.string().domain().optional(),
+  INSTANCE_BASE_URL: Joi.string().uri().optional(),
+
+  // Crypto / Blockchain payouts
+  CRYPTO_PAYOUTS_ENABLED: Joi.string().valid('true', 'false').optional().default('false'),
+  CRYPTO_PAYOUT_PRIVATE_KEY: Joi.string().allow('').optional(),
+  CRYPTO_PAYOUT_CHAINS: Joi.string().optional().default('8453'),
+
+  // AI / OpenRouter (optional — features fall back to templates when unset)
+  OPENROUTER_API_KEY: Joi.string().optional(),
+  OPENROUTER_BASE_URL: Joi.string().uri().optional().default('https://openrouter.ai/api/v1'),
+  AI_TEXT_MODEL: Joi.string().optional().default('openai/gpt-4o-mini'),
+  AI_VISION_MODEL: Joi.string().optional().default('openai/gpt-4o'),
+  AI_ANALYSIS_MODEL: Joi.string().optional().default('openai/gpt-4o-mini'),
+  AI_FALLBACK_ENABLED: Joi.string().valid('true', 'false').optional().default('true'),
 });

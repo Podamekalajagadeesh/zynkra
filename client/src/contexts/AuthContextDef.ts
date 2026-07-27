@@ -16,7 +16,7 @@ export interface AuthContextType {
   isLoggedIn: boolean;
   switchAccount: (accountId: string) => void;
   addAccount: (account: Account) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   setUser: (user: UserProfile) => void;
 }
 

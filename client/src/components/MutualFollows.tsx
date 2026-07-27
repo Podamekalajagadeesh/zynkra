@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import { getMutualFollows } from '../lib/api';
-import { User } from '../lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Link } from 'react-router-dom';
+
+interface MutualFollowUser {
+  id: string;
+  email?: string | null;
+  nftPfpUrl?: string | null;
+}
 
 interface MutualFollowsProps {
   userId: string;
 }
 
 export function MutualFollows({ userId }: MutualFollowsProps) {
-  const [mutualFollows, setMutualFollows] = useState<User[]>([]);
+  const [mutualFollows, setMutualFollows] = useState<MutualFollowUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +47,7 @@ export function MutualFollows({ userId }: MutualFollowsProps) {
         {mutualFollows.slice(0, 5).map((user) => (
           <Link to={`/users/${user.id}`} key={user.id}>
             <Avatar>
-              <AvatarImage src={user.pfp ?? ''} />
+              <AvatarImage src={user.nftPfpUrl ?? ''} />
               <AvatarFallback>{user.email?.[0]}</AvatarFallback>
             </Avatar>
           </Link>

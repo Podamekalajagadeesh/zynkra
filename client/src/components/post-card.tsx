@@ -57,7 +57,7 @@ interface PostAuthor {
   id: string;
   email: string | null;
   walletAddress: string | null;
-  displayName: string | null;
+  displayName?: string | null;
   subscription?: { active: boolean };
   isPremium?: boolean;
 }
@@ -215,8 +215,6 @@ export function PostCard({
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
-  const [sourceType, setSourceType] = useState<'human' | 'animal' | 'dialect' | null>(null);
-  const [translationConfidence, setTranslationConfidence] = useState<number | null>(null);
 
   // Auto-translate post content if auto-translate is enabled
   useEffect(() => {
@@ -230,8 +228,6 @@ export function PostCard({
             const result = await translateText(post.content, targetLang);
             setTranslatedContent(result.translatedText);
             setDetectedLanguage(result.detectedSourceLanguage);
-            setSourceType(result.sourceType);
-            setTranslationConfidence(result.confidence);
           } catch (error) {
             console.error('Failed to translate post:', error);
           } finally {
@@ -255,8 +251,6 @@ export function PostCard({
       const result = await translateText(post.content, targetLang);
       setTranslatedContent(result.translatedText);
       setDetectedLanguage(result.detectedSourceLanguage);
-      setSourceType(result.sourceType);
-      setTranslationConfidence(result.confidence);
     } catch (error) {
       console.error('Failed to translate post:', error);
       addToast('Failed to translate post', 'error');
@@ -1167,10 +1161,7 @@ export function PostCard({
                 <>
                   {renderContent(translatedContent)}
                   <span className="text-xs text-dark-500 dark:text-dark-400 block mt-1">
-                    Translated from {detectedLanguage || 'unknown language'} 
-                    {sourceType === 'animal' && ' • 🐾 Animal communication'}
-                    {sourceType === 'dialect' && ' • 🌍 Rare human dialect'}
-                    {translationConfidence && ` • ${Math.round(translationConfidence * 100)}% confidence`}
+                    Translated from {detectedLanguage || 'unknown language'}
                     • <button onClick={handleManualTranslate} className="underline">Show original</button>
                   </span>
                 </>

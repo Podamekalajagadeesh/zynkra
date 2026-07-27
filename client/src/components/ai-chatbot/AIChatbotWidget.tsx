@@ -6,6 +6,7 @@ import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '../../hooks/useToast';
+import { api } from '../../lib/api';
 
 interface ChatMessage {
   id: string;
@@ -122,16 +123,34 @@ export default function AIChatbotWidget() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    let responseText: string;
+
+    try {
+      // Call the dedicated chat endpoint with conversation history
+      const response = await api.post('/ai/content/chat', {
+        messages: [
+          ...messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          { role: 'user', content: currentInput },
+        ],
+      });
+
+      responseText = response.data?.content || generateAIResponse(currentInput);
+    } catch {
+      // Fall back to keyword-based FAQ matching when API is unavailable
+      responseText = generateAIResponse(currentInput);
+    }
 
     const aiResponse: ChatMessage = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      content: generateAIResponse(inputValue),
+      content: responseText,
       timestamp: new Date()
     };
 
@@ -181,7 +200,7 @@ export default function AIChatbotWidget() {
                 <Bot className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">Zynkra AI Assistant</h3>
+                <h3 className="font-bold text-lg">Zynkra AI Assistant — Preview</h3>
                 <p className="text-sm opacity-90">Customer service & community management</p>
               </div>
             </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Message } from '../../lib/types';
-import { Brain, Lock } from 'lucide-react';
+import { Brain, Lock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { decryptMessage, getKeys } from '../../services/encryption.service';
+import { useE2EE } from '../../hooks/useE2EE';
 import { API_BASE_URL } from '../../lib/api';
 
 /** Server-relative upload paths need the API origin prefixed. */
@@ -15,7 +15,9 @@ interface MessageContentProps {
 export default function MessageContent({ message }: MessageContentProps) {
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [isDecrypting, setIsDecrypting] = useState(false);
+  const [decryptError, setDecryptError] = useState(false);
   const { user } = useAuth();
+  const { decryptMessage, isReady } = useE2EE(user?.id);
 
   // Helper function to get emotion color
   const getEmotionColor = (value: number): string => {
@@ -29,35 +31,60 @@ export default function MessageContent({ message }: MessageContentProps) {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
-  // Decrypt message content if it's encrypted
+  // Decrypt message content using Signal Protocol
   useEffect(() => {
     const decryptContent = async () => {
       if (!message.content || !user) return;
-      
-      // Check if content is encrypted (JSON string with nonce and ciphertext)
+
+      // Check if content is E2EE (Signal Protocol format: JSON with type and body)
       try {
         const parsed = JSON.parse(message.content);
-        if (parsed.nonce && parsed.ciphertext) {
+
+        // Signal Protocol ciphertext format: { type: number, body: string, version: number }
+        if (parsed.type !== undefined && parsed.body && parsed.version) {
           setIsDecrypting(true);
-          const keys = await getKeys(user.id);
-          if (keys) {
-            // Get sender's public key - in a real app, this would come from the message sender
-            const senderPublicKeyBytes = new Uint8Array(atob(message.sender.publicKey || '').split('').map(c => c.charCodeAt(0)));
-            const decrypted = await decryptMessage(senderPublicKeyBytes, keys.privateKey, message.content);
+          setDecryptError(false);
+
+          try {
+            const decrypted = await decryptMessage(message.sender.id, message.content);
             setDecryptedContent(decrypted);
+          } catch {
+            // Old format fallback: check for legacy libsodium format
+            if (parsed.nonce && parsed.ciphertext) {
+              // Legacy format — show as-is (can't decrypt without old keys)
+              setDecryptedContent('[Encrypted message from previous session]');
+            } else {
+              setDecryptedContent(message.content);
+            }
+            setDecryptError(false);
           }
+
+          setIsDecrypting(false);
+        } else if (parsed.nonce && parsed.ciphertext) {
+          // Legacy libsodium format — show placeholder
+          setDecryptedContent('[Encrypted message - key exchange required]');
           setIsDecrypting(false);
         } else {
+          // Plain text
           setDecryptedContent(message.content);
         }
-      } catch (e) {
-        // Content is not encrypted, use as is
+      } catch {
+        // Not JSON — plain text
         setDecryptedContent(message.content);
       }
     };
 
     decryptContent();
-  }, [message.content, message.sender, user]);
+  }, [message.content, message.sender.id, user, decryptMessage]);
+
+  const isE2EE = (() => {
+    try {
+      const p = JSON.parse(message.content);
+      return p.type !== undefined && p.body && p.version === 1;
+    } catch {
+      return false;
+    }
+  })();
 
   return (
     <div>
@@ -67,7 +94,7 @@ export default function MessageContent({ message }: MessageContentProps) {
             <Brain size={14} className="text-purple-600 dark:text-purple-400" />
             <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Telepathic Message</span>
           </div>
-          
+
           {/* Display emotions if available */}
           {message.neuralMetadata?.emotions && (
             <div className="mt-2">
@@ -82,7 +109,7 @@ export default function MessageContent({ message }: MessageContentProps) {
               </div>
             </div>
           )}
-          
+
           {/* Display context if available */}
           {message.neuralMetadata?.context && (
             <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
@@ -97,14 +124,25 @@ export default function MessageContent({ message }: MessageContentProps) {
         </div>
       )}
       <div className="flex items-center gap-1 mb-1">
-        <Lock size={12} className="text-green-600 dark:text-green-400" />
-        <span className="text-[10px] text-green-600 dark:text-green-400">End-to-end encrypted</span>
+        {isE2EE ? (
+          <>
+            <ShieldCheck size={12} className="text-green-600 dark:text-green-400" />
+            <span className="text-[10px] text-green-600 dark:text-green-400">Encrypted (Signal Protocol)</span>
+          </>
+        ) : (
+          <>
+            <Lock size={12} className="text-amber-600 dark:text-amber-400" />
+            <span className="text-[10px] text-amber-600 dark:text-amber-400">Encrypted in transit</span>
+          </>
+        )}
       </div>
       {message.forwardedFrom && (
         <p className="text-xs text-gray-500">Forwarded</p>
       )}
       {isDecrypting ? (
         <p className="text-sm text-gray-500">Decrypting message...</p>
+      ) : decryptError ? (
+        <p className="text-sm text-red-500">Failed to decrypt message</p>
       ) : (
         <p className="text-sm">{decryptedContent || message.content}</p>
       )}

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { PageShell } from '../components/PageShell';
 import { walletService, WalletInfo } from '../services/wallet';
 import { Button } from '../components/ui/button';
-import { LogOut, Copy, CheckCircle2, User, Wallet as WalletIcon, Receipt, Car, Coins } from 'lucide-react';
+import { LogOut, Copy, CheckCircle2, User, Wallet as WalletIcon, Receipt, Car, Coins, ExternalLink, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { getNftsForOwner, Nft } from '../services/nft';
-import { setNftPfp } from '../lib/api';
+import { setNftPfp, getWalletBalance, getWalletLedger } from '../lib/api';
+import type { LedgerEntry, WalletBalance } from '../lib/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { SuperAppDashboard } from '../components/superapp/SuperAppDashboard';
 import { useAuth } from '../hooks/useAuth';
@@ -16,8 +17,16 @@ export function WalletPage() {
   const [nfts, setNfts] = useState<Nft[]>([]);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [reputation, setReputation] = useState<any>(null);
+  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const { user } = useAuth();
   const { addToast } = useToast();
+
+  const formatMoney = (amount: number, currency = 'usd') =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: (currency || 'usd').toUpperCase(),
+    }).format(amount);
 
   useEffect(() => {
     const connectedWallet = walletService.getConnectedWallet();
@@ -27,6 +36,9 @@ export function WalletPage() {
     }
     if (user?.id) {
       get<any>(`/reputation/${user.id}`).then(setReputation);
+      // Fetch backend wallet balance and ledger
+      getWalletBalance().then(setWalletBalance).catch(() => {});
+      getWalletLedger(20).then(setLedger).catch(() => {});
     }
   }, [user]);
 
@@ -114,6 +126,55 @@ export function WalletPage() {
                   <p className="text-lg font-semibold text-dark-900 dark:text-white">
                     {wallet.providerType}
                   </p>
+                </div>
+              </div>
+
+              {/* Wallet Balance & Ledger (backend) */}
+              <div className="surface">
+                <div className="p-5">
+                  <p className="section-title flex items-center gap-2">
+                    <WalletIcon size={20} className="text-primary-500" />
+                    Wallet Balance
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-100 p-4 rounded-xl border border-green-200">
+                      <p className="text-sm font-medium text-green-800">Available Balance</p>
+                      <p className="text-3xl font-bold text-green-900">
+                        {walletBalance ? formatMoney(walletBalance.walletBalance) : '$0.00'}
+                      </p>
+                      <p className="text-xs text-green-600 mt-1">Funds available for payouts</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-50 to-violet-100 p-4 rounded-xl border border-purple-200">
+                      <p className="text-sm font-medium text-purple-800">Connected Wallet</p>
+                      <p className="text-lg font-bold text-purple-900 truncate">
+                        {wallet?.address?.slice(0, 6)}...{wallet?.address?.slice(-4) || 'N/A'}
+                      </p>
+                      <p className="text-xs text-purple-600 mt-1">Used for crypto payouts</p>
+                    </div>
+                  </div>
+                  {ledger.length > 0 && (
+                    <div className="mt-6">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Recent Transactions</p>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {ledger.slice(0, 10).map((entry: LedgerEntry) => {
+                          const credit = Number(entry.amount) >= 0;
+                          return (
+                            <div key={entry.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className={`p-1 rounded-full ${credit ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                  {credit ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+                                </span>
+                                <span className="text-sm text-gray-700 capitalize">{entry.purpose || entry.type}</span>
+                              </div>
+                              <span className={`text-sm font-medium ${credit ? 'text-green-600' : 'text-gray-700'}`}>
+                                {credit ? '+' : '−'}{Math.abs(Number(entry.amount)).toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useRef } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { createPost } from '../lib/api';

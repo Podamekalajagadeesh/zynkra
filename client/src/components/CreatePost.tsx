@@ -328,6 +328,10 @@ export function CreatePost() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const files = Array.from(event.target.files);
+      if (mediaFiles.length + files.length > 4) {
+        addToast('Maximum of 4 media items allowed per post.', 'warning');
+        return;
+      }
       setMediaFiles(prev => [...prev, ...files]);
 
       const previews = files.map(file => URL.createObjectURL(file));

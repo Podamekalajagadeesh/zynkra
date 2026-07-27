@@ -8,9 +8,12 @@ import {
   Param,
   Query,
   Session,
+  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { WalletService } from './wallet.service';
+import { CryptoPayoutsService } from './crypto-payouts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ConnectWalletDto } from './dto/connect-wallet.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
@@ -18,7 +21,10 @@ import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
 @Controller('wallet')
 @UseGuards(JwtAuthGuard)
 export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly cryptoPayoutsService: CryptoPayoutsService,
+  ) {}
 
   /** Issue a one-time message the wallet must sign before it can be linked. */
   @Get('connect/challenge')
@@ -78,5 +84,39 @@ export class WalletController {
   @Post('set-nft-pfp')
   setNftPfp(@Req() req, @Body() setNftPfpDto: SetNftPfpDto) {
     return this.walletService.setNftPfp(req.user.userId, setNftPfpDto);
+  }
+
+  // ---- Crypto Payouts -------------------------------------------------------
+
+  @Get('crypto/chains')
+  getSupportedChains() {
+    return {
+      enabled: this.cryptoPayoutsService.isEnabled(),
+      chains: this.cryptoPayoutsService.getSupportedChains(),
+    };
+  }
+
+  @Post('crypto/payout')
+  async requestCryptoPayout(
+    @Req() req,
+    @Body() body: { amount: number; chainId?: number },
+  ) {
+    const { amount, chainId } = body;
+    if (!amount || amount <= 0) {
+      throw new BadRequestException('Invalid payout amount');
+    }
+    return this.cryptoPayoutsService.sendCryptoPayout(
+      req.user.userId,
+      amount,
+      chainId ?? 8453,
+    );
+  }
+
+  @Get('crypto/status/:txHash')
+  async getCryptoPayoutStatus(
+    @Param('txHash') txHash: string,
+    @Query('chainId', new ParseIntPipe({ optional: true })) chainId?: number,
+  ) {
+    return this.cryptoPayoutsService.getTransactionStatus(txHash, chainId ?? 8453);
   }
 }

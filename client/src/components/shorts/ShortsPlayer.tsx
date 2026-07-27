@@ -38,7 +38,7 @@ const ShortsPlayer = ({ shorts }: ShortsPlayerProps) => {
         >
           <video
             ref={(el) => (videoRefs.current[index] = el)}
-            src={`${API_BASE_URL}${short.mediaUrl}`}
+            src={`${API_BASE_URL}${short.videoUrl || short.media?.[0]?.url || ''}`}
             className="h-full w-auto"
             loop
             muted={false}

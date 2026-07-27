@@ -2,90 +2,6 @@ import axios from 'axios';
 import { enqueueOfflineOperation } from './offlineSync';
 import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing } from './types';
 
-// Enhanced universal translation service - supports all human languages, dialects, and animal communication
-export const translateText = async (text: string, targetLanguage: string): Promise<{ translatedText: string; detectedSourceLanguage: string; sourceType: 'human' | 'animal' | 'dialect'; confidence: number }> => {
-  try {
-    const response = await api.post('/advanced-features/translate', { text, targetLanguage });
-    return response.data;
-  } catch (error) {
-    console.error('Advanced translation failed, using local fallback:', error);
-    // Comprehensive mock translations including human languages, dialects, and animal communications
-    const mockTranslations: Record<string, Record<string, { text: string; sourceType: 'human' | 'animal' | 'dialect' }>> = {
-      // Human languages
-      en: {
-        es: { text: `[Spanish] ${text}`, sourceType: 'human' },
-        fr: { text: `[French] ${text}`, sourceType: 'human' },
-        de: { text: `[German] ${text}`, sourceType: 'human' },
-        pt: { text: `[Portuguese] ${text}`, sourceType: 'human' },
-        ja: { text: `[Japanese] ${text}`, sourceType: 'human' },
-        zh: { text: `[Chinese] ${text}`, sourceType: 'human' },
-        ar: { text: `[Arabic] ${text}`, sourceType: 'human' },
-        hi: { text: `[Hindi] ${text}`, sourceType: 'human' },
-        ru: { text: `[Russian] ${text}`, sourceType: 'human' },
-      },
-      // Animal communications to human language (English)
-      "dog-bark": {
-        en: { text: "The dog is barking to warn of an approaching stranger and expressing alertness.", sourceType: 'animal' },
-        es: { text: "El perro ladra para advertir de un extraño que se acerca y expresar alerta.", sourceType: 'animal' },
-        fr: { text: "Le chien aboie pour avertir d'un étranger qui approche et exprimer son alerte.", sourceType: 'animal' },
-      },
-      "cat-meow": {
-        en: { text: "The cat is meowing to request food and attention from its owner.", sourceType: 'animal' },
-        es: { text: "El gato maúlla para pedir comida y atención a su dueño.", sourceType: 'animal' },
-        fr: { text: "Le chat miaule pour demander de la nourriture et l'attention de son propriétaire.", sourceType: 'animal' },
-      },
-      "bird-chirp": {
-        en: { text: "The bird is chirping to signal that it has found food and is calling other flock members.", sourceType: 'animal' },
-        es: { text: "El pájaro trina para señalar que ha encontrado comida y llama a otros miembros de la bandada.", sourceType: 'animal' },
-        fr: { text: "L'oiseau chante pour signaler qu'il a trouvé de la nourriture et appelle les autres membres du troupeau.", sourceType: 'animal' },
-      },
-      "whale-song": {
-        en: { text: "The whale is singing a long-distance mating call to communicate with potential partners across the ocean.", sourceType: 'animal' },
-        es: { text: "La ballena canta una llamada de apareamiento de larga distancia para comunicarse con parejas potenciales a través del océano.", sourceType: 'animal' },
-        fr: { text: "La baleine chante un appel d'accouplement longue distance pour communiquer avec des partenaires potentiels à travers l'océan.", sourceType: 'animal' },
-      },
-      // Human dialects
-      "scots-gaelic": {
-        en: { text: `[Translated from Scottish Gaelic] ${text}`, sourceType: 'dialect' },
-      },
-      "louisiana-creole": {
-        en: { text: `[Translated from Louisiana Creole] ${text}`, sourceType: 'dialect' },
-      },
-      "hawaiian-pidgin": {
-        en: { text: `[Translated from Hawaiian Pidgin] ${text}`, sourceType: 'dialect' },
-      },
-    };
-
-    // Determine source type and get translated text
-    let detectedSource = 'en';
-    let sourceType: 'human' | 'animal' | 'dialect' = 'human';
-    let translated = text;
-
-    // Check if input matches an animal communication pattern or use target language fallback
-    if (text.match(/(woof|bark|meow|chirp|squeak)/i)) {
-      detectedSource = 'animal-communication';
-      const animalSource = text.includes('woof') || text.includes('bark') ? 'dog-bark' : 
-                         text.includes('meow') ? 'cat-meow' : 
-                         text.includes('chirp') || text.includes('tweet') ? 'bird-chirp' : 'whale-song';
-      
-      if (mockTranslations[animalSource]?.[targetLanguage]) {
-        translated = mockTranslations[animalSource][targetLanguage].text;
-        sourceType = mockTranslations[animalSource][targetLanguage].sourceType;
-      }
-    } else if (mockTranslations[detectedSource]?.[targetLanguage]) {
-      translated = mockTranslations[detectedSource][targetLanguage].text;
-      sourceType = mockTranslations[detectedSource][targetLanguage].sourceType;
-    }
-
-    return {
-      translatedText: translated,
-      detectedSourceLanguage: detectedSource,
-      sourceType,
-      confidence: 0.98 // High confidence in translation accuracy
-    };
-  }
-};
-
 export const updatePrivacy = async (privacy: { 
   postVisibility?: PostVisibility; 
   friendRequestPrivacy?: FriendRequestPrivacy;
@@ -312,6 +228,60 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Auto-refresh token on 401 responses
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Skip refresh for auth endpoints (signup, signin, refresh itself) to avoid loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/signin') ||
+      originalRequest.url?.includes('/auth/signup') ||
+      originalRequest.url?.includes('/auth/refresh') ||
+      originalRequest.url?.includes('/auth/recover') ||
+      originalRequest.url?.includes('/auth/verify-email');
+
+    if (error.response?.status === 401 && !isAuthEndpoint && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          refreshSubscribers.push((token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const { access_token } = await api.post('/auth/refresh');
+        setAuthToken(access_token);
+        onRefreshed(access_token);
+        refreshSubscribers = [];
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return api(originalRequest);
+      } catch {
+        setAuthToken(null);
+        window.dispatchEvent(new Event('authchange'));
+        return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export const setAuthToken = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -344,8 +314,18 @@ export const signUp = async (data: AuthData) => {
   return response.data;
 };
 
+export const logoutFromServer = async () => {
+  const response = await api.post('/auth/signout');
+  return response.data as { message: string };
+};
+
 export const login = async (data: AuthData) => {
   const response = await api.post('/auth/signin', data);
+  return response.data;
+};
+
+export const refreshToken = async (): Promise<{ access_token: string }> => {
+  const response = await api.post('/auth/refresh');
   return response.data;
 };
 
@@ -361,6 +341,16 @@ export const setup2FA = async () => {
 
 export const enable2FA = async (data: { token: string }) => {
   const response = await api.post('/auth/2fa/enable', data);
+  return response.data;
+};
+
+export const get2FAStatus = async () => {
+  const response = await api.get('/auth/2fa/status');
+  return response.data;
+};
+
+export const disable2FA = async (data: { token: string }) => {
+  const response = await api.post('/auth/2fa/disable', data);
   return response.data;
 };
 
@@ -995,6 +985,7 @@ export const sendMessage = async (
   replyToId?: string,
   media?: { url: string; type: 'image' | 'video' | 'audio' }[],
   voiceNote?: { durationSeconds: number; waveform: number[] },
+  senderPublicKey?: string,
 ) => {
   if (conversationId) {
     const response = await api.post(`/dms/${conversationId}/messages`, {
@@ -1002,6 +993,7 @@ export const sendMessage = async (
       replyToId,
       media,
       voiceNote,
+      senderPublicKey,
     });
     return response.data;
   }
@@ -1010,6 +1002,8 @@ export const sendMessage = async (
       content,
       replyToId,
       media,
+      voiceNote,
+      senderPublicKey,
     });
     return response.data;
   }
@@ -1663,11 +1657,6 @@ export const getMemoryProjects = async () => {
   return response.data;
 };
 
-export const createDao = async (groupId: string) => {
-  const response = await api.post('/dao', { groupId });
-  return response.data;
-};
-
 export const getInstantForms = async () => {
   const response = await api.get('/instant-forms');
   return response.data;
@@ -1785,20 +1774,6 @@ export const deletePage = async (pageId: string) => {
 };
 
 
-export const getProposals = async (daoId: string) => {
-  const response = await api.get(`/dao/${daoId}/proposals`);
-  return response.data;
-};
-
-export const createProposal = async (daoId: string, title: string, description: string) => {
-  const response = await api.post(`/dao/${daoId}/proposals`, { title, description });
-  return response.data;
-};
-
-export const vote = async (proposalId: string, voterId: string, support: boolean) => {
-  const response = await api.post(`/dao/proposals/${proposalId}/vote`, { voterId, support });
-  return response.data;
-};
 
 export const createSubscription = async (creatorId: string, tier: string) => {
   const response = await api.post('/subscriptions', { creatorId, tier });
@@ -2191,5 +2166,297 @@ export const requestPayout = async (
   purpose = 'creator-payout',
 ): Promise<PayoutResult> => {
   const response = await api.post('/payments/payouts/request', { amount, purpose });
+  return response.data;
+};
+
+// ---- Crypto Payouts --------------------------------------------------------
+
+export type CryptoChain = {
+  chainId: number;
+  name: string;
+  usdcAddress: string;
+};
+
+export interface CryptoPayoutResult {
+  success: boolean;
+  txHash: string | null;
+  amount: number;
+  currency: string;
+  recipientAddress: string;
+  status: string;
+}
+
+export const getCryptoPayoutChains = async (): Promise<{
+  enabled: boolean;
+  chains: CryptoChain[];
+}> => {
+  const response = await api.get('/wallet/crypto/chains');
+  return response.data;
+};
+
+export const requestCryptoPayout = async (
+  amount: number,
+  chainId = 8453,
+): Promise<CryptoPayoutResult> => {
+  const response = await api.post('/wallet/crypto/payout', { amount, chainId });
+  return response.data;
+};
+
+// ---- Creator Analytics -----------------------------------------------------
+
+export interface CreatorDashboardData {
+  overview: {
+    totalPosts: number;
+    totalArticles: number;
+    totalViews: number;
+    totalSubscribers: number;
+    newslettersSent: number;
+    totalPlays: number;
+    coursesCreated: number;
+    totalEnrollments: number;
+  };
+  topContent: {
+    posts: any[];
+    articles: any[];
+    podcasts: any[];
+  };
+}
+
+export const getCreatorDashboard = async (): Promise<CreatorDashboardData> => {
+  const response = await api.get('/creator-analytics/dashboard');
+  return response.data;
+};
+
+export const getNewsletterAnalytics = async (): Promise<any> => {
+  const response = await api.get('/creator-analytics/newsletters');
+  return response.data;
+};
+
+export const getCourseAnalytics = async (): Promise<any> => {
+  const response = await api.get('/creator-analytics/courses');
+  return response.data;
+};
+
+export const getPodcastAnalytics = async (): Promise<any> => {
+  const response = await api.get('/creator-analytics/podcasts');
+  return response.data;
+};
+
+// ---- AI Content Creation ---------------------------------------------------
+
+export const generateContent = async (params: {
+  topic: string;
+  type: 'announcement' | 'tutorial' | 'opinion' | 'promotional' | 'question';
+  details?: string;
+  tone?: string;
+  keywords?: string[];
+}) => {
+  const response = await api.post('/ai/content/generate', params);
+  return response.data;
+};
+
+export const optimizeContent = async (content: string) => {
+  const response = await api.post('/ai/content/optimize', { content });
+  return response.data;
+};
+
+export const analyzeContent = async (content: string) => {
+  const response = await api.post('/ai/content/analyze', { content });
+  return response.data;
+};
+
+export const generateCaption = async (mediaType: 'image' | 'video' | 'audio', keywords?: string[]) => {
+  const response = await api.post('/ai/content/caption', { mediaType, keywords });
+  return response.data;
+};
+
+// ---- Translation -----------------------------------------------------------
+
+export const getSupportedLanguages = async () => {
+  const response = await api.get('/translation/languages');
+  return response.data;
+};
+
+export const translateText = async (text: string, targetLang: string, sourceLang?: string) => {
+  const response = await api.post('/translation/translate', { text, targetLang, sourceLang });
+  return response.data;
+};
+
+// ---- Articles API ----------------------------------------------------------
+
+export interface Article {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  content: string;
+  excerpt: string;
+  coverImage: string | null;
+  author: { id: string; username: string; displayName: string; avatar: string };
+  publishedAt: string;
+  readingTime: number;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  tags: string[];
+  isGated: boolean;
+}
+
+export const getArticleFeed = async (page = 1, tag?: string): Promise<{ articles: Article[]; total: number }> => {
+  const params = new URLSearchParams({ page: String(page) });
+  if (tag) params.set('tag', tag);
+  const response = await api.get(`/articles/feed?${params}`);
+  return response.data;
+};
+
+export const getArticleBySlug = async (slug: string): Promise<Article> => {
+  const response = await api.get(`/articles/${slug}`);
+  return response.data;
+};
+
+// ---- Podcasts API ----------------------------------------------------------
+
+export interface Podcast {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  audioUrl: string;
+  durationSeconds: number;
+  author: { id: string; username: string; displayName: string };
+  tags: string[];
+  playCount: number;
+}
+
+export const getPodcastFeed = async (page = 1, tag?: string): Promise<{ podcasts: Podcast[]; total: number }> => {
+  const params = new URLSearchParams({ page: String(page) });
+  if (tag) params.set('tag', tag);
+  const response = await api.get(`/podcasts/feed?${params}`);
+  return response.data;
+};
+
+// ---- Courses API -----------------------------------------------------------
+
+export interface Course {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  author: { id: string; username: string; displayName: string };
+  enrollmentCount: number;
+  lessonCount: number;
+}
+
+export const getCourseFeed = async (page = 1): Promise<{ courses: Course[]; total: number }> => {
+  const response = await api.get(`/courses/feed?page=${page}`);
+  return response.data;
+};
+
+// ---- DAO API ---------------------------------------------------------------
+
+export const createDao = async (groupId: string) => {
+  const response = await api.post('/dao', { groupId });
+  return response.data;
+};
+
+export const getDao = async (daoId: string) => {
+  const response = await api.get(`/dao/${daoId}/stats`);
+  return response.data;
+};
+
+export const getDaoStats = async (daoId: string) => {
+  const response = await api.get(`/dao/${daoId}/stats`);
+  return response.data;
+};
+
+export const getProposals = async (daoId: string) => {
+  const response = await api.get(`/dao/${daoId}/proposals`);
+  return response.data;
+};
+
+export const getProposal = async (proposalId: string) => {
+  const response = await api.get(`/dao/proposals/${proposalId}`);
+  return response.data;
+};
+
+export const createProposal = async (daoId: string, title: string, description: string) => {
+  const response = await api.post(`/dao/${daoId}/proposals`, { title, description });
+  return response.data;
+};
+
+export const vote = async (proposalId: string, voterId: string, support: boolean) => {
+  const response = await api.post(`/dao/proposals/${proposalId}/vote`, { voterId, support });
+  return response.data;
+};
+
+export const executeProposal = async (proposalId: string) => {
+  const response = await api.post(`/dao/proposals/${proposalId}/execute`);
+  return response.data;
+};
+
+// ---- Token-Gated API -------------------------------------------------------
+
+export const getTokenGatedContent = async (contentId: string) => {
+  const response = await api.get(`/token-gated/content/${contentId}`);
+  return response.data;
+};
+
+export const createTokenGatedContent = async (
+  name: string,
+  description: string,
+  tokenAddress: string,
+  minTokenBalance: number,
+) => {
+  const response = await api.post('/token-gated/content', {
+    name,
+    description,
+    tokenAddress,
+    minTokenBalance,
+  });
+  return response.data;
+};
+
+export const createTokenGatedGroup = async (
+  name: string,
+  description: string,
+  tokenAddress: string,
+  minTokenBalance: number,
+) => {
+  const response = await api.post('/token-gated/group', {
+    name,
+    description,
+    tokenAddress,
+    minTokenBalance,
+  });
+  return response.data;
+};
+
+export const getTokenGatedGroup = async (groupId: string) => {
+  const response = await api.get(`/token-gated/group/${groupId}`);
+  return response.data;
+};
+
+export const joinTokenGatedGroup = async (groupId: string) => {
+  const response = await api.post(`/token-gated/group/${groupId}/join`);
+  return response.data;
+};
+
+// ---- Sync API --------------------------------------------------------------
+
+export const getInitialSync = async (since?: string) => {
+  const params = since ? `?since=${since}` : '';
+  const response = await api.get(`/sync/initial${params}`);
+  return response.data;
+};
+
+export const pushOfflineChanges = async (changes: any) => {
+  const response = await api.post('/sync/push', changes);
+  return response.data;
+};
+
+export const pullChanges = async (since: string) => {
+  const response = await api.get(`/sync/pull?since=${since}`);
   return response.data;
 };

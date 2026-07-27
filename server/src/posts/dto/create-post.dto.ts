@@ -9,6 +9,7 @@ import {
   ValidateNested,
   IsNumber,
   IsArray,
+  ArrayMaxSize,
 } from 'class-validator';
 import { PostVisibility, PostType } from '../entities/post.entity';
 import { Type } from 'class-transformer';
@@ -97,6 +98,7 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(4)
   @ValidateNested({ each: true })
   @Type(() => MediaDto)
   media?: MediaDto[];

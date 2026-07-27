@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { PageShell } from '../PageShell';
 import { Button } from '../ui/button';

@@ -10,15 +10,7 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
-    '/src/feed/',
     '/src/federation/',
-    '/src/notifications/',
-    '/src/advanced-features/',
-    '/src/neural-compensation/',
-    '/src/virtual-real-estate/',
-    '/src/stories/',
-    '/src/comments/',
-    '/src/users/',
-    '/src/posts/',
+    '/src/federation/',
   ],
 };

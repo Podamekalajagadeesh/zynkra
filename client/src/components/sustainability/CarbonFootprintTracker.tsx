@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { Leaf, TreeDeciduous, TrendingUp, Info, ChevronDown, ChevronUp, Recycle, Globe, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { Note } from './entities/note.entity';
@@ -75,6 +76,7 @@ export class NotesService {
     }
   }
 
+  @Cron('0 */30 * * * *') // Run every 30 minutes
   async cleanupExpiredNotes(): Promise<void> {
     await this.notesRepository.delete({ expiresAt: LessThan(new Date()) });
   }

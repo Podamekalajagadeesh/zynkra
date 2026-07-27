@@ -22,6 +22,7 @@ import { PagesService } from '../pages/pages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { User } from './entities/user.entity';
+import { FollowRequest } from './entities/follow-request.entity';
 import { Page } from '../pages/entities/page.entity';
 import { Poke } from './entities/poke.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -72,20 +73,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getCurrentUser(@Request() req): Promise<Omit<User, 'password_hash'>> {
-    const user = await this.usersService.findOneById(req.user.userId, [
-      'following',
-      'followers',
-    ]);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    const { ...result } = user;
-    return result;
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  async getProfile(@Request() req): Promise<Omit<User, 'password_hash'>> {
     const user = await this.usersService.findOneById(req.user.userId, [
       'following',
       'followers',
@@ -366,6 +353,25 @@ export class UsersController {
   @Get('me/followers')
   async getMyFollowers(@Request() req): Promise<User[]> {
     return this.usersService.getFollowers(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/following')
+  async getMyFollowing(@Request() req): Promise<User[]> {
+    return this.usersService.getFollowing(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/follow-requests/pending')
+  async getMyPendingFollowRequests(@Request() req): Promise<FollowRequest[]> {
+    return this.usersService.getPendingFollowRequests(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('follow-requests/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cancelFollowRequest(@Request() req, @Param('id') id: string): Promise<void> {
+    return this.usersService.cancelFollowRequest(req.user.userId, id);
   }
 
   @UseGuards(JwtAuthGuard)

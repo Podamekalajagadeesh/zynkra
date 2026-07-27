@@ -236,6 +236,11 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
+      const currentCount = mediaFiles.length;
+      if (currentCount + files.length > 4) {
+        addToast('Maximum of 4 media items allowed per post.', 'warning');
+        return;
+      }
       const newMediaFiles = files.map((file) => ({
         file,
         preview: URL.createObjectURL(file),

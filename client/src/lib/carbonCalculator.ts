@@ -56,8 +56,8 @@ interface CarbonFootprint {
 export function calculateCarbonFootprint(metadata: ContentMetadata): CarbonFootprint {
   const sizeInGB = metadata.sizeInBytes / (1024 * 1024 * 1024);
   let processingEmissions = 0;
-  let transferEmissions = sizeInGB * EMISSION_FACTORS.dataTransfer;
-  let storageEmissions = sizeInGB * EMISSION_FACTORS.storage; // Annual storage emissions
+  const transferEmissions = sizeInGB * EMISSION_FACTORS.dataTransfer;
+  const storageEmissions = sizeInGB * EMISSION_FACTORS.storage; // Annual storage emissions
   
   // Calculate processing emissions based on content type
   if (metadata.type === 'video' && metadata.durationInSeconds) {

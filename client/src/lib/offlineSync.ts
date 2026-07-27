@@ -282,7 +282,7 @@ async function attemptBackgroundSyncRegistration(registration?: ServiceWorkerReg
 
     try {
       const raw = localStorage.getItem(REGISTRATION_RETRY_KEY);
-      let state = raw ? JSON.parse(raw) as { attempts: number; nextAt: number } : { attempts: 0, nextAt: 0 };
+      const state = raw ? JSON.parse(raw) as { attempts: number; nextAt: number } : { attempts: 0, nextAt: 0 };
       const now = Date.now();
       if (now < state.nextAt) return;
 

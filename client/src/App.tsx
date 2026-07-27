@@ -11,7 +11,7 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, Home, ShoppingBag, Plus, Coins } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
@@ -60,6 +60,7 @@ const AccessibilityFirstCommunitiesPage = lazy(() =>
   import('./components/accessibility-first-communities/AccessibilityFirstCommunities').then((module) => ({ default: module.AccessibilityFirstCommunities }))
 );
 const ShortsPage = lazy(() => import('./pages/shorts').then((module) => ({ default: module.default })));
+const ShortsEditorPage = lazy(() => import('./components/shorts/ShortsEditor').then((module) => ({ default: module.default })));
 const WalletPage = lazy(() => import('./pages/wallet').then((module) => ({ default: module.WalletPage })));
 const EarningsPage = lazy(() => import('./pages/earnings').then((module) => ({ default: module.EarningsPage })));
 const BlockchainIdentityPage = lazy(() => import('./pages/blockchain-identity').then((module) => ({ default: module.default })));
@@ -124,6 +125,8 @@ const DatingOnboardingPage = lazy(() => import('./pages/dating/onboarding').then
 const DatingDiscoveryPage = lazy(() => import('./pages/dating/discover').then((module) => ({ default: module.default })));
 const DatingMatchesPage = lazy(() => import('./pages/dating/matches').then((module) => ({ default: module.default })));
 const DatingCrushPage = lazy(() => import('./pages/dating/crush').then((module) => ({ default: module.default })));
+const ArticleFeedPage = lazy(() => import('./pages/articles/ArticleFeed'));
+const ArticleEditorPage = lazy(() => import('./pages/articles/ArticleEditor'));
 const AffiliateDashboardPage = lazy(() => import('./pages/affiliates/AffiliateDashboardPage').then((module) => ({ default: module.AffiliateDashboardPage })));
 const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/BrandCollabsDashboardPage').then((module) => ({ default: module.BrandCollabsDashboardPage })));
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
@@ -143,6 +146,11 @@ const TimelineReviewSettingsPage = lazy(() => import('./pages/timeline-review/se
 const ExplorePage = lazy(() => import('./pages/explore').then((module) => ({ default: module.default })));
 const EInkReaderPage = lazy(() => import('./pages/eink-reader').then((module) => ({ default: module.EInkReaderPage })));
 const AdvancedFeaturesPage = lazy(() => import('./pages/advanced-features').then((module) => ({ default: module.AdvancedFeaturesPage })));
+const CrisisEventsPage = lazy(() => import('./pages/crisis/CrisisEventsPage').then((module) => ({ default: module.default })));
+const CrisisEventDetailPage = lazy(() => import('./pages/crisis/CrisisEventDetailPage').then((module) => ({ default: module.default })));
+const TokenGatedPage = lazy(() => import('./pages/token-gated').then((module) => ({ default: module.TokenGatedPage })));
+const DaoPage = lazy(() => import('./pages/dao').then((module) => ({ default: module.DaoPage })));
+const SnapMapPage = lazy(() => import('./components/snapmap/SnapMapPage').then((module) => ({ default: module.SnapMapPage })));
 
 
 function RouteLoader() {
@@ -202,6 +210,7 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
   {
     title: 'Library',
     items: [
+      { to: '/articles', label: 'Articles', icon: BookOpen },
       { to: '/read-later', label: 'Read Later', icon: Bookmark },
       { to: '/memories', label: 'Memories', icon: Clock },
       { to: '/marketplace/saved', label: 'Saved', icon: Heart },
@@ -714,8 +723,8 @@ function App() {
                                 <PostList posts={posts} />
                                 {activeAccount && !hasKeys(activeAccount.user.id) && (
                                   <div className="surface p-md rounded-lg mt-md">
-                                    <h3 className="font-semibold mb-sm">Enable End-to-End Encryption</h3>
-                                    <p className="text-sm text-dark-500 mb-md">Generate a new key pair to secure your direct messages.</p>
+                                    <h3 className="font-semibold mb-sm">Enable Encryption</h3>
+                                    <p className="text-sm text-dark-500 mb-md">Generate a new key pair to help secure your direct messages. Note: E2EE is in progress — messages are encrypted in transit via TLS.</p>
                                     <Button onClick={() => generateKeys(activeAccount.user.id)}>Generate Keys</Button>
                                   </div>
                                 )}
@@ -788,6 +797,16 @@ function App() {
                     <Route path="/marketplace/orders" element={<OrdersPage />} />
                     <Route path="/marketplace/saved" element={<SavedMarketplaceListingsPage />} />
                     <Route path="/explore" element={<ExplorePage />} />
+                    <Route path="/articles" element={
+                      <ProtectedRoute>
+                        <ArticleFeedPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/articles/new" element={
+                      <ProtectedRoute>
+                        <ArticleEditorPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/digital-assets" element={
                       <ProtectedRoute>
                         <DigitalAssetsPage />
@@ -925,6 +944,14 @@ function App() {
                       }
                     />
                     <Route
+                      path="/shorts/editor"
+                      element={
+                        <ProtectedRoute>
+                          <ShortsEditorPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/local-feed"
                       element={
                         <ProtectedRoute>
@@ -985,6 +1012,22 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SecurityCheckupPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/crisis-events"
+                      element={
+                        <ProtectedRoute>
+                          <CrisisEventsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/crisis-events/:id"
+                      element={
+                        <ProtectedRoute>
+                          <CrisisEventDetailPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1174,6 +1217,9 @@ function App() {
                     />
                     <Route path="/timeline-review" element={<TimelineReviewPage />} />
                     <Route path="/timeline-review/settings" element={<TimelineReviewSettingsPage />} />
+                    <Route path="/token-gated" element={<ProtectedRoute><TokenGatedPage /></ProtectedRoute>} />
+                    <Route path="/dao" element={<ProtectedRoute><DaoPage /></ProtectedRoute>} />
+                    <Route path="/snapmap" element={<ProtectedRoute><SnapMapPage /></ProtectedRoute>} />
                   </Routes>
                 </Suspense>
               </main>

@@ -168,6 +168,9 @@ export class PostsService {
     }
 
     if (createPostDto.media) {
+      if (createPostDto.media.length > 4) {
+        throw new BadRequestException('Maximum of 4 media items allowed per post.');
+      }
       post.media = createPostDto.media.map(mediaDto => {
         const media = new Media();
         media.url = mediaDto.url;
@@ -175,8 +178,6 @@ export class PostsService {
         media.altText = mediaDto.altText;
         return media;
       });
-
-
     }
 
     if (createPostDto.poll) {
@@ -546,14 +547,12 @@ export class PostsService {
       return post;
     }
 
-    let cid: string;
-
     // Commented out since Post uses media array instead of mediaUrl
     // if (post.mediaUrl) {
     //   const response = await firstValueFrom(this.httpService.get(post.mediaUrl, { responseType: 'arraybuffer' }));
     //   cid = await this.storageService.upload(response.data);
     // } else {
-      cid = await this.storageService.upload(Buffer.from(post.content));
+      const cid = await this.storageService.upload(Buffer.from(post.content));
     // }
 
     post.ipfsCid = cid;

@@ -3,7 +3,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useToast } from '../hooks/useToast';
-import { setup2FA, enable2FA } from '../lib/api';
+import { setup2FA, enable2FA, get2FAStatus, disable2FA } from '../lib/api';
 import { AuthLayout } from '../components/AuthLayout';
 import QRCode from 'qrcode';
 
@@ -12,14 +12,22 @@ export function TwoFactorAuthPage() {
   const [secret, setSecret] = useState<string | null>(null);
   const [otpauthUrl, setOtpauthUrl] = useState<string | null>(null);
   const [token, setToken] = useState('');
+  const [disableToken, setDisableToken] = useState('');
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { addToast } = useToast();
 
   useEffect(() => {
     const fetch2FAStatus = async () => {
-      // In a real app, you'd fetch the user's 2FA status from the backend
-      // For this example, we'll just assume it's disabled by default
-      setIs2FAEnabled(false);
+      try {
+        const status = await get2FAStatus();
+        setIs2FAEnabled(status.enabled);
+      } catch {
+        // Backend not available or user not logged in — assume disabled
+        setIs2FAEnabled(false);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetch2FAStatus();
   }, []);
@@ -47,11 +55,40 @@ export function TwoFactorAuthPage() {
       setQrCode(null);
       setSecret(null);
       setOtpauthUrl(null);
+      setToken('');
       addToast('2FA enabled successfully!', 'success');
     } catch (error) {
       addToast('Invalid 2FA token', 'error');
     }
   };
+
+  const handleDisable2FA = async () => {
+    if (!disableToken) {
+      addToast('Please enter the 6-digit code from your authenticator app to disable 2FA', 'error');
+      return;
+    }
+    try {
+      await disable2FA({ token: disableToken });
+      setIs2FAEnabled(false);
+      setDisableToken('');
+      addToast('2FA disabled successfully', 'success');
+    } catch (error) {
+      addToast('Invalid token. Please try again.', 'error');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AuthLayout
+        title="Two-Factor Authentication"
+        subtitle="Add an extra layer of security to your account."
+      >
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout
@@ -59,8 +96,29 @@ export function TwoFactorAuthPage() {
       subtitle="Add an extra layer of security to your account."
     >
       {is2FAEnabled ? (
-        <div className="text-center">
-          <p className="text-lg font-medium text-green-600">2FA is enabled on your account.</p>
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="text-lg font-medium text-green-600">✓ 2FA is enabled on your account.</p>
+          </div>
+          <div className="border-t pt-6 space-y-4">
+            <p className="text-sm text-gray-600">
+              To disable two-factor authentication, enter a code from your authenticator app:
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="disable-token">Authenticator code:</Label>
+              <Input
+                id="disable-token"
+                type="text"
+                value={disableToken}
+                onChange={(e) => setDisableToken(e.target.value)}
+                maxLength={6}
+                placeholder="123456"
+              />
+            </div>
+            <Button onClick={handleDisable2FA} variant="destructive" className="w-full">
+              Disable 2FA
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">

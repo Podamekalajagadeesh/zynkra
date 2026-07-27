@@ -9,5 +9,6 @@ import { NonprofitsService } from './nonprofits.service';
   imports: [TypeOrmModule.forFeature([Nonprofit])],
   controllers: [NonprofitsController],
   providers: [NonprofitsService],
+  exports: [NonprofitsService],
 })
 export class NonprofitsModule {}

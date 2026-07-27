@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsUUID, IsOptional } from 'class-validator';
 
 export class CreateNoteDto {
   @IsString()
@@ -7,6 +7,6 @@ export class CreateNoteDto {
   content: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  postId: string;
+  @IsOptional()
+  postId?: string;
 }

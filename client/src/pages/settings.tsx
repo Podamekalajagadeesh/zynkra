@@ -256,42 +256,28 @@ export function SettingsPage() {
           <NeuralEthicalGuardrails />
         </div>
 
-        {/* Neural Encryption Settings */}
+        {/* Neural Encryption Settings - Preview */}
         <div className="surface-soft rounded-2xl p-5">
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <p className="font-semibold text-lg flex items-center gap-2">
-                <Lock size={20} className="text-green-600" />
-                Cryptographic Privacy by Default
+                <Lock size={20} className="text-amber-600" />
+                Encryption — Preview
               </p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                End-to-end neural encryption ensures only your intended audience can access your thoughts and messages.
-                All communications are encrypted using libsodium's X25519 key exchange.
+                All messages are encrypted in transit (TLS). Full end-to-end encryption is in progress —
+                see the roadmap for details.
               </p>
             </div>
           </div>
-          
+
           <div className="space-y-4 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-dark-900 dark:text-white">Enable Neural Encryption</p>
-                <p className="text-xs text-dark-500 dark:text-dark-400">Encrypt all your messages and thoughts with end-to-end encryption</p>
-              </div>
-              <Switch checked={true} disabled={true} /> {/* Always enabled by default as per feature requirement */}
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-dark-900 dark:text-white">Forward Secrecy</p>
-                <p className="text-xs text-dark-500 dark:text-dark-400">Automatically rotate encryption keys to maintain forward secrecy</p>
+                <p className="text-sm font-semibold text-dark-900 dark:text-white">Transport Encryption</p>
+                <p className="text-xs text-dark-500 dark:text-dark-400">All data is encrypted in transit using TLS</p>
               </div>
               <Switch checked={true} disabled={true} />
-            </div>
-            
-            <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <p className="text-xs text-green-700 dark:text-green-300">
-                ✓ Your neural encryption is active. All your messages and thoughts are protected with military-grade encryption.
-              </p>
             </div>
           </div>
         </div>

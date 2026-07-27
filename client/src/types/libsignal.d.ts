@@ -1,53 +1,108 @@
+/**
+ * Extended type declarations for @privacyresearch/libsignal-protocol-typescript.
+ * Based on the Signal Protocol TypeScript port's full API surface.
+ */
+
 declare module '@privacyresearch/libsignal-protocol-typescript' {
+  // --- Address ---
   export class SignalProtocolAddress {
     constructor(name: string, deviceId: number);
+    getName(): string;
+    getDeviceId(): number;
+    toString(): string;
+    static fromString(encoded: string): SignalProtocolAddress;
   }
 
+  // --- Key Types ---
+  export interface KeyPairType {
+    privKey: ArrayBuffer;
+    pubKey: ArrayBuffer;
+  }
+
+  export interface PreKeyPairType {
+    keyId: number;
+    keyPair: KeyPairType;
+  }
+
+  export interface SignedPreKeyPairType {
+    keyId: number;
+    keyPair: KeyPairType;
+    signature: ArrayBuffer;
+  }
+
+  export interface PreKeyBundleType {
+    registrationId: number;
+    deviceId: number;
+    identityKey: ArrayBuffer;
+    signedPreKeyId: number;
+    signedPreKey: ArrayBuffer;
+    signedPreKeySignature: ArrayBuffer;
+    preKeyId?: number;
+    preKey?: ArrayBuffer;
+  }
+
+  // --- Storage Interface ---
+  export interface SignalProtocolStore {
+    getIdentityKeyPair(): Promise<KeyPairType | null>;
+    getLocalRegistrationId(): Promise<number>;
+    isTrustedIdentity(
+      identifier: string,
+      identityKey: ArrayBuffer,
+      direction: number,
+    ): Promise<boolean>;
+    saveIdentity(identifier: string, identityKey: ArrayBuffer): Promise<boolean>;
+    loadPreKey(keyId: number): Promise<KeyPairType | null>;
+    storePreKey(keyId: number, keyPair: KeyPairType): Promise<void>;
+    removePreKey(keyId: number): Promise<void>;
+    loadSignedPreKey(keyId: number): Promise<KeyPairType | null>;
+    storeSignedPreKey(keyId: number, keyPair: KeyPairType): Promise<void>;
+    loadSession(identifier: string): Promise<string | null>;
+    storeSession(identifier: string, record: string): Promise<void>;
+    removeSession(identifier: string): Promise<void>;
+    removeAllSessions(identifier: string): Promise<void>;
+  }
+
+  // --- Session Builder ---
   export class SessionBuilder {
     constructor(store: SignalProtocolStore, address: SignalProtocolAddress);
-    processPreKey(bundle: PreKeyBundle): Promise<void>;
+    processPreKeyBundle(preKeyBundle: PreKeyBundleType): Promise<void>;
+  }
+
+  // --- Session Cipher ---
+  export interface CiphertextMessageType {
+    type: number;
+    body: string;
+    serialized: string;
   }
 
   export class SessionCipher {
     constructor(store: SignalProtocolStore, address: SignalProtocolAddress);
-    encrypt(message: Buffer): Promise<unknown>;
-    decryptPreKeyWhisperMessage(message: unknown, encoding: string): Promise<ArrayBuffer>;
-    decryptWhisperMessage(message: unknown, encoding: string): Promise<ArrayBuffer>;
+    encrypt(message: ArrayBuffer): Promise<CiphertextMessageType>;
+    decryptPreKeyWhisperMessage(
+      ciphertext: ArrayBuffer,
+      encoding: string,
+    ): Promise<ArrayBuffer>;
+    decryptWhisperMessage(
+      ciphertext: ArrayBuffer,
+      encoding: string,
+    ): Promise<ArrayBuffer>;
   }
 
-  export interface SignalProtocolStore {
-    getLocalRegistrationId(): Promise<number | null>;
-    put(key: string, value: unknown): Promise<void>;
-    storePreKey(keyId: string | number, keyPair: unknown): void;
-    storeSignedPreKey(keyId: string | number, keyPair: unknown): void;
-  }
+  // --- Crypto Functions ---
+  export function generateIdentityKeyPair(): Promise<KeyPairType>;
+  export function generatePreKey(keyId: number): Promise<PreKeyPairType>;
+  export function generateSignedPreKey(
+    identityKeyPair: KeyPairType,
+    keyId: number,
+  ): Promise<SignedPreKeyPairType>;
+  export function createPreKeyBundle(
+    store: SignalProtocolStore,
+    identityKeyPair: KeyPairType,
+    signedPreKey: SignedPreKeyPairType,
+    preKeys: PreKeyPairType | null,
+  ): Promise<PreKeyBundleType>;
 
-  export interface PreKeyBundle {
-    registrationId?: number;
-    deviceId?: number;
-    preKey?: unknown;
-    signedPreKey?: unknown;
-    identityKey?: unknown;
-    [key: string]: unknown;
-  }
-
-  export interface SignedPreKeyType {
-    keyId: number;
-    keyPair: unknown;
-    signature?: Uint8Array;
-  }
-
-  export interface KeyPairType {
-    privateKey?: unknown;
-    publicKey?: unknown;
-  }
-
-  export type SignedPreKeyTypeAlias = SignedPreKeyType;
-  export type KeyPairTypeAlias = KeyPairType;
-
-  export type PreKeyBundleType = PreKeyBundle;
-  export type SignalProtocolStoreType = SignalProtocolStore;
-  export type SignalProtocolAddressType = SignalProtocolAddress;
-  export type SessionBuilderType = SessionBuilder;
-  export type SessionCipherType = SessionCipher;
+  // --- Curve ---
+  export function generateKeyPair(): Promise<KeyPairType>;
+  export function createKeyPair(privKey: ArrayBuffer): Promise<KeyPairType>;
 }

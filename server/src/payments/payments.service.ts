@@ -7,6 +7,7 @@ import { Payout } from './entities/payout.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const Stripe = require('stripe');
 
 @Injectable()

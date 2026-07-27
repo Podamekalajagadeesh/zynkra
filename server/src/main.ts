@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { randomUUID } from 'crypto';
+import { ValidationPipe } from '@nestjs/common';
 
 if (!(globalThis as any).crypto) {
   (globalThis as any).crypto = { randomUUID };
@@ -68,6 +69,18 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type'],
   });
+
+  // Global ValidationPipe enables class-validator DTO decorators. Unknown
+  // properties are stripped (whitelist) but not rejected (forbidNonWhitelisted:
+  // false) to avoid breaking existing endpoints that pass extra fields.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  );
+
   // SESSION_SECRET presence/strength is enforced by env validation (common/env.validation.ts).
   const sessionSecret = configService.get<string>('SESSION_SECRET');
 

@@ -18,6 +18,12 @@ export class TokenGatedContent {
   @Column()
   minTokenBalance: number;
 
+  @Column({ default: 1 })
+  chainId: number;
+
+  @Column({ default: 'basic' })
+  tier: string;
+
   @ManyToOne(() => User, (user) => user.tokenGatedContent)
   creator: User;
 }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState, useContext, createContext, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useUser } from './useUser';

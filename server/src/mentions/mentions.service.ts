@@ -3,7 +3,7 @@ import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@n
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mention, SentimentType } from './mention.entity';
-import { User } from '../users/entities/user.entity';
+import { User, TagPrivacy } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Comment } from '../comments/entities/comment.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -36,8 +36,6 @@ export class MentionsService {
     }
 
     const mentionedUsers: User[] = [];
-    const { TagPrivacy } = require('../users/entities/user.entity');
-    
     for (const username of mentions) {
       const user = await this.usersRepository.findOne({
         where: [{ username }, { displayName: username }],

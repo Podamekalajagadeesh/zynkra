@@ -9,6 +9,7 @@ import { FederatePostDto, FederateFollowDto } from './dto/federate-post.dto';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';
+import { HttpSignaturesService } from './http-signatures.service';
 import axios from 'axios';
 
 @Injectable()
@@ -16,8 +17,9 @@ export class FederationService implements OnModuleInit {
   private readonly logger = new Logger(FederationService.name);
   private readonly instanceDomain: string;
   private readonly instanceBaseUrl: string;
-  private readonly defaultDeliveryRetries = 2;
-  private readonly defaultDeliveryRetryDelayMs = 150;
+  private readonly federationEnabled: boolean;
+  private readonly defaultDeliveryRetries = 3;
+  private readonly defaultDeliveryRetryDelayMs = 200;
 
   constructor(
     @InjectRepository(RemoteInstance)
@@ -29,9 +31,30 @@ export class FederationService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly postsService: PostsService,
+    private readonly httpSignaturesService: HttpSignaturesService,
   ) {
     this.instanceDomain = this.configService.get<string>('INSTANCE_DOMAIN', 'zynkra.local');
-    this.instanceBaseUrl = this.configService.get<string>('INSTANCE_BASE_URL', 'https://zynkra.local');
+    this.instanceBaseUrl = this.configService.get<string>('INSTANCE_BASE_URL', 'http://localhost:3001');
+    this.federationEnabled = this.configService.get<string>('FEDERATION_ENABLED', 'false') === 'true';
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.httpSignaturesService.initialize();
+    if (this.federationEnabled) {
+      this.logger.log('Outbound federation is ENABLED — HTTP Signatures active (draft-cavage-http-signatures-10)');
+    } else {
+      this.logger.warn('Outbound federation is DISABLED — set FEDERATION_ENABLED=true to enable. Disabled by default — this is expected for new instances.');
+    }
+  }
+
+  /** Check the federation guard — throws if outbound federation is disabled. */
+  private assertFederationEnabled(): void {
+    if (!this.federationEnabled) {
+      throw new HttpException(
+        'Outbound federation is disabled. Set FEDERATION_ENABLED=true and restart.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
   }
 
   async getConnectedInstances(): Promise<RemoteInstance[]> {
@@ -50,7 +73,7 @@ export class FederationService implements OnModuleInit {
       const nodeInfoResponse = await axios.get(wellKnownUrl, { timeout: 5000 });
 
       let nodeInfoUrl = nodeInfoResponse.data.links?.find(
-        (link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0'
+        (link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0',
       )?.href;
 
       if (!nodeInfoUrl) {
@@ -61,8 +84,8 @@ export class FederationService implements OnModuleInit {
 
       try {
         await axios.get(`${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`, { timeout: 5000 });
-      } catch (webfingerError) {
-        this.logger.warn(`Webfinger probe for ${normalizedDomain} did not return a usable response`, webfingerError);
+      } catch {
+        this.logger.warn(`Webfinger probe for ${normalizedDomain} did not return a usable response`);
       }
 
       return {
@@ -77,8 +100,8 @@ export class FederationService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`Failed to discover instance ${domain}:`, error);
       throw new HttpException(
-        `Could not discover instance at ${domain}. Verify it's a valid ActivityPub compatible server.`,
-        HttpStatus.BAD_REQUEST
+        `Could not discover instance at ${domain}. Verify it is a valid ActivityPub compatible server.`,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -143,7 +166,17 @@ export class FederationService implements OnModuleInit {
     }
 
     try {
-      const actor = await this.fetchRemoteJson<any>(actorId);
+      // Use signed GET if federation is enabled
+      let actor: any;
+      if (this.federationEnabled) {
+        const signedHeaders = this.httpSignaturesService.getSignedGetHeaders(
+          `${this.instanceBaseUrl}/federation/users/local`,
+          actorId,
+        );
+        actor = await this.fetchRemoteJson<any>(actorId, signedHeaders);
+      } else {
+        actor = await this.fetchRemoteJson<any>(actorId);
+      }
 
       const domain = new URL(actorId).hostname;
       let instance = await this.instanceRepository.findOne({ where: { domain } });
@@ -187,7 +220,18 @@ export class FederationService implements OnModuleInit {
     }
 
     try {
-      const activity = await this.fetchRemoteJson<any>(activityId);
+      // Use signed GET if federation is enabled
+      let activity: any;
+      if (this.federationEnabled) {
+        const signedHeaders = this.httpSignaturesService.getSignedGetHeaders(
+          `${this.instanceBaseUrl}/federation/users/local`,
+          activityId,
+        );
+        activity = await this.fetchRemoteJson<any>(activityId, signedHeaders);
+      } else {
+        activity = await this.fetchRemoteJson<any>(activityId);
+      }
+
       let author: RemoteUser | null = null;
       let instance: RemoteInstance | null = null;
 
@@ -211,7 +255,7 @@ export class FederationService implements OnModuleInit {
       }
 
       const object = activity.object || activity;
-      
+
       const remotePost = this.remotePostRepository.create({
         activityId,
         activityType: activity.type as ActivityType,
@@ -233,6 +277,8 @@ export class FederationService implements OnModuleInit {
   }
 
   async federatePost(localUserId: string, federateDto: FederatePostDto, targetInstances: string[]) {
+    this.assertFederationEnabled();
+
     const activity = await this.buildActivity('Create', localUserId, {
       ...federateDto,
       type: 'Note',
@@ -253,12 +299,14 @@ export class FederationService implements OnModuleInit {
         await this.deliverToInbox(instance, activity);
         this.logger.log(`Successfully federated post to ${instanceDomain}`);
       } catch (error) {
-        this.logger.error(`Failed to federated post to ${instanceDomain}:`, error);
+        this.logger.error(`Failed to federate post to ${instanceDomain}:`, error);
       }
     }
   }
 
   async sendFollow(followDto: FederateFollowDto, localUserId: string) {
+    this.assertFederationEnabled();
+
     const targetUser = await this.fetchRemoteUser(followDto.objectId);
     if (!targetUser?.inboxUrl) {
       throw new HttpException('Cannot follow this user: no inbox URL found', HttpStatus.BAD_REQUEST);
@@ -269,11 +317,17 @@ export class FederationService implements OnModuleInit {
     });
 
     try {
-      await axios.post(targetUser.inboxUrl, followActivity, {
-        headers: {
-          'Content-Type': 'application/activity+json',
-          'Host': new URL(targetUser.inboxUrl).hostname,
-        },
+      const body = JSON.stringify(followActivity);
+      const actorUsername = (await this.getLocalActorUsername(localUserId)) || 'local';
+      const actorUrl = `${this.instanceBaseUrl}/federation/users/${actorUsername}`;
+      const signedHeaders = this.httpSignaturesService.getSignedPostHeaders(
+        actorUrl,
+        body,
+        targetUser.inboxUrl,
+      );
+
+      await axios.post(targetUser.inboxUrl, body, {
+        headers: signedHeaders,
       });
       this.logger.log(`Follow sent to ${targetUser.username}@${targetUser.instance.domain}`);
       return { success: true, message: `Following ${targetUser.username}@${targetUser.instance.domain}` };
@@ -299,30 +353,47 @@ export class FederationService implements OnModuleInit {
     };
   }
 
+  private async getLocalActorUsername(userId: string): Promise<string | null> {
+    const user = await this.userService.findOneById(userId);
+    return user?.username || null;
+  }
+
   async deliverToInbox(
     instance: Partial<RemoteInstance>,
     activity: any,
-    options: { maxAttempts?: number; retryDelayMs?: number } = {},
+    options: { maxAttempts?: number; retryDelayMs?: number; actorUsername?: string } = {},
   ) {
     if (!instance?.baseUrl) return;
 
     const inboxUrl = `${instance.baseUrl}/inbox`;
     const maxAttempts = options.maxAttempts ?? this.defaultDeliveryRetries;
+    const actorUsername = options.actorUsername || 'local';
+    const actorUrl = `${this.instanceBaseUrl}/federation/users/${actorUsername}`;
     let lastError: unknown;
+
+    const body = JSON.stringify(activity);
+    const signedHeaders = this.httpSignaturesService.getSignedPostHeaders(
+      actorUrl,
+      body,
+      inboxUrl,
+    );
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
-        await axios.post(inboxUrl, activity, {
-          headers: {
-            'Content-Type': 'application/activity+json',
-            Host: new URL(inboxUrl).hostname,
-          },
+        await axios.post(inboxUrl, body, {
+          headers: signedHeaders,
+          timeout: 10000,
         });
         return;
       } catch (error) {
         lastError = error;
+        const axiosError = error as any;
+        if (axiosError?.response?.status === 401) {
+          this.logger.warn(`HTTP Signature rejected by ${instance.baseUrl} — check actor keyId alignment`);
+        }
         if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, options.retryDelayMs ?? this.defaultDeliveryRetryDelayMs));
+          const delay = options.retryDelayMs ?? this.defaultDeliveryRetryDelayMs;
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
@@ -358,7 +429,7 @@ export class FederationService implements OnModuleInit {
       try {
         await axios.get(`${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`, { timeout: 5000 });
         result.capabilities.push('webfinger');
-      } catch (error) {
+      } catch {
         result.errors.push('webfinger-unavailable');
       }
 
@@ -395,6 +466,7 @@ export class FederationService implements OnModuleInit {
       totalRemotePosts,
       localDomain: this.instanceDomain,
       localBaseUrl: this.instanceBaseUrl,
+      federationEnabled: this.federationEnabled,
     };
   }
 
@@ -414,15 +486,20 @@ export class FederationService implements OnModuleInit {
       preferredUsername: username,
       name: user.displayName || user.username,
       summary: user.bio || '',
-      icon: { type: 'Image', url: `${this.instanceBaseUrl}${user.avatar || '/default-avatar.png'}` },
+      icon: {
+        type: 'Image',
+        url: user.avatar
+          ? `${this.instanceBaseUrl}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}`
+          : `${this.instanceBaseUrl}/default-avatar.png`,
+      },
       inbox: `${this.instanceBaseUrl}/federation/users/${username}/inbox`,
       outbox: `${this.instanceBaseUrl}/federation/users/${username}/outbox`,
       followers: `${this.instanceBaseUrl}/federation/users/${username}/followers`,
       following: `${this.instanceBaseUrl}/federation/users/${username}/following`,
       publicKey: {
-        id: `${this.instanceBaseUrl}/users/${username}#main-key`,
+        id: `${this.instanceBaseUrl}/federation/users/${username}#main-key`,
         owner: `${this.instanceBaseUrl}/federation/users/${username}`,
-        publicKeyPem: this.instancePublicKey,
+        publicKeyPem: this.httpSignaturesService.getPublicKeyPem(),
       },
     };
   }
@@ -514,6 +591,7 @@ export class FederationService implements OnModuleInit {
       }
 
       const inboxUrl = remoteActor?.inboxUrl || (actorUrl ? `${new URL(actorUrl).origin}/inbox` : null);
+
       const acceptActivity = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         id: `${this.instanceBaseUrl}/federation/accepts/${Date.now()}`,
@@ -523,12 +601,21 @@ export class FederationService implements OnModuleInit {
         to: [actorUrl],
       };
 
-      if (inboxUrl) {
+      if (inboxUrl && this.federationEnabled) {
+        try {
+          const body = JSON.stringify(acceptActivity);
+          const signedHeaders = this.httpSignaturesService.getSignedPostHeaders(
+            `${this.instanceBaseUrl}/federation/users/local`,
+            body,
+            inboxUrl,
+          );
+          await axios.post(inboxUrl, body, { headers: signedHeaders });
+        } catch (error) {
+          this.logger.error(`Failed to send Accept for follow from ${actorUrl}:`, error);
+        }
+      } else if (inboxUrl) {
         await axios.post(inboxUrl, acceptActivity, {
-          headers: {
-            'Content-Type': 'application/activity+json',
-            Host: new URL(inboxUrl).hostname,
-          },
+          headers: { 'Content-Type': 'application/activity+json' },
         });
       }
 
@@ -643,11 +730,6 @@ export class FederationService implements OnModuleInit {
     return this.processSharedInbox(activity);
   }
 
-  private async addLocalKeys() {
-    const publicKey = this.configService.get<string>('ACTIVITYPUB_PUBLIC_KEY');
-    this.instancePublicKey = publicKey || '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqh...IDAQAB\n-----END PUBLIC KEY-----';
-  }
-
   private async getOrCreateInstanceFromActor(actorUrl: string): Promise<RemoteInstance | null> {
     try {
       const actorDomain = new URL(actorUrl).hostname;
@@ -668,23 +750,19 @@ export class FederationService implements OnModuleInit {
     }
   }
 
-  private instancePublicKey: string;
-
-  async onModuleInit() {
-    await this.addLocalKeys();
-  }
-
   async webfinger(acct: string) {
     const [username, domain] = acct.replace('acct:', '').split('@');
 
     if (domain === this.instanceDomain) {
       return {
         subject: `acct:${username}@${domain}`,
-        links: [{
-          rel: 'self',
-          type: 'application/activity+json',
-          href: `${this.instanceBaseUrl}/federation/users/${username}`,
-        }],
+        links: [
+          {
+            rel: 'self',
+            type: 'application/activity+json',
+            href: `${this.instanceBaseUrl}/federation/users/${username}`,
+          },
+        ],
       };
     }
 

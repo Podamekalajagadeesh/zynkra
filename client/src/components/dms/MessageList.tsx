@@ -2,13 +2,12 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Skeleton } from '../ui/skeleton';
 import Avatar from '../ui/avatar';
-import { getMessages, addReaction, markMessageAsRead, getPublicKey, getProfile, getConversations, forwardMessage } from '../../lib/api';
+import { getMessages, addReaction, markMessageAsRead, getProfile, getConversations, forwardMessage } from '../../lib/api';
 import { Smile, CornerUpLeft, CheckCheck, Send } from 'lucide-react';
 import { Message, Conversation, ScreenshotProtectionLevel } from '../../lib/types';
 import { formatDateTime } from '../../lib/preferences';
 import MessageContent from './MessageContent';
 import { useAuth } from '../../contexts/AuthContext';
-import { decryptMessage, getKeys } from '../../services/encryption.service';
 import { useScreenshotProtection } from '../../hooks/useScreenshotProtection';
 
 interface MessageListProps {
@@ -85,28 +84,8 @@ export const MessageList = ({
     if (!user) return;
     try {
       const data = await getMessages(conversationId, channelId);
-      const decryptedMessages = await Promise.all(
-        data.map(async (msg: Message) => {
-          if (msg.content.includes('nonce') && msg.content.includes('ciphertext')) {
-            try {
-              const keys = await getKeys(user.id);
-              if (keys) {
-                const senderPublicKey = await getPublicKey(msg.sender.id);
-                if (senderPublicKey) {
-                  const senderPublicKeyBytes = new Uint8Array(atob(senderPublicKey).split('').map(c => c.charCodeAt(0)));
-                  const decryptedContent = await decryptMessage(senderPublicKeyBytes, keys.privateKey, msg.content);
-                  return { ...msg, content: decryptedContent };
-                }
-              }
-            } catch (e) {
-              console.error('Failed to decrypt message', e);
-              return { ...msg, content: 'Failed to decrypt message' };
-            }
-          }
-          return msg;
-        })
-      );
-      setMessages(decryptedMessages || []);
+      // Messages are decrypted in MessageContent component via the E2EE service
+      setMessages(data || []);
     } catch (error) {
       console.error('Failed to fetch messages', error);
       addToast('Failed to load messages', 'error');

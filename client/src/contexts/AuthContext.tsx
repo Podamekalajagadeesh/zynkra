@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactNode, useCallback } from 'react';
-import { getProfile, setAuthToken, uploadPublicKey } from '../lib/api';
+import { getProfile, setAuthToken, uploadPublicKey, logoutFromServer } from '../lib/api';
 import { Account, AuthContext } from './AuthContextDef';
 import {
   generateAndStoreKeys,
@@ -121,8 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [accounts],
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     if (activeAccount) {
+      try {
+        await logoutFromServer();
+      } catch (error) {
+        console.warn('Server logout failed, cleaning up locally anyway:', error);
+      }
+
       const remainingAccounts = accounts.filter(
         (a) => a.user.id !== activeAccount.user.id,
       );

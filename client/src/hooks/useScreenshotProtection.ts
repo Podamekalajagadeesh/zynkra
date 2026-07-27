@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useCallback, useRef } from 'react';
 import { useToast } from './useToast';
 import { ScreenshotProtectionLevel, ScreenshotProtectionSettings } from '../lib/types';

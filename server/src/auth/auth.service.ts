@@ -334,7 +334,7 @@ export class AuthService {
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
     const user = await this.usersService.findByPasswordResetToken(token);
 
-    if (!user) {
+    if (!user || !user.passwordResetTokenExpires || user.passwordResetTokenExpires < new Date()) {
       throw new UnauthorizedException('Invalid or expired password reset token.');
     }
 
@@ -398,6 +398,35 @@ export class AuthService {
     await this.usersService.save(user);
 
     return { message: 'Two-factor authentication enabled.' };
+  }
+
+  async get2FAStatus(userId: string): Promise<{ enabled: boolean; hasSecret: boolean }> {
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      enabled: user.twoFactorEnabled,
+      hasSecret: !!user.twoFactorSecret,
+    };
+  }
+
+  async disable2FA(userId: string, token: string): Promise<{ message: string }> {
+    const user = await this.usersService.findOneById(userId);
+    if (!user || !user.twoFactorEnabled) {
+      throw new BadRequestException('Two-factor authentication is not enabled.');
+    }
+    if (!user.twoFactorSecret) {
+      throw new BadRequestException('No 2FA secret found.');
+    }
+    // Require valid TOTP token to disable (security best practice)
+    if (!this.verifyTotp(user.twoFactorSecret, token)) {
+      throw new UnauthorizedException('Invalid 2FA token');
+    }
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    await this.usersService.save(user);
+    return { message: 'Two-factor authentication disabled.' };
   }
 
   async verify2FALogin(tempToken: string, token: string, req?: any): Promise<{ access_token: string }> {
@@ -649,6 +678,47 @@ export class AuthService {
     await this.loginSessionsRepository.save(session);
 
     return { message: 'Session revoked.' };
+  }
+
+  async refreshToken(userId: string, sessionId?: string): Promise<{ access_token: string }> {
+    if (!sessionId) {
+      throw new BadRequestException('No active session to refresh.');
+    }
+
+    const session = await this.loginSessionsRepository.findOne({
+      where: { id: sessionId },
+    });
+
+    if (!session || session.revokedAt) {
+      throw new UnauthorizedException('Session is invalid or has been revoked.');
+    }
+
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    await this.loginSessionsRepository.update(session.id, { lastSeenAt: new Date() });
+
+    const payload = { sub: user.id, email: user.email, sid: session.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
+
+  async signOut(sessionId?: string): Promise<{ message: string }> {
+    if (sessionId) {
+      const session = await this.loginSessionsRepository.findOne({
+        where: { id: sessionId },
+      });
+
+      if (session) {
+        session.revokedAt = new Date();
+        await this.loginSessionsRepository.save(session);
+      }
+    }
+
+    return { message: 'Signed out successfully.' };
   }
 
   async revokeAllOtherSessions(userId: string, currentSessionId?: string): Promise<{ message: string }> {

@@ -15,7 +15,7 @@ export class SearchController {
 
   @Post('reverse-image')
   @UseInterceptors(FileInterceptor('image'))
-  async reverseImageSearch(@UploadedFile() file: Express.Multer.File) {
-    return this.searchService.reverseImageSearch(file.buffer);
+  async reverseImageSearch() {
+    return this.searchService.reverseImageSearch();
   }
 }

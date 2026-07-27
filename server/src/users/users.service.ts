@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Not, Repository } from 'typeorm';
 import { webcrypto } from 'crypto';
 import { User, ProfilePrivacy } from './entities/user.entity';
-import { FollowRequest } from './entities/follow-request.entity';
+import { FollowRequest, FollowRequestStatus } from './entities/follow-request.entity';
 import { Poke } from './entities/poke.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Role } from './roles.enum';
@@ -874,6 +874,38 @@ export class UsersService {
     }
 
     return user.following.map((f) => f.id);
+  }
+
+  async getFollowing(userId: string): Promise<User[]> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['following'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    return user.following;
+  }
+
+  async getPendingFollowRequests(userId: string): Promise<FollowRequest[]> {
+    return this.followRequestRepository.find({
+      where: { recipient: { id: userId }, status: FollowRequestStatus.PENDING },
+      relations: ['requester'],
+    });
+  }
+
+  async cancelFollowRequest(requesterId: string, requestId: string): Promise<void> {
+    const request = await this.followRequestRepository.findOne({
+      where: { id: requestId, requester: { id: requesterId } },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Follow request not found.');
+    }
+
+    await this.followRequestRepository.delete(requestId);
   }
 
   async findFollowSuggestions(userId: string): Promise<User[]> {

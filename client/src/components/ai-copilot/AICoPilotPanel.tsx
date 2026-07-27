@@ -6,7 +6,7 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Sparkles, Send, X, Wand2, Brain, Image as ImageIcon, Music, Lightbulb, RefreshCw, Copy, Check } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
-import api from '../../lib/api';
+import { api } from '../../lib/api';
 
 interface AICoPilotMessage {
   id: string;
@@ -87,86 +87,90 @@ export const AICoPilotPanel: React.FC<AICoPilotPanelProps> = ({
   }, [messages]);
 
   const generateAISuggestions = async (userPrompt: string): Promise<ContentSuggestion[]> => {
-    // In a real app, this would call an AI API
-    // For now, we'll generate context-aware suggestions based on the user's prompt
-    const lowerPrompt = userPrompt.toLowerCase();
-    
-    const suggestions: ContentSuggestion[] = [];
-    
-    // Memory-specific suggestions
-    if (contentType === 'memory') {
-      if (lowerPrompt.includes('birthday') || lowerPrompt.includes('party')) {
-        suggestions.push({
-          id: `memory-birthday-${Date.now()}`,
-          type: 'sensory',
-          title: 'Enhanced Birthday Memory',
-          description: 'Add rich sensory details to your birthday memory',
-          content: `${userPrompt}\n\nThe room was filled with the sweet scent of vanilla cake, and laughter echoed off the walls as friends sang. I felt the warmth of everyone's presence, the excitement building as I blew out the candles. The sound of clapping and cheers created a moment frozen in time, every detail etched into my memory forever. The flickering candlelight danced across everyone's smiling faces, and the taste of the first bite of cake - perfectly sweet with a hint of chocolate - remains with me still.`,
-          mediaSuggestions: ['birthday_group.jpg', 'singing_happy_birthday.aac', 'cake_cutting.mp4'],
-          emotionalContext: { joy: 95, excitement: 90, love: 88, surprise: 75 }
-        });
-      } else if (lowerPrompt.includes('travel') || lowerPrompt.includes('trip') || lowerPrompt.includes('vacation')) {
-        suggestions.push({
-          id: `memory-travel-${Date.now()}`,
-          type: 'immersive',
-          title: 'Immersive Travel Memory',
-          description: 'Create a fully immersive travel memory experience',
-          content: `${userPrompt}\n\nStanding at the summit, I breathed in the crisp mountain air, the panoramic view stretching endlessly before me. The wind whipped through my hair, carrying the distant sound of a stream far below. Every sense was alive: the sight of endless peaks, the smell of pine trees, the cool breeze on my skin, the feeling of accomplishment that flooded through me. This wasn't just a view - it was an experience that connected me to something larger than myself. I could feel the weight of the journey that brought me here, every step leading to this perfect moment of clarity and wonder.`,
-          mediaSuggestions: ['mountain_view.jpg', 'wind_in_pines.aac', 'hiking_timelapse.mp4'],
-          emotionalContext: { joy: 92, excitement: 88, calm: 85, wonder: 95 }
-        });
-      } else if (lowerPrompt.includes('wedding') || lowerPrompt.includes('marriage') || lowerPrompt.includes('love')) {
-        suggestions.push({
-          id: `memory-wedding-${Date.now()}`,
-          type: 'emotional',
-          title: 'Deeply Emotional Wedding Memory',
-          description: 'Capture the emotional depth of your special day',
-          content: `${userPrompt}\n\nAs I looked into their eyes, time seemed to stand still. The world narrowed to just the two of us, the sounds of the crowd fading into the background. I felt tears of joy welling up, my heart so full it might burst. The warmth of their hand in mine, the quiet promise in their voice - every detail was seared into my soul. The flower petals drifted down around us like colorful snow, and the music that began to play seemed to be written specifically for this moment. In that instant, I knew this memory would sustain me for a lifetime.`,
-          mediaSuggestions: ['first_look.jpg', 'vows.aac', 'first_dance.mp4'],
-          emotionalContext: { love: 98, joy: 95, calm: 80, surprise: 70, tears: 85 }
+    try {
+      const suggestions: ContentSuggestion[] = [];
+
+      // Call multiple AI endpoints in parallel
+      const [generateRes, hashtagsRes, captionRes, analyzeRes] = await Promise.allSettled([
+        api.post('/ai/content/generate', {
+          topic: userPrompt,
+          type: contentType === 'memory' ? 'story' : 'tutorial',
+          details: userPrompt,
+          tone: 'inspirational',
+        }),
+        api.post('/ai/content/hashtags', { topic: userPrompt }),
+        api.post('/ai/content/caption', { mediaType: 'image', keywords: [userPrompt] }),
+        api.post('/ai/content/analyze', { content: userPrompt }),
+      ]);
+
+      // Build suggestions from generate response
+      if (generateRes.status === 'fulfilled') {
+        const data = generateRes.value.data;
+        const contents = Array.isArray(data?.content) ? data.content : [data?.content || ''];
+        const hashtags = Array.isArray(data?.hashtags) ? data.hashtags : [];
+
+        contents.slice(0, 3).forEach((text: string, i: number) => {
+          const types: Array<ContentSuggestion['type']> = ['immersive', 'sensory', 'emotional'];
+          suggestions.push({
+            id: `ai-gen-${Date.now()}-${i}`,
+            type: types[i % types.length],
+            title: `AI Suggestion ${i + 1}`,
+            description: `AI-generated ${contentType} content based on your prompt`,
+            content: text,
+            mediaSuggestions: ['suggested_photo.jpg', 'background_music.aac'],
+            emotionalContext: { ...existingEmotions, joy: 80, excitement: 75 }
+          });
         });
       }
-    }
-    
-    // Post-specific suggestions
-    if (contentType === 'post') {
-      if (lowerPrompt.includes('art') || lowerPrompt.includes('creative') || lowerPrompt.includes('design')) {
+
+      // Add hashtag suggestion card
+      if (hashtagsRes.status === 'fulfilled' && Array.isArray(hashtagsRes.value.data) && hashtagsRes.value.data.length > 0) {
         suggestions.push({
-          id: `post-art-${Date.now()}`,
-          type: 'story',
-          title: 'Creative Art Post',
-          description: 'A compelling post about your creative work',
-          content: `${userPrompt}\n\nEvery piece I create holds a piece of my journey. This one started with a single sketch on a napkin, and over weeks it evolved into something that surprised even me. The creative process isn't always easy - there were moments I wanted to scrap it all, but something pushed me to keep going. I'm sharing it here because art is meant to be shared, to evoke feelings in others that they couldn't name themselves. What does this piece make you feel? Let me know in the comments - your interpretations are as much a part of this work as my creation of it.`,
-          mediaSuggestions: ['work_in_progress.jpg', 'final_piece.mp4', 'process_timelapse.mp4'],
-          emotionalContext: { pride: 90, vulnerability: 75, excitement: 88, curiosity: 82 }
-        });
-      } else if (lowerPrompt.includes('food') || lowerPrompt.includes('cooking') || lowerPrompt.includes('recipe')) {
-        suggestions.push({
-          id: `post-food-${Date.now()}`,
-          type: 'sensory',
-          title: 'Sensory Food Experience Post',
-          description: 'Make your food post come alive with sensory details',
-          content: `${userPrompt}\n\nThe aroma that filled the kitchen as this dish came together was incredible - garlic, herbs, and slow-cooked tomatoes that had been simmering for hours. The first bite was perfect: the pasta perfectly al dente, the sauce rich and complex, with just the right amount of heat that builds gently. I spent an entire afternoon perfecting this recipe, testing ratios, adjusting seasonings, and I'm so excited to share it with you. The colors alone make it worth it - deep reds, fresh greens, the golden crust of homemade bread on the side. This is more than food; it's love made edible, meant to be shared with people who matter most.`,
-          mediaSuggestions: ['cooking_process.mp4', 'finished_plate.jpg', 'serving_bread.mp4'],
-          emotionalContext: { joy: 90, satisfaction: 85, excitement: 92, comfort: 88 }
+          id: `ai-hashtags-${Date.now()}`,
+          type: 'caption',
+          title: 'Hashtag Recommendations',
+          description: 'Trending hashtags for your content',
+          content: `Recommended hashtags:\n${hashtagsRes.value.data.join('\n')}`,
+          emotionalContext: existingEmotions
         });
       }
+
+      // Add caption suggestion card
+      if (captionRes.status === 'fulfilled' && Array.isArray(captionRes.value.data) && captionRes.value.data.length > 0) {
+        suggestions.push({
+          id: `ai-caption-${Date.now()}`,
+          type: 'caption',
+          title: 'Caption Ideas',
+          description: 'AI-generated captions for your media',
+          content: captionRes.value.data.join('\n\n---\n\n'),
+          emotionalContext: existingEmotions
+        });
+      }
+
+      // If all API calls failed, fall back to template suggestions
+      if (suggestions.length === 0) {
+        return getFallbackSuggestions(userPrompt);
+      }
+
+      return suggestions;
+    } catch {
+      return getFallbackSuggestions(userPrompt);
     }
-    
-    // Generic suggestion if no specific case matches
-    if (suggestions.length === 0) {
-      suggestions.push({
-        id: `enhanced-generic-${Date.now()}`,
+  };
+
+  // Template-based fallback when API is unavailable
+  const getFallbackSuggestions = (userPrompt: string): ContentSuggestion[] => {
+    return [
+      {
+        id: `fallback-${Date.now()}`,
         type: 'immersive',
         title: 'Enhanced Immersive Version',
         description: 'Transform your content into an immersive experience',
         content: `${userPrompt}\n\nWhat I didn't mention in that simple description is the depth of the moment - the way the light fell, the sounds that surrounded me, the emotions that coursed through my body as everything unfolded. This wasn't just something that happened; it was something I experienced with every fiber of my being. I want to share not just what happened, but what it felt like, so you can experience it almost as if you were there with me. The small details that might seem insignificant are actually what make this memory or moment so profound - a stranger's smile, the way the wind changed direction, the unexpected text message that arrived right when I needed it. Every piece came together to create magic.`,
         mediaSuggestions: ['main_photo.jpg', 'ambience_audio.aac', 'b-roll_video.mp4'],
         emotionalContext: { ...existingEmotions, joy: Math.max(existingEmotions.joy || 50, 75), wonder: 80, gratitude: 85 }
-      });
-    }
-    
-    return suggestions;
+      }
+    ];
   };
 
   const handleSendMessage = async () => {
@@ -182,11 +186,8 @@ export const AICoPilotPanel: React.FC<AICoPilotPanelProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsProcessing(true);
-    
+
     try {
-      // Simulate AI processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const suggestions = await generateAISuggestions(inputValue);
       
       const aiResponse: AICoPilotMessage = {
@@ -213,7 +214,6 @@ export const AICoPilotPanel: React.FC<AICoPilotPanelProps> = ({
     
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
       const suggestions = await generateAISuggestions(currentContent);
       
       const aiResponse: AICoPilotMessage = {
@@ -257,7 +257,7 @@ export const AICoPilotPanel: React.FC<AICoPilotPanelProps> = ({
       <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-600 to-blue-600 text-white">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />
-          <h3 className="font-bold text-lg">Creative AI Co-Pilot</h3>
+          <h3 className="font-bold text-lg">Creative AI Co-Pilot (Preview)</h3>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
           <X className="h-5 w-5" />

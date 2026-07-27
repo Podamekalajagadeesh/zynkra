@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { createPageMessage, getPublicKey } from '../../lib/api';
+import { createPageMessage } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { encryptMessage, getKeys } from '../../services/encryption.service';
+import { useE2EE } from '../../hooks/useE2EE';
 
 interface PageSendMessageFormProps {
   conversationId: string;
@@ -13,23 +13,21 @@ export function PageSendMessageForm({ conversationId, recipientId }: PageSendMes
   const { pageId } = useParams<{ pageId: string }>();
   const [content, setContent] = useState('');
   const { user } = useAuth();
+  const { encryptMessage, isReady: e2eeReady } = useE2EE(user?.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (content.trim() === '') return;
-    
+
     let contentToSend = content;
-    if (recipientId && user) {
-      const recipientPublicKey = await getPublicKey(recipientId);
-      if (recipientPublicKey) {
-        const keys = await getKeys(user.id);
-        if (keys) {
-          const recipientPublicKeyBytes = new Uint8Array(atob(recipientPublicKey).split('').map(c => c.charCodeAt(0)));
-          contentToSend = await encryptMessage(recipientPublicKeyBytes, keys.privateKey, content);
-        }
+    if (recipientId && user && e2eeReady) {
+      try {
+        contentToSend = await encryptMessage(recipientId, content);
+      } catch {
+        console.warn('E2EE encrypt failed, sending plaintext');
       }
     }
-    
+
     await createPageMessage(pageId!, conversationId, contentToSend);
     setContent('');
   };

@@ -14,7 +14,10 @@ import {
   getWalletBalance,
   getWalletLedger,
   requestPayout,
+  getCryptoPayoutChains,
+  requestCryptoPayout,
 } from '../lib/api';
+import type { CryptoChain, CryptoPayoutResult } from '../lib/api';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -24,6 +27,9 @@ import {
   Loader2,
   Receipt,
   Wallet as WalletIcon,
+  Coins,
+  CheckCircle2,
+  ExternalLink as ExternalLinkIcon,
 } from 'lucide-react';
 
 const formatMoney = (amount: number, currency = 'usd') =>
@@ -87,18 +93,30 @@ export function EarningsPage() {
   const [onboarding, setOnboarding] = useState(false);
   const [amount, setAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [payoutMethod, setPayoutMethod] = useState<'stripe' | 'crypto'>('stripe');
+
+  // Crypto payout state
+  const [cryptoEnabled, setCryptoEnabled] = useState(false);
+  const [cryptoChains, setCryptoChains] = useState<CryptoChain[]>([]);
+  const [selectedChain, setSelectedChain] = useState<number>(8453);
+  const [cryptoResult, setCryptoResult] = useState<CryptoPayoutResult | null>(null);
+  const [cryptoSubmitting, setCryptoSubmitting] = useState(false);
+  const [cryptoAmount, setCryptoAmount] = useState('');
 
   const refresh = useCallback(async () => {
-    const [bal, led, pay, conn] = await Promise.all([
+    const [bal, led, pay, conn, crypto] = await Promise.all([
       getWalletBalance(),
       getWalletLedger(50),
       getMyPayouts(),
       getConnectStatus().catch(() => null),
+      getCryptoPayoutChains().catch(() => ({ enabled: false, chains: [] })),
     ]);
     setBalance(Number(bal.walletBalance ?? 0));
     setLedger(led);
     setPayouts(pay);
     setConnect(conn);
+    setCryptoEnabled(crypto.enabled);
+    setCryptoChains(crypto.chains);
   }, []);
 
   useEffect(() => {
@@ -174,6 +192,27 @@ export function EarningsPage() {
     }
   };
 
+  const handleCryptoPayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedCrypto = parseFloat(cryptoAmount);
+    if (!Number.isFinite(parsedCrypto) || parsedCrypto <= 0 || parsedCrypto > balance) return;
+    setCryptoSubmitting(true);
+    setCryptoResult(null);
+    try {
+      const result = await requestCryptoPayout(parsedCrypto, selectedChain);
+      setCryptoResult(result);
+      if (result.success) {
+        addToast(`Crypto payout sent! TX: ${result.txHash?.slice(0, 10)}...`, 'success');
+      }
+      setCryptoAmount('');
+      await refresh();
+    } catch (err: any) {
+      addToast(err?.response?.data?.message || 'Crypto payout failed', 'error');
+    } finally {
+      setCryptoSubmitting(false);
+    }
+  };
+
   const connectNotice = useMemo(() => {
     if (!connect) return null;
     if (connect.mode === 'manual') {
@@ -228,71 +267,187 @@ export function EarningsPage() {
                   Request a payout
                 </p>
 
-                {connectNotice && (
-                  <p className="mt-2 text-sm text-dark-500 dark:text-dark-400">
-                    {connectNotice}
-                  </p>
-                )}
-
-                {canOnboard && !payoutsReady ? (
-                  <Button
-                    className="mt-4"
-                    onClick={handleOnboard}
-                    isLoading={onboarding}
-                    icon={<ExternalLink size={16} />}
+                {/* Payout method tabs: Stripe | Crypto */}
+                <div className="mt-4 flex gap-2 border-b border-dark-200 dark:border-dark-700 pb-2">
+                  <button
+                    onClick={() => setPayoutMethod('stripe')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors ${
+                      payoutMethod === 'stripe'
+                        ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-500 dark:bg-primary-950/40 dark:text-primary-300'
+                        : 'text-dark-500 hover:text-dark-700 dark:text-dark-400'
+                    }`}
                   >
-                    {connect?.hasAccount ? 'Finish payout setup' : 'Set up payouts'}
-                  </Button>
-                ) : (
-                  <form onSubmit={handleRequestPayout} className="mt-4 space-y-3">
-                    <div>
-                      <label
-                        htmlFor="payout-amount"
-                        className="mb-1 block text-sm font-medium text-dark-700 dark:text-light-100"
-                      >
-                        Amount (USD)
-                      </label>
-                      <div className="relative">
-                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">
-                          $
-                        </span>
-                        <input
-                          id="payout-amount"
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          max={balance}
-                          step="0.01"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="0.00"
-                          className="w-full rounded-xl border border-dark-200 bg-white py-2 pl-7 pr-3 text-dark-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-dark-700 dark:bg-dark-800 dark:text-white"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="submit"
-                        disabled={!amountValid}
-                        isLoading={submitting}
-                      >
-                        Withdraw
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => setAmount(String(balance))}
-                        disabled={balance <= 0}
-                        className="text-sm font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 dark:text-primary-400"
-                      >
-                        Max
-                      </button>
-                    </div>
-                    {amount !== '' && !amountValid && (
-                      <p className="text-sm text-red-600 dark:text-red-400">
-                        Enter an amount between $0.01 and {formatMoney(balance)}.
+                    Bank (Stripe)
+                  </button>
+                  {cryptoEnabled && (
+                    <button
+                      onClick={() => setPayoutMethod('crypto')}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-t-lg transition-colors ${
+                        payoutMethod === 'crypto'
+                          ? 'bg-primary-50 text-primary-700 border-b-2 border-primary-500 dark:bg-primary-950/40 dark:text-primary-300'
+                          : 'text-dark-500 hover:text-dark-700 dark:text-dark-400'
+                      }`}
+                    >
+                      <Coins size={14} className="inline mr-1" />
+                      Crypto (USDC)
+                    </button>
+                  )}
+                </div>
+
+                {payoutMethod === 'stripe' && (
+                  <>
+                    {connectNotice && (
+                      <p className="mt-2 text-sm text-dark-500 dark:text-dark-400">
+                        {connectNotice}
                       </p>
                     )}
-                  </form>
+
+                    {canOnboard && !payoutsReady ? (
+                      <Button
+                        className="mt-4"
+                        onClick={handleOnboard}
+                        isLoading={onboarding}
+                        icon={<ExternalLink size={16} />}
+                      >
+                        {connect?.hasAccount ? 'Finish payout setup' : 'Set up payouts'}
+                      </Button>
+                    ) : (
+                      <form onSubmit={handleRequestPayout} className="mt-4 space-y-3">
+                        <div>
+                          <label
+                            htmlFor="payout-amount"
+                            className="mb-1 block text-sm font-medium text-dark-700 dark:text-light-100"
+                          >
+                            Amount (USD)
+                          </label>
+                          <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">$</span>
+                            <input
+                              id="payout-amount"
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              max={balance}
+                              step="0.01"
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
+                              placeholder="0.00"
+                              className="w-full rounded-xl border border-dark-200 bg-white py-2 pl-7 pr-3 text-dark-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-dark-700 dark:bg-dark-800 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Button type="submit" disabled={!amountValid} isLoading={submitting}>
+                            Withdraw
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setAmount(String(balance))}
+                            disabled={balance <= 0}
+                            className="text-sm font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 dark:text-primary-400"
+                          >
+                            Max
+                          </button>
+                        </div>
+                        {amount !== '' && !amountValid && (
+                          <p className="text-sm text-red-600 dark:text-red-400">
+                            Enter an amount between $0.01 and {formatMoney(balance)}.
+                          </p>
+                        )}
+                      </form>
+                    )}
+                  </>
+                )}
+
+                {payoutMethod === 'crypto' && (
+                  <div className="mt-4">
+                    <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
+                      Withdraw funds directly to your connected wallet as USDC on a supported chain.
+                    </p>
+
+                    {cryptoResult?.success ? (
+                      <div className="p-4 bg-green-50 dark:bg-green-950/40 rounded-xl border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 size={20} className="text-green-600" />
+                          <p className="font-semibold text-green-800 dark:text-green-300">
+                            Crypto payout sent
+                          </p>
+                        </div>
+                        <p className="text-sm text-green-700 dark:text-green-400">
+                          {cryptoResult.amount} {cryptoResult.currency} to {cryptoResult.recipientAddress.slice(0, 6)}...{cryptoResult.recipientAddress.slice(-4)}
+                        </p>
+                        {cryptoResult.txHash && (
+                          <a
+                            href={`https://basescan.org/tx/${cryptoResult.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                          >
+                            <ExternalLinkIcon size={14} />
+                            View on explorer
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <form onSubmit={handleCryptoPayout} className="space-y-3">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-dark-700 dark:text-light-100">
+                            Amount (USD → USDC)
+                          </label>
+                          <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">$</span>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min="0"
+                              max={balance}
+                              step="0.01"
+                              value={cryptoAmount}
+                              onChange={(e) => setCryptoAmount(e.target.value)}
+                              placeholder="0.00"
+                              className="w-full rounded-xl border border-dark-200 bg-white py-2 pl-7 pr-3 text-dark-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-dark-700 dark:bg-dark-800 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        {cryptoChains.length > 0 && (
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-dark-700 dark:text-light-100">
+                              Network
+                            </label>
+                            <select
+                              value={selectedChain}
+                              onChange={(e) => setSelectedChain(Number(e.target.value))}
+                              className="w-full rounded-xl border border-dark-200 bg-white py-2 px-3 text-dark-900 focus:border-primary-500 focus:outline-none dark:border-dark-700 dark:bg-dark-800 dark:text-white"
+                            >
+                              {cryptoChains.map((chain) => (
+                                <option key={chain.chainId} value={chain.chainId}>
+                                  {chain.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3">
+                          <Button type="submit" disabled={cryptoSubmitting || !cryptoAmount || parseFloat(cryptoAmount) <= 0 || parseFloat(cryptoAmount) > balance} isLoading={cryptoSubmitting}>
+                            Send USDC
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setCryptoAmount(String(balance))}
+                            disabled={balance <= 0}
+                            className="text-sm font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 dark:text-primary-400"
+                          >
+                            Max
+                          </button>
+                        </div>
+                        {cryptoAmount && (parseFloat(cryptoAmount) <= 0 || parseFloat(cryptoAmount) > balance) && (
+                          <p className="text-sm text-red-600 dark:text-red-400">
+                            Enter an amount between $0.01 and {formatMoney(balance)}.
+                          </p>
+                        )}
+                      </form>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

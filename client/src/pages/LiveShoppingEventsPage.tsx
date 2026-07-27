@@ -15,7 +15,7 @@ interface LiveShoppingEvent {
   hostName: string;
   hostAvatar: string;
   isLive: boolean;
-  startsAt: Date;
+  startsAt: string;
   endsAt?: Date;
   thumbnailUrl: string;
   products: any[];

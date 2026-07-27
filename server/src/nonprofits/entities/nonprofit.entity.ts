@@ -35,6 +35,9 @@ export class Nonprofit {
   @Column('text', { nullable: true })
   missionStatement: string;
 
+  @Column({ nullable: true })
+  rejectionReason?: string;
+
   @ManyToOne(() => User, (user) => user.nonprofits)
   user: User;
 

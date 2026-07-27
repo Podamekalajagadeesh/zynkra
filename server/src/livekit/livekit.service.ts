@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RoomServiceClient, Room } from 'livekit-server-sdk';
+import { RoomServiceClient, Room, AccessToken } from 'livekit-server-sdk';
 
 @Injectable()
 export class LiveKitService {
@@ -22,7 +22,6 @@ export class LiveKitService {
   }
 
   async generateToken(userId: string, roomName: string, isHost: boolean): Promise<string> {
-    const { AccessToken } = require('livekit-server-sdk');
     const token = new AccessToken(
       process.env.LIVEKIT_API_KEY || 'dev-api-key',
       process.env.LIVEKIT_API_SECRET || 'dev-api-secret',

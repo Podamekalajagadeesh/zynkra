@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import { WebauthnService } from './webauthn.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -50,6 +52,18 @@ export class AuthController {
   @Post('2fa/verify')
   async verifyTwoFactor(@Req() req, @Body() body: { tempToken: string; token: string }) {
     return this.authService.verify2FALogin(body.tempToken, body.token, req);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('2fa/status')
+  async getTwoFactorStatus(@Req() req) {
+    return this.authService.get2FAStatus(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  async disableTwoFactor(@Req() req, @Body() body: { token: string }) {
+    return this.authService.disable2FA(req.user.userId, body.token);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -118,15 +132,22 @@ export class AuthController {
     return this.authService.signIn(signInDto, req);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Request() req) {
+    return this.authService.refreshToken(req.user.userId, req.user.sessionId);
+  }
+
   @Throttle(EMAIL_SENDING)
   @Post('forgot-password')
-  async forgotPassword(@Body() { email }: { email: string }) {
-    return this.authService.forgotPassword(email);
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @Throttle(STRICT)
   @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: any) {
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(
       resetPasswordDto.token,
       resetPasswordDto.password,
@@ -223,6 +244,13 @@ export class AuthController {
   @Post('sessions/revoke-all')
   async revokeAllSessions(@Request() req) {
     return this.authService.revokeAllOtherSessions(req.user.userId, req.user.sessionId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('signout')
+  @HttpCode(HttpStatus.OK)
+  async signOut(@Request() req) {
+    return this.authService.signOut(req.user?.sessionId);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -2,7 +2,10 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FeedService } from './feed.service';
 import { FeedController } from './feed.controller';
+import { SmartFeedService } from './smart-feed.service';
+import { SmartFeedController } from './smart-feed.controller';
 import { Post } from '../posts/entities/post.entity';
+import { User } from '../users/entities/user.entity';
 import { PostsModule } from '../posts/posts.module';
 import { UserInterestsModule } from '../user-interests/user-interests.module';
 import { UsersModule } from '../users/users.module';
@@ -11,10 +14,11 @@ import { BookmarksModule } from '../bookmarks/bookmarks.module';
 import { StoriesModule } from '../stories/stories.module';
 import { SnapMapModule } from '../snapmap/snapmap.module';
 import { TrendsModule } from '../trends/trends.module';
+import { TranslationModule } from '../translation/translation.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post, User]),
     forwardRef(() => PostsModule),
     forwardRef(() => UserInterestsModule),
     forwardRef(() => UsersModule),
@@ -23,9 +27,10 @@ import { TrendsModule } from '../trends/trends.module';
     forwardRef(() => StoriesModule),
     SnapMapModule,
     TrendsModule,
+    TranslationModule,
   ],
-  providers: [FeedService],
-  controllers: [FeedController],
-  exports: [FeedService],
+  providers: [FeedService, SmartFeedService],
+  controllers: [FeedController, SmartFeedController],
+  exports: [FeedService, SmartFeedService],
 })
 export class FeedModule {}

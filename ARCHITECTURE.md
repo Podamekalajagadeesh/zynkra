@@ -491,7 +491,15 @@ socket.on('notification', (notification) => {})
    └─ Refresh token for new session (optional)
 ```
 
-### End-to-End Encryption (E2EE)
+### End-to-End Encryption (E2EE) — Preview
+
+> **🚧 Current status:** Messages are **encrypted in transit** (TLS). True end-to-end
+> encryption (E2EE) using Signal Protocol / libsodium is partially implemented on the
+> client side but **not yet enforced server-side**: the server can read plaintext when
+> the client fails to encrypt (e.g. missing recipient key). See Phase 3 of the
+> [ROADMAP](ROADMAP.md) for the path to full E2EE.
+
+Planned flow once E2EE is fully active:
 ```typescript
 // Sending a DM
 const message = "Secret message"

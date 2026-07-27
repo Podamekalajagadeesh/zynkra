@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, UseGuards, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DaoService } from './dao.service';
 import { CreateDaoDto } from './dto/create-dao.dto';
@@ -17,14 +17,23 @@ export class DaoController {
 
   @Post(':daoId/proposals')
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
   createProposal(@Param('daoId') daoId: string, @Body() createProposalDto: CreateProposalDto) {
     return this.daoService.createProposal(daoId, createProposalDto);
   }
 
   @Post('proposals/:proposalId/vote')
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   vote(@Param('proposalId') proposalId: string, @Body() voteDto: VoteDto) {
     return this.daoService.vote(proposalId, voteDto);
+  }
+
+  @Post('proposals/:proposalId/execute')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  executeProposal(@Param('proposalId') proposalId: string) {
+    return this.daoService.executeProposal(proposalId);
   }
 
   @Get(':daoId/proposals')
@@ -35,5 +44,10 @@ export class DaoController {
   @Get('proposals/:proposalId')
   getProposal(@Param('proposalId') proposalId: string) {
     return this.daoService.getProposal(proposalId);
+  }
+
+  @Get(':daoId/stats')
+  getDaoStats(@Param('daoId') daoId: string) {
+    return this.daoService.getDaoStats(daoId);
   }
 }

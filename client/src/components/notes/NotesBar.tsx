@@ -32,8 +32,8 @@ export const NotesBar = () => {
         <div className="flex-shrink-0">
           <button onClick={() => setCreateOpen(true)}>
             <Avatar>
-              <AvatarImage src={user?.profile.avatarUrl} />
-              <AvatarFallback>{user?.displayName.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user?.profile?.avatarUrl} />
+              <AvatarFallback>{user?.displayName?.charAt(0) ?? '?'}</AvatarFallback>
             </Avatar>
           </button>
         </div>
@@ -41,7 +41,6 @@ export const NotesBar = () => {
           {notes.map((note) => (
             <button key={note.id} onClick={() => setSelectedNote(note)}>
               <Avatar>
-                {/* You might need to fetch user details to display avatar */}
                 <AvatarFallback>{note.userId.charAt(0)}</AvatarFallback>
               </Avatar>
             </button>

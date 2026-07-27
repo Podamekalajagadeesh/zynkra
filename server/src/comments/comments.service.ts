@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment, SentimentType } from './entities/comment.entity';
-import { User } from '../users/entities/user.entity';
+import { User, CommentPrivacy } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { ReputationService } from '../reputation/reputation.service';
 import { ReputationEvent } from '../reputation/reputation.enum';
@@ -30,7 +30,6 @@ export class CommentsService {
   ) {}
 
   private canUserComment(commentingUser: User, postOwner: User): boolean {
-    const { CommentPrivacy } = require('../users/entities/user.entity');
     const privacy = postOwner.commentPrivacy;
     
     // If no privacy set, default to everyone

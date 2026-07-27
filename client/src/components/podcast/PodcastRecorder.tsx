@@ -101,7 +101,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
     // Add distortion if needed
     if (filter.distortion) {
       const distortion = audioContext.createWaveShaper();
-      function makeDistortionCurve(amount: number) {
+      const makeDistortionCurve = (amount: number) => {
         const k = amount;
         const n_samples = 44100;
         const curve = new Float32Array(n_samples);

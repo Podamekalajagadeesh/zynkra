@@ -25,6 +25,7 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "react-hooks/rules-of-hooks": "off",
+    "@typescript-eslint/no-explicit-any": "off",
     "no-empty": "off",
     "no-control-regex": "off",
     "no-cond-assign": "off",
@@ -37,7 +38,9 @@
     "valid-typeof": "off",
     "no-fallthrough": "off",
     "no-constant-condition": "off",
-    "no-func-assign": "off"
+    "no-func-assign": "off",
+    "react/no-unescaped-entities": "off",
+    "@typescript-eslint/ban-ts-comment": "off"
   },
   "settings": {
     "react": {

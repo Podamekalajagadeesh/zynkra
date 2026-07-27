@@ -10,9 +10,27 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    exclude: [
+      '@privacyresearch/libsignal-protocol-typescript',
+      '@privacyresearch/curve25519-typescript',
+    ],
+  },
+  ssr: {
+    noExternal: [],
+    external: ['@privacyresearch/libsignal-protocol-typescript', '@privacyresearch/curve25519-typescript'],
+  },
   publicDir: 'public',
   build: {
+    commonjsOptions: {
+      include: [
+        /node_modules/,
+      ],
+    },
     rollupOptions: {
+      external: [
+        /@privacyresearch/,
+      ],
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) {

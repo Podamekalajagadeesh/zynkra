@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { Post } from '../posts/entities/post.entity';
+import { Post, PostType, PostVisibility } from '../posts/entities/post.entity';
 import { TrendsService } from '../trends/trends.service';
-import { PostVisibility } from '../posts/entities/post.entity';
 import { UserInterestsService } from '../user-interests/user-interests.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
@@ -50,7 +49,7 @@ export class FeedService {
 
   async getLocalFeed(user: User, radiusKm: number = 50): Promise<(Post & { distance?: number })[]> {
     // Get current user's location from SnapMap gateway's in-memory storage
-    // @ts-ignore - Access private userLocations map from SnapMapGateway (we can refactor to share location service later)
+    // @ts-expect-error - Access private userLocations map from SnapMapGateway (we can refactor to share location service later)
     const userLocation = this.snapMapGateway.userLocations?.get(user.id);
     
     if (!userLocation) {
@@ -351,7 +350,7 @@ export class FeedService {
     const videoPosts = await this.postsRepository.find({
       where: {
         visibility: PostVisibility.PUBLIC,
-        // mediaType: 'video', // Commented out - Post entity doesn't have mediaType property
+        postType: PostType.REEL,
       },
       relations: ['user', 'reactions', 'comments', 'tags'],
     }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts));

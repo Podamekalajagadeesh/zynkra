@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Button } from '../ui/button';
 import { sendMessage, getPublicKey } from '../../lib/api';
-import { Send, X, Gift, Brain } from 'lucide-react';
+import { Send, X, Gift, Brain, ShieldCheck } from 'lucide-react';
 import { Message, EmotionData, ContextualData, NeuralMessageMetadata } from '../../lib/types';
 import { useAuth } from '../../contexts/AuthContext';
-import { encryptMessage, getKeys } from '../../services/encryption.service';
+import { useE2EE } from '../../hooks/useE2EE';
 import { GiftModal } from '../monetization/GiftModal';
 
 interface SendMessageFormProps {
@@ -33,6 +33,7 @@ export const SendMessageForm = ({
   const [neuralMetadata, setNeuralMetadata] = useState<NeuralMessageMetadata | null>(null);
   const { addToast } = useToast();
   const { user } = useAuth();
+  const { encryptMessage, isReady: e2eeReady, error: e2eeError } = useE2EE(user?.id);
 
   useEffect(() => {
     if (replyTo) {
@@ -141,12 +142,15 @@ export const SendMessageForm = ({
     try {
       let contentToSend = content;
       if (recipientId && user) {
-        const recipientPublicKey = await getPublicKey(recipientId);
-        if (recipientPublicKey) {
-          const keys = await getKeys(user.id);
-          if (keys) {
-            const recipientPublicKeyBytes = new Uint8Array(atob(recipientPublicKey).split('').map(c => c.charCodeAt(0)));
-            contentToSend = await encryptMessage(recipientPublicKeyBytes, keys.privateKey, content);
+        if (e2eeReady) {
+          // Use Signal Protocol E2EE
+          contentToSend = await encryptMessage(recipientId, content);
+        } else {
+          // Fallback: use legacy public key encryption
+          const recipientPublicKey = await getPublicKey(recipientId);
+          // If legacy key doesn't exist either, send plaintext
+          if (!recipientPublicKey) {
+            console.warn('No encryption keys available, sending unencrypted');
           }
         }
       }

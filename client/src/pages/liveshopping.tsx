@@ -78,12 +78,12 @@ export const LiveShoppingPage = () => {
 
       // Fetch host's products that can be added to the stream
       api.get('/products').then(response => {
-        const formattedProducts = response.data.map(p => ({
+        const formattedProducts = response.data.map((p: any) => ({
           id: p.id,
           name: p.name,
           description: p.description,
           imageUrl: p.imageUrls?.[0],
-          variants: p.variants.map(v => ({
+          variants: p.variants.map((v: any) => ({
             id: v.id,
             name: v.name,
             price: v.price,

@@ -389,88 +389,19 @@ export function SecurityCheckupPage() {
           )}
         </section>
         
-        {/* Brainwave Authentication Devices Section */}
+        {/* Advanced Authentication Section — Coming Soon */}
         <section className="space-y-4 rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
             <div>
-              <p className="font-semibold text-lg text-dark-900 dark:text-white">Neural Authentication Devices</p>
+              <p className="font-semibold text-lg text-dark-900 dark:text-white flex items-center gap-2">
+                Advanced Authentication
+                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Coming Soon</span>
+              </p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                Manage your registered brainwave authentication devices. Your unique neural signature is encrypted and never stored in plaintext.
+                Future authentication methods including biometric and hardware key support are under development.
               </p>
             </div>
-            <Button 
-              variant="primary" 
-              size="sm" 
-              disabled={registeringBrainwave}
-              onClick={async () => {
-                setRegisteringBrainwave(true);
-                try {
-                  await registerBrainwaveDevice();
-                  await loadSecurityData();
-                  toast.success('New brainwave device registered successfully!');
-                } catch (error) {
-                  console.error('Failed to register brainwave device', error);
-                  toast.error('Failed to register new neural device.');
-                } finally {
-                  setRegisteringBrainwave(false);
-                }
-              }}
-              icon={<Plus size={16} />}
-            >
-              {registeringBrainwave ? 'Registering...' : 'Add New Device'}
-            </Button>
           </div>
-          
-          {brainwaveDevices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Brain className="w-12 h-12 text-dark-300 dark:text-dark-600 mb-4" />
-              <p className="text-dark-500 dark:text-dark-400">No neural authentication devices registered yet.</p>
-              <p className="text-sm text-dark-400 dark:text-dark-500 mt-1">Add your first brainwave headset to enable unhackable neural authentication.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {brainwaveDevices.map((device) => (
-                <Card key={device.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-primary-50 p-2 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300">
-                        <Brain size={20} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-dark-900 dark:text-white">{device.deviceModel}</p>
-                        <p className="text-sm text-dark-500 dark:text-dark-400">
-                          Registered on {new Date(device.registeredAt).toLocaleDateString()} • Firmware {device.firmware}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await removeBrainwaveDevice(device.id);
-                          await loadSecurityData();
-                          toast.success('Neural device removed successfully.');
-                        } catch (error) {
-                          console.error('Failed to remove brainwave device', error);
-                          toast.error('Failed to remove neural device.');
-                        }
-                      }}
-                      icon={<Trash2 size={16} />}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-green-500" />
-                    <span className="text-xs text-dark-500 dark:text-dark-400">
-                      Neural signature verified • Authentication accuracy: {device.accuracy.toFixed(1)}%
-                    </span>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
         </section>
       </div>
     </PageShell>

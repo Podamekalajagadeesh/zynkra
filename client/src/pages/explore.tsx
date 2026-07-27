@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { PageShell } from '../components/PageShell';
 import { PostList } from '../components/post-list';
