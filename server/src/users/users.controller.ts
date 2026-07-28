@@ -189,13 +189,20 @@ export class UsersController {
   }
 
   @UseGuards(OptionalJwtAuthGuard)
+  @Get('search')
+  async searchUsers(@Request() req, @Query('q') query: string): Promise<User[]> {
+    const searchingUserId = req.user ? req.user.userId : undefined;
+    return this.usersService.search(query, searchingUserId);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
   async findByUsername(
     @Request() req,
     @Param('username') username: string,
   ): Promise<User | null> {
     const requestingUserId = req.user ? req.user.userId : undefined;
-    return this.usersService.findByUsername(username, requestingUserId);
+    return this.usersService.findByUsername(username, [], requestingUserId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -375,12 +382,25 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('follow-requests/user/:targetUserId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cancelFollowRequestByUser(@Request() req, @Param('targetUserId') targetUserId: string): Promise<void> {
+    return this.usersService.cancelFollowRequestByUser(req.user.userId, targetUserId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('me/notification-settings')
   async updateNotificationSettings(
     @Request() req,
     @Body() settings: NotificationSettingsDto,
   ): Promise<User> {
     return this.usersService.updateNotificationSettings(req.user.userId, settings);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/life-events')
+  async getLifeEvents(@Request() req) {
+    return this.usersService.getLifeEvents(req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

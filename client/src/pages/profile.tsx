@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode } from 'lucide-react';
+import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shield, ShieldOff } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
-import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest } from '../lib/api';
+import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
@@ -60,6 +60,7 @@ export function ProfilePage() {
   const [followStatus, setFollowStatus] = useState<'following' | 'requested' | 'not_following'>('not_following');
   const [posts, setPosts] = useState<Post[]>([]);
   const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const [nfts, setNfts] = useState<Nft[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
@@ -88,6 +89,12 @@ export function ProfilePage() {
         } else {
           setCurrentUser(profile);
         }
+        if (userId && currentUser) {
+          try {
+            const blocked = await getBlockedUsers();
+            setIsBlocked(blocked.some((u: any) => u.id === userId));
+          } catch { /* ignore */ }
+        }
         const reputationData = await getReputation(profile.id);
         setReputation(reputationData?.score ?? 0);
       } catch (error) {
@@ -99,7 +106,7 @@ export function ProfilePage() {
     };
 
     fetchProfile();
-  }, [addToast, currentUserId, setCurrentUser, userId]);
+  }, [addToast, currentUserId, currentUser, setCurrentUser, userId]);
 
   const handleToggleFeatured = async (postId: string, isFeatured: boolean) => {
     try {
@@ -185,6 +192,23 @@ setCurrentUser(updatedUser);
     } catch (error) {
       console.error('Failed to perform action:', error);
       addToast('Failed to perform action', 'error');
+    }
+  };
+
+  const handleBlockToggle = async () => {
+    if (!user) return;
+    try {
+      if (isBlocked) {
+        await unblockUser(user.id);
+        addToast('User unblocked', 'success');
+        setIsBlocked(false);
+      } else {
+        await blockUser(user.id);
+        addToast('User blocked', 'success');
+        setIsBlocked(true);
+      }
+    } catch {
+      addToast('Failed to update block status', 'error');
     }
   };
 
@@ -311,6 +335,14 @@ setCurrentUser(updatedUser);
                 </Button>
                 <Button onClick={handleFollow}>
                   {followStatus === 'following' ? 'Unfollow' : followStatus === 'requested' ? 'Requested' : 'Follow'}
+                </Button>
+                <Button
+                  variant={isBlocked ? 'secondary' : 'destructive'}
+                  onClick={handleBlockToggle}
+                  icon={isBlocked ? <ShieldOff size={16} /> : <Shield size={16} />}
+                  ariaLabel={isBlocked ? 'Unblock user' : 'Block user'}
+                >
+                  {isBlocked ? 'Blocked' : 'Block'}
                 </Button>
               </div>
             )}

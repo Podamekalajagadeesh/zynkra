@@ -574,6 +574,11 @@ export const getMyFollowers = async (): Promise<UserProfile[]> => {
   return response.data.map(normalizeUserProfile);
 };
 
+export const getMyFollowing = async (): Promise<UserProfile[]> => {
+  const response = await api.get('/users/me/following');
+  return response.data.map(normalizeUserProfile);
+};
+
 const uploadPostMedia = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -822,12 +827,12 @@ export const sendFollowRequest = async (userId: string) => {
 };
 
 export const cancelFollowRequest = async (userId: string) => {
-  const response = await api.delete(`/users/${userId}/cancel-request`);
+  const response = await api.delete(`/users/follow-requests/user/${userId}`);
   return response.data;
 };
 
 export const getFollowRequests = async () => {
-  const response = await api.get('/users/follow-requests');
+  const response = await api.get('/users/me/follow-requests/pending');
   return response.data;
 };
 
@@ -1832,6 +1837,21 @@ export const blockUser = async (userId: string) => {
 
 export const unblockUser = async (userId: string) => {
   const response = await api.delete(`/users/${userId}/block`);
+  return response.data;
+};
+
+export const createLifeEvent = async (data: { title: string; description?: string; date: string; type: string }) => {
+  const response = await api.post('/users/me/life-events', data);
+  return response.data;
+};
+
+export const updateLifeEvent = async (id: string, data: { title?: string; description?: string; date?: string; type?: string }) => {
+  const response = await api.patch(`/users/me/life-events/${id}`, data);
+  return response.data;
+};
+
+export const deleteLifeEvent = async (id: string) => {
+  const response = await api.delete(`/users/me/life-events/${id}`);
   return response.data;
 };
 

@@ -908,6 +908,18 @@ export class UsersService {
     await this.followRequestRepository.delete(requestId);
   }
 
+  async cancelFollowRequestByUser(requesterId: string, targetUserId: string): Promise<void> {
+    const request = await this.followRequestRepository.findOne({
+      where: { requester: { id: requesterId }, recipient: { id: targetUserId }, status: FollowRequestStatus.PENDING },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Follow request not found.');
+    }
+
+    await this.followRequestRepository.delete(request.id);
+  }
+
   async findFollowSuggestions(userId: string): Promise<User[]> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
@@ -1023,6 +1035,14 @@ export class UsersService {
     };
 
     return this.usersRepository.save(user);
+  }
+
+  async getLifeEvents(userId: string): Promise<LifeEvent[]> {
+    const user = await this.findOneById(userId, ['lifeEvents']);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.lifeEvents || [];
   }
 
   async addLifeEvent(userId: string, createLifeEventDto: CreateLifeEventDto): Promise<LifeEvent> {

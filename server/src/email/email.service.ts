@@ -43,7 +43,7 @@ export class EmailService {
   }
 
   async sendVerificationEmail(email: string, token: string) {
-    const verificationLink = `${this.serverUrl}/verify-email/${token}`;
+    const verificationLink = `${this.clientUrl}/verify-email/${token}`;
     const subject = 'Verify your Zynkra account';
     const text = `Please verify your account by visiting: ${verificationLink}`;
     const html = `<p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`;

@@ -302,7 +302,7 @@ export function LoginPage() {
       )}
       
       <Tabs defaultValue="password" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="password">Password</TabsTrigger>
           <TabsTrigger value="recovery">Recovery</TabsTrigger>
           <TabsTrigger value="passkey">Passkey</TabsTrigger>

@@ -264,6 +264,64 @@ describe('ProfilePage', () => {
     });
   });
 
+  // --- Follower / Following list display ---
+
+  it('displays following count', async () => {
+    const profile = {
+      ...mockUser,
+      following: [
+        { id: 'u2', username: 'user2', displayName: 'User Two' },
+        { id: 'u3', username: 'user3', displayName: 'User Three' },
+      ],
+      followers: [],
+    };
+    mockGetProfile.mockResolvedValue(profile);
+    mockGetReputation.mockResolvedValue({ score: 100 });
+    renderProfilePage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Following')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+  });
+
+  it('displays followers count', async () => {
+    const profile = {
+      ...mockUser,
+      followers: [
+        { id: 'f1', username: 'follower1', displayName: 'Follower One' },
+        { id: 'f2', username: 'follower2', displayName: 'Follower Two' },
+        { id: 'f3', username: 'follower3', displayName: 'Follower Three' },
+      ],
+    };
+    mockGetProfile.mockResolvedValue(profile);
+    mockGetReputation.mockResolvedValue({ score: 100 });
+    renderProfilePage();
+
+    await waitFor(() => {
+      // "Followers" appears both as the stat label and the section heading
+      expect(screen.getAllByText('Followers').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('3')).toBeInTheDocument();
+    });
+  });
+
+  it('displays follower names in the follower list', async () => {
+    const profile = {
+      ...mockUser,
+      followers: [
+        { id: 'f1', username: 'follower1', displayName: 'Follower One' },
+      ],
+    };
+    mockGetProfile.mockResolvedValue(profile);
+    mockGetReputation.mockResolvedValue({ score: 100 });
+    renderProfilePage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Follower One')).toBeInTheDocument();
+      expect(screen.getByText('@follower1')).toBeInTheDocument();
+    });
+  });
+
   // --- Error handling ---
 
   it('handles profile fetch error gracefully', async () => {

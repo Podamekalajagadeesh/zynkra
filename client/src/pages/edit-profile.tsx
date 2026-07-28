@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import { api, getProfile, updateProfile } from '../lib/api';
+import { api, getProfile, updateProfile, createLifeEvent, deleteLifeEvent } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -59,27 +59,44 @@ export function EditProfilePage() {
       setProfileThemeColor(profile.profileThemeColor || '#000000');
       setProfileBioFont(profile.profileBioFont || 'default');
       setLifeEvents(profile.lifeEvents || []);
+      // Load life events from server
+      api.get('/users/me/life-events').then(res => { if (res.data) setLifeEvents(res.data); }).catch(() => {});
         setIsLoading(false);
       });
     }
   }, [user, setUser]);
 
-  const addLifeEvent = () => {
+  // Load life events when user is loaded directly
+  useEffect(() => {
+    if (user) {
+      api.get('/users/me/life-events').then(res => { if (res.data) setLifeEvents(res.data); }).catch(() => {});
+    }
+  }, [user]);
+
+  const addLifeEvent = async () => {
     if (!newEvent.title || !newEvent.date) {
       addToast('Please fill in all required fields', 'error');
       return;
     }
-    const event: LifeEvent = {
-      id: Date.now().toString(),
-      ...newEvent
-    };
-    setLifeEvents([...lifeEvents, event]);
-    setNewEvent({ title: '', description: '', date: '', type: 'other' });
-    setShowAddLifeEvent(false);
+    try {
+      const created = await createLifeEvent(newEvent);
+      setLifeEvents([...lifeEvents, created]);
+      setNewEvent({ title: '', description: '', date: '', type: 'other' });
+      setShowAddLifeEvent(false);
+      addToast('Life event added', 'success');
+    } catch {
+      addToast('Failed to add life event', 'error');
+    }
   };
 
-  const removeLifeEvent = (eventId: string) => {
-    setLifeEvents(lifeEvents.filter(event => event.id !== eventId));
+  const removeLifeEvent = async (eventId: string) => {
+    try {
+      await deleteLifeEvent(eventId);
+      setLifeEvents(lifeEvents.filter(event => event.id !== eventId));
+      addToast('Life event removed', 'success');
+    } catch {
+      addToast('Failed to remove life event', 'error');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
