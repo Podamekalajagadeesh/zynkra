@@ -188,12 +188,7 @@ export class UsersController {
     return { users, pages };
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
-  @Get('search')
-  async searchUsers(@Request() req, @Query('q') query: string): Promise<User[]> {
-    const searchingUserId = req.user ? req.user.userId : undefined;
-    return this.usersService.search(query, searchingUserId);
-  }
+
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
