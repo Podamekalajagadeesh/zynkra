@@ -16,7 +16,7 @@ interface AICoPilotMessage {
   suggestions?: ContentSuggestion[];
 }
 
-interface ContentSuggestion {
+export interface ContentSuggestion {
   id: string;
   type: 'caption' | 'story' | 'sensory' | 'emotional' | 'immersive';
   title: string;

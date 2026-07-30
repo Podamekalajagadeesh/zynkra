@@ -17,7 +17,7 @@ export class Articles1785900000000 implements MigrationInterface {
         "status" character varying NOT NULL DEFAULT 'draft',
         "scheduledAt" TIMESTAMP WITH TIME ZONE,
         "publishedAt" TIMESTAMP WITH TIME ZONE,
-        "tags" character varying[] array,
+        "tags" character varying[],
         "readingTime" integer NOT NULL DEFAULT 1,
         "viewCount" integer NOT NULL DEFAULT 0,
         "likeCount" integer NOT NULL DEFAULT 0,

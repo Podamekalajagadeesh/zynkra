@@ -180,7 +180,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
       const newPost = await createPost(
         content,
         mediaFiles.map(mf => ({ file: mf.file, altText: mf.altText })),
-        visibility,
+        visibility as any,
         filter,
         tokenGated,
         subscriptionGated,
@@ -880,7 +880,7 @@ To transcribe your content in real-time.`;
             // Reset form after scheduling
             setContent('');
             setMediaFiles([]);
-            toast({ title: 'Post scheduled successfully', description: `Your post will be published on ${new Date(post.scheduledFor).toLocaleString()}` });
+            addToast({ title: 'Post scheduled successfully', type: 'success', description: `Your post will be published on ${new Date(post.scheduledFor).toLocaleString()}` });
           }}
           initialData={scheduleRequest}
         />

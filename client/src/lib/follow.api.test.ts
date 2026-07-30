@@ -368,7 +368,7 @@ describe('close friends API helpers', () => {
     );
 
     const result = await updateCloseFriends(['cf-1']);
-    expect(result.closeFriends).toHaveLength(1);
+    expect((result as any).closeFriends).toHaveLength(1);
   });
 
   it('throws on error when fetching close friends', async () => {

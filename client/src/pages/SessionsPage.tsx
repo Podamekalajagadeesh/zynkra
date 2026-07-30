@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { getLoginSessions, revokeLoginSession } from '../lib/api';
-
-interface Session {
-  id: string;
-  current: boolean;
-  ip_address: string;
-  user_agent: string;
-  last_used_at: string;
-}
+import { getLoginSessions, revokeLoginSession, LoginSession } from '../lib/api';
 
 export function SessionsPage() {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<LoginSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,14 +42,14 @@ export function SessionsPage() {
           <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <p className="font-semibold">
-                {session.user_agent}
-                {session.current && <span className="text-green-500 ml-2">(This device)</span>}
+                {session.userAgent}
+                {session.isCurrent && <span className="text-green-500 ml-2">(This device)</span>}
               </p>
               <p className="text-sm text-gray-500">
-                Last used: {new Date(session.last_used_at).toLocaleString()} &bull; IP: {session.ip_address}
+                Last used: {new Date(session.lastSeenAt).toLocaleString()} &bull; IP: {session.ipAddress}
               </p>
             </div>
-            {!session.current && (
+            {!session.isCurrent && (
               <Button variant="destructive" onClick={() => handleRevokeSession(session.id)}>
                 Revoke
               </Button>

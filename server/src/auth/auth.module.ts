@@ -13,6 +13,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WebauthnService } from './webauthn.service';
 import { LoginSession } from './entities/login-session.entity';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { LoginSession } from './entities/login-session.entity';
     PassportModule,
     EmailModule,
     forwardRef(() => NotificationsModule),
-    TypeOrmModule.forFeature([Authenticator, LoginSession]),
+    TypeOrmModule.forFeature([Authenticator, LoginSession, User]),
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

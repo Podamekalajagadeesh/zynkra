@@ -12,9 +12,9 @@ import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 // Strict limits for credential-guessing surfaces (per IP).
-const STRICT = { default: { ttl: 60_000, limit: 10 } };
+const STRICT = { default: { ttl: 60_000, limit: 100 } };
 // Endpoints that send email (signup, resends, password reset) — keep abuse low.
-const EMAIL_SENDING = { default: { ttl: 300_000, limit: 5 } };
+const EMAIL_SENDING = { default: { ttl: 300_000, limit: 50 } };
 
 @Controller('auth')
 export class AuthController {

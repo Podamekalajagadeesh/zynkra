@@ -66,7 +66,7 @@ describe('updateCloseFriends API helper', () => {
     const result = await updateCloseFriends(['friend-1']);
 
     expect(capturedBody).toEqual({ closeFriendIds: ['friend-1'] });
-    expect(result.closeFriends).toHaveLength(1);
+    expect((result as any).closeFriends).toHaveLength(1);
   });
 
   it('sends empty array to remove all close friends', async () => {
@@ -82,7 +82,7 @@ describe('updateCloseFriends API helper', () => {
     const result = await updateCloseFriends([]);
 
     expect(capturedBody).toEqual({ closeFriendIds: [] });
-    expect(result.closeFriends).toHaveLength(0);
+    expect((result as any).closeFriends).toHaveLength(0);
   });
 
   it('throws on error', async () => {

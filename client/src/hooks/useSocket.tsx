@@ -22,8 +22,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      // useUser returns the active account; the profile lives on .user
+    if (user && user.user?.id) {
       const userId = user.user.id;
       const newSocket = io(API_BASE_URL, {
         query: { userId },

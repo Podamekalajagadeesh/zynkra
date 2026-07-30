@@ -33,8 +33,8 @@ export function SignUpPage() {
     }
     setIsLoading(true);
     try {
-      await signUp({ username, email, password });
-      addToast('Account created! Please check your email for a verification link.', 'success');
+      const response = await signUp({ username, email, password });
+      addToast(response.message || 'Account created!', 'success');
       setIsSignedUp(true);
     } catch (err) {
       setIsLoading(false);

@@ -383,7 +383,7 @@ export const getProfile = async () => {
     profile.featuredPosts = [];
     return profile;
   }
-  const postsResponse = await api.get(`/users/${profile.id}/posts`);
+  const postsResponse = await api.get(`/posts/users/${profile.id}/posts`);
   profile.posts = postsResponse.data;
   profile.featuredPosts = postsResponse.data.filter(
     (p: { isFeatured?: boolean }) => p.isFeatured,
@@ -400,7 +400,7 @@ export const getUserProfile = async (
     params: { take, skip },
   });
   const profile = normalizeUserProfile(response.data);
-  const postsResponse = await api.get(`/users/${userId}/posts`);
+  const postsResponse = await api.get(`/posts/users/${userId}/posts`);
   profile.posts = postsResponse.data;
   profile.featuredPosts = postsResponse.data.filter(
     (p: { isFeatured?: boolean }) => p.isFeatured,
