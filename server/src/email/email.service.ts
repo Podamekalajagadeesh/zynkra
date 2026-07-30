@@ -42,6 +42,39 @@ export class EmailService {
     return this.configService.get<string>('FROM_EMAIL') || 'no-reply@zynkra.local';
   }
 
+  async sendVerificationCode(email: string, code: string) {
+    const subject = 'Your Zynkra verification code';
+    const text = `Your verification code is: ${code}\n\nEnter this code in the app to verify your email address.\n\nThe code expires in 1 hour.`;
+    const html = `<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Verify your Zynkra account</h2>
+      <p>Enter this verification code in the app:</p>
+      <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center;
+                  padding: 16px; background: #f5f5f5; border-radius: 8px; margin: 16px 0;">
+        ${code}
+      </div>
+      <p style="color: #666;">This code expires in 1 hour.</p>
+    </div>`;
+
+    if (!this.transporter) {
+      this.logger.log(`(DEV) Verification code to ${email}: ${code}`);
+      return Promise.resolve();
+    }
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromAddress,
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(`Verification code sent to ${email}`);
+    } catch (err) {
+      this.logger.error(`Failed to send verification code to ${email}`, err as any);
+      throw err;
+    }
+  }
+
   async sendVerificationEmail(email: string, token: string) {
     const verificationLink = `${this.clientUrl}/verify-email/${token}`;
     const subject = 'Verify your Zynkra account';

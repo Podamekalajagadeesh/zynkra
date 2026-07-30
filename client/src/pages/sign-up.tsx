@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
 import { AuthLayout } from '../components/AuthLayout';
@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { signUp, API_BASE_URL } from '../lib/api';
+import { api, setAuthToken } from '../lib/api';
 import axios from 'axios';
 
 const WebAuthn = lazy(() => import('../components/WebAuthn'));
@@ -19,6 +20,41 @@ export function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
   const [isSignedUp, setIsSignedUp] = useState(false);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const codeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isSignedUp && codeInputRef.current) {
+      codeInputRef.current.focus();
+    }
+  }, [isSignedUp]);
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyCode || verifyCode.length !== 6) {
+      setError('Please enter the 6-digit code sent to your email');
+      return;
+    }
+    setIsVerifying(true);
+    setError(null);
+    try {
+      const response = await api.post('/auth/verify-code', { email, code: verifyCode });
+      const { access_token } = response.data;
+      setAuthToken(access_token);
+      addToast('Email verified! You are now logged in.', 'success');
+      navigate('/');
+    } catch (err) {
+      setIsVerifying(false);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Verification failed');
+        addToast(err.response.data.message || 'Verification failed', 'error');
+      } else {
+        setError('An unexpected error occurred');
+        addToast('An unexpected error occurred', 'error');
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +69,8 @@ export function SignUpPage() {
     }
     setIsLoading(true);
     try {
-      const response = await signUp({ username, email, password });
-      addToast(response.message || 'Account created!', 'success');
+      await signUp({ username, email, password });
+      addToast('Verification code sent to your email!', 'success');
       setIsSignedUp(true);
     } catch (err) {
       setIsLoading(false);
@@ -51,11 +87,36 @@ export function SignUpPage() {
   if (isSignedUp) {
     return (
       <AuthLayout
-        title="Check your email"
-        subtitle="We've sent a verification link to your email address."
+        title="Verify your email"
+        subtitle={`Enter the 6-digit code sent to ${email}`}
       >
-        <p className="text-center">
-          Please check your inbox and follow the link to complete your registration.
+        {error && (
+          <p className="mb-5 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
+            {error}
+          </p>
+        )}
+        <form onSubmit={handleVerifyCode}>
+          <div className="mb-6 space-y-2">
+            <Label htmlFor="code">Verification Code</Label>
+            <Input
+              ref={codeInputRef}
+              id="code"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              required
+              placeholder="000000"
+              className="text-center text-2xl tracking-[8px]"
+            />
+          </div>
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isVerifying}>
+            {isVerifying ? 'Verifying...' : 'Verify Email'}
+          </Button>
+        </form>
+        <p className="mt-4 text-center text-sm text-dark-500 dark:text-white/70">
+          Check your email for the 6-digit code.
         </p>
       </AuthLayout>
     );

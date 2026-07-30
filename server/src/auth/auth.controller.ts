@@ -126,6 +126,13 @@ export class AuthController {
   }
 
   @Throttle(STRICT)
+  @Post('verify-code')
+  @HttpCode(HttpStatus.OK)
+  verifyByCode(@Req() req, @Body() body: { email: string; code: string }) {
+    return this.authService.verifyByCode(body.email, body.code, req);
+  }
+
+  @Throttle(STRICT)
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   signIn(@Req() req, @Body() signInDto: SignInDto) {

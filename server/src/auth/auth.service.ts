@@ -219,7 +219,8 @@ export class AuthService {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
-    const emailVerificationToken = randomBytes(32).toString('hex');
+    const emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const emailVerificationToken = emailVerificationCode;
     const emailVerificationTokenExpires = new Date();
     emailVerificationTokenExpires.setHours(emailVerificationTokenExpires.getHours() + 1); // Token expires in 1 hour
 
@@ -231,10 +232,10 @@ export class AuthService {
       emailVerificationTokenExpires,
     });
 
-    await this.emailService.sendVerificationEmail(user.email, emailVerificationToken);
+    await this.emailService.sendVerificationCode(user.email, emailVerificationCode);
 
     return {
-      message: 'Signup successful. Please check your email to verify your account.',
+      message: 'Signup successful. A 6-digit verification code has been sent to your email.',
     };
   }
 
@@ -246,17 +247,17 @@ export class AuthService {
       return { message: 'If a user with that email exists, a verification email has been sent.' };
     }
 
-    const emailVerificationToken = randomBytes(32).toString('hex');
+    const emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const emailVerificationTokenExpires = new Date();
     emailVerificationTokenExpires.setHours(emailVerificationTokenExpires.getHours() + 1);
 
-    user.emailVerificationToken = emailVerificationToken;
+    user.emailVerificationToken = emailVerificationCode;
     user.emailVerificationTokenExpires = emailVerificationTokenExpires;
     await this.usersService.save(user);
 
-    await this.emailService.sendVerificationEmail(user.email, emailVerificationToken);
+    await this.emailService.sendVerificationCode(user.email, emailVerificationCode);
 
-    return { message: 'If a user with that email exists, a verification email has been sent.' };
+    return { message: 'If a user with that email exists, a verification code has been sent.' };
   }
 
   async verifyEmail(token: string, req?: any): Promise<{ access_token: string }> {
@@ -274,6 +275,33 @@ export class AuthService {
     user.emailVerificationToken = null;
     user.emailVerificationTokenExpires = null;
     await this.usersService.save(user);
+
+    return this.issueAccessToken(user, req);
+  }
+
+  async verifyByCode(email: string, code: string, req?: any): Promise<{ access_token: string }> {
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or code');
+    }
+
+    if (user.emailVerified) {
+      return this.issueAccessToken(user, req);
+    }
+
+    if (user.emailVerificationToken !== code) {
+      throw new UnauthorizedException('Invalid verification code');
+    }
+
+    if (user.emailVerificationTokenExpires < new Date()) {
+      throw new UnauthorizedException('Verification code has expired');
+    }
+
+    user.emailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationTokenExpires = null;
+    await this.usersRepository.save(user);
 
     return this.issueAccessToken(user, req);
   }

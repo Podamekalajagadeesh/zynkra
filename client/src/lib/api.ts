@@ -263,11 +263,12 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { access_token } = await api.post('/auth/refresh');
-        setAuthToken(access_token);
-        onRefreshed(access_token);
+        const { data: refreshData } = await api.post('/auth/refresh');
+        const newToken = refreshData.access_token;
+        setAuthToken(newToken);
+        onRefreshed(newToken);
         refreshSubscribers = [];
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch {
         setAuthToken(null);
