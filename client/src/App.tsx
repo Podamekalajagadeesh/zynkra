@@ -466,9 +466,9 @@ function Navbar({ isLoggedIn, toggleTheme, theme }: { isLoggedIn: boolean; toggl
                       {label}
                     </NavLink>
                   ))}
-                  <NavLink to="/profile" className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
+                  <NavLink to={activeAccount?.user?.username ? `/profile/${activeAccount.user.username}` : '#'} className={menuItemClass} onClick={() => setIsMenuOpen(false)}>
                     <UserPlus size={18} aria-hidden="true" />
-                    Profile
+                    My Profile
                   </NavLink>
 
                   <div className="mt-2 grid grid-cols-2 gap-2">

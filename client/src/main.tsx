@@ -61,9 +61,42 @@ async function enableMocking() {
   }
 }
 
+// A stale MSW service worker (registered before MSW was disabled) claims the page
+// and intercepts requests, but the client no longer handshakes with it — so API
+// calls fail with ERR_NETWORK. Unregister it on startup so it stops controlling the page.
+// If it was controlling this page, reload once so the next load runs without it
+// (guarded against loops).
+async function unregisterStaleMockServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    let removed = false;
+    for (const registration of registrations) {
+      const scriptUrl = registration.active?.scriptURL ?? registration.installing?.scriptURL ?? '';
+      if (scriptUrl.includes('mockServiceWorker.js')) {
+        await registration.unregister();
+        removed = true;
+      }
+    }
+    if (removed && navigator.serviceWorker.controller && !sessionStorage.getItem('msw-sw-reloaded')) {
+      sessionStorage.setItem('msw-sw-reloaded', '1');
+      window.location.reload();
+    }
+  } catch (error) {
+    console.warn('Failed to unregister stale MSW service worker:', error);
+  }
+}
+
 const queryClient = new QueryClient();
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 initializeOfflineSync();
+void unregisterStaleMockServiceWorker();
+
+// MSW is disabled to avoid ERR_NETWORK from stale cached service worker.
+// The Vite proxy handles API forwarding in dev mode instead.
+// enableMocking();
 
 root.render(
   <React.StrictMode>
@@ -86,4 +119,4 @@ root.render(
   </React.StrictMode>,
 );
 
-enableMocking();
+// enableMocking();

@@ -35,12 +35,16 @@ export function ResetPasswordPage() {
       addToast('Password has been reset successfully!', 'success');
       navigate('/login');
     } catch (err) {
+      console.error('ResetPassword error:', err);
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || 'An error occurred');
         addToast(err.response.data.message || 'Failed to reset password', 'error');
       } else {
-        setError('An unexpected error occurred');
-        addToast('An unexpected error occurred', 'error');
+        const msg = axios.isAxiosError(err)
+          ? `Network error: ${err.code || 'no response'}`
+          : `Error: ${err instanceof Error ? err.message : String(err)}`;
+        setError(msg);
+        addToast(msg, 'error');
       }
     } finally {
       setIsLoading(false);

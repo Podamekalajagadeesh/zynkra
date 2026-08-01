@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useNavigate } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
 import { LifeEvent } from '../lib/types';
+import { themes, Theme } from '../themes';
 
 export function EditProfilePage() {
   const { user, setUser } = useAuth();

@@ -18,7 +18,7 @@ export type QueuedOperation = {
 const DB_NAME = 'zynkra-offline-sync';
 const STORE_NAME = 'operations';
 const SYNC_TAG = 'zynkra-offline-sync';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
 const REGISTRATION_RETRY_KEY = 'zynkra-sw-sync-retry';
 
 function openQueueDatabase(): Promise<IDBDatabase> {

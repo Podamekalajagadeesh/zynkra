@@ -24,12 +24,16 @@ export function ForgotPasswordPage() {
       await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
       setIsSubmitted(true);
     } catch (err) {
+      console.error('ForgotPassword error:', err);
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || 'An error occurred');
         addToast(err.response.data.message || 'Failed to send password reset email', 'error');
       } else {
-        setError('An unexpected error occurred');
-        addToast('An unexpected error occurred', 'error');
+        const msg = axios.isAxiosError(err)
+          ? `Network error: ${err.code || 'no response'}`
+          : `Error: ${err instanceof Error ? err.message : String(err)}`;
+        setError(msg);
+        addToast(msg, 'error');
       }
     } finally {
       setIsLoading(false);

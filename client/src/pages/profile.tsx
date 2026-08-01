@@ -106,7 +106,7 @@ export function ProfilePage() {
     };
 
     fetchProfile();
-  }, [addToast, currentUserId, currentUser, setCurrentUser, userId]);
+  }, [addToast, currentUserId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggleFeatured = async (postId: string, isFeatured: boolean) => {
     try {
