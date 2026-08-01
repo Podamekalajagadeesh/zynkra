@@ -5,7 +5,7 @@ import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shi
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
-import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser } from '../lib/api';
+import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, getFollowers, getUserFollowing } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
@@ -56,6 +56,9 @@ export function ProfilePage() {
   const { signMessageAsync } = useSignMessage();
   const { id: userId } = useParams<{ id: string }>();
   const [followersCount, setFollowersCount] = useState(0);
+  const [following, setFollowing] = useState<ExtendedUserProfile[]>([]);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [activeList, setActiveList] = useState<'followers' | 'following'>('followers');
   const [mutualFollows, setMutualFollows] = useState<ExtendedUserProfile[]>([]);
   const [followStatus, setFollowStatus] = useState<'following' | 'requested' | 'not_following'>('not_following');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -74,14 +77,23 @@ export function ProfilePage() {
         const profile = userId ? await getUserProfile(userId) : await getProfile();
         setUser(profile);
         setFollowers(profile.followers ?? []);
+        setFollowing(profile.following ?? []);
+        setFollowersCount((profile.followers ?? []).length);
+        setFollowingCount((profile.following ?? []).length);
         setPosts(profile.posts ?? []);
         setFeaturedPosts(profile.featuredPosts ?? []);
         if (userId) {
-          const isUserFollowing = (profile.followers ?? []).some((follower) => follower.id === currentUser?.id);
-          if (isUserFollowing) {
-            setFollowersCount((profile.followers ?? []).length);
-          } else {
-            setFollowersCount((profile.followers ?? []).length);
+          try {
+            const [followersList, followingList] = await Promise.all([
+              getFollowers(userId),
+              getUserFollowing(userId),
+            ]);
+            setFollowers(followersList);
+            setFollowing(followingList);
+            setFollowersCount(followersList.length);
+            setFollowingCount(followingList.length);
+          } catch (error) {
+            console.error('Failed to fetch follow lists:', error);
           }
           const mutuals = await getMutualFollows(userId);
           setMutualFollows(mutuals);
@@ -382,35 +394,45 @@ setCurrentUser(updatedUser);
               </div>
             </div>
 
-            <div className="surface-soft p-4">
+            <button
+              type="button"
+              onClick={() => setActiveList('following')}
+              className={`surface-soft p-4 text-left w-full ${activeList === 'following' ? 'ring-2 ring-primary-500' : ''}`}
+            >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Following</p>
-              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{user.following?.length ?? 0}</p>
-            </div>
-            <div className="surface-soft p-4">
+              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{followingCount}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveList('followers')}
+              className={`surface-soft p-4 text-left w-full ${activeList === 'followers' ? 'ring-2 ring-primary-500' : ''}`}
+            >
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Followers</p>
-                <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{userId ? followersCount : user.followers?.length ?? 0}</p>
-              </div>
+                <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{followersCount}</p>
+              </button>
               <div className="lg:col-span-4">
-                <h3 className="text-lg font-semibold">Followers</h3>
+                <h3 className="text-lg font-semibold">
+                  {activeList === 'followers' ? 'Followers' : 'Following'}
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                  {(followers ?? []).map((follower) => (
-                    <div key={follower.id} className="flex items-center justify-between p-2 border rounded-lg">
-                      <Link to={`/profile/${follower.id}`} className="flex items-center gap-2">
+                  {(activeList === 'followers' ? followers : following).map((listUser) => (
+                    <div key={listUser.id} className="flex items-center justify-between p-2 border rounded-lg">
+                      <Link to={`/profile/${listUser.username || listUser.id}`} className="flex items-center gap-2">
                         <img
-                          src={follower.nftPfpUrl || `https://api.dicebear.com/6.x/micah/svg?seed=${follower.id}`}
-                          alt={follower.displayName || follower.username || 'User'}
+                          src={listUser.nftPfpUrl || `https://api.dicebear.com/6.x/micah/svg?seed=${listUser.id}`}
+                          alt={listUser.displayName || listUser.username || 'User'}
                           className="h-10 w-10 rounded-full"
                         />
                         <div>
-                          <p className="font-bold">{follower.displayName}</p>
-                          <p className="text-sm text-dark-500">@{follower.username}</p>
+                          <p className="font-bold">{listUser.displayName}</p>
+                          <p className="text-sm text-dark-500">@{listUser.username}</p>
                         </div>
                       </Link>
-                      {currentUser?.id === user?.id && (
+                      {activeList === 'followers' && currentUser?.id === user?.id && (
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleRemoveFollower(follower.id)}
+                          onClick={() => handleRemoveFollower(listUser.id)}
                         >
                           Remove
                         </Button>
@@ -418,6 +440,11 @@ setCurrentUser(updatedUser);
                     </div>
                   ))}
                 </div>
+                {(activeList === 'followers' ? followers : following).length === 0 && (
+                  <p className="mt-2 text-sm text-dark-500">
+                    {activeList === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+                  </p>
+                )}
               </div>
               <div className="surface-soft p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Reputation</p>
@@ -431,7 +458,7 @@ setCurrentUser(updatedUser);
                 <div className="mt-2 flex items-center space-x-2">
                   <div className="flex -space-x-2">
                     {mutualFollows.slice(0, 5).map((mutual) => (
-                      <Link to={`/users/${mutual.id}`} key={mutual.id}>
+                      <Link to={`/profile/${mutual.username || mutual.id}`} key={mutual.id}>
                         <img
                           src={mutual.nftPfpUrl || `https://api.dicebear.com/6.x/micah/svg?seed=${mutual.id}`}
                           alt={mutual.email || 'User'}
@@ -643,7 +670,7 @@ setCurrentUser(updatedUser);
         <ProfileQrModal
           isOpen={isQrOpen}
           onClose={() => setIsQrOpen(false)}
-          profileId={user.id}
+          profileId={user.username || user.id}
           displayName={user.displayName || user.username}
         />
       )}

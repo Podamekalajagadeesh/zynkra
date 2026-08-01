@@ -40,7 +40,7 @@ describe('ProfileQrModal', () => {
 
   it('displays the profile URL', () => {
     render(<ProfileQrModal {...defaultProps} />);
-    expect(screen.getByText(/users\/user-1/)).toBeInTheDocument();
+    expect(screen.getByText(/profile\/user-1/)).toBeInTheDocument();
   });
 
   it('renders close button', () => {

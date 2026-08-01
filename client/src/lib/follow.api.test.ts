@@ -10,6 +10,7 @@ import {
   denyFollowRequest,
   getFollowSuggestions,
   getFollowers,
+  getUserFollowing,
   getMyFollowers,
   getMyFollowing,
   removeFollower,
@@ -165,6 +166,37 @@ describe('getFollowers API helper', () => {
     );
 
     await expect(getFollowers('user-1')).rejects.toThrow();
+  });
+});
+
+describe('getUserFollowing API helper', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('fetches following list for a user', async () => {
+    server.use(
+      http.get('*/users/user-1/following', () => {
+        return HttpResponse.json([
+          { id: 'u1', username: 'carol', displayName: 'Carol' },
+          { id: 'u2', username: 'dave', displayName: 'Dave' },
+        ]);
+      })
+    );
+
+    const result = await getUserFollowing('user-1');
+    expect(result).toHaveLength(2);
+    expect(result[0].username).toBe('carol');
+  });
+
+  it('throws on error', async () => {
+    server.use(
+      http.get('*/users/user-1/following', () => {
+        return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+      })
+    );
+
+    await expect(getUserFollowing('user-1')).rejects.toThrow();
   });
 });
 

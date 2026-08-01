@@ -363,6 +363,24 @@ export class UsersController {
     return this.usersService.getFollowing(req.user.userId);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get(':id/followers')
+  async getUserFollowers(
+    @Request() req,
+    @Param('id') id: string,
+  ): Promise<User[]> {
+    return this.usersService.getUserFollowers(id, req.user?.userId);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get(':id/following')
+  async getUserFollowing(
+    @Request() req,
+    @Param('id') id: string,
+  ): Promise<User[]> {
+    return this.usersService.getUserFollowing(id, req.user?.userId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me/follow-requests/pending')
   async getMyPendingFollowRequests(@Request() req): Promise<FollowRequest[]> {

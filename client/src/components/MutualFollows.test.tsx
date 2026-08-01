@@ -78,7 +78,7 @@ describe('MutualFollows', () => {
 
     await waitFor(() => {
       const link = screen.getByRole('link');
-      expect(link).toHaveAttribute('href', '/users/mutual-1');
+      expect(link).toHaveAttribute('href', '/profile/mutual-1');
     });
   });
 

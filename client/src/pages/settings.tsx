@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, Cog, FileText, Globe, Keyboard, KeyRound, MoonStar, Shield, ShieldAlert, SunMedium, Trash2, User as UserIcon, UserCheck, Users, ArrowUpDown, Heart, Brain, Timer, Eye, Mic, Expand, Accessibility, Contrast, Minimize2, Lock, BadgeCheck } from 'lucide-react';
+import { Clock, Cog, FileText, Globe, Keyboard, KeyRound, MoonStar, Shield, ShieldAlert, ShieldCheck, SunMedium, Trash2, User as UserIcon, UserCheck, Users, ArrowUpDown, Heart, Brain, Timer, Eye, Mic, Expand, Accessibility, Contrast, Minimize2, Lock, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
@@ -695,6 +695,17 @@ export function SettingsPage() {
           action={
             <Link to="/passkeys">
               <Button variant="secondary">Manage Passkeys</Button>
+            </Link>
+          }
+        />
+
+        <SettingItem
+          icon={<ShieldCheck size={20} />}
+          title="Two-Factor Authentication"
+          description="Add an extra layer of security to your account with an authenticator app."
+          action={
+            <Link to="/settings/2fa">
+              <Button variant="secondary">Manage 2FA</Button>
             </Link>
           }
         />

@@ -297,8 +297,18 @@ export const setAuthToken = (token: string | null) => {
 const token = localStorage.getItem('access_token');
 setAuthToken(token);
 
+// Avatars are stored as bare IPFS CIDs (e.g. "Qm…"). Resolve them through a public
+// gateway so they render in <img>; leave full URLs untouched.
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
+const resolveAvatarUrl = (value?: string): string => {
+  if (!value) return '';
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  return `${IPFS_GATEWAY}${value}`;
+};
+
 const normalizeUserProfile = (data: any): UserProfile => {
-  const avatarUrl = data?.pfp ?? data?.avatar ?? data?.profile?.avatarUrl ?? '';
+  const rawAvatar = data?.pfp ?? data?.avatar ?? data?.profile?.avatarUrl ?? '';
+  const avatarUrl = resolveAvatarUrl(rawAvatar);
 
   return {
     ...data,
@@ -333,6 +343,44 @@ export const refreshToken = async (): Promise<{ access_token: string }> => {
 export const resendVerification = async (data: { email: string }) => {
   const response = await api.post('/auth/resend-verification', data);
   return response.data as { message: string };
+};
+
+export const getAiNotificationDigest = async () => {
+  const response = await api.get('/notifications/ai/digest');
+  return response.data as {
+    summary: string;
+    criticalCount: number;
+    unreadCount: number;
+    topCategories: string[];
+    highlights: Array<Record<string, unknown>>;
+  };
+};
+
+export const getAiPrioritizedNotifications = async () => {
+  const response = await api.get('/notifications/ai/prioritized');
+  return response.data as {
+    critical: Array<Record<string, unknown>>;
+    high: Array<Record<string, unknown>>;
+    medium: Array<Record<string, unknown>>;
+    low: Array<Record<string, unknown>>;
+    muted: Array<Record<string, unknown>>;
+  };
+};
+
+export const analyzeSentimentText = async (text: string) => {
+  const response = await api.post('/sentiment/analyze', { text });
+  return response.data as {
+    sentiment: 'positive' | 'neutral' | 'negative';
+    score: number;
+    confidence: number;
+    emotions?: {
+      joy?: number;
+      sadness?: number;
+      anger?: number;
+      fear?: number;
+      surprise?: number;
+    };
+  };
 };
 
 export const setup2FA = async () => {
@@ -934,6 +982,11 @@ export const revokeSession = async (sessionId: string) => {
 
 export const getFollowers = async (userId: string) => {
   const response = await api.get(`/users/${userId}/followers`);
+  return response.data;
+};
+
+export const getUserFollowing = async (userId: string) => {
+  const response = await api.get(`/users/${userId}/following`);
   return response.data;
 };
 
@@ -1590,6 +1643,11 @@ export const connectAccount = async (account: ConnectAccountRequest): Promise<Co
 
 export const disconnectAccount = async (accountId: string): Promise<void> => {
   await api.delete(`/connected-accounts/${accountId}`);
+};
+
+export const setConnectedAccountActive = async (accountId: string, isActive: boolean): Promise<ConnectedAccount> => {
+  const response = await api.patch(`/connected-accounts/${accountId}`, { isActive });
+  return response.data;
 };
 
 // Scheduling API functions

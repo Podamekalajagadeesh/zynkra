@@ -178,6 +178,20 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id }, relations });
   }
 
+  /** Resolve a user by id or username — profile routes use the username. */
+  async findUserByIdOrUsername(
+    identifier: string,
+    relations: string[] = [],
+  ): Promise<User | undefined> {
+    if (!identifier) {
+      return undefined;
+    }
+    return this.usersRepository.findOne({
+      where: [{ id: identifier }, { username: identifier }],
+      relations,
+    });
+  }
+
   async findByEmail(email: string): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { email } });
   }
@@ -489,14 +503,8 @@ export class UsersService {
   }
 
   async findMutualFollows(userId1: string, userId2: string): Promise<User[]> {
-    const user1 = await this.usersRepository.findOne({
-      where: { id: userId1 },
-      relations: ['following'],
-    });
-    const user2 = await this.usersRepository.findOne({
-      where: { id: userId2 },
-      relations: ['following'],
-    });
+    const user1 = await this.findOneById(userId1, ['following']);
+    const user2 = await this.findUserByIdOrUsername(userId2, ['following']);
 
     if (!user1 || !user2) {
       throw new NotFoundException('User not found.');
@@ -506,6 +514,10 @@ export class UsersService {
     const mutuals = user2.following.filter((user) =>
       following1.includes(user.id),
     );
+
+    for (const mutual of mutuals) {
+      (mutual as any).password_hash = undefined;
+    }
 
     return mutuals;
   }
@@ -887,6 +899,91 @@ export class UsersService {
     }
 
     return user.following;
+  }
+
+  async getUserFollowers(
+    profileId: string,
+    requestingUserId?: string,
+  ): Promise<User[]> {
+    const profile = await this.findUserByIdOrUsername(profileId, [
+      'followers',
+      'blockedUsers',
+    ]);
+
+    if (!profile) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (requestingUserId) {
+      if (await this.isBlockedBy(requestingUserId, profileId)) {
+        throw new ForbiddenException('This user has blocked you.');
+      }
+      if (await this.isBlockedBy(profileId, requestingUserId)) {
+        return [];
+      }
+    }
+
+    if (profile.profilePrivacy === ProfilePrivacy.PRIVATE) {
+      const isOwner = requestingUserId === profile.id;
+      const isFollower = profile.followers.some(
+        (follower) => follower.id === requestingUserId,
+      );
+      if (!isOwner && !isFollower) {
+        throw new ForbiddenException('This profile is private.');
+      }
+    }
+
+    const blockedIds = profile.blockedUsers.map((u) => u.id);
+    const followers = profile.followers.filter(
+      (follower) => !blockedIds.includes(follower.id),
+    );
+    for (const follower of followers) {
+      (follower as any).password_hash = undefined;
+    }
+    return followers;
+  }
+
+  async getUserFollowing(
+    profileId: string,
+    requestingUserId?: string,
+  ): Promise<User[]> {
+    const profile = await this.findUserByIdOrUsername(profileId, [
+      'following',
+      'followers',
+      'blockedUsers',
+    ]);
+
+    if (!profile) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (requestingUserId) {
+      if (await this.isBlockedBy(requestingUserId, profileId)) {
+        throw new ForbiddenException('This user has blocked you.');
+      }
+      if (await this.isBlockedBy(profileId, requestingUserId)) {
+        return [];
+      }
+    }
+
+    if (profile.profilePrivacy === ProfilePrivacy.PRIVATE) {
+      const isOwner = requestingUserId === profile.id;
+      const isFollower = profile.followers.some(
+        (follower) => follower.id === requestingUserId,
+      );
+      if (!isOwner && !isFollower) {
+        throw new ForbiddenException('This profile is private.');
+      }
+    }
+
+    const blockedIds = profile.blockedUsers.map((u) => u.id);
+    const following = profile.following.filter(
+      (followed) => !blockedIds.includes(followed.id),
+    );
+    for (const followed of following) {
+      (followed as any).password_hash = undefined;
+    }
+    return following;
   }
 
   async getPendingFollowRequests(userId: string): Promise<FollowRequest[]> {

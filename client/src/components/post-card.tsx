@@ -57,6 +57,7 @@ interface PostAuthor {
   id: string;
   email: string | null;
   walletAddress: string | null;
+  username?: string | null;
   displayName?: string | null;
   subscription?: { active: boolean };
   isPremium?: boolean;
@@ -897,7 +898,7 @@ export function PostCard({
         return (
           <Link
             key={i}
-            to={`/users/${username}`}
+            to={`/profile/${username}`}
             className="text-primary-600 hover:underline"
           >
             {part}
@@ -990,14 +991,14 @@ export function PostCard({
         <div className="mb-2 text-sm text-dark-500">
           <Repeat size={14} className="inline-block mr-1" />
           Reposted by{' '}
-          <Link to={`/users/${post.user.id}`} className="font-semibold hover:underline">
+          <Link to={`/profile/${post.user.username || post.user.id}`} className="font-semibold hover:underline">
             {post.user.email || post.user.walletAddress}
           </Link>
         </div>
       )}
       {/* Post Header */}
       <div className="mb-md flex items-center justify-between">
-        <Link to={`/users/${post.repostedFrom ? post.repostedFrom.user.id : post.user.id}`} className="flex items-center gap-md hover:opacity-80 transition-opacity">
+        <Link to={`/profile/${post.repostedFrom ? post.repostedFrom.user.username || post.repostedFrom.user.id : post.user.username || post.user.id}`} className="flex items-center gap-md hover:opacity-80 transition-opacity">
           <Avatar name={displayName} size={48} />
           <div>
             <h3 className="font-semibold text-dark-900 hover:text-primary-600">
@@ -1007,7 +1008,7 @@ export function PostCard({
               <span className="text-sm text-dark-500 ml-1">
                 is with
                 {post.taggedUsers.map((user, index) => (
-                  <Link key={user.id} to={`/users/${user.id}`} className="font-semibold hover:underline ml-1">
+                  <Link key={user.id} to={`/profile/${user.username || user.id}`} className="font-semibold hover:underline ml-1">
                     {user.displayName}
                     {index < post.taggedUsers!.length - 1 ? ',' : ''}
                   </Link>
@@ -1810,7 +1811,7 @@ export function PostCard({
                     <div key={comment.id} className={`mb-4 ${marginLeft}`}>
                       <div className={`rounded-xl border border-dark-200 bg-dark-50 p-md dark:border-dark-700 dark:bg-dark-800/70 ${comment.isPinned ? 'ring-2 ring-blue-500' : ''} ${comment.isLocked ? 'opacity-75' : ''}`}>
                         <div className="flex items-start justify-between">
-                          <Link to={`/users/${comment.user.id}`} className="flex items-center gap-sm mb-xs hover:opacity-80">
+                          <Link to={`/profile/${comment.user.username || comment.user.id}`} className="flex items-center gap-sm mb-xs hover:opacity-80">
                             <div className="w-8 h-8 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full flex items-center justify-center text-white text-xs font-bold">
                               {(comment.user.email || comment.user.walletAddress || 'A').charAt(0).toUpperCase()}
                             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, HelpCircle, Shield, MessageCircle, Settings } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -203,6 +204,11 @@ export default function AIChatbotWidget() {
                 <h3 className="font-bold text-lg">Zynkra AI Assistant — Preview</h3>
                 <p className="text-sm opacity-90">Customer service & community management</p>
               </div>
+            </div>
+            <div className="mt-2 text-right">
+              <Link to="/ai/on-device" className="text-xs underline opacity-90 hover:opacity-100">
+                Try on-device AI →
+              </Link>
             </div>
           </div>
 

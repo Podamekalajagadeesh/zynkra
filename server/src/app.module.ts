@@ -86,6 +86,9 @@ import { PodcastsModule } from './podcasts/podcasts.module';
 import { CoursesModule } from './courses/courses.module';
 import { NewslettersModule } from './newsletters/newsletters.module';
 import { TranslationModule } from './translation/translation.module';
+import { AdvancedFeaturesModule } from './advanced-features/advanced-features.module';
+import { ConnectedAccountsModule } from './connected-accounts/connected-accounts.module';
+import { CustomAudiencesModule } from './custom-audiences/custom-audiences.module';
 import { SyncModule } from './sync/sync.module';
 import { AiContentModule } from './ai/ai-content.module';
 import { DigitalAssetsModule } from './digital-assets/digital-assets.module';
@@ -234,6 +237,9 @@ import { CommonModule } from './common/common.module';
     CoursesModule,
     NewslettersModule,
     TranslationModule,
+    AdvancedFeaturesModule,
+    ConnectedAccountsModule,
+    CustomAudiencesModule,
     SyncModule,
     AiContentModule,
     CommonModule,

@@ -21,6 +21,8 @@ function createMockUserService() {
     follow: jest.fn(),
     unfollow: jest.fn(),
     getFollowers: jest.fn(),
+    getUserFollowers: jest.fn(),
+    getUserFollowing: jest.fn(),
     findOneById: jest.fn(),
     updateProfile: jest.fn(),
     update: jest.fn(),
@@ -98,6 +100,38 @@ describe('DELETE /users/followers/:id (remove follower)', () => {
     const r = await request(app.getHttpServer()).delete('/users/followers/follower-1').set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(204);
     expect(usersService.unfollow).toHaveBeenCalledWith('follower-1', 'user-1');
+    await app.close();
+  });
+});
+
+describe('GET /users/:id/followers', () => {
+  it('returns a user\'s followers list', async () => {
+    const { app, usersService, token } = await buildApp();
+    usersService.getUserFollowers.mockResolvedValue([
+      { id: 'follower-1', username: 'alice', displayName: 'Alice' },
+    ] as any);
+
+    const r = await request(app.getHttpServer()).get('/users/other-user/followers').set('Authorization', `Bearer ${token}`);
+    expect(r.status).toBe(200);
+    expect(usersService.getUserFollowers).toHaveBeenCalledWith('other-user', 'user-1');
+    expect(r.body).toHaveLength(1);
+    expect(r.body[0].username).toBe('alice');
+    await app.close();
+  });
+});
+
+describe('GET /users/:id/following', () => {
+  it('returns a user\'s following list', async () => {
+    const { app, usersService, token } = await buildApp();
+    usersService.getUserFollowing.mockResolvedValue([
+      { id: 'user-2', username: 'bob', displayName: 'Bob' },
+    ] as any);
+
+    const r = await request(app.getHttpServer()).get('/users/other-user/following').set('Authorization', `Bearer ${token}`);
+    expect(r.status).toBe(200);
+    expect(usersService.getUserFollowing).toHaveBeenCalledWith('other-user', 'user-1');
+    expect(r.body).toHaveLength(1);
+    expect(r.body[0].username).toBe('bob');
     await app.close();
   });
 });

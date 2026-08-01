@@ -30,11 +30,15 @@ const mockGetProfile = vi.fn();
 const mockGetUserProfile = vi.fn();
 const mockGetReputation = vi.fn();
 const mockGetMutualFollows = vi.fn();
+const mockGetFollowers = vi.fn();
+const mockGetUserFollowing = vi.fn();
 vi.mock('../lib/api', () => ({
   getProfile: (...args: any[]) => mockGetProfile(...args),
   getUserProfile: (...args: any[]) => mockGetUserProfile(...args),
   getReputation: (...args: any[]) => mockGetReputation(...args),
   getMutualFollows: (...args: any[]) => mockGetMutualFollows(...args),
+  getFollowers: (...args: any[]) => mockGetFollowers(...args),
+  getUserFollowing: (...args: any[]) => mockGetUserFollowing(...args),
   followUser: vi.fn().mockResolvedValue(undefined),
   unfollowUser: vi.fn().mockResolvedValue(undefined),
   sendFollowRequest: vi.fn().mockResolvedValue(undefined),
@@ -65,9 +69,10 @@ vi.mock('../hooks/useEnsName', () => ({
   useEnsName: () => null,
 }));
 
-// Mock useToast
+// Mock useToast with a stable addToast (mirrors the useCallback-stable real one)
+const mockAddToast = vi.hoisted(() => vi.fn());
 vi.mock('../hooks/useToast', () => ({
-  useToast: () => ({ addToast: vi.fn() }),
+  useToast: () => ({ addToast: mockAddToast }),
 }));
 
 // Mock components
@@ -116,6 +121,8 @@ describe('ProfilePage', () => {
     vi.clearAllMocks();
     mockGetReputation.mockResolvedValue({ score: 100 });
     mockGetMutualFollows.mockResolvedValue([]);
+    mockGetFollowers.mockResolvedValue([]);
+    mockGetUserFollowing.mockResolvedValue([]);
   });
 
   // --- Loading state ---
@@ -319,6 +326,34 @@ describe('ProfilePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Follower One')).toBeInTheDocument();
       expect(screen.getByText('@follower1')).toBeInTheDocument();
+    });
+  });
+
+  it('shows the following list when the Following stat is clicked', async () => {
+    const profile = {
+      ...mockUser,
+      following: [
+        { id: 'u2', username: 'user2', displayName: 'User Two' },
+        { id: 'u3', username: 'user3', displayName: 'User Three' },
+      ],
+      followers: [],
+    };
+    mockGetProfile.mockResolvedValue(profile);
+    mockGetReputation.mockResolvedValue({ score: 100 });
+    renderProfilePage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Following')).toBeInTheDocument();
+    });
+
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /following/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('User Two')).toBeInTheDocument();
+      expect(screen.getByText('@user2')).toBeInTheDocument();
+      expect(screen.getByText('User Three')).toBeInTheDocument();
     });
   });
 

@@ -146,6 +146,7 @@ const TimelineReviewSettingsPage = lazy(() => import('./pages/timeline-review/se
 const ExplorePage = lazy(() => import('./pages/explore').then((module) => ({ default: module.default })));
 const EInkReaderPage = lazy(() => import('./pages/eink-reader').then((module) => ({ default: module.EInkReaderPage })));
 const AdvancedFeaturesPage = lazy(() => import('./pages/advanced-features').then((module) => ({ default: module.AdvancedFeaturesPage })));
+const OnDeviceLLMPanel = lazy(() => import('./components/on-device-llm/OnDeviceLLMPanel').then((module) => ({ default: module.OnDeviceLLMPanel })));
 const CrisisEventsPage = lazy(() => import('./pages/crisis/CrisisEventsPage').then((module) => ({ default: module.default })));
 const CrisisEventDetailPage = lazy(() => import('./pages/crisis/CrisisEventDetailPage').then((module) => ({ default: module.default })));
 const TokenGatedPage = lazy(() => import('./pages/token-gated').then((module) => ({ default: module.TokenGatedPage })));
@@ -780,6 +781,7 @@ function App() {
                     <Route path="/devices" element={<DeviceModeRoute />} />
                     <Route path="/eink-reader" element={<ProtectedRoute><EInkReaderPage /></ProtectedRoute>} />
                     <Route path="/advanced-features" element={<ProtectedRoute><AdvancedFeaturesPage /></ProtectedRoute>} />
+                    <Route path="/ai/on-device" element={<ProtectedRoute><OnDeviceLLMPanel /></ProtectedRoute>} />
                     <Route path="/hashtag/:hashtag" element={<HashtagPage />} />
                     <Route path="/events" element={<EventsPage />} />
                     <Route path="/events/:id" element={<EventPage />} />

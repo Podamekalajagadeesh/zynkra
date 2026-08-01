@@ -43,14 +43,17 @@ export function SecurityCheckupPage() {
     }
 
     try {
-      const [allSessions, pending, brainwaveDevicesData] = await Promise.all([
-        getLoginSessions(), 
+      const [allSessions, pending] = await Promise.all([
+        getLoginSessions(),
         getPendingLoginSessions(),
-        getBrainwaveDevices()
       ]);
       setSessions(allSessions);
       setPendingSessions(pending);
-      setBrainwaveDevices(brainwaveDevicesData);
+      // Brainwave devices are aspirational/best-effort — a missing endpoint must
+      // never prevent sessions and pending approvals from loading.
+      getBrainwaveDevices()
+        .then(setBrainwaveDevices)
+        .catch(() => setBrainwaveDevices([]));
     } catch (error) {
       console.error('Failed to load security data', error);
       toast.error('Failed to load security data.');

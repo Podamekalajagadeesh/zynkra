@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 interface ProfileQrModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Profile identifier used in the URL (user id or username). */
+  /** Profile username used in the URL (falls back to user id). */
   profileId: string;
   displayName?: string | null;
 }
@@ -15,7 +15,7 @@ interface ProfileQrModalProps {
 export function ProfileQrModal({ isOpen, onClose, profileId, displayName }: ProfileQrModalProps) {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
 
-  const profileUrl = `${window.location.origin}/users/${profileId}`;
+  const profileUrl = `${window.location.origin}/profile/${profileId}`;
 
   useEffect(() => {
     if (!isOpen) return;

@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../components/ui/dialog';
 import { Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
-import { getConnectedAccounts, connectAccount, disconnectAccount } from '../lib/api';
+import { getConnectedAccounts, connectAccount, disconnectAccount, setConnectedAccountActive } from '../lib/api';
 
 type SocialPlatform = 'twitter' | 'instagram' | 'facebook' | 'linkedin' | 'tiktok';
 
@@ -103,11 +103,12 @@ const ConnectedAccountsPage = () => {
   };
 
   const handleToggleAccountActive = async (accountId: string, isActive: boolean) => {
+    // Optimistic update, reverted if the server rejects it.
+    setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, isActive } : a));
     try {
-      setAccounts(prev => prev.map(a => 
-        a.id === accountId ? { ...a, isActive } : a
-      ));
+      await setConnectedAccountActive(accountId, isActive);
     } catch (error) {
+      setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, isActive: !isActive } : a));
       console.error('Failed to update account:', error);
     }
   };

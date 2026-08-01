@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 interface MutualFollowUser {
   id: string;
+  username?: string | null;
   email?: string | null;
   nftPfpUrl?: string | null;
 }
@@ -45,7 +46,7 @@ export function MutualFollows({ userId }: MutualFollowsProps) {
       <h3 className="text-lg font-semibold">Followed by</h3>
       <div className="mt-2 flex space-x-2">
         {mutualFollows.slice(0, 5).map((user) => (
-          <Link to={`/users/${user.id}`} key={user.id}>
+          <Link to={`/profile/${user.username || user.id}`} key={user.id}>
             <Avatar>
               <AvatarImage src={user.nftPfpUrl ?? ''} />
               <AvatarFallback>{user.email?.[0]}</AvatarFallback>

@@ -4,6 +4,8 @@ import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/useToast';
 import { ModerationQueue } from '../components/moderation/ModerationQueue';
+import { BiasDetectionDashboard } from '../components/moderation/BiasDetectionDashboard';
+import { SentimentAnalyzer } from '../components/sentiment/SentimentAnalyzer';
 
 interface PendingVerification {
   id: string;
@@ -69,7 +71,7 @@ export function AdminPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'verifications' | 'moderation'>('verifications');
+  const [activeTab, setActiveTab] = useState<'verifications' | 'moderation' | 'bias' | 'sentiment'>('verifications');
 
   return (
     <PageShell title="Admin Dashboard">
@@ -81,11 +83,23 @@ export function AdminPage() {
           >
             Verification Requests
           </Button>
-          <Button 
-            variant={activeTab === 'moderation' ? 'default' : 'ghost'} 
+          <Button
+            variant={activeTab === 'moderation' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('moderation')}
           >
             Content Moderation
+          </Button>
+          <Button
+            variant={activeTab === 'bias' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('bias')}
+          >
+            Bias Detection
+          </Button>
+          <Button
+            variant={activeTab === 'sentiment' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('sentiment')}
+          >
+            Sentiment
           </Button>
         </div>
 
@@ -147,6 +161,18 @@ export function AdminPage() {
         {activeTab === 'moderation' && (
           <div>
             <ModerationQueue />
+          </div>
+        )}
+
+        {activeTab === 'bias' && (
+          <div>
+            <BiasDetectionDashboard />
+          </div>
+        )}
+
+        {activeTab === 'sentiment' && (
+          <div>
+            <SentimentAnalyzer />
           </div>
         )}
       </div>
