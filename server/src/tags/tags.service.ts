@@ -32,7 +32,7 @@ export class TagsService {
   async findPostsByTagName(name: string): Promise<Post[]> {
     const tag = await this.tagsRepository.findOne({
       where: { name },
-      relations: ['posts', 'posts.user', 'posts.likes', 'posts.comments'],
+      relations: ['posts', 'posts.user', 'posts.reactions', 'posts.comments'],
     });
 
     if (!tag) {

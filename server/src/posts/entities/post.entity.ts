@@ -26,6 +26,7 @@ import { MemoryEditRevision } from '../../memories/entities/memory-edit-revision
 export enum PostType {
   POST = 'post',
   REEL = 'reel',
+  SHORTS = 'shorts',
 }
 
 export enum PostVisibility {
@@ -89,6 +90,12 @@ export class Post {
 
   @Column({ type: 'boolean', default: false })
   isFeatured: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isBoosted: boolean;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  boostExpiresAt: Date;
 
   @Column({ type: 'boolean', default: false })
   isAnonymous: boolean;

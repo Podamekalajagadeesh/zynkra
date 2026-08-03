@@ -65,6 +65,7 @@
     "mongoose": "^8.24.0",
     "multer": "^2.2.0",
     "nestjs-pino": "^4.6.1",
+    "node-html-parser": "^9.0.1",
     "nodemailer": "^8.0.8",
     "nsfwjs": "^4.2.0",
     "passport": "^0.7.0",

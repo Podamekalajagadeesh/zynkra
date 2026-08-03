@@ -2029,6 +2029,97 @@ export const voteNoteHelpfulness = async (noteId: string, isUpvote: boolean) => 
   return response.data;
 };
 
+// ---- Threads (multi-message topic branching) ----
+export const createThread = async (input: { title?: string; content?: string }) => {
+  const response = await api.post('/threads', input);
+  return response.data;
+};
+
+export const getThreads = async () => {
+  const response = await api.get('/threads');
+  return response.data;
+};
+
+export const getThread = async (threadId: string) => {
+  const response = await api.get(`/threads/${threadId}`);
+  return response.data;
+};
+
+export const sendThreadMessage = async (
+  threadId: string,
+  input: { content: string; parentMessageId?: string | null },
+) => {
+  const response = await api.post(`/threads/${threadId}/messages`, input);
+  return response.data;
+};
+
+export const deleteThread = async (threadId: string) => {
+  const response = await api.delete(`/threads/${threadId}`);
+  return response.data;
+};
+
+export const deleteThreadMessage = async (threadId: string, messageId: string) => {
+  const response = await api.delete(`/threads/${threadId}/messages/${messageId}`);
+  return response.data;
+};
+
+// ---- Link previews (OG-card unfurl) ----
+export const getLinkPreview = async (url: string) => {
+  const response = await api.get('/link-previews', { params: { url } });
+  return response.data;
+};
+
+// ---- Post drafts ----
+export const createDraft = async (input: { content: string; postType?: string; visibility?: string }) => {
+  const response = await api.post('/posts/drafts', input);
+  return response.data;
+};
+
+export const getDrafts = async () => {
+  const response = await api.get('/posts/drafts');
+  return response.data;
+};
+
+export const getDraft = async (id: string) => {
+  const response = await api.get(`/posts/drafts/${id}`);
+  return response.data;
+};
+
+export const updateDraft = async (id: string, input: { content: string; postType?: string; visibility?: string }) => {
+  const response = await api.patch(`/posts/drafts/${id}`, input);
+  return response.data;
+};
+
+export const publishDraft = async (id: string) => {
+  const response = await api.post(`/posts/drafts/${id}/publish`);
+  return response.data;
+};
+
+export const deleteDraft = async (id: string) => {
+  const response = await api.delete(`/posts/drafts/${id}`);
+  return response.data;
+};
+
+export const setPostCollaborators = async (postId: string, userIds: string[]) => {
+  const response = await api.put(`/posts/${postId}/collaborators`, { userIds });
+  return response.data;
+};
+
+export const searchGifs = async (query: string, limit = 24) => {
+  const response = await api.get('/gifs/search', { params: { q: query, limit } });
+  return response.data;
+};
+
+export const getPostAnalytics = async (postId: string) => {
+  const response = await api.get(`/posts/${postId}/analytics`);
+  return response.data;
+};
+
+export const getSimilarPosts = async (postId: string, limit = 6) => {
+  const response = await api.get(`/posts/${postId}/similar`, { params: { limit } });
+  return response.data;
+};
+
 export const createCollection = async (name: string) => {
   const response = await api.post('/collections', { name });
   return response.data;

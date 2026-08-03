@@ -27,6 +27,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.zynkra.app",
       "buildNumber": "2",
+      "associatedDomains": [
+        "applinks:app.zynkra.example",
+        "applinks:applinks.zynkra.dev"
+      ],
       "privacyManifest": {
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": [],
@@ -43,6 +47,16 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.zynkra.app",
       "versionCode": 2,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            { "scheme": "https", "host": "app.zynkra.example", "pathPrefix": "/post" },
+            { "scheme": "https", "host": "app.zynkra.example", "pathPrefix": "/threads" }
+          ]
+        }
+      ],
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.CAMERA",

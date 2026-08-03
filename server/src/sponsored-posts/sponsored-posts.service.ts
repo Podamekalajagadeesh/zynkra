@@ -28,7 +28,7 @@ export class SponsoredPostsService {
       where: {
         expiresAt: MoreThan(new Date()),
       },
-      relations: ['post', 'post.user', 'post.likes', 'post.comments', 'post.tags'],
+      relations: ['post', 'post.user', 'post.reactions', 'post.comments', 'post.tags'],
     });
   }
 }

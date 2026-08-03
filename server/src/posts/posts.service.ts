@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Post, PostType, PostVisibility } from './entities/post.entity';
@@ -28,6 +28,9 @@ import { TimelineReview, ReviewStatus } from '../timeline-review/entities/timeli
 import { TimelineReviewService } from '../timeline-review/timeline-review.service';
 import { ProfileReviewService } from '../tags/profile-review.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { CreateDraftDto } from './dto/create-draft.dto';
+import { UpdateDraftDto } from './dto/update-draft.dto';
+import { SetCollaboratorsDto } from './dto/set-collaborators.dto';
 
 
 import { ReelEffect } from '../reels/entities/reel-effect.entity';
@@ -217,14 +220,244 @@ export class PostsService {
     return savedPost as Post;
   }
 
+  async createDraft(userId: string, dto: CreateDraftDto): Promise<Post> {
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const post = this.postsRepository.create({
+      content: dto.content,
+      user,
+      visibility: dto.visibility ?? PostVisibility.PUBLIC,
+      postType: dto.postType ?? PostType.POST,
+      isDraft: true,
+    });
+    if (dto.media) {
+      post.media = dto.media.map((mediaDto) => {
+        const media = new Media();
+        media.url = mediaDto.url;
+        media.type = mediaDto.type;
+        media.altText = mediaDto.altText;
+        return media;
+      });
+    }
+    return this.postsRepository.save(post);
+  }
+
+  async findDrafts(userId: string): Promise<Post[]> {
+    return this.postsRepository.find({
+      where: { user: { id: userId }, isDraft: true },
+      relations: ['media'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findDraft(userId: string, id: string): Promise<Post> {
+    const draft = await this.postsRepository.findOne({
+      where: { id, user: { id: userId }, isDraft: true },
+      relations: ['media'],
+    });
+    if (!draft) {
+      throw new NotFoundException('Draft not found');
+    }
+    return draft;
+  }
+
+  async updateDraft(userId: string, id: string, dto: UpdateDraftDto): Promise<Post> {
+    const draft = await this.findDraft(userId, id);
+    if (dto.content !== undefined) {
+      draft.content = dto.content;
+    }
+    if (dto.visibility !== undefined) {
+      draft.visibility = dto.visibility;
+    }
+    if (dto.postType !== undefined) {
+      draft.postType = dto.postType;
+    }
+    if (dto.media !== undefined) {
+      draft.media = dto.media.map((mediaDto) => {
+        const media = new Media();
+        media.url = mediaDto.url;
+        media.type = mediaDto.type;
+        media.altText = mediaDto.altText;
+        return media;
+      });
+    }
+    return this.postsRepository.save(draft);
+  }
+
+  async publishDraft(userId: string, id: string): Promise<Post> {
+    const draft = await this.findDraft(userId, id);
+    const published = await this.create(
+      { userId },
+      {
+        content: draft.content,
+        visibility: draft.visibility,
+        postType: draft.postType,
+        ...(draft.media && draft.media.length > 0
+          ? { media: draft.media.map((m) => ({ url: m.url, type: m.type })) }
+          : {}),
+      },
+    );
+    await this.postsRepository.remove(draft);
+    return published;
+  }
+
+  async deleteDraft(userId: string, id: string): Promise<void> {
+    const draft = await this.findDraft(userId, id);
+    await this.postsRepository.remove(draft);
+  }
+
+  async setCollaborators(postId: string, userId: string, dto: SetCollaboratorsDto): Promise<Post> {
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+      relations: ['user'],
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+    if (post.user.id !== userId) {
+      throw new ForbiddenException('Only the post author can manage collaborators');
+    }
+
+    const collaborators = [];
+    for (const collaboratorId of dto.userIds) {
+      if (collaboratorId === userId) {
+        throw new BadRequestException('The post author is already a collaborator by default');
+      }
+      const collaborator = await this.usersService.findOneById(collaboratorId);
+      if (!collaborator) {
+        throw new NotFoundException(`User "${collaboratorId}" not found`);
+      }
+      collaborators.push(collaborator);
+    }
+
+    post.collaborators = collaborators;
+    const saved = await this.postsRepository.save(post);
+    return this.findOne(saved.id, userId);
+  }
+
+  async getPostAnalytics(userId: string, postId: string) {
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+      relations: ['user'],
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+    if (post.user.id !== userId) {
+      throw new ForbiddenException('Only the post author can view analytics');
+    }
+
+    const reactions = await this.postReactionsRepository.count({
+      where: { post: { id: postId } },
+    });
+    const comments = await this.commentsRepository.count({
+      where: { post: { id: postId } },
+    });
+
+    const views = post.viewCount ?? 0;
+    const shares = post.shareCount ?? 0;
+    const quotes = post.quoteCount ?? 0;
+    const reposts = post.repostCount ?? 0;
+    const engagements = reactions + comments + shares + quotes + reposts;
+    const engagementRate = views > 0 ? Number(((engagements / views) * 100).toFixed(2)) : 0;
+
+    return {
+      postId,
+      views,
+      reactions,
+      comments,
+      shares,
+      quotes,
+      reposts,
+      engagements,
+      engagementRate,
+    };
+  }
+
+  async findSimilarPosts(postId: string, limit = 10): Promise<Post[]> {
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+      relations: ['tags'],
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const tagIds = post.tags?.map((tag) => tag.id) ?? [];
+    if (tagIds.length === 0) {
+      return this.postsRepository.find({
+        where: { visibility: PostVisibility.PUBLIC, isDraft: false },
+        relations: ['user'],
+        order: { createdAt: 'DESC' },
+        take: limit,
+      });
+    }
+
+    // Posts sharing at least one tag; rank by number of shared tags.
+    const rows = await this.postsRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.user', 'user')
+      .innerJoinAndSelect('post.tags', 'tag')
+      .where('post.id != :postId', { postId })
+      .andWhere('post.isDraft = false')
+      .andWhere('post.visibility = :visibility', { visibility: PostVisibility.PUBLIC })
+      .andWhere('tag.id IN (:...tagIds)', { tagIds })
+      .orderBy('post.createdAt', 'DESC')
+      .take(limit * 4)
+      .getMany();
+
+    const counts = new Map<string, { post: Post; overlap: number }>();
+    for (const row of rows) {
+      const entry = counts.get(row.id);
+      if (entry) {
+        entry.overlap += 1;
+      } else {
+        counts.set(row.id, { post: row, overlap: 1 });
+      }
+    }
+
+    return [...counts.values()]
+      .sort((a, b) => b.overlap - a.overlap)
+      .slice(0, limit)
+      .map((entry) => entry.post);
+  }
+
+  async getOEmbed(postId: string) {
+    const post = await this.postsRepository.findOne({
+      where: { id: postId },
+      relations: ['user'],
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const clientUrl = process.env.CLIENT_URL || 'http://127.0.0.1:5173';
+    const embedUrl = `${clientUrl.replace(/\/+$/, '')}/embed/post/${post.id}`;
+
+    return {
+      type: 'rich',
+      version: '1.0',
+      title: post.content?.slice(0, 120) || 'Zynkra post',
+      author_name: post.user?.username || post.user?.email || 'Zynkra user',
+      provider_name: 'Zynkra',
+      provider_url: clientUrl,
+      width: 550,
+      height: 400,
+      html: `<iframe src="${embedUrl}" width="550" height="400" frameborder="0" allowfullscreen loading="lazy"></iframe>`,
+    };
+  }
+
   async findOne(id: string, userId?: string): Promise<Post | undefined> {
     const post = await this.postsRepository.findOne({
       where: { id },
       relations: [
-        'user', 
-        'user.followers', 
-        'likes', 
-        'likes.user', 
+        'user',
+        'user.followers',
+        'collaborators',
+        'reactions',
+        'reactions.user',
         'comments', 
         'comments.user', 
         'comments.awards',
@@ -356,7 +589,7 @@ export class PostsService {
           pinnedAt: 'DESC',
           createdAt: 'DESC',
         },
-        relations: ['user', 'likes', 'likes.user', 'quotedPost', 'quotedPost.user'],
+        relations: ['user', 'reactions', 'reactions.user', 'quotedPost', 'quotedPost.user'],
         take,
         skip,
       });
@@ -388,7 +621,7 @@ export class PostsService {
           pinnedAt: 'DESC',
           createdAt: 'DESC',
         },
-        relations: ['user', 'likes', 'likes.user', 'quotedPost', 'quotedPost.user'],
+        relations: ['user', 'reactions', 'reactions.user', 'quotedPost', 'quotedPost.user'],
         take,
         skip,
       });

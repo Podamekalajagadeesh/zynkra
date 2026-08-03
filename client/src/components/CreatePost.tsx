@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
-import { createPost } from '../lib/api';
+import { createPost, createDraft, updateDraft, getDrafts, deleteDraft } from '../lib/api';
 import { Button } from './ui/button';
 import { X, Image as ImageIcon, Video as VideoIcon, Smile, User, Sparkles, Edit as EditIcon, Mic as MicIcon, Brain as BrainIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,8 @@ import PodcastRecorder from './podcast/PodcastRecorder';
 import { analyzeContent, ContentAnalysisResult } from '../services/contentModerationService';
 import { ContentWarningBanner } from './moderation/ContentWarningBanner';
 import { AutoTag } from '../lib/types';
+import { useLinkPreview } from '../hooks/useLinkPreview';
+import { LinkPreviewCard } from './LinkPreviewCard';
 
 // Generate mock auto-tags based on post content for demonstration
 function generateMockAutoTags(content: string, mediaPreviews: string[]): AutoTag[] {
@@ -189,9 +191,53 @@ export function CreatePost() {
   const [generatedAIContent, setGeneratedAIContent] = useState<GeneratedContent | null>(null);
   const [contentAnalysis, setContentAnalysis] = useState<ContentAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [restoreDraft, setRestoreDraft] = useState<{ id: string; content: string } | null>(null);
+  const draftTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const { preview: linkPreview, loading: linkPreviewLoading } = useLinkPreview(content);
+
+  // Offer to restore the most recent autosaved draft when the composer opens.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const drafts = await getDrafts();
+        if (!cancelled && drafts.length > 0) {
+          setRestoreDraft({ id: drafts[0].id, content: drafts[0].content });
+        }
+      } catch {
+        // Best effort — no drafts, or not signed in.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Debounced autosave of the composer into a draft.
+  useEffect(() => {
+    if (!content.trim()) return;
+    if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = window.setTimeout(async () => {
+      try {
+        if (draftId) {
+          await updateDraft(draftId, { content });
+        } else {
+          const draft = await createDraft({ content });
+          setDraftId(draft.id);
+        }
+        setRestoreDraft(null);
+      } catch {
+        // Autosave is best-effort.
+      }
+    }, 1500);
+    return () => {
+      if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+    };
+  }, [content, draftId]);
 
   // Neural thought-to-post capture functionality with integrated neural moderation
   const startNeuralCapture = async () => {
@@ -394,6 +440,10 @@ export function CreatePost() {
         autoTags
       );
       addToast('Post created successfully!', 'success');
+      if (draftId) {
+        deleteDraft(draftId).catch(() => undefined);
+        setDraftId(null);
+      }
       navigate('/');
     } catch (error) {
       console.error('Failed to create post:', error);
@@ -411,6 +461,27 @@ export function CreatePost() {
           </Button>
         </div>
         <form onSubmit={handleSubmit}>
+          {restoreDraft && (
+            <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:bg-amber-900/20">
+              <p className="text-xs text-amber-800 dark:text-amber-200">You have an unsaved draft.</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    setContent(restoreDraft.content);
+                    setDraftId(restoreDraft.id);
+                    setRestoreDraft(null);
+                  }}
+                >
+                  Restore
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setRestoreDraft(null)}>
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          )}
           <textarea
             className="w-full p-2 border rounded-md bg-gray-100 dark:bg-dark-700 dark:text-white"
             rows={4}
@@ -456,6 +527,7 @@ export function CreatePost() {
               </div>
             </div>
           )}
+          <LinkPreviewCard preview={linkPreview} loading={linkPreviewLoading} />
           <input
             type="text"
             className="w-full p-2 mt-2 border rounded-md bg-gray-100 dark:bg-dark-700 dark:text-white"

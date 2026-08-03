@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
 import { Skeleton } from '../components/ui/skeleton';
 import { Compass, TrendingUp, Map, Users, Sparkles, Image, Film, Music, Code, Heart, Briefcase, TreePine } from 'lucide-react';
 import { getTrendingFeed, getExploreFeed, getExploreCategories } from '../lib/api';
+import { LiveTrending } from '../components/LiveTrending';
 import type { Post } from '../lib/types';
 
 interface Category {
@@ -125,6 +126,7 @@ export default function ExplorePage() {
       description="Curated content for new topics and creators to help you discover what's next"
     >
       <div className="space-y-6">
+        <LiveTrending />
         {/* Header with compass icon */}
         <div className="flex items-center gap-3 mb-6">
           <div className="p-3 rounded-full bg-primary-100 dark:bg-primary-900/30">

@@ -427,7 +427,7 @@ export class UsersService {
       order: { createdAt: 'DESC' },
       take,
       skip,
-      relations: ['user', 'likes', 'likes.user'],
+      relations: ['user', 'reactions', 'reactions.user'],
     });
 
     user.posts = posts;

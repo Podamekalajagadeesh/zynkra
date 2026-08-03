@@ -15,6 +15,14 @@ import { VisibilityService } from '../common/visibility/visibility.service';
 
 @Injectable()
 export class FeedService {
+  private readonly EXPLORE_KEYWORDS: Record<string, string[]> = {
+    nature: ['nature', 'outdoors', 'wildlife', 'forest', 'ocean', 'mountain', 'sunset'],
+    travel: ['travel', 'wanderlust', 'adventure', 'hiking', 'beach', 'trip'],
+    food: ['food', 'recipe', 'cooking', 'foodie', 'baking', 'coffee'],
+    art: ['art', 'design', 'illustration', 'photography', 'drawing', 'digitalart'],
+    fashion: ['fashion', 'style', 'ootd', 'streetwear', 'outfit'],
+  };
+
   constructor(
     @InjectRepository(Post)
     private readonly postsRepository: Repository<Post>,
@@ -160,17 +168,17 @@ export class FeedService {
 
     // Score followed hashtag posts and suggested posts
     const scoredFollowedHashtagPosts = followedHashtagPosts.map(post => {
-      const { score, reasons } = this.calculatePostScore(post, userInterests);
+      const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
 
     const scoredRemainingPosts = remainingPosts.map(post => {
-      const { score, reasons } = this.calculatePostScore(post, userInterests);
+      const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
 
     const scoredOrganicPosts = organicPosts.map(post => {
-      const { score, reasons } = this.calculatePostScore(post, userInterests);
+      const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
 
@@ -439,18 +447,19 @@ export class FeedService {
     return this.storiesService.findActiveStories(filteredFollowingIds);
   }
 
-  private calculatePostScore(post: Post, userInterests: any[]): { score: number; reasons: string[] } {
-    const likeWeight = 1;
+  private calculatePostScore(post: Post, userInterests: any[], followingIds: string[] = []): { score: number; reasons: string[] } {
+    const reactionWeight = 1;
     const commentWeight = 2;
-    const recencyWeight = 0.5;
+    const shareWeight = 3;
     const interestWeight = 5;
+    const followedBoost = 20;
     const reasons: string[] = [];
 
     const now = new Date().getTime();
-    const postAgeInHours = (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
-    if (postAgeInHours < 24) {
-      reasons.push('This is a recent post');
-    }
+    const ageHours = (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
+    // Exponential recency decay — strongly favours fresh content and never
+    // drives a score negative the way the old linear penalty did.
+    const recencyFactor = Math.exp(-ageHours / 48);
 
     let interestScore = 0;
     const matchingTags: string[] = [];
@@ -463,26 +472,27 @@ export class FeedService {
         }
       }
       if (matchingTags.length > 0) {
-        reasons.push(`This post contains topics you follow: ${matchingTags.join(', ')}`);
+        reasons.push(`Topics you follow: ${matchingTags.join(', ')}`);
       }
     }
 
-    // Check if post is from a followed user
-    if (post.user && post.user.followers && post.user.followers.length > 0) {
-      reasons.push('This post is from someone you follow');
+    const reactions = post.reactions?.length ?? 0;
+    const comments = post.comments?.length ?? 0;
+    const shares = (post.shareCount ?? 0) + (post.quoteCount ?? 0) + (post.repostCount ?? 0);
+
+    const isFollowed = !!post.user && followingIds.includes(post.user.id);
+    if (isFollowed) {
+      reasons.push('From someone you follow');
+    }
+    if (comments > 10) {
+      reasons.push('Popular discussion');
+    }
+    if (reactions > 20) {
+      reasons.push('Well received');
     }
 
-    // Check engagement
-    if (post.comments && post.comments.length > 10) {
-      reasons.push('This post is popular with many comments');
-    }
-
-    const score =
-      // Commented out since Post entity doesn't have a likes property (uses postReactions instead)
-      // post.likes.length * likeWeight +
-      post.comments.length * commentWeight -
-      postAgeInHours * recencyWeight +
-      interestScore * interestWeight;
+    const engagement = reactions * reactionWeight + comments * commentWeight + shares * shareWeight;
+    const score = engagement * recencyFactor + interestScore * interestWeight + (isFollowed ? followedBoost : 0);
 
     return { score, reasons };
   }
@@ -523,7 +533,7 @@ export class FeedService {
   }
 
   async getExploreFeed(user: User, category?: string) {
-    const posts = await this.postsRepository
+    const qb = this.postsRepository
       .createQueryBuilder('post')
       .where('post.visibility = :visibility', { visibility: PostVisibility.PUBLIC })
       .andWhere('post.imageUrls IS NOT NULL')
@@ -533,21 +543,45 @@ export class FeedService {
       .leftJoinAndSelect('post.comments', 'comments')
       .leftJoinAndSelect('post.tags', 'tags')
       .orderBy('post.createdAt', 'DESC')
-      .limit(30)
+      .limit(30);
+
+    if (category && this.EXPLORE_KEYWORDS[category]) {
+      qb.andWhere('tags.name IN (:...keywords)', { keywords: this.EXPLORE_KEYWORDS[category] });
+    }
+
+    const posts = await qb
       .getMany()
       .then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found));
 
     return { posts, hasMore: posts.length === 30 };
   }
 
+  // Curated explore categories — real post counts (tag-based) plus which
+  // hashtags are currently trending inside each category.
   async getExploreCategories() {
-    const categories = [
-      { id: 'nature', name: 'Nature', count: 1250 },
-      { id: 'travel', name: 'Travel', count: 980 },
-      { id: 'food', name: 'Food', count: 1520 },
-      { id: 'art', name: 'Art & Design', count: 870 },
-      { id: 'fashion', name: 'Fashion', count: 1100 },
-    ];
+    const trendingTags = (await this.trendsService.getTrending(25)).map((t) =>
+      t.tag.replace(/^#/, '').toLowerCase(),
+    );
+
+    const categories = await Promise.all(
+      Object.entries(this.EXPLORE_KEYWORDS).map(async ([id, keywords]) => {
+        const count = await this.postsRepository
+          .createQueryBuilder('post')
+          .innerJoin('post.tags', 'tag')
+          .where('post.visibility = :visibility', { visibility: PostVisibility.PUBLIC })
+          .andWhere('post.isDraft = false')
+          .andWhere('tag.name IN (:...keywords)', { keywords })
+          .getCount();
+
+        return {
+          id,
+          name: id.charAt(0).toUpperCase() + id.slice(1),
+          count,
+          trending: keywords.filter((k) => trendingTags.includes(k)).slice(0, 3),
+        };
+      }),
+    );
+
     return { categories };
   }
 

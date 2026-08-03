@@ -6,6 +6,9 @@ import { PostCard } from '../components/post-card';
 import { Post } from '../lib/types';
 import { PageShell } from '../components/PageShell';
 import { Skeleton } from '../components/ui/skeleton';
+import { PostCollaborators } from '../components/PostCollaborators';
+import { PostAnalytics } from '../components/PostAnalytics';
+import { MoreLikeThis } from '../components/MoreLikeThis';
 
 export function PostPage() {
   const { id } = useParams<{ id: string }>();
@@ -78,6 +81,9 @@ export function PostPage() {
         onUnfollow={handleUnfollow}
         onDelete={handleDelete}
       />
+      <PostCollaborators postId={post.id} collaborators={post.collaborators || []} authorId={post.user?.id} />
+      <PostAnalytics postId={post.id} authorId={post.user?.id} />
+      <MoreLikeThis postId={post.id} />
     </PageShell>
   );
 }

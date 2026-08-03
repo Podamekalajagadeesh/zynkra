@@ -1,0 +1,34 @@
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { PostType, PostVisibility } from '../entities/post.entity';
+import { DraftMediaDto } from './create-draft.dto';
+
+export class UpdateDraftDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(10000)
+  content?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DraftMediaDto)
+  media?: DraftMediaDto[];
+
+  @IsOptional()
+  @IsEnum(PostVisibility)
+  visibility?: PostVisibility;
+
+  @IsOptional()
+  @IsEnum(PostType)
+  postType?: PostType;
+}

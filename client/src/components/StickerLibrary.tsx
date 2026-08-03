@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { X } from 'lucide-react';
-
-const GIPHY_API_KEY = 'YOUR_GIPHY_API_KEY'; // Replace with your Giphy API key
+import { searchGifs } from '../lib/api';
 
 interface StickerLibraryProps {
   onSelect: (url: string) => void;
@@ -17,13 +16,17 @@ const StickerLibrary: React.FC<StickerLibraryProps> = ({ onSelect, onClose }) =>
   useEffect(() => {
     const fetchGifs = async () => {
       try {
-        const response = await fetch(
-          `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${searchTerm}&limit=24`
+        // GIFs are proxied through the server so the Giphy API key stays server-side.
+        const results = await searchGifs(searchTerm, 24);
+        setGifs(
+          results.map((gif: { id: string; title: string; url: string | null }) => ({
+            id: gif.id,
+            title: gif.title,
+            images: { fixed_height: { url: gif.url } },
+          })),
         );
-        const data = await response.json();
-        setGifs(data.data);
       } catch (error) {
-        console.error('Error fetching GIFs from Giphy:', error);
+        console.error('Error fetching GIFs:', error);
       }
     };
 

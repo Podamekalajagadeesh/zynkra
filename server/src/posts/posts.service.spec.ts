@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -70,6 +70,7 @@ describe('PostsService', () => {
   let service: PostsService;
   let postsRepo: jest.Mocked<Repository<Post>>;
   let postReactionsRepo: jest.Mocked<Repository<PostReaction>>;
+  let commentsRepo: jest.Mocked<Repository<Comment>>;
   let usersService: jest.Mocked<UsersService>;
   let notificationsService: jest.Mocked<NotificationsService>;
   let visibilityService: jest.Mocked<VisibilityService>;
@@ -79,9 +80,9 @@ describe('PostsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PostsService,
-        { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), delete: jest.fn(), increment: jest.fn(), count: jest.fn() } },
-        { provide: getRepositoryToken(PostReaction), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn(), delete: jest.fn() } },
-        { provide: getRepositoryToken(Comment), useValue: { delete: jest.fn() } },
+        { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), delete: jest.fn(), increment: jest.fn(), count: jest.fn(), createQueryBuilder: jest.fn() } },
+        { provide: getRepositoryToken(PostReaction), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn(), delete: jest.fn(), count: jest.fn() } },
+        { provide: getRepositoryToken(Comment), useValue: { delete: jest.fn(), count: jest.fn() } },
         { provide: getRepositoryToken(Report), useValue: { delete: jest.fn() } },
         { provide: getRepositoryToken(Poll), useValue: {} },
         { provide: getRepositoryToken(PollOption), useValue: {} },
@@ -110,6 +111,7 @@ describe('PostsService', () => {
     service = module.get<PostsService>(PostsService);
     postsRepo = module.get(getRepositoryToken(Post)) as jest.Mocked<Repository<Post>>;
     postReactionsRepo = module.get(getRepositoryToken(PostReaction)) as jest.Mocked<Repository<PostReaction>>;
+    commentsRepo = module.get(getRepositoryToken(Comment)) as jest.Mocked<Repository<Comment>>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
     visibilityService = module.get(VisibilityService) as jest.Mocked<VisibilityService>;
@@ -539,6 +541,217 @@ describe('PostsService', () => {
       postsRepo.findOne.mockResolvedValue(post);
 
       await expect(service.feature('post-id', { userId: 'other-id' })).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  // ─── drafts ───────────────────────────────────────────────────────────
+
+  describe('drafts', () => {
+    it('creates a draft marked isDraft', async () => {
+      const user = makeUser();
+      usersService.findOneById.mockResolvedValue(user);
+      const draft = makePost({ content: 'work in progress', isDraft: true });
+      postsRepo.create.mockReturnValue(draft);
+      postsRepo.save.mockResolvedValue(draft);
+
+      const result = await service.createDraft(user.id, { content: 'work in progress' });
+
+      expect(result.isDraft).toBe(true);
+      expect(postsRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ content: 'work in progress', isDraft: true }),
+      );
+    });
+
+    it('lists only the user’s drafts', async () => {
+      postsRepo.find.mockResolvedValue([makePost({ isDraft: true })]);
+
+      await service.findDrafts('user-id');
+
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { user: { id: 'user-id' }, isDraft: true } }),
+      );
+    });
+
+    it('throws NotFoundException for a missing draft', async () => {
+      postsRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.findDraft('user-id', 'bad-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('updates draft content', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ isDraft: true }));
+      postsRepo.save.mockResolvedValue(makePost({ content: 'edited', isDraft: true }));
+
+      const result = await service.updateDraft('user-id', 'draft-id', { content: 'edited' });
+
+      expect(result.content).toBe('edited');
+      expect(postsRepo.save).toHaveBeenCalled();
+    });
+
+    it('publishes a draft through the full pipeline and removes the draft', async () => {
+      const user = makeUser();
+      postsRepo.findOne.mockResolvedValue(makePost({ content: 'ready', isDraft: true, user }));
+      usersService.findOneById.mockResolvedValue(user);
+      postsRepo.save.mockResolvedValue(makePost({ content: 'ready' }));
+      postsRepo.remove.mockResolvedValue(makePost());
+
+      const result = await service.publishDraft(user.id, 'draft-id');
+
+      expect(postsRepo.remove).toHaveBeenCalled();
+      expect(result.content).toBe('ready');
+    });
+
+    it('deletes a draft', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ isDraft: true }));
+      postsRepo.remove.mockResolvedValue(makePost());
+
+      await service.deleteDraft('user-id', 'draft-id');
+
+      expect(postsRepo.remove).toHaveBeenCalled();
+    });
+  });
+
+  // ─── collaborators ─────────────────────────────────────────────────────
+
+  describe('collaborators', () => {
+    it('sets collaborators for the post author', async () => {
+      const author = makeUser();
+      postsRepo.findOne.mockResolvedValue(makePost({ user: author }));
+      usersService.findOneById.mockResolvedValue(makeUser({ id: 'collab-1' }));
+      const saved = makePost({ user: author });
+      saved.collaborators = [makeUser({ id: 'collab-1' })];
+      postsRepo.save.mockResolvedValue(saved);
+      postsRepo.findOne.mockResolvedValue(makePost({ user: author, collaborators: [makeUser({ id: 'collab-1' })] }));
+
+      const result = await service.setCollaborators('post-id', author.id, { userIds: ['collab-1'] });
+
+      expect(usersService.findOneById).toHaveBeenCalledWith('collab-1');
+      expect(postsRepo.save).toHaveBeenCalled();
+      expect(result.collaborators).toHaveLength(1);
+    });
+
+    it('forbids non-authors from setting collaborators', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ user: makeUser({ id: 'owner-id' }) }));
+
+      await expect(
+        service.setCollaborators('post-id', 'other-id', { userIds: ['collab-1'] }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('throws NotFoundException when a collaborator does not exist', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ user: makeUser() }));
+      usersService.findOneById.mockResolvedValue(null);
+
+      await expect(
+        service.setCollaborators('post-id', makeUser().id, { userIds: ['ghost'] }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─── per-post analytics ────────────────────────────────────────────────
+
+  describe('getPostAnalytics', () => {
+    it('returns aggregate stats for the owner', async () => {
+      const author = makeUser();
+      postsRepo.findOne.mockResolvedValue(makePost({ user: author, viewCount: 100, shareCount: 4, quoteCount: 2, repostCount: 1 }));
+      postReactionsRepo.count.mockResolvedValue(10);
+      commentsRepo.count.mockResolvedValue(5);
+
+      const result = await service.getPostAnalytics(author.id, 'post-id');
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          postId: 'post-id',
+          views: 100,
+          reactions: 10,
+          comments: 5,
+          shares: 4,
+          quotes: 2,
+          reposts: 1,
+          engagements: 22,
+        }),
+      );
+    });
+
+    it('forbids non-owners', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ user: makeUser({ id: 'owner-id' }) }));
+
+      await expect(service.getPostAnalytics('other-id', 'post-id')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('throws NotFoundException when the post is missing', async () => {
+      postsRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getPostAnalytics('user-id', 'bad-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─── more-like-this ────────────────────────────────────────────────────
+
+  describe('findSimilarPosts', () => {
+    it('throws NotFoundException when the post is missing', async () => {
+      postsRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.findSimilarPosts('bad-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('falls back to recent public posts when the post has no tags', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ tags: [] }));
+      postsRepo.find.mockResolvedValue([makePost({ id: 'other', content: 'Recent' })]);
+
+      const result = await service.findSimilarPosts('post-id');
+
+      expect(result).toHaveLength(1);
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { visibility: PostVisibility.PUBLIC, isDraft: false } }),
+      );
+    });
+
+    it('ranks candidates by shared-tag overlap', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ tags: [{ id: 'tag-a' }] as any }));
+      const qb = {
+        innerJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          makePost({ id: 'p-1', content: 'two matches' }),
+          makePost({ id: 'p-1', content: 'two matches' }),
+          makePost({ id: 'p-2', content: 'one match' }),
+        ]),
+      };
+      postsRepo.createQueryBuilder.mockReturnValue(qb as any);
+
+      const result = await service.findSimilarPosts('post-id', 5);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('p-1');
+      expect(result[1].id).toBe('p-2');
+    });
+  });
+
+  // ─── oEmbed ────────────────────────────────────────────────────────────
+
+  describe('getOEmbed', () => {
+    it('returns an oEmbed response with an iframe', async () => {
+      postsRepo.findOne.mockResolvedValue(makePost({ content: 'Hello embed', user: makeUser({ username: 'jsh' }) }));
+
+      const result = await service.getOEmbed('post-id');
+
+      expect(result.type).toBe('rich');
+      expect(result.title).toBe('Hello embed');
+      expect(result.author_name).toBe('jsh');
+      expect(result.html).toContain('iframe');
+      expect(result.html).toContain('/embed/post/post-id');
+    });
+
+    it('throws NotFoundException when the post is missing', async () => {
+      postsRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getOEmbed('bad-id')).rejects.toThrow(NotFoundException);
     });
   });
 });

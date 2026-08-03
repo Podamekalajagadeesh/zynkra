@@ -91,6 +91,10 @@ import { ConnectedAccountsModule } from './connected-accounts/connected-accounts
 import { CustomAudiencesModule } from './custom-audiences/custom-audiences.module';
 import { SyncModule } from './sync/sync.module';
 import { AiContentModule } from './ai/ai-content.module';
+import { ThreadsModule } from './threads/threads.module';
+import { ScheduledPostsModule } from './scheduled-posts/scheduled-posts.module';
+import { LinkPreviewsModule } from './link-previews/link-previews.module';
+import { GifsModule } from './gifs/gifs.module';
 import { DigitalAssetsModule } from './digital-assets/digital-assets.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { CommonModule } from './common/common.module';
@@ -242,6 +246,10 @@ import { CommonModule } from './common/common.module';
     CustomAudiencesModule,
     SyncModule,
     AiContentModule,
+    ThreadsModule,
+    LinkPreviewsModule,
+    ScheduledPostsModule,
+    GifsModule,
     CommonModule,
   ],
   controllers: [AppController, InfrastructureController],

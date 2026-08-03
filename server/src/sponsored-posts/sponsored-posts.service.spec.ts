@@ -67,7 +67,7 @@ describe('SponsoredPostsService', () => {
       expect(result).toHaveLength(2);
       expect(repo.find).toHaveBeenCalledWith({
         where: { expiresAt: expect.any(Object) },
-        relations: ['post', 'post.user', 'post.likes', 'post.comments', 'post.tags'],
+        relations: ['post', 'post.user', 'post.reactions', 'post.comments', 'post.tags'],
       });
     });
 

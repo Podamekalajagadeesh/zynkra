@@ -1,6 +1,9 @@
-import { Controller, Post, Body, UseGuards, Request, Get, Param, Delete, Patch, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get, Param, Delete, Patch, Query, Put } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { CreateDraftDto } from './dto/create-draft.dto';
+import { UpdateDraftDto } from './dto/update-draft.dto';
+import { SetCollaboratorsDto } from './dto/set-collaborators.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
@@ -31,6 +34,42 @@ export class PostsController {
     return this.postsService.findAll(userId, take ? +take : 10, skip ? +skip : 0);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('drafts')
+  createDraft(@Request() req, @Body() dto: CreateDraftDto) {
+    return this.postsService.createDraft(req.user.userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('drafts')
+  getDrafts(@Request() req) {
+    return this.postsService.findDrafts(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('drafts/:id')
+  getDraft(@Param('id') id: string, @Request() req) {
+    return this.postsService.findDraft(req.user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('drafts/:id')
+  updateDraft(@Param('id') id: string, @Request() req, @Body() dto: UpdateDraftDto) {
+    return this.postsService.updateDraft(req.user.userId, id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('drafts/:id/publish')
+  publishDraft(@Param('id') id: string, @Request() req) {
+    return this.postsService.publishDraft(req.user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('drafts/:id')
+  deleteDraft(@Param('id') id: string, @Request() req) {
+    return this.postsService.deleteDraft(req.user.userId, id);
+  }
+
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   findOne(@Param('id') id: string, @Request() req) {
@@ -58,6 +97,30 @@ export class PostsController {
     @Request() req,
   ) {
     return this.postsService.update(id, createPostDto.content, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/collaborators')
+  setCollaborators(@Param('id') id: string, @Request() req, @Body() dto: SetCollaboratorsDto) {
+    return this.postsService.setCollaborators(id, req.user.userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/analytics')
+  analytics(@Param('id') id: string, @Request() req) {
+    return this.postsService.getPostAnalytics(req.user.userId, id);
+  }
+
+  @Get(':id/similar')
+  @UseGuards(OptionalJwtAuthGuard)
+  similar(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.postsService.findSimilarPosts(id, limit ? Math.min(+limit, 20) : 10);
+  }
+
+  @Get(':id/oembed')
+  @UseGuards(OptionalJwtAuthGuard)
+  oembed(@Param('id') id: string) {
+    return this.postsService.getOEmbed(id);
   }
 
   @UseGuards(JwtAuthGuard)

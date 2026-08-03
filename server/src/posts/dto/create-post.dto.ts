@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   MaxLength,
   IsOptional,
-  IsUrl,
   IsEnum,
   IsBoolean,
   ValidateNested,
@@ -15,7 +14,8 @@ import { PostVisibility, PostType } from '../entities/post.entity';
 import { Type } from 'class-transformer';
 
 class MediaDto {
-  @IsUrl()
+  // Upload endpoint returns relative /uploads/<hash> paths; legacy rows hold data URLs.
+  @IsString()
   url: string;
 
   @IsString()
@@ -27,7 +27,7 @@ class MediaDto {
 }
 
 class StickerDto {
-  @IsUrl()
+  @IsString()
   url: string;
 
   @IsNumber()
@@ -87,10 +87,6 @@ class MusicTagDto {
 }
 
 export class CreatePostDto {
-  @IsNumber()
-  @IsNotEmpty()
-  profileId: number;
-
   @IsString()
   @IsNotEmpty()
   @MaxLength(280)

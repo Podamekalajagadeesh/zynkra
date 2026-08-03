@@ -383,6 +383,7 @@ export interface Post {
   };
   likes: PostLike[];
   comments: Comment[];
+  collaborators?: { id: string; username?: string; displayName?: string }[];
   bookmarked?: boolean;
   shareCount?: number;
   viewCount?: number;

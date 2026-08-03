@@ -11,7 +11,7 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
@@ -40,6 +40,7 @@ const ConversationPage = lazy(() =>
   import('./pages/dms/conversation').then((module) => ({ default: module.ConversationPage })),
 );
 const PostPage = lazy(() => import('./pages/post').then((module) => ({ default: module.PostPage })));
+const EmbedPostPage = lazy(() => import('./pages/embed-post').then((module) => ({ default: module.default })));
 const ReelPage = lazy(() => import('./pages/ReelPage').then((module) => ({ default: module.ReelPage })));
 const EmailVerificationPage = lazy(() =>
   import('./pages/email-verification').then(module => ({ default: module.EmailVerificationPage }))
@@ -132,6 +133,8 @@ const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/Brand
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
 const RequestVerificationPage = lazy(() => import('./pages/request-verification'));
 const CollectionsPage = lazy(() => import('./pages/collections').then((module) => ({ default: module.default })));
+const ThreadsPage = lazy(() => import('./pages/threads').then((module) => ({ default: module.default })));
+const DraftsPage = lazy(() => import('./pages/drafts').then((module) => ({ default: module.default })));
 const NewCollectionPage = lazy(() => import('./pages/NewCollectionsPage').then((module) => ({ default: module.default })));
 const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage').then((module) => ({ default: module.default })));
 const ScheduleStreamPage = lazy(() => import('./pages/schedule-stream').then((module) => ({ default: module.ScheduleStreamPage })));
@@ -192,6 +195,7 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
   {
     title: 'Discover',
     items: [
+      { to: '/threads', label: 'Threads', icon: GitBranch },
       { to: '/local-feed', label: 'Local Feed', icon: MapPin },
       { to: '/fitness-segments', label: 'Fitness Segments', icon: Compass },
       { to: '/dating/discover', label: 'Dating', icon: UserPlus },
@@ -213,6 +217,7 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
     items: [
       { to: '/articles', label: 'Articles', icon: BookOpen },
       { to: '/read-later', label: 'Read Later', icon: Bookmark },
+      { to: '/drafts', label: 'Drafts', icon: FileText },
       { to: '/memories', label: 'Memories', icon: Clock },
       { to: '/marketplace/saved', label: 'Saved', icon: Heart },
       { to: '/events', label: 'Events', icon: Calendar },
@@ -768,6 +773,7 @@ function App() {
                         )
                       }
                     />
+                    <Route path="/embed/post/:id" element={<EmbedPostPage />} />
                     <Route path="/signup" element={<SignUpPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -836,6 +842,9 @@ function App() {
                     <Route path="/collections" element={<CollectionsPage />} />
                     <Route path="/collections/new" element={<NewCollectionPage />} />
                     <Route path="/collections/:id" element={<CollectionDetailPage />} />
+                    <Route path="/threads" element={<ThreadsPage />} />
+                    <Route path="/threads/:id" element={<ThreadsPage />} />
+                    <Route path="/drafts" element={<DraftsPage />} />
                     <Route path="/pages/new" element={<CreatePage />} />
                     <Route path="/pages/:id" element={<PageProfile />} />
                     <Route path="/pages/:id/inbox" element={<PageInbox />} />

@@ -60,11 +60,13 @@ export class ReputationService {
     }
 
     const points = this.getPointsForEvent(event);
-    reputation.score += points;
-    
+    // TypeORM returns decimal columns as strings — coerce to Number before adding,
+    // otherwise `+=` string-concatenates and produces invalid numeric values.
+    reputation.score = Number(reputation.score) + points;
+
     // Convert reputation points to cryptocurrency (1 point = 0.001 ZYNK token)
     const cryptoEarned = points * 0.001;
-    reputation.earnedCryptocurrency += cryptoEarned;
+    reputation.earnedCryptocurrency = Number(reputation.earnedCryptocurrency) + cryptoEarned;
 
     const log = this.reputationLogRepository.create({
       reputation,

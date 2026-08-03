@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Button } from '../ui/button';
-import { sendMessage, getPublicKey } from '../../lib/api';
-import { Send, X, Gift, Brain, ShieldCheck } from 'lucide-react';
+import { sendMessage, getPublicKey, uploadMedia } from '../../lib/api';
+import { Send, X, Gift, Brain, ShieldCheck, Mic, Square } from 'lucide-react';
 import { Message, EmotionData, ContextualData, NeuralMessageMetadata } from '../../lib/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useE2EE } from '../../hooks/useE2EE';
+import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 import { GiftModal } from '../monetization/GiftModal';
 
 interface SendMessageFormProps {
@@ -34,6 +35,14 @@ export const SendMessageForm = ({
   const { addToast } = useToast();
   const { user } = useAuth();
   const { encryptMessage, isReady: e2eeReady, error: e2eeError } = useE2EE(user?.id);
+  const {
+    isRecording,
+    recordingSeconds,
+    error: recorderError,
+    start: startRecording,
+    stop: stopRecording,
+  } = useVoiceRecorder();
+  const [isSendingVoice, setIsSendingVoice] = useState(false);
 
   useEffect(() => {
     if (replyTo) {
@@ -42,6 +51,12 @@ export const SendMessageForm = ({
       textarea?.focus();
     }
   }, [replyTo]);
+
+  useEffect(() => {
+    if (recorderError) {
+      addToast(recorderError, 'error');
+    }
+  }, [recorderError, addToast]);
 
   // Neural telepathic messaging capture functionality
   const startNeuralCapture = async () => {
@@ -167,6 +182,36 @@ export const SendMessageForm = ({
     }
   };
 
+  const handleVoiceToggle = async () => {
+    if (isRecording) {
+      const result = await stopRecording();
+      if (!result) return;
+      setIsSendingVoice(true);
+      try {
+        const { url } = await uploadMedia(
+          new File([result.blob], 'voice.webm', { type: result.blob.type }),
+        );
+        await sendMessage(
+          conversationId,
+          channelId,
+          '',
+          replyTo?.id,
+          [{ url, type: 'audio' }],
+          { durationSeconds: result.durationSeconds, waveform: result.waveform },
+        );
+        addToast('Voice message sent', 'success');
+        onMessageSent?.();
+      } catch (error) {
+        console.error('Failed to send voice message', error);
+        addToast('Failed to send voice message', 'error');
+      } finally {
+        setIsSendingVoice(false);
+      }
+    } else {
+      await startRecording();
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -198,6 +243,24 @@ export const SendMessageForm = ({
             <Gift size={20} className="text-dark-600" />
           </button>
         )}
+        {isRecording && (
+          <span className="text-xs font-medium text-red-600 tabular-nums">
+            0:{String(recordingSeconds).padStart(2, '0')}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={handleVoiceToggle}
+          disabled={isLoading || isSendingVoice}
+          aria-label={isRecording ? 'Stop recording voice message' : 'Record voice message'}
+          className={`p-2 rounded-lg border transition-colors ${
+            isRecording
+              ? 'border-red-500 bg-red-50 text-red-600 dark:bg-red-900/20'
+              : 'border-dark-300 hover:bg-gray-100 dark:hover:bg-dark-700'
+          }`}
+        >
+          {isRecording ? <Square size={20} /> : <Mic size={20} className="text-dark-600" />}
+        </button>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
