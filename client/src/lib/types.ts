@@ -164,6 +164,13 @@ export interface UserProfile {
   name?: string;
 }
 
+export interface ThemeDefinition {
+  key: string;
+  name: string;
+  accent: string;
+  mode: 'light' | 'dark' | 'both';
+}
+
 export interface PostAuthor {
   id: string;
   email: string | null;
@@ -375,6 +382,7 @@ export interface Post {
   visibility: 'public' | 'private' | 'unlisted' | 'profile_only';
   isFeatured?: boolean;
   isSensitive?: boolean;
+  sensitiveLocked?: boolean;
   requiresScreenshotProtection?: boolean;
   user: PostAuthor;
   author: {

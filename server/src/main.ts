@@ -10,6 +10,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { randomUUID } from 'crypto';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 if (!(globalThis as any).crypto) {
   (globalThis as any).crypto = { randomUUID };
@@ -92,6 +93,18 @@ async function bootstrap() {
       cookie: { secure: configService.get('NODE_ENV') === 'production' },
     }),
   );
+
+  // Public REST API docs — mounted at /docs. Auth'd endpoints carry a bearer
+  // token description; no prefix is added so existing routes are unchanged.
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Zynkra API')
+    .setDescription('Zynkra — a decentralized social platform. Interactive API docs.')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, swaggerDocument);
+
   await app.listen(configService.get<number>('PORT', 3000));
 }
 bootstrap();

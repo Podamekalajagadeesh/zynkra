@@ -19,7 +19,7 @@ class MediaDto {
   url: string;
 
   @IsString()
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
 
   @IsOptional()
   @IsString()

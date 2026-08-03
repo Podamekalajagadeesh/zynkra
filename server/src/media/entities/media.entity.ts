@@ -32,7 +32,10 @@ export class Media {
   url: string;
 
   @Column({ type: 'varchar', length: 20 })
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
+
+  @Column({ type: 'int', default: 0 })
+  sortOrder: number;
 
   @Column({ type: 'text', nullable: true })
   altText: string;

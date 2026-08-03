@@ -49,6 +49,7 @@ vi.mock('../lib/api', () => ({
   linkWallet: vi.fn().mockResolvedValue(undefined),
   setNftPfp: vi.fn().mockResolvedValue(undefined),
   getNfts: vi.fn().mockResolvedValue({ ownedNfts: [] }),
+  getThemes: vi.fn().mockResolvedValue([]),
   api: {
     defaults: { headers: { common: {} } },
     interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },

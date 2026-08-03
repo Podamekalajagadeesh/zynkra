@@ -298,6 +298,51 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 
+  async setBirthDate(userId: string, birthDate: string): Promise<User> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const parsed = new Date(birthDate);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('Invalid birth date');
+    }
+    if (parsed.getTime() > Date.now()) {
+      throw new BadRequestException('Birth date cannot be in the future');
+    }
+
+    user.birthDate = birthDate;
+    if (computeAge(parsed) >= 18) {
+      user.birthDateVerifiedAt = user.birthDateVerifiedAt ?? new Date();
+    } else {
+      user.birthDateVerifiedAt = null;
+    }
+    return this.usersRepository.save(user);
+  }
+
+  async getAgeVerificationStatus(userId: string) {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const age = user.birthDate ? computeAge(new Date(user.birthDate)) : null;
+    return {
+      birthDateSet: Boolean(user.birthDate),
+      verified: Boolean(user.birthDateVerifiedAt),
+      isAdult: age !== null && age >= 18,
+      age,
+    };
+  }
+
+  async isAgeVerified(userId: string): Promise<boolean> {
+    const user = await this.findOneById(userId);
+    if (!user || !user.birthDateVerifiedAt) {
+      return false;
+    }
+    return computeAge(new Date(user.birthDate!)) >= 18;
+  }
+
   async follow(followerId: string, followingId: string): Promise<void> {
     if (await this.isBlockedBy(followerId, followingId)) {
       throw new ForbiddenException('You are blocked by this user.');
@@ -1360,4 +1405,14 @@ export class UsersService {
       select: ['id', 'username', 'displayName', 'email', 'idDocumentUrl', 'verificationSubmittedAt']
     });
   }
+}
+
+export function computeAge(birthDate: Date): number {
+  const now = new Date();
+  let age = now.getFullYear() - birthDate.getFullYear();
+  const monthDiff = now.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+    age -= 1;
+  }
+  return age;
 }

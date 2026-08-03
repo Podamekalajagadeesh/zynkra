@@ -41,7 +41,7 @@ import {
 } from '../lib/api';
 import { Button } from './ui/button';
 import Avatar from './ui/avatar';
-import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone, Quote } from 'lucide-react';
+import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone, Quote, Music2 } from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { formatDateTime } from '../lib/preferences';
 import { ReactionButtons } from './ReactionButtons';
@@ -160,6 +160,7 @@ interface Post {
   awards?: Award[];
   productTags?: ProductTag[];
   isSensitive?: boolean;
+  sensitiveLocked?: boolean;
   enableScreenshotProtection?: boolean;
   autoTags?: {
     id: string;
@@ -842,6 +843,10 @@ export function PostCard({
                 controls={false}
                 fallbackText="Video content is hidden to save bandwidth."
               />
+            ) : post.media[0].type === 'audio' ? (
+              <div className="w-full h-full flex items-center justify-center bg-dark-100 dark:bg-dark-800">
+                <Music2 size={32} className="text-dark-400 dark:text-dark-500" />
+              </div>
             ) : (
               <LowBandwidthMedia
                 src={post.media[0].url}
@@ -1115,6 +1120,15 @@ export function PostCard({
         </div>
       ) : (
         <div className="mb-md" id={`post-content-${post.id}`} ref={protectionRef}>
+          {post.sensitiveLocked && (
+            <div className="mb-4 p-4 rounded-xl border border-dark-200 bg-dark-50 dark:bg-dark-800 text-center">
+              <Lock size={20} className="mx-auto mb-2 text-dark-500" />
+              <p className="font-medium text-dark-700">Sensitive content</p>
+              <p className="text-sm text-dark-500">
+                Verify your age to view this post.
+              </p>
+            </div>
+          )}
           {/* Content warning banner if post has harmful content, misinformation, or deepfake/synthetic content and user has warnings enabled */}
           {contentWarningsEnabled && post.contentAnalysis && (
             post.contentAnalysis.isHarmful || 

@@ -19,6 +19,7 @@ import { ChallengeContribution } from './entities/challenge-contribution.entity'
 // Calendar and Todo entities
 import { CalendarEvent } from './entities/calendar-event.entity';
 import { TodoItem } from './entities/todo-item.entity';
+import { GroupLockdown } from './entities/group-lockdown.entity';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TodoItem } from './entities/todo-item.entity';
       ChallengeContribution,
       CalendarEvent,
       TodoItem,
+      GroupLockdown,
     ]),
     UsersModule,
     TokenGatedContentModule,

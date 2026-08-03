@@ -1,0 +1,30 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type GqlUser {
+  id: ID!
+  username: String
+  displayName: String
+  bio: String
+  avatar: String
+}
+
+type GqlPostAuthor {
+  id: ID!
+  username: String
+}
+
+type GqlPost {
+  id: ID!
+  content: String
+  viewCount: Int
+  createdAt: String
+  author: GqlPostAuthor
+  sensitiveLocked: Boolean
+}
+
+type Query {
+  user(id: ID!): GqlUser
+  post(id: ID!): GqlPost
+}

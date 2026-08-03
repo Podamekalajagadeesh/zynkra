@@ -101,6 +101,18 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('me/birth-date')
+  setBirthDate(@Request() req, @Body() body: { birthDate: string }) {
+    return this.usersService.setBirthDate(req.user.userId, body.birthDate);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/age-verification-status')
+  ageVerificationStatus(@Request() req) {
+    return this.usersService.getAgeVerificationStatus(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('deactivate')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deactivate(@Request() req): Promise<void> {

@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DataExport, DataExportStatus } from './entities/data-export.entity';
+import { ExportService } from './export.service';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Comment } from '../comments/entities/comment.entity';
@@ -19,6 +20,7 @@ export class DataExportService {
   constructor(
     @InjectRepository(DataExport)
     private dataExportRepository: Repository<DataExport>,
+    private readonly exportService: ExportService,
   ) {
     setInterval(() => this.processQueue(), 5000);
   }
@@ -105,31 +107,9 @@ export class DataExportService {
   }
 
   private async processExport(exportRequest: DataExport) {
-    // Fetch all user data: profile, posts, comments, messages, sessions, etc.
-    const userRepository = this.dataExportRepository.manager.getRepository(User);
-    const postRepository = this.dataExportRepository.manager.getRepository(Post);
-    const commentRepository = this.dataExportRepository.manager.getRepository(Comment);
-    
-    const user = await userRepository.findOne({
-      where: { id: exportRequest.user.id },
-      relations: ['followers', 'following', 'blockedUsers']
-    });
-    
-    const posts = await postRepository.find({
-      where: { user: { id: exportRequest.user.id } },
-      relations: ['reactions', 'comments']
-    });
-    
-    const comments = await commentRepository.find({
-      where: { user: { id: exportRequest.user.id } }
-    });
-
-    const userData = {
-      profile: user,
-      posts: posts,
-      comments: comments,
-      exportGeneratedAt: new Date().toISOString(),
-    };
+    // Full portable payload: profile, posts, comments, DMs, articles, podcasts,
+    // courses, enrollments, settings — via the richer ExportService.
+    const userData = await this.exportService.exportUserData(exportRequest.user.id);
 
     const fileName = `${exportRequest.id}.json`;
     const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);

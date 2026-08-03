@@ -11,7 +11,7 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText, Trophy, Package, KeyRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
@@ -64,6 +64,11 @@ const ShortsPage = lazy(() => import('./pages/shorts').then((module) => ({ defau
 const ShortsEditorPage = lazy(() => import('./components/shorts/ShortsEditor').then((module) => ({ default: module.default })));
 const WalletPage = lazy(() => import('./pages/wallet').then((module) => ({ default: module.WalletPage })));
 const EarningsPage = lazy(() => import('./pages/earnings').then((module) => ({ default: module.EarningsPage })));
+const TippingLeaderboardPage = lazy(() => import('./pages/tipping-leaderboard').then((module) => ({ default: module.TippingLeaderboardPage })));
+const SubscriptionBundlesPage = lazy(() => import('./pages/subscription-bundles').then((module) => ({ default: module.SubscriptionBundlesPage })));
+const InvoicesPage = lazy(() => import('./pages/invoices').then((module) => ({ default: module.InvoicesPage })));
+const TaxDocumentsPage = lazy(() => import('./pages/tax-documents').then((module) => ({ default: module.TaxDocumentsPage })));
+const OAuthAppsPage = lazy(() => import('./pages/oauth-apps').then((module) => ({ default: module.OAuthAppsPage })));
 const BlockchainIdentityPage = lazy(() => import('./pages/blockchain-identity').then((module) => ({ default: module.default })));
 const SearchResultsPage = lazy(() => import('./pages/search').then((module) => ({ default: module.default })));
 const NotificationsPage = lazy(() => import('./pages/notifications').then((module) => ({ default: module.default })));
@@ -228,6 +233,11 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
     title: 'Creator & business',
     items: [
       { to: '/earnings', label: 'Earnings & Payouts', icon: Coins },
+      { to: '/leaderboard', label: 'Tipping Leaderboard', icon: Trophy },
+      { to: '/subscription-bundles', label: 'Subscription Bundles', icon: Package },
+      { to: '/invoices', label: 'Invoices', icon: FileText },
+      { to: '/tax-documents', label: 'Tax Documents', icon: FileText },
+      { to: '/oauth/apps', label: 'OAuth Apps', icon: KeyRound },
       { to: '/scheduler', label: 'Content Scheduler', icon: CalendarDays },
       { to: '/livestream/schedule', label: 'Schedule Stream', icon: Calendar },
       { to: '/nonprofit', label: 'Nonprofit Tools', icon: Building2 },
@@ -991,6 +1001,46 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <EarningsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/leaderboard"
+                      element={
+                        <ProtectedRoute>
+                          <TippingLeaderboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/subscription-bundles"
+                      element={
+                        <ProtectedRoute>
+                          <SubscriptionBundlesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/invoices"
+                      element={
+                        <ProtectedRoute>
+                          <InvoicesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/tax-documents"
+                      element={
+                        <ProtectedRoute>
+                          <TaxDocumentsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/oauth/apps"
+                      element={
+                        <ProtectedRoute>
+                          <OAuthAppsPage />
                         </ProtectedRoute>
                       }
                     />

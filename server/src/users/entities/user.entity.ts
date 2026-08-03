@@ -357,6 +357,12 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   profileTheme: string | null;
 
+  @Column({ type: 'date', nullable: true })
+  birthDate: string | null;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  birthDateVerifiedAt: Date | null;
+
   @Column({ type: 'varchar', length: 50, nullable: true })
   profileBioFont: string | null;
 

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Group } from './group.entity';
 import { GroupRole } from '../group-role.enum';
@@ -20,4 +20,7 @@ export class GroupMember {
     default: GroupRole.MEMBER,
   })
   role: GroupRole;
+
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  createdAt: Date;
 }

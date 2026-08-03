@@ -11,6 +11,7 @@ import { Conversation } from '../dms/entities/conversation.entity';
 import { ConversationType } from '../dms/conversation-type.enum';
 import { GroupMember } from './entities/group-member.entity';
 import { GroupRole } from './group-role.enum';
+import { GroupLockdown, LockdownMode } from './entities/group-lockdown.entity';
 import { Proposal, ProposalStatus } from './entities/proposal.entity';
 import { Vote } from './entities/vote.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
@@ -63,6 +64,8 @@ export class GroupsService {
     private readonly calendarEventsRepository: Repository<CalendarEvent>,
     @InjectRepository(TodoItem)
     private readonly todoItemsRepository: Repository<TodoItem>,
+    @InjectRepository(GroupLockdown)
+    private readonly lockdownsRepository: Repository<GroupLockdown>,
     private readonly usersService: UsersService,
     private readonly tokenGatedContentService: TokenGatedContentService,
     private readonly reputationService: ReputationService,
@@ -172,8 +175,14 @@ export class GroupsService {
     if (!group) {
       throw new NotFoundException('Group not found');
     }
-    if (group.owner.id !== user.id) {
-      throw new NotFoundException('Only group owner can create channels');
+    const membership = await this.groupMembersRepository.findOne({
+      where: { group: { id: groupId }, user: { id: user.id } },
+    });
+    const isAdminOrMod =
+      membership &&
+      (membership.role === GroupRole.ADMIN || membership.role === GroupRole.MODERATOR);
+    if (!isAdminOrMod && group.owner.id !== user.id) {
+      throw new ForbiddenException('Only group admins can create channels');
     }
     const channel = this.channelsRepository.create({ name, group, type });
     await this.channelsRepository.save(channel);
@@ -877,5 +886,92 @@ export class GroupsService {
       isInternal,
     });
     return this.messagesRepository.save(message);
+  }
+
+  async enableLockdown(
+    groupId: string,
+    adminId: string,
+    mode: LockdownMode,
+    durationHours?: number,
+    newMemberMuteHours?: number,
+  ): Promise<GroupLockdown> {
+    await this.assertAdmin(groupId, adminId);
+    const group = await this.groupsRepository.findOne({ where: { id: groupId } });
+    const admin = await this.usersService.findOneById(adminId);
+    if (!group || !admin) {
+      throw new NotFoundException('Group not found');
+    }
+
+    const existing = await this.lockdownsRepository.findOne({
+      where: { group: { id: groupId } },
+    });
+    const duration = durationHours && durationHours > 0 ? durationHours : 24;
+    const activeUntil = new Date(Date.now() + duration * 60 * 60 * 1000);
+
+    if (existing) {
+      existing.mode = mode;
+      existing.activeSince = new Date();
+      existing.activeUntil = activeUntil;
+      existing.newMemberMuteHours = newMemberMuteHours ?? existing.newMemberMuteHours;
+      return this.lockdownsRepository.save(existing);
+    }
+
+    const lockdown = this.lockdownsRepository.create({
+      group,
+      createdBy: admin,
+      mode,
+      activeSince: new Date(),
+      activeUntil,
+      newMemberMuteHours: newMemberMuteHours ?? 24,
+    });
+    return this.lockdownsRepository.save(lockdown);
+  }
+
+  async getLockdown(groupId: string): Promise<GroupLockdown | null> {
+    const lockdown = await this.lockdownsRepository.findOne({
+      where: { group: { id: groupId } },
+      relations: ['createdBy'],
+    });
+    if (!lockdown) {
+      return null;
+    }
+    if (lockdown.activeUntil && lockdown.activeUntil < new Date()) {
+      await this.lockdownsRepository.remove(lockdown);
+      return null;
+    }
+    return lockdown;
+  }
+
+  async resolveLockdown(groupId: string, adminId: string): Promise<void> {
+    await this.assertAdmin(groupId, adminId);
+    const lockdown = await this.lockdownsRepository.findOne({
+      where: { group: { id: groupId } },
+    });
+    if (lockdown) {
+      await this.lockdownsRepository.remove(lockdown);
+    }
+  }
+
+  // Raid heuristic: many memberships created in a short recent window suggest a
+  // coordinated join. Returns the join count in the window when it crosses the
+  // alert threshold, otherwise 0 — callers decide whether to alert admins.
+  async detectPotentialRaid(groupId: string): Promise<number> {
+    const since = new Date(Date.now() - 10 * 60 * 1000);
+    const recent = await this.groupMembersRepository.find({
+      where: { group: { id: groupId } },
+    });
+    const recentCount = recent.filter(
+      (member) => member.createdAt && member.createdAt >= since,
+    ).length;
+    return recentCount >= 10 ? recentCount : 0;
+  }
+
+  private async assertAdmin(groupId: string, userId: string): Promise<void> {
+    const membership = await this.groupMembersRepository.findOne({
+      where: { group: { id: groupId }, user: { id: userId } },
+    });
+    if (!membership || membership.role !== GroupRole.ADMIN) {
+      throw new ForbiddenException('Only group admins can manage raid protection');
+    }
   }
 }

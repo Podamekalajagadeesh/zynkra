@@ -1,7 +1,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Tip } from './entities/tip.entity';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { User } from '../users/entities/user.entity';
@@ -62,4 +62,74 @@ export class TippingService {
 
     return this.tipsRepository.save(tip);
   }
+
+  async getLeaderboard(
+    period: 'all' | 'weekly' | 'monthly' = 'all',
+    limit = 50,
+  ): Promise<LeaderboardEntry[]> {
+    const since =
+      period === 'weekly'
+        ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        : period === 'monthly'
+          ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          : null;
+
+    const qb = this.tipsRepository
+      .createQueryBuilder('tip')
+      .leftJoin('tip.to', 'recipient')
+      .select('recipient.id', 'toId')
+      .addSelect('SUM(tip.amount)', 'total')
+      .addSelect('COUNT(tip.id)', 'tipCount')
+      .groupBy('recipient.id')
+      .orderBy('total', 'DESC')
+      .limit(Math.min(Math.max(limit, 1), 100));
+
+    if (since) {
+      qb.where('tip.createdAt >= :since', { since });
+    }
+
+    const rows = (await qb.getRawMany()) as Array<{
+      toId: string;
+      total: string;
+      tipCount: string;
+    }>;
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const users = await this.usersRepository.find({
+      where: { id: In(rows.map((r) => r.toId)) },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return rows.map((row, index) => {
+      const user = userMap.get(row.toId);
+      return {
+        rank: index + 1,
+        totalAmount: Number(row.total),
+        tipCount: Number(row.tipCount),
+        user: user
+          ? {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName,
+              avatar: user.avatar,
+            }
+          : { id: row.toId },
+      };
+    });
+  }
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  totalAmount: number;
+  tipCount: number;
+  user: {
+    id: string;
+    username?: string | null;
+    displayName?: string | null;
+    avatar?: string | null;
+  };
 }

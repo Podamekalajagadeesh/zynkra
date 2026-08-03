@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Button } from '../ui/button';
 import { sendMessage, getPublicKey, uploadMedia } from '../../lib/api';
-import { Send, X, Gift, Brain, ShieldCheck, Mic, Square } from 'lucide-react';
+import { Send, X, Gift, Brain, ShieldCheck, Mic, Square, Video } from 'lucide-react';
 import { Message, EmotionData, ContextualData, NeuralMessageMetadata } from '../../lib/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useE2EE } from '../../hooks/useE2EE';
@@ -43,6 +43,7 @@ export const SendMessageForm = ({
     stop: stopRecording,
   } = useVoiceRecorder();
   const [isSendingVoice, setIsSendingVoice] = useState(false);
+  const [isSendingVideo, setIsSendingVideo] = useState(false);
 
   useEffect(() => {
     if (replyTo) {
@@ -212,6 +213,31 @@ export const SendMessageForm = ({
     }
   };
 
+  const handleVideoFile = async (file: File) => {
+    if (!file.type.startsWith('video/')) {
+      addToast('Please choose a video file', 'error');
+      return;
+    }
+    setIsSendingVideo(true);
+    try {
+      const { url } = await uploadMedia(file);
+      await sendMessage(
+        conversationId,
+        channelId,
+        '',
+        replyTo?.id,
+        [{ url, type: 'video' }],
+      );
+      addToast('Video message sent', 'success');
+      onMessageSent?.();
+    } catch (error) {
+      console.error('Failed to send video message', error);
+      addToast('Failed to send video message', 'error');
+    } finally {
+      setIsSendingVideo(false);
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -261,6 +287,29 @@ export const SendMessageForm = ({
         >
           {isRecording ? <Square size={20} /> : <Mic size={20} className="text-dark-600" />}
         </button>
+        <input
+          type="file"
+          id="video-upload"
+          accept="video/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleVideoFile(file);
+            e.target.value = '';
+          }}
+        />
+        <label
+          htmlFor="video-upload"
+          role="button"
+          aria-label="Send video message"
+          className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+            isSendingVideo
+              ? 'opacity-50 pointer-events-none'
+              : 'border-dark-300 hover:bg-gray-100 dark:hover:bg-dark-700'
+          }`}
+        >
+          <Video size={20} className="text-dark-600" />
+        </label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}

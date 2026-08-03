@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import { api, getProfile, updateProfile, createLifeEvent, deleteLifeEvent } from '../lib/api';
+import { api, getProfile, updateProfile, createLifeEvent, deleteLifeEvent, getThemes, setBirthDate } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,8 +10,8 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { BadgeCheck } from 'lucide-react';
-import { LifeEvent } from '../lib/types';
-import { themes, Theme } from '../themes';
+import { LifeEvent, ThemeDefinition } from '../lib/types';
+import { themes } from '../themes';
 
 export function EditProfilePage() {
   const { user, setUser } = useAuth();
@@ -27,6 +27,9 @@ export function EditProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [profileTheme, setProfileTheme] = useState('default');
   const [profileThemeColor, setProfileThemeColor] = useState('#000000');
+  const [themeCatalog, setThemeCatalog] = useState<ThemeDefinition[]>([]);
+  const [birthDate, setBirthDateState] = useState('');
+  const [ageStatus, setAgeStatus] = useState<string>('');
   const [profileBioFont, setProfileBioFont] = useState('default');
   const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>([]);
   const [showAddLifeEvent, setShowAddLifeEvent] = useState(false);
@@ -46,6 +49,7 @@ export function EditProfilePage() {
       setRelationshipStatus(user.relationshipStatus || '');
       setProfileTheme(user.profileTheme || 'default');
       setProfileThemeColor(user.profileThemeColor || '#000000');
+      setBirthDateState(user.birthDate || '');
       setProfileBioFont(user.profileBioFont || 'default');
       setLifeEvents(user.lifeEvents || []);
       setIsLoading(false);
@@ -58,6 +62,7 @@ export function EditProfilePage() {
         setWebsite(profile.website || '');
         setProfileTheme(profile.profileTheme || 'default');
       setProfileThemeColor(profile.profileThemeColor || '#000000');
+      setBirthDateState(profile.birthDate || '');
       setProfileBioFont(profile.profileBioFont || 'default');
       setLifeEvents(profile.lifeEvents || []);
       // Load life events from server
@@ -73,6 +78,12 @@ export function EditProfilePage() {
       api.get('/users/me/life-events').then(res => { if (res.data) setLifeEvents(res.data); }).catch(() => {});
     }
   }, [user]);
+
+  // Load the server theme catalog (fall back to the static list while offline
+  // or before the request resolves — the select handles empty gracefully).
+  useEffect(() => {
+    getThemes().then(setThemeCatalog).catch(() => {});
+  }, []);
 
   const addLifeEvent = async () => {
     if (!newEvent.title || !newEvent.date) {
@@ -125,6 +136,24 @@ export function EditProfilePage() {
       navigate(`/profile/${user.id}`);
     } catch (error) {
       addToast('Failed to update profile', 'error');
+    }
+  };
+
+  const handleSaveBirthDate = async () => {
+    if (!birthDate) {
+      addToast('Pick a birth date', 'error');
+      return;
+    }
+    try {
+      const updated = await setBirthDate(birthDate);
+      setAgeStatus(
+        updated.birthDateVerifiedAt
+          ? 'Verified — 18+ access enabled'
+          : 'You must be 18 or older to view sensitive content.',
+      );
+      addToast('Birth date saved', 'success');
+    } catch (error: any) {
+      addToast(error?.response?.data?.message || 'Failed to save birth date', 'error');
     }
   };
 
@@ -260,9 +289,12 @@ export function EditProfilePage() {
             onChange={(e) => setProfileTheme(e.target.value)}
             className="w-full p-2 border rounded"
           >
-            {Object.keys(themes).map(themeKey => (
-              <option key={themeKey} value={themeKey}>
-                {themes[themeKey as Theme].name}
+            {(themeCatalog.length > 0
+              ? themeCatalog
+              : Object.keys(themes).map(k => ({ key: k, name: themes[k].name, accent: '', mode: 'both' }))
+            ).map(themeOption => (
+              <option key={themeOption.key} value={themeOption.key}>
+                {themeOption.name}
               </option>
             ))}
           </select>
@@ -275,6 +307,23 @@ export function EditProfilePage() {
             value={profileThemeColor}
             onChange={(e) => setProfileThemeColor(e.target.value)}
           />
+        </div>
+        <div>
+          <label htmlFor="birthDate">Birth Date (age verification)</label>
+          <div className="flex gap-2">
+            <Input
+              id="birthDate"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDateState(e.target.value)}
+            />
+            <Button type="button" onClick={handleSaveBirthDate}>
+              Save
+            </Button>
+          </div>
+          {ageStatus && (
+            <p className="text-xs text-dark-500 mt-1">{ageStatus}</p>
+          )}
         </div>
         <div>
           <label htmlFor="profileBioFont">Bio Font Style</label>

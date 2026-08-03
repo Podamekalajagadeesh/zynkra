@@ -5,7 +5,7 @@ import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shi
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
-import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, getFollowers, getUserFollowing } from '../lib/api';
+import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, getFollowers, getUserFollowing, getThemes } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
@@ -16,7 +16,7 @@ import { themes, Theme } from '../themes';
 import { PostList } from '../components/post-list';
 import { ProfileQrModal } from '../components/ProfileQrModal';
 import { useEnsName } from '../hooks/useEnsName';
-import type { Post, UserProfile } from '../lib/types';
+import type { Post, UserProfile, ThemeDefinition } from '../lib/types';
 
 interface ExtendedUserProfile extends UserProfile {
   profileAccentColor?: string | null;
@@ -47,6 +47,7 @@ export function ProfilePage() {
   const [followers, setFollowers] = useState<NonNullable<ExtendedUserProfile['followers']>>([]);
   const [reputation, setReputation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [themeCatalog, setThemeCatalog] = useState<ThemeDefinition[]>([]);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const ensName = useEnsName(user?.walletAddress);
@@ -69,6 +70,10 @@ export function ProfilePage() {
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
   const [isSettingPfp, setIsSettingPfp] = useState<string | null>(null);
 
+
+  useEffect(() => {
+    getThemes().then(setThemeCatalog).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -268,10 +273,15 @@ setCurrentUser(updatedUser);
     }
   };
 
-  const selectedTheme = themes[(user?.profileTheme as Theme) || 'default'];
+  // Theme lookup is resilient to server theme keys that aren't in the static
+  // catalog: fall back to the default, and prefer the user's custom accent or
+  // the catalog theme's accent over the static style.
+  const catalogTheme = themeCatalog.find(t => t.key === user?.profileTheme);
+  const staticTheme = themes[(user?.profileTheme as Theme)] || themes.default;
+  const themeAccent = user?.profileThemeColor || catalogTheme?.accent || staticTheme.styles.color || '#000000';
   const customStyles = {
-    ...selectedTheme.styles,
-    ['--primary' as string]: user?.profileThemeColor || selectedTheme.styles.color,
+    ...staticTheme.styles,
+    ['--primary' as string]: themeAccent,
   } as unknown as React.CSSProperties;
 
   return (

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { enqueueOfflineOperation } from './offlineSync';
-import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing } from './types';
+import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
 
 export const updatePrivacy = async (privacy: { 
   postVisibility?: PostVisibility; 
@@ -682,34 +682,15 @@ export const createPost = async (
 ) => {
   const mediaPayload = await Promise.all(
     media.map(async (mediaFile) => {
-      const fileDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Failed to read media file'));
-        reader.readAsDataURL(mediaFile.file);
-      });
-
-      let captionsDataUrl: string | undefined;
-      if (mediaFile.captionsFile) {
-        const captionsFile = mediaFile.captionsFile;
-        captionsDataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('Failed to read caption file'));
-          reader.readAsDataURL(captionsFile);
-        });
-      }
-
-      return {
-        fileName: mediaFile.file.name,
-        mimeType: mediaFile.file.type,
-        dataUrl: fileDataUrl,
-        altText: mediaFile.altText,
-        captionsFileName: mediaFile.captionsFile?.name,
-        captionsMimeType: mediaFile.captionsFile?.type,
-        captionsDataUrl,
-      };
-    })
+      // The server DTO accepts real {url, type} records, not base64 data URLs.
+      const { url } = await uploadMedia(mediaFile.file);
+      const type = mediaFile.file.type.startsWith('video/')
+        ? 'video'
+        : mediaFile.file.type.startsWith('audio/')
+          ? 'audio'
+          : 'image';
+      return { url, type, altText: mediaFile.altText };
+    }),
   );
 
   const payload = {
@@ -1138,6 +1119,38 @@ export const getChannels = async (groupId: string) => {
   return response.data;
 };
 
+export const enableGroupLockdown = async (
+  groupId: string,
+  data: { mode: 'approval' | 'mute_new' | 'full'; durationHours?: number; newMemberMuteHours?: number },
+) => {
+  const response = await api.post(`/groups/${groupId}/lockdown`, data);
+  return response.data;
+};
+
+export const getGroupLockdown = async (groupId: string) => {
+  const response = await api.get(`/groups/${groupId}/lockdown`);
+  return response.data;
+};
+
+export const resolveGroupLockdown = async (groupId: string) => {
+  const response = await api.delete(`/groups/${groupId}/lockdown`);
+  return response.data;
+};
+
+export const detectGroupRaid = async (groupId: string) => {
+  const response = await api.get(`/groups/${groupId}/raid-detection`);
+  return response.data;
+};
+
+export const createChannel = async (
+  groupId: string,
+  name: string,
+  type: 'group' | 'broadcast' = 'group',
+) => {
+  const response = await api.post(`/groups/${groupId}/channels`, { name, type });
+  return response.data;
+};
+
 export const getGroupMembers = async (groupId: string) => {
   const response = await api.get(`/groups/${groupId}/members`);
   return response.data;
@@ -1495,6 +1508,16 @@ export const sendTip = async (data: {
   postId: string;
 }) => {
   const response = await api.post('/tipping', data);
+  return response.data;
+};
+
+export const getTippingLeaderboard = async (
+  period: 'all' | 'weekly' | 'monthly' = 'all',
+  limit = 50,
+) => {
+  const response = await api.get(
+    `/tipping/leaderboard?period=${period}&limit=${limit}`,
+  );
   return response.data;
 };
 
@@ -1881,6 +1904,167 @@ export const updateSubscriptionTier = async (tierId: string, updates: { name?: s
 
 export const deleteSubscriptionTier = async (tierId: string) => {
   const response = await api.delete(`/subscriptions/tiers/${tierId}`);
+  return response.data;
+};
+
+export const createSubscriptionBundle = async (data: {
+  name: string;
+  description?: string;
+  price: number;
+  tierIds: string[];
+}) => {
+  const response = await api.post('/subscription-bundles', data);
+  return response.data;
+};
+
+export const getCreatorSubscriptionBundles = async (creatorId: string) => {
+  const response = await api.get(`/subscription-bundles/creator/${creatorId}`);
+  return response.data;
+};
+
+export const getSubscriptionBundle = async (bundleId: string) => {
+  const response = await api.get(`/subscription-bundles/${bundleId}`);
+  return response.data;
+};
+
+export const updateSubscriptionBundle = async (
+  bundleId: string,
+  updates: {
+    name?: string;
+    description?: string;
+    price?: number;
+    tierIds?: string[];
+    isActive?: boolean;
+  },
+) => {
+  const response = await api.patch(`/subscription-bundles/${bundleId}`, updates);
+  return response.data;
+};
+
+export const deleteSubscriptionBundle = async (bundleId: string) => {
+  const response = await api.delete(`/subscription-bundles/${bundleId}`);
+  return response.data;
+};
+
+export const purchaseSubscriptionBundle = async (bundleId: string) => {
+  const response = await api.post(`/subscription-bundles/${bundleId}/purchase`);
+  return response.data;
+};
+
+// ---- Invoices (B2B) --------------------------------------------------------
+
+export const getInvoices = async () => {
+  const response = await api.get('/invoices');
+  return response.data;
+};
+
+export const getInvoice = async (invoiceId: string) => {
+  const response = await api.get(`/invoices/${invoiceId}`);
+  return response.data;
+};
+
+export const createInvoice = async (data: {
+  clientName: string;
+  clientEmail?: string;
+  currency?: string;
+  lineItems: { description: string; quantity: number; unitPrice: number }[];
+  taxRate: number;
+  dueDate?: string;
+}) => {
+  const response = await api.post('/invoices', data);
+  return response.data;
+};
+
+export const updateInvoice = async (
+  invoiceId: string,
+  updates: Partial<{
+    clientName: string;
+    clientEmail: string;
+    lineItems: { description: string; quantity: number; unitPrice: number }[];
+    taxRate: number;
+    dueDate: string;
+    status: string;
+  }>,
+) => {
+  const response = await api.patch(`/invoices/${invoiceId}`, updates);
+  return response.data;
+};
+
+export const markInvoicePaid = async (invoiceId: string) => {
+  const response = await api.post(`/invoices/${invoiceId}/mark-paid`);
+  return response.data;
+};
+
+export const deleteInvoice = async (invoiceId: string) => {
+  const response = await api.delete(`/invoices/${invoiceId}`);
+  return response.data;
+};
+
+// ---- Tax documents (1099) --------------------------------------------------
+
+export const getTaxDocuments = async () => {
+  const response = await api.get('/tax-documents');
+  return response.data;
+};
+
+export const generateTaxDocument = async (year: number) => {
+  const response = await api.post(`/tax-documents/generate/${year}`);
+  return response.data;
+};
+
+export const downloadTaxDocument = (documentId: string) => {
+  return `${API_BASE_URL}/tax-documents/${documentId}/download`;
+};
+
+// ---- OAuth app platform ----------------------------------------------------
+
+export const createOAuthApp = async (data: {
+  name: string;
+  description?: string;
+  redirectUris: string[];
+  scopes?: string[];
+  homepageUrl?: string;
+}) => {
+  const response = await api.post('/oauth/apps', data);
+  return response.data;
+};
+
+export const listOAuthApps = async () => {
+  const response = await api.get('/oauth/apps');
+  return response.data;
+};
+
+export const getOAuthApp = async (appId: string) => {
+  const response = await api.get(`/oauth/apps/${appId}`);
+  return response.data;
+};
+
+export const deleteOAuthApp = async (appId: string) => {
+  const response = await api.delete(`/oauth/apps/${appId}`);
+  return response.data;
+};
+
+export const rotateOAuthSecret = async (appId: string) => {
+  const response = await api.post(`/oauth/apps/${appId}/rotate-secret`);
+  return response.data;
+};
+
+export const oauthAuthorize = async (data: {
+  appId: string;
+  scopes: string[];
+  codeChallenge: string;
+  codeChallengeMethod?: string;
+}) => {
+  const response = await api.post('/oauth/authorize', data);
+  return response.data;
+};
+
+export const oauthExchangeToken = async (data: {
+  code: string;
+  codeVerifier: string;
+  clientId: string;
+}) => {
+  const response = await api.post('/oauth/token', data);
   return response.data;
 };
 
@@ -2628,5 +2812,32 @@ export const pushOfflineChanges = async (changes: any) => {
 
 export const pullChanges = async (since: string) => {
   const response = await api.get(`/sync/pull?since=${since}`);
+  return response.data;
+};
+
+// ---- Themes (creator/profile branding) ------------------------------------
+
+export const getThemes = async (): Promise<ThemeDefinition[]> => {
+  const response = await api.get('/themes');
+  return response.data;
+};
+
+export const setMyTheme = async (theme: string, themeColor?: string) => {
+  const response = await api.put('/users/me/theme', {
+    theme,
+    themeColor,
+  });
+  return response.data;
+};
+
+// ---- Age verification ------------------------------------------------------
+
+export const setBirthDate = async (birthDate: string) => {
+  const response = await api.post('/users/me/birth-date', { birthDate });
+  return response.data;
+};
+
+export const getAgeVerificationStatus = async () => {
+  const response = await api.get('/users/me/age-verification-status');
   return response.data;
 };

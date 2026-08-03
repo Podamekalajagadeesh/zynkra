@@ -388,3 +388,27 @@ html[data-color-blind-mode="achromatopsia"] {
 /* SVG Filters for color blindness correction */
 /* These filters are referenced in the CSS and need to be present in the DOM */
 /* A React component injects these SVG filters into the document head */
+/* Carousel — multi-media posts swipe horizontally with scroll-snap */
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1rem;
+  border: 1px solid rgb(229 231 235 / 0.5);
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-item {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  position: relative;
+}
+
+.carousel-item > * {
+  width: 100%;
+}

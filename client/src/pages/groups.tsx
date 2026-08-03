@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { GroupList } from '../components/groups/GroupList';
+import { GroupLockdownPanel } from '../components/groups/GroupLockdownPanel';
 import { ChannelList } from '../components/groups/ChannelList';
 import { MessageList } from '../components/dms/MessageList';
 import { SendMessageForm } from '../components/dms/SendMessageForm';
@@ -18,6 +19,9 @@ export const GroupsPage = () => {
   const [selectedChannelId, setSelectedChannelId] = useState<
     string | undefined
   >();
+  const [selectedChannelType, setSelectedChannelType] = useState<
+    'group' | 'broadcast' | undefined
+  >();
   const [selectedModMailConversation, setSelectedModMailConversation] = useState<Conversation | null>(null);
   const [isUserModerator, setIsUserModerator] = useState(false);
   const [modMailRefreshKey, setModMailRefreshKey] = useState(0);
@@ -26,6 +30,7 @@ export const GroupsPage = () => {
   const handleSelectGroup = (id: string) => {
     setSelectedGroupId(id);
     setSelectedChannelId(undefined);
+    setSelectedChannelType(undefined);
     setSelectedModMailConversation(null);
   };
 
@@ -51,7 +56,13 @@ export const GroupsPage = () => {
   const handleSelectModMailConversation = (conversation: Conversation) => {
     setSelectedModMailConversation(conversation);
     setSelectedChannelId(undefined);
+    setSelectedChannelType(undefined);
   };
+
+  const canPostToChannel =
+    !selectedChannelId ||
+    selectedChannelType !== 'broadcast' ||
+    isUserModerator;
 
   return (
     <PageShell title="Groups">
@@ -68,11 +79,13 @@ export const GroupsPage = () => {
             <div className="flex flex-col overflow-y-auto">
               <ChannelList
                 groupId={selectedGroupId}
-                onSelectChannel={(id) => {
-                  setSelectedChannelId(id);
+                onSelectChannel={(channel) => {
+                  setSelectedChannelId(channel.id);
+                  setSelectedChannelType(channel.type);
                   setSelectedModMailConversation(null);
                 }}
                 selectedId={selectedChannelId}
+                canCreate={isUserModerator}
               />
               {isUserModerator && (
                 <>
@@ -89,17 +102,26 @@ export const GroupsPage = () => {
                 </>
               )}
               <GroupMembers />
+              {isUserModerator && selectedGroupId && (
+                <GroupLockdownPanel groupId={selectedGroupId} />
+              )}
             </div>
           )}
           <div className="flex flex-col h-full">
             {selectedChannelId ? (
               <>
                 <MessageList channelId={selectedChannelId} onReply={setReplyTo} />
-                <SendMessageForm
-                  channelId={selectedChannelId}
-                  replyTo={replyTo}
-                  onClearReply={() => setReplyTo(null)}
-                />
+                {canPostToChannel ? (
+                  <SendMessageForm
+                    channelId={selectedChannelId}
+                    replyTo={replyTo}
+                    onClearReply={() => setReplyTo(null)}
+                  />
+                ) : (
+                  <div className="p-3 border-t border-dark-200 dark:border-dark-700 text-sm text-dark-500">
+                    This is a broadcast channel — only group admins can post.
+                  </div>
+                )}
               </>
             ) : selectedModMailConversation ? (
               <>

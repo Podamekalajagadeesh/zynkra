@@ -98,6 +98,11 @@ import { GifsModule } from './gifs/gifs.module';
 import { DigitalAssetsModule } from './digital-assets/digital-assets.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { CommonModule } from './common/common.module';
+import { ThemesModule } from './themes/themes.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { TaxDocumentsModule } from './tax-documents/tax-documents.module';
+import { OAuthModule } from './oauth/oauth.module';
+import { ZynkraGraphQLModule } from './graphql/graphql.module';
 
 @Module({
   imports: [
@@ -251,6 +256,11 @@ import { CommonModule } from './common/common.module';
     ScheduledPostsModule,
     GifsModule,
     CommonModule,
+    ThemesModule,
+    InvoicesModule,
+    TaxDocumentsModule,
+    OAuthModule,
+    ZynkraGraphQLModule,
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

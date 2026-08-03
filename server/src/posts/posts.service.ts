@@ -174,11 +174,12 @@ export class PostsService {
       if (createPostDto.media.length > 4) {
         throw new BadRequestException('Maximum of 4 media items allowed per post.');
       }
-      post.media = createPostDto.media.map(mediaDto => {
+      post.media = createPostDto.media.map((mediaDto, index) => {
         const media = new Media();
         media.url = mediaDto.url;
         media.type = mediaDto.type;
         media.altText = mediaDto.altText;
+        media.sortOrder = index;
         return media;
       });
     }
@@ -233,11 +234,12 @@ export class PostsService {
       isDraft: true,
     });
     if (dto.media) {
-      post.media = dto.media.map((mediaDto) => {
+      post.media = dto.media.map((mediaDto, index) => {
         const media = new Media();
         media.url = mediaDto.url;
         media.type = mediaDto.type;
         media.altText = mediaDto.altText;
+        media.sortOrder = index;
         return media;
       });
     }
@@ -275,11 +277,12 @@ export class PostsService {
       draft.postType = dto.postType;
     }
     if (dto.media !== undefined) {
-      draft.media = dto.media.map((mediaDto) => {
+      draft.media = dto.media.map((mediaDto, index) => {
         const media = new Media();
         media.url = mediaDto.url;
         media.type = mediaDto.type;
         media.altText = mediaDto.altText;
+        media.sortOrder = index;
         return media;
       });
     }
@@ -295,7 +298,7 @@ export class PostsService {
         visibility: draft.visibility,
         postType: draft.postType,
         ...(draft.media && draft.media.length > 0
-          ? { media: draft.media.map((m) => ({ url: m.url, type: m.type })) }
+          ? { media: draft.media.map((m) => ({ url: m.url, type: m.type, altText: m.altText })) }
           : {}),
       },
     );
@@ -550,6 +553,22 @@ export class PostsService {
         content: 'This content is exclusive to subscribers. Subscribe to access.',
         media: [],
       };
+    }
+
+    // Sensitive content: viewers under 18 (or unverified) get a stripped post
+    // with sensitiveLocked set — the existence is never revealed, only hidden.
+    if (post.isSensitive && post.user.id !== userId) {
+      const verified = userId
+        ? await this.usersService.isAgeVerified(userId)
+        : false;
+      if (!verified) {
+        return {
+          ...post,
+          content: '',
+          media: [],
+          sensitiveLocked: true,
+        };
+      }
     }
 
     // Record view interaction for content recommendation

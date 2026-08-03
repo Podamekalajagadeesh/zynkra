@@ -18,6 +18,8 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { SendMessageDto } from '../dms/dto/send-message.dto';
 import { GroupRoleGuard } from './guards/group-role.guard';
 import { GroupRole } from './group-role.enum';
+import { CreateLockdownDto } from './dto/create-lockdown.dto';
+import { LockdownMode } from './entities/group-lockdown.entity';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CreateVoteDto } from './dto/create-vote.dto';
@@ -122,6 +124,45 @@ export class GroupsController {
       sendMessageDto.content,
       user,
     );
+  }
+
+  // ---- Anti-raid / lockdown -----------------------------------------------
+
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @SetMetadata('roles', [GroupRole.ADMIN])
+  @Post(':groupId/lockdown')
+  async enableLockdown(
+    @Request() req,
+    @Param('groupId') groupId: string,
+    @Body() dto: CreateLockdownDto,
+  ) {
+    return this.groupsService.enableLockdown(
+      groupId,
+      req.user.userId,
+      dto.mode as LockdownMode,
+      dto.durationHours,
+      dto.newMemberMuteHours,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':groupId/lockdown')
+  getLockdown(@Param('groupId') groupId: string) {
+    return this.groupsService.getLockdown(groupId);
+  }
+
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @SetMetadata('roles', [GroupRole.ADMIN])
+  @Delete(':groupId/lockdown')
+  async resolveLockdown(@Request() req, @Param('groupId') groupId: string) {
+    return this.groupsService.resolveLockdown(groupId, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @SetMetadata('roles', [GroupRole.ADMIN])
+  @Get(':groupId/raid-detection')
+  detectRaid(@Param('groupId') groupId: string) {
+    return this.groupsService.detectPotentialRaid(groupId);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)

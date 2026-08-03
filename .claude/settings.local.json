@@ -89,7 +89,15 @@
       "Bash(nslookup ideal-adventure-wr7q796wqxj9hgqgg-5173.app.github.dev)",
       "Bash(grep -rn '\\\\${API_BASE_URL}/' /workspaces/zynkra/client/src --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -rn '\\\\${API_BASE_URL}[^/}]' /workspaces/zynkra/client/src --include=\"*.ts\" --include=\"*.tsx\")",
-      "Bash(grep -rn \"API_BASE_URL +\\\\|API_BASE_URL}\\\\${\" /workspaces/zynkra/client/src --include=\"*.ts\" --include=\"*.tsx\")"
+      "Bash(grep -rn \"API_BASE_URL +\\\\|API_BASE_URL}\\\\${\" /workspaces/zynkra/client/src --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(sed -n '1,40p' server/src/stickers/entities/*.ts)",
+      "Bash(sed -n '1,40p' server/src/timeline-review/entities/*.ts)",
+      "Bash(grep -iE \"[0-9]{4,5}\")",
+      "Bash(grep -rEn \"\\\\-\\\\-port|[0-9]{4,5}\" --include=\"package.json\" --include=\"vite.config.*\" --include=\"webpack.config.*\" --include=\".env\" --include=\"*.ts\" client server)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('SCRIPTS:', json.dumps\\(d['scripts'], indent=2\\)\\); print\\('DEPS:', list\\(d.get\\('dependencies',{}\\).keys\\(\\)\\)\\)\")",
+      "Bash(echo \"SERVER_TSC_EXIT=$?\")",
+      "Bash(echo \"CLIENT_TSC_EXIT=$?\")",
+      "Bash(awk '{print $2, $3, $10}')"
     ]
   }
 }

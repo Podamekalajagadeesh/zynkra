@@ -7,6 +7,7 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  AfterLoad,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { PostReaction } from './post-reaction.entity';
@@ -108,6 +109,10 @@ export class Post {
 
   @Column({ type: 'boolean', default: false })
   isSensitive: boolean;
+
+  // Transient — set by the service when sensitive content is withheld from a
+  // viewer under 18. Never persisted.
+  sensitiveLocked?: boolean;
 
   @Column({ type: 'boolean', default: false })
   enableScreenshotProtection: boolean;
@@ -273,4 +278,15 @@ export class Post {
     onDelete: 'CASCADE',
   })
   awards: UserGift[];
+
+  // Optional function property (not a method) so `{...post}` spreads scattered
+  // across services keep typechecking — the hook is invoked by name regardless.
+  @AfterLoad()
+  sortMedia?: () => void = () => {
+    // Carousels depend on slide order — DB eager-loads media without a stable
+    // row order, so normalize it on every load.
+    if (Array.isArray(this.media) && this.media.length > 1) {
+      this.media.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    }
+  };
 }
