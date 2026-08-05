@@ -17,6 +17,7 @@ import request from 'supertest';
 
 import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
+import { CaptchaService } from '../src/auth/captcha.service';
 import { UsersService } from '../src/users/users.service';
 import { WebauthnService } from '../src/auth/webauthn.service';
 
@@ -77,6 +78,10 @@ describe('POST /auth/forgot-password (HTTP integration)', () => {
         {
           provide: UsersService,
           useValue: { findOneById: jest.fn() },
+        },
+        {
+          provide: CaptchaService,
+          useValue: { generate: jest.fn(), verify: jest.fn().mockReturnValue(true) },
         },
       ],
     }).compile();
@@ -186,6 +191,10 @@ describe('POST /auth/reset-password (HTTP integration)', () => {
         {
           provide: UsersService,
           useValue: { findOneById: jest.fn() },
+        },
+        {
+          provide: CaptchaService,
+          useValue: { generate: jest.fn(), verify: jest.fn().mockReturnValue(true) },
         },
       ],
     }).compile();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import { api, setAuthToken } from '../lib/api';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/ui/button';
 
@@ -19,7 +19,7 @@ export function EmailVerificationPage() {
 
       try {
         const response = await api.get(`/auth/verify-email/${token}`);
-        localStorage.setItem('access_token', response.data.access_token);
+        setAuthToken(response.data.access_token);
         setStatus('success');
       } catch (err: any) {
         setStatus('error');

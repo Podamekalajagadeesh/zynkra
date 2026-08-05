@@ -11,4 +11,12 @@ export class AnalyticsController {
   getAnalytics(@Request() req) {
     return this.analyticsService.getAnalytics(req.user.userId);
   }
+
+  @Get('sustainability')
+  @UseGuards(JwtAuthGuard)
+  getSustainability(@Request() req) {
+    return this.analyticsService.getSustainabilityData(
+      req.user.userId || req.user.id,
+    );
+  }
 }

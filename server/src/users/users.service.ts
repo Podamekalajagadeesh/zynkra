@@ -19,6 +19,7 @@ import { CreateLifeEventDto } from './dto/create-life-event.dto';
 import { UpdateLifeEventDto } from './dto/update-life-event.dto';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import { UpdateFaceRecognitionDto } from './dto/update-face-recognition.dto';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class UsersService {
@@ -35,6 +36,7 @@ export class UsersService {
     private readonly lifeEventRepository: Repository<LifeEvent>,
     private readonly notificationsService: NotificationsService,
     private readonly storageService: StorageService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async updateFaceRecognition(
@@ -128,7 +130,12 @@ export class UsersService {
       user.profileBioFont = updateUserDto.profileBioFont;
     }
 
-    return this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+    void this.webhooksService.dispatchEvent('user.updated', {
+      userId: saved.id,
+      username: saved.username,
+    });
+    return saved;
   }
 
   async updatePrivacy(userId: string, updatePrivacyDto: UpdatePrivacyDto): Promise<User> {
@@ -206,6 +213,10 @@ export class UsersService {
 
   async findByEmailVerificationToken(token: string): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { emailVerificationToken: token } });
+  }
+
+  async findByMagicLinkTokenHash(hash: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ where: { magicLinkTokenHash: hash } });
   }
 
   async setPasswordResetToken(userId: string, token: string, expires: Date): Promise<void> {
@@ -369,6 +380,12 @@ export class UsersService {
 
     follower.following.push(following);
     await this.usersRepository.save(follower);
+
+    void this.webhooksService.dispatchEvent('follow.created', {
+      followerId: follower.id,
+      followerUsername: follower.username,
+      followingId: following.id,
+    });
 
     await this.notificationsService.createNotification(
       following,
@@ -683,6 +700,63 @@ export class UsersService {
       (u) => u.id !== blockedUserId,
     );
     await this.usersRepository.save(user);
+  }
+
+  async mute(userId: string, mutedUserId: string): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['mutedUsers'],
+    });
+    const userToMute = await this.usersRepository.findOneBy({
+      id: mutedUserId,
+    });
+
+    if (!user || !userToMute) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.id === mutedUserId) {
+      throw new BadRequestException('You cannot mute yourself.');
+    }
+
+    const isAlreadyMuted = user.mutedUsers.some(
+      (u) => u.id === mutedUserId,
+    );
+    if (isAlreadyMuted) {
+      throw new BadRequestException('User is already muted.');
+    }
+
+    user.mutedUsers.push(userToMute);
+    await this.usersRepository.save(user);
+  }
+
+  async unmute(userId: string, mutedUserId: string): Promise<void> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['mutedUsers'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isMuted = user.mutedUsers.some((u) => u.id === mutedUserId);
+    if (!isMuted) {
+      throw new BadRequestException('User is not muted.');
+    }
+
+    user.mutedUsers = user.mutedUsers.filter((u) => u.id !== mutedUserId);
+    await this.usersRepository.save(user);
+  }
+
+  async getMutedUsers(userId: string): Promise<User[]> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['mutedUsers'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user.mutedUsers;
   }
 
   async followHashtag(userId: string, hashtagName: string): Promise<void> {

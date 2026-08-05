@@ -24,6 +24,15 @@ function renderSignUpPage() {
   );
 }
 
+// The sign-up page now requires a solved CAPTCHA before submitting. The mock
+// captcha handler returns the expression "3 + 5", so the answer is "8".
+async function fillCaptcha(user: ReturnType<typeof userEvent.setup>) {
+  await waitFor(() => {
+    expect(screen.getByText('3 + 5')).toBeInTheDocument();
+  });
+  await user.type(screen.getByLabelText(/security check/i), '8');
+}
+
 describe('SignUpPage', () => {
   beforeAll(() => server.listen());
   afterEach(() => server.resetHandlers());
@@ -107,7 +116,8 @@ describe('SignUpPage', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'newuser');
     await user.type(screen.getByLabelText(/email/i), 'new@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
+    await fillCaptcha(user);
     // Submit the form directly
     const form = screen.getByRole('button', { name: /^sign up$/i }).closest('form');
     if (form) fireEvent.submit(form);
@@ -116,15 +126,15 @@ describe('SignUpPage', () => {
       await user.click(submitBtn);
     }
 
-    // The title "Check your email" appears in both desktop sidebar and mobile header
+    // The title "Verify your email" appears in both desktop sidebar and mobile header
     await waitFor(() => {
-      const headings = screen.getAllByText(/check your email/i);
+      const headings = screen.getAllByText(/verify your email/i);
       expect(headings.length).toBeGreaterThanOrEqual(1);
     });
 
-    // The verification link message is inside the content area — may appear once or twice
-    const verifyMsgs = screen.getAllByText(/verification link/i);
-    expect(verifyMsgs.length).toBeGreaterThanOrEqual(1);
+    // The 6-digit code entry form is shown in the content area
+    expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
+    expect(screen.getByText(/check your email for the 6-digit code/i)).toBeInTheDocument();
   });
 
   // --- Error handling ---
@@ -144,7 +154,9 @@ describe('SignUpPage', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'existinguser');
     await user.type(screen.getByLabelText(/email/i), 'taken@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
+    fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '2005-01-01' } });
+    await fillCaptcha(user);
     await user.keyboard('{Enter}');
 
     await waitFor(() => {
@@ -164,7 +176,9 @@ describe('SignUpPage', () => {
 
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
+    fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '2005-01-01' } });
+    await fillCaptcha(user);
     await user.keyboard('{Enter}');
 
     await waitFor(() => {

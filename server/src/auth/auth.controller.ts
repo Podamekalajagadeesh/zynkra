@@ -3,11 +3,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
+import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MagicLinkRequestDto } from './dto/magic-link-request.dto';
+import { MagicLinkVerifyDto } from './dto/magic-link-verify.dto';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -20,6 +23,7 @@ const EMAIL_SENDING = { default: { ttl: 300_000, limit: 50 } };
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly captchaService: CaptchaService,
     private readonly webauthnService: WebauthnService,
     private readonly usersService: UsersService,
   ) {}
@@ -113,6 +117,12 @@ export class AuthController {
     return this.authService.verifyTrustedContactRecovery(body.identifier, body.contactEmail, body.code, req);
   }
 
+  @Throttle(STRICT)
+  @Get('captcha')
+  captcha() {
+    return this.captchaService.generate();
+  }
+
   @Throttle(EMAIL_SENDING)
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
@@ -161,6 +171,22 @@ export class AuthController {
     );
   }
 
+  @Throttle(EMAIL_SENDING)
+  @Post('magic-link/request')
+  async requestMagicLink(@Body() magicLinkRequestDto: MagicLinkRequestDto) {
+    return this.authService.requestMagicLink(magicLinkRequestDto.email);
+  }
+
+  @Throttle(STRICT)
+  @Post('magic-link/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyMagicLink(
+    @Req() req,
+    @Body() magicLinkVerifyDto: MagicLinkVerifyDto,
+  ) {
+    return this.authService.verifyMagicLink(magicLinkVerifyDto.token, req);
+  }
+
   @Get('verify-email/:token')
   verifyEmail(@Req() req, @Param('token') token: string) {
     return this.authService.verifyEmail(token, req);
@@ -183,7 +209,9 @@ export class AuthController {
   @Post('webauthn/authentication')
   async getWebAuthnAuthenticationOptions(@Body() body, @Session() session: Record<string, any>) {
     const user = await this.authService.validateUser(body.email);
-    const options = await this.webauthnService.getAuthenticationOptions(user);
+    const options = await this.webauthnService.getAuthenticationOptions(user, {
+      biometric: body.biometric === true,
+    });
     session.challenge = options.challenge;
     session.userId = user.id;
     return options;
@@ -205,7 +233,7 @@ export class AuthController {
       // After successful verification, update the authenticator counter in the database to prevent replay attacks.
       await this.webauthnService.updateAuthenticatorCounter(verification.authenticationInfo);
 
-      const loginPayload = await this.authService.login(user);
+      const loginPayload = await this.authService.login(user, undefined, body.rememberMe === true);
 
       // On successful login, clear the temporary session data.
       session.challenge = undefined;

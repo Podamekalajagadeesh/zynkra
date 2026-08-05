@@ -27,6 +27,7 @@ import { GroupsService } from '../groups/groups.service';
 import { TimelineReview, ReviewStatus } from '../timeline-review/entities/timeline-review.entity';
 import { TimelineReviewService } from '../timeline-review/timeline-review.service';
 import { ProfileReviewService } from '../tags/profile-review.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftDto } from './dto/update-draft.dto';
@@ -75,6 +76,7 @@ export class PostsService {
     private readonly timelineReviewService: TimelineReviewService,
     private readonly profileReviewService: ProfileReviewService,
     private readonly visibilityService: VisibilityService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async create(
@@ -217,6 +219,12 @@ export class PostsService {
 
     await this.reputationService.addReputation(ReputationEvent.POST_CREATED, user);
     await this.trendsService.extractAndScoreHashtags(savedPost.content);
+
+    void this.webhooksService.dispatchEvent('post.created', {
+      postId: savedPost.id,
+      authorId: user.id,
+      visibility: savedPost.visibility,
+    });
 
     return savedPost as Post;
   }
@@ -757,7 +765,12 @@ export class PostsService {
       throw new Error('You are not authorized to update this post');
     }
     post.content = content;
-    return this.postsRepository.save(post);
+    const saved = await this.postsRepository.save(post);
+    void this.webhooksService.dispatchEvent('post.updated', {
+      postId: saved.id,
+      authorId: saved.user?.id,
+    });
+    return saved;
   }
 
   async remove(id: string, userPayload: { userId: string, role?: string }): Promise<void> {
@@ -769,6 +782,7 @@ export class PostsService {
       throw new Error('You are not authorized to delete this post');
     }
 
+    const { id: postId, user } = post;
     try {
       // Manually delete related entities
       await this.postReactionsRepository.delete({ post: { id } });
@@ -776,6 +790,10 @@ export class PostsService {
       await this.reportsRepository.delete({ post: { id } });
 
       await this.postsRepository.remove(post as Post);
+      void this.webhooksService.dispatchEvent('post.deleted', {
+        postId,
+        authorId: user?.id,
+      });
     } catch (error) {
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to delete post with id: ${id}`, errorStack);

@@ -353,6 +353,11 @@ export function SecurityCheckupPage() {
                         <span className="rounded-full bg-dark-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-dark-700 dark:bg-dark-800 dark:text-dark-300">
                           {statusLabel}
                         </span>
+                        {session.isTrusted && (
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                            Trusted
+                          </span>
+                        )}
                         {session.suspicious && !session.isApproved && !session.isRevoked && (
                           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                             Needs review
@@ -392,17 +397,26 @@ export function SecurityCheckupPage() {
           )}
         </section>
         
-        {/* Advanced Authentication Section — Coming Soon */}
+        {/* Biometric sign-in */}
         <section className="space-y-4 rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
           <div className="flex items-start gap-4">
             <div>
               <p className="font-semibold text-lg text-dark-900 dark:text-white flex items-center gap-2">
-                Advanced Authentication
-                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Coming Soon</span>
+                Biometric Sign-in
+                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Available</span>
               </p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                Future authentication methods including biometric and hardware key support are under development.
+                Sign in with Face ID, Touch ID, or Windows Hello using a passkey registered to this device. Go to the
+                Login page and choose <span className="font-medium">Passkey &rarr; Face ID / Fingerprint</span>.
               </p>
+              <div className="mt-3">
+                <Link
+                  to="/passkeys"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+                >
+                  Manage your passkeys
+                </Link>
+              </div>
             </div>
           </div>
         </section>

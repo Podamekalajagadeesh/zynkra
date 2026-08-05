@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Message } from '../dms/entities/message.entity';
@@ -17,6 +17,7 @@ import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
 import { Article } from '../articles/article.entity';
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment } from '../courses/course.entity';
+import { Media } from '../media/entities/media.entity';
 
 export interface ExportData {
   user: any;
@@ -306,6 +307,85 @@ export class ExportService {
   async exportAsJson(userId: string): Promise<string> {
     const data = await this.exportUserData(userId);
     return JSON.stringify(data, null, 2);
+  }
+
+  // Recreates profile, posts, and follows from a Zynkra export payload
+  // (the JSON produced by exportAsJson / GET /data-export/download).
+  // Identity fields (email, wallet, verified) are intentionally not imported.
+  async importFromJson(
+    userId: string,
+    data: ExportData,
+  ): Promise<{ imported: boolean; posts: number; follows: number }> {
+    if (!data || typeof data !== 'object' || !data.user) {
+      throw new BadRequestException('Invalid export data: missing user object');
+    }
+
+    let importedPosts = 0;
+    let importedFollows = 0;
+
+    await this.postsRepo.manager.transaction(async (manager) => {
+      const user = await manager.findOne(User, { where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (data.user.displayName) user.displayName = data.user.displayName;
+      if (data.user.bio) user.bio = data.user.bio;
+      if (data.user.pronouns) user.pronouns = data.user.pronouns;
+      if (data.user.header) user.header = data.user.header;
+      if (data.user.accountType) (user as any).accountType = data.user.accountType;
+      await manager.save(User, user);
+
+      if (Array.isArray(data.posts)) {
+        for (const p of data.posts) {
+          if (p.isReel) continue;
+          const post = new Post();
+          post.content = p.content ?? null;
+          post.postType = p.postType ?? 'feed';
+          post.visibility = p.visibility ?? null;
+          post.user = user;
+          if (Array.isArray(p.media)) {
+            post.media = (p.media as any[]).map((m, index) => {
+              const media = new Media();
+              media.url = m.url;
+              media.type = m.type ?? 'image';
+              media.sortOrder = m.sortOrder ?? index;
+              media.altText = m.altText ?? null;
+              media.post = post;
+              return media;
+            });
+          }
+          await manager.save(Post, post);
+          importedPosts++;
+        }
+      }
+
+      const followingUsernames = (data.follows?.following ?? [])
+        .map((f: any) => f.username)
+        .filter(Boolean) as string[];
+      if (followingUsernames.length > 0) {
+        const targets = await manager.find(User, {
+          where: { username: In(followingUsernames) },
+        });
+        const existing = await manager.find(Follow, {
+          where: { followerId: userId },
+        });
+        const existingIds = new Set(existing.map((f) => f.followingId));
+        for (const target of targets) {
+          if (target.id === userId || existingIds.has(target.id)) continue;
+          await manager.save(
+            Follow,
+            manager.create(Follow, {
+              followerId: userId,
+              followingId: target.id,
+            } as Partial<Follow>),
+          );
+          importedFollows++;
+        }
+      }
+    });
+
+    return { imported: true, posts: importedPosts, follows: importedFollows };
   }
 
   async getExportInfo(userId: string): Promise<{

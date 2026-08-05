@@ -8,13 +8,14 @@ import { RemoteInstance } from './entities/remote-instance.entity';
 import { RemoteUser } from './entities/remote-user.entity';
 import { RemotePost } from './entities/remote-post.entity';
 import { InstanceKey } from './entities/instance-key.entity';
+import { FederationModeration } from './entities/federation-moderation.entity';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { PostsModule } from '../posts/posts.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RemoteInstance, RemoteUser, RemotePost, InstanceKey]),
+    TypeOrmModule.forFeature([RemoteInstance, RemoteUser, RemotePost, InstanceKey, FederationModeration]),
     UsersModule,
     PostsModule,
     AuthModule,

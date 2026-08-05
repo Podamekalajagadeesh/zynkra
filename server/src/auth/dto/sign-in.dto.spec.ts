@@ -23,6 +23,27 @@ describe('SignInDto validation', () => {
     expect(errors.length).toBe(0);
   });
 
+  // --- rememberMe ---
+
+  it('accepts rememberMe as a boolean', async () => {
+    const dto = plainToInstance(SignInDto, makeDto({ rememberMe: true }));
+    const errors = await validate(dto);
+    expect(errors.length).toBe(0);
+  });
+
+  it('accepts missing rememberMe', async () => {
+    const dto = plainToInstance(SignInDto, makeDto());
+    const errors = await validate(dto);
+    expect(errors.length).toBe(0);
+  });
+
+  it('rejects a non-boolean rememberMe', async () => {
+    const dto = plainToInstance(SignInDto, makeDto({ rememberMe: 'yes' }));
+    const errors = await validate(dto);
+    const rememberMeError = errors.find((e) => e.property === 'rememberMe');
+    expect(rememberMeError).toBeDefined();
+  });
+
   it('accepts a DTO with only password (email/username optional)', async () => {
     const dto = plainToInstance(SignInDto, makeDto({ email: undefined, username: undefined }));
     const errors = await validate(dto);

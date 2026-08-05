@@ -30,6 +30,7 @@ import { ReelEffect } from '../reels/entities/reel-effect.entity';
 import { TimelineReview } from '../timeline-review/entities/timeline-review.entity';
 import { User } from '../users/entities/user.entity';
 import { HttpService } from '@nestjs/axios';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const user = new User();
@@ -105,6 +106,7 @@ describe('PostsService', () => {
         { provide: TimelineReviewService, useValue: {} },
         { provide: ProfileReviewService, useValue: { createForPost: jest.fn() } },
         { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts), isBlockedEither: jest.fn().mockResolvedValue(false), canViewAuthor: jest.fn().mockResolvedValue(true) } },
+        { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
       ],
     }).compile();
 

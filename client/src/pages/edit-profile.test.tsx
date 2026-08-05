@@ -4,23 +4,32 @@ import { MemoryRouter } from 'react-router-dom';
 import { EditProfilePage } from './edit-profile';
 import { ToastProvider } from '../contexts/ToastContext';
 
-// Mock useAuth
-const mockSetUser = vi.fn();
-const mockUser = {
-  id: 'user-1',
-  username: 'testuser',
-  displayName: 'Test User',
-  bio: 'A test user',
-  website: 'https://example.com',
-  avatar: '/avatar.jpg',
-  relationshipStatus: 'Single',
-  profileTheme: 'default',
-  profileThemeColor: '#000000',
-  profileBioFont: 'default',
-  lifeEvents: [],
-  verified: false,
-  verificationStatus: null,
-};
+// vi.mock factories are hoisted above the module body, so any fixture they
+// reference must be created via vi.hoisted to avoid TDZ errors.
+const { mockSetUser, mockUser, mockUpdateProfile, mockThemes } = vi.hoisted(() => ({
+  mockSetUser: vi.fn(),
+  mockUser: {
+    id: 'user-1',
+    username: 'testuser',
+    displayName: 'Test User',
+    bio: 'A test user',
+    website: 'https://example.com',
+    avatar: '/avatar.jpg',
+    relationshipStatus: 'Single',
+    profileTheme: 'default',
+    profileThemeColor: '#000000',
+    profileBioFont: 'default',
+    lifeEvents: [],
+    verified: false,
+    verificationStatus: null,
+  },
+  mockUpdateProfile: vi.fn(),
+  mockThemes: {
+    default: { name: 'Default', styles: { backgroundColor: '#ffffff', color: '#000000' } },
+    dark: { name: 'Dark', styles: { backgroundColor: '#000000', color: '#ffffff' } },
+    light: { name: 'Light', styles: { backgroundColor: '#f5f5f5', color: '#000000' } },
+  },
+}));
 
 vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({
@@ -30,11 +39,15 @@ vi.mock('../hooks/useAuth', () => ({
 }));
 
 // Mock updateProfile
-const mockUpdateProfile = vi.fn();
 vi.mock('../lib/api', () => ({
   updateProfile: (...args: any[]) => mockUpdateProfile(...args),
   getProfile: vi.fn(),
+  getThemes: vi.fn(() => Promise.resolve([])),
+  createLifeEvent: vi.fn(() => Promise.resolve()),
+  deleteLifeEvent: vi.fn(() => Promise.resolve()),
+  setBirthDate: vi.fn(() => Promise.resolve()),
   api: {
+    get: vi.fn(() => Promise.resolve({ data: [] })),
     post: vi.fn(),
     defaults: { headers: { common: {} } },
     interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
@@ -42,11 +55,6 @@ vi.mock('../lib/api', () => ({
 }));
 
 // Mock themes module
-const mockThemes = {
-  default: { name: 'Default', styles: { backgroundColor: '#ffffff', color: '#000000' } },
-  dark: { name: 'Dark', styles: { backgroundColor: '#000000', color: '#ffffff' } },
-  light: { name: 'Light', styles: { backgroundColor: '#f5f5f5', color: '#000000' } },
-};
 vi.mock('../themes', () => ({ themes: mockThemes }));
 // The component references `themes` globally (masked by @ts-nocheck)
 vi.stubGlobal('themes', mockThemes);

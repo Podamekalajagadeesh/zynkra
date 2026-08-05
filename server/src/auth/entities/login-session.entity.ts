@@ -37,6 +37,9 @@ export class LoginSession {
   @Column({ default: false })
   suspicious: boolean;
 
+  @Column({ default: false })
+  isTrusted: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

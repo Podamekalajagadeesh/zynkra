@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { RemoteInstance } from './entities/remote-instance.entity';
 import { RemoteUser } from './entities/remote-user.entity';
 import { RemotePost, ActivityType } from './entities/remote-post.entity';
+import { FederationModeration } from './entities/federation-moderation.entity';
 import { ConnectInstanceDto, RemoteInstanceDto } from './dto/remote-instance.dto';
 import { FederatePostDto, FederateFollowDto } from './dto/federate-post.dto';
 import { ConfigService } from '@nestjs/config';
@@ -28,6 +29,8 @@ export class FederationService implements OnModuleInit {
     private readonly remoteUserRepository: Repository<RemoteUser>,
     @InjectRepository(RemotePost)
     private readonly remotePostRepository: Repository<RemotePost>,
+    @InjectRepository(FederationModeration)
+    private readonly moderationRepository: Repository<FederationModeration>,
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly postsService: PostsService,
@@ -451,6 +454,73 @@ export class FederationService implements OnModuleInit {
 
   async unblockInstance(instanceId: string): Promise<void> {
     await this.instanceRepository.update(instanceId, { isBlocked: false });
+  }
+
+  // ---- Per-user moderation across servers --------------------------------
+
+  private async getModerationRow(
+    localUserId: string,
+    remoteUserId: string,
+  ): Promise<FederationModeration> {
+    const remoteUser = await this.remoteUserRepository.findOne({
+      where: { id: remoteUserId },
+    });
+    if (!remoteUser) {
+      throw new HttpException('Remote user not found', HttpStatus.NOT_FOUND);
+    }
+    let row = await this.moderationRepository.findOne({
+      where: {
+        localUser: { id: localUserId } as any,
+        remoteUser: { id: remoteUserId } as any,
+      },
+    });
+    if (!row) {
+      row = this.moderationRepository.create({
+        localUser: { id: localUserId } as any,
+        remoteUser: { id: remoteUserId } as any,
+      });
+    }
+    return row;
+  }
+
+  async blockRemoteUser(localUserId: string, remoteUserId: string): Promise<void> {
+    const row = await this.getModerationRow(localUserId, remoteUserId);
+    row.isBlocked = true;
+    await this.moderationRepository.save(row);
+  }
+
+  async unblockRemoteUser(localUserId: string, remoteUserId: string): Promise<void> {
+    const row = await this.getModerationRow(localUserId, remoteUserId);
+    row.isBlocked = false;
+    await this.moderationRepository.save(row);
+  }
+
+  async muteRemoteUser(localUserId: string, remoteUserId: string): Promise<void> {
+    const row = await this.getModerationRow(localUserId, remoteUserId);
+    row.isMuted = true;
+    await this.moderationRepository.save(row);
+  }
+
+  async unmuteRemoteUser(localUserId: string, remoteUserId: string): Promise<void> {
+    const row = await this.getModerationRow(localUserId, remoteUserId);
+    row.isMuted = false;
+    await this.moderationRepository.save(row);
+  }
+
+  async getRemoteModerations(localUserId: string) {
+    return this.moderationRepository.find({
+      where: { localUser: { id: localUserId } as any },
+      relations: ['remoteUser'],
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  // Cross-server reply chains: fetch the direct replies to a remote post.
+  async getRemoteReplies(postActivityId: string): Promise<RemotePost[]> {
+    return this.remotePostRepository.find({
+      where: { inReplyToId: postActivityId },
+      order: { publishedAt: 'ASC' },
+    });
   }
 
   async getInstanceFederationStats() {

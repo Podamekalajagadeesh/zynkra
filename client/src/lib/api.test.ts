@@ -187,21 +187,33 @@ describe('login API helper', () => {
 describe('setAuthToken', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
-  it('stores the token in localStorage and sets default header', () => {
+  it('stores the token in sessionStorage by default (not remembered) and sets the header', () => {
     setAuthToken('test-jwt-token');
 
-    expect(localStorage.getItem('access_token')).toBe('test-jwt-token');
+    expect(sessionStorage.getItem('access_token')).toBe('test-jwt-token');
+    expect(localStorage.getItem('access_token')).toBeNull();
     expect(api.defaults.headers.common['Authorization']).toBe('Bearer test-jwt-token');
   });
 
-  it('removes the token when called with null', () => {
-    localStorage.setItem('access_token', 'existing-token');
+  it('stores the token in localStorage when remembered', () => {
+    localStorage.setItem('zynkra_remember_me', 'true');
+
+    setAuthToken('test-jwt-token');
+
+    expect(localStorage.getItem('access_token')).toBe('test-jwt-token');
+    expect(sessionStorage.getItem('access_token')).toBeNull();
+  });
+
+  it('removes the token from both stores when called with null', () => {
+    sessionStorage.setItem('access_token', 'existing-token');
     api.defaults.headers.common['Authorization'] = 'Bearer existing-token';
 
     setAuthToken(null);
 
+    expect(sessionStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(api.defaults.headers.common['Authorization']).toBeUndefined();
   });

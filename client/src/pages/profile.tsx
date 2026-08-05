@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shield, ShieldOff } from 'lucide-react';
+import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shield, ShieldOff, Volume2, VolumeX } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
-import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, getFollowers, getUserFollowing, getThemes } from '../lib/api';
+import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, muteUser, unmuteUser, getFollowers, getUserFollowing, getThemes } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
@@ -65,6 +65,7 @@ export function ProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   const [nfts, setNfts] = useState<Nft[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
@@ -229,6 +230,23 @@ setCurrentUser(updatedUser);
     }
   };
 
+  const handleMuteToggle = async () => {
+    if (!user) return;
+    try {
+      if (isMuted) {
+        await unmuteUser(user.id);
+        addToast('User unmuted', 'success');
+        setIsMuted(false);
+      } else {
+        await muteUser(user.id);
+        addToast('User muted', 'success');
+        setIsMuted(true);
+      }
+    } catch {
+      addToast('Failed to update mute status', 'error');
+    }
+  };
+
   const handleSetNftPfp = async (nft: Nft) => {
     const pfpData = {
       nftPfpUrl: nft.image.cachedUrl,
@@ -276,7 +294,7 @@ setCurrentUser(updatedUser);
   // Theme lookup is resilient to server theme keys that aren't in the static
   // catalog: fall back to the default, and prefer the user's custom accent or
   // the catalog theme's accent over the static style.
-  const catalogTheme = themeCatalog.find(t => t.key === user?.profileTheme);
+  const catalogTheme = Array.isArray(themeCatalog) ? themeCatalog.find(t => t.key === user?.profileTheme) : undefined;
   const staticTheme = themes[(user?.profileTheme as Theme)] || themes.default;
   const themeAccent = user?.profileThemeColor || catalogTheme?.accent || staticTheme.styles.color || '#000000';
   const customStyles = {
@@ -357,6 +375,14 @@ setCurrentUser(updatedUser);
                 </Button>
                 <Button onClick={handleFollow}>
                   {followStatus === 'following' ? 'Unfollow' : followStatus === 'requested' ? 'Requested' : 'Follow'}
+                </Button>
+                <Button
+                  variant={isMuted ? 'secondary' : 'outline'}
+                  onClick={handleMuteToggle}
+                  icon={isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  ariaLabel={isMuted ? 'Unmute user' : 'Mute user'}
+                >
+                  {isMuted ? 'Muted' : 'Mute'}
                 </Button>
                 <Button
                   variant={isBlocked ? 'secondary' : 'destructive'}

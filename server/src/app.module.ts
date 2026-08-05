@@ -14,6 +14,7 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { InfrastructureController } from './infrastructure/infrastructure.controller';
 import { AuthModule } from './auth/auth.module';
+import { InviteCodesModule } from './invite-codes/invite-codes.module';
 import { UsersModule } from './users/users.module';
 import { SiweModule } from './siwe/siwe.module';
 import { PostsModule } from './posts/posts.module';
@@ -173,6 +174,7 @@ import { ZynkraGraphQLModule } from './graphql/graphql.module';
     // ProfileModule removed - module doesn't exist
     UsersModule,
     AuthModule,
+    InviteCodesModule,
     SiweModule,
     VisibilityModule,
     PostsModule,

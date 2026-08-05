@@ -25,6 +25,8 @@ import { LoginSession } from './entities/login-session.entity';
 import { User } from '../users/entities/user.entity';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { CaptchaService } from './captcha.service';
+import { InviteCodesService } from '../invite-codes/invite-codes.service';
 
 // Mock bcrypt entirely — it's a native C++ addon and we don't want real hashing.
 jest.mock('bcrypt', () => ({
@@ -72,10 +74,15 @@ describe('AuthService', () => {
   let emailService: jest.Mocked<EmailService>;
   let notificationsService: jest.Mocked<NotificationsService>;
   let loginSessionRepo: jest.Mocked<Repository<LoginSession>>;
+  let captchaServiceMock: { verify: jest.Mock; generate: jest.Mock };
 
   beforeEach(async () => {
     // Reset bcrypt mock state
     jest.clearAllMocks();
+    captchaServiceMock = {
+      verify: jest.fn().mockReturnValue(true),
+      generate: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -87,6 +94,7 @@ describe('AuthService', () => {
             findByUsername: jest.fn(),
             findOneById: jest.fn(),
             findByEmailVerificationToken: jest.fn(),
+            findByMagicLinkTokenHash: jest.fn(),
             findByPasswordResetToken: jest.fn(),
             createUser: jest.fn(),
             save: jest.fn(),
@@ -115,17 +123,30 @@ describe('AuthService', () => {
         {
           provide: EmailService,
           useValue: {
+            sendVerificationCode: jest.fn().mockResolvedValue(undefined),
             sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
             sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
             sendLoginAlertEmail: jest.fn().mockResolvedValue(undefined),
             sendTrustedRecoveryCodeEmail: jest.fn().mockResolvedValue(undefined),
             sendNotificationEmail: jest.fn().mockResolvedValue(undefined),
+            sendMagicLinkEmail: jest.fn().mockResolvedValue(undefined),
           },
         },
         {
           provide: NotificationsService,
           useValue: {
             createNotification: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            create: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
+            findOne: jest.fn(),
+            delete: jest.fn(),
+            update: jest.fn(),
           },
         },
         {
@@ -137,6 +158,19 @@ describe('AuthService', () => {
             findOne: jest.fn(),
             delete: jest.fn(),
             update: jest.fn(),
+          },
+        },
+        {
+          provide: CaptchaService,
+          useValue: captchaServiceMock,
+        },
+        {
+          provide: InviteCodesService,
+          useValue: {
+            findByCode: jest.fn(),
+            isUsable: jest.fn().mockReturnValue(false),
+            consume: jest.fn().mockResolvedValue(true),
+            generateCode: jest.fn(),
           },
         },
       ],
@@ -158,6 +192,9 @@ describe('AuthService', () => {
       username: 'newuser',
       email: 'new@example.com',
       password: 'password123',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
     };
 
     it('creates a user and sends a verification email', async () => {
@@ -175,11 +212,13 @@ describe('AuthService', () => {
           username: 'newuser',
           email: 'new@example.com',
           password_hash: '$2b$10$hashedpassword',
+          birthDate: '1990-01-01',
+          birthDateVerifiedAt: expect.any(Date),
           emailVerificationToken: expect.any(String),
           emailVerificationTokenExpires: expect.any(Date),
         }),
       );
-      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith(
+      expect(emailService.sendVerificationCode).toHaveBeenCalledWith(
         'new@example.com',
         expect.any(String),
       );
@@ -209,17 +248,32 @@ describe('AuthService', () => {
       await expect(service.signUp(dto)).rejects.toThrow('Database error');
     });
 
-    it('propagates error when EmailService.sendVerificationEmail fails', async () => {
+    it('does not fail signup when EmailService.sendVerificationCode fails', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       usersService.findByUsername.mockResolvedValue(null);
       usersService.createUser.mockResolvedValue(makeUser({ username: 'newuser', email: 'new@example.com' }));
-      emailService.sendVerificationEmail.mockRejectedValue(new Error('Email send failed'));
+      emailService.sendVerificationCode.mockRejectedValue(new Error('Email send failed'));
 
-      // User creation succeeded but email failed — the service should propagate the error
-      await expect(service.signUp(dto)).rejects.toThrow('Email send failed');
-
-      // Verify user was already created (the failure is in the email step)
+      // User creation succeeded but email failed — signup must still succeed.
+      const result = await service.signUp(dto);
+      expect(result.message).toContain('Signup successful');
       expect(usersService.createUser).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws BadRequestException when the captcha is invalid', async () => {
+      captchaServiceMock.verify.mockReturnValueOnce(false);
+
+      await expect(service.signUp(dto)).rejects.toThrow(BadRequestException);
+      expect(usersService.createUser).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when the user is under the minimum age', async () => {
+      const underageDto: SignUpDto = {
+        ...dto,
+        birthDate: '2020-01-01',
+      };
+      await expect(service.signUp(underageDto)).rejects.toThrow(BadRequestException);
+      expect(usersService.createUser).not.toHaveBeenCalled();
     });
 
     it('works with username that has underscores and periods', async () => {
@@ -227,6 +281,9 @@ describe('AuthService', () => {
         username: 'test_user.name',
         email: 'special@example.com',
         password: 'password123',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       };
 
       usersService.findByEmail.mockResolvedValue(null);
@@ -375,6 +432,7 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({ sub: user.id }),
+        expect.anything(),
       );
       expect(result.access_token).toBe('jwt-token');
     });
@@ -529,8 +587,8 @@ describe('AuthService', () => {
 
       const result = await service.resendVerification('test@example.com');
 
-      expect(result.message).toContain('verification email has been sent');
-      expect(emailService.sendVerificationEmail).toHaveBeenCalledWith('test@example.com', expect.any(String));
+      expect(result.message).toContain('verification code has been sent');
+      expect(emailService.sendVerificationCode).toHaveBeenCalledWith('test@example.com', expect.any(String));
     });
 
     it('returns generic message for non-existent user (security)', async () => {
@@ -538,8 +596,8 @@ describe('AuthService', () => {
 
       const result = await service.resendVerification('unknown@example.com');
 
-      expect(result.message).toContain('verification email has been sent');
-      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
+      expect(result.message).toContain('a verification email has been sent');
+      expect(emailService.sendVerificationCode).not.toHaveBeenCalled();
     });
 
     it('returns generic message for already verified user (security)', async () => {
@@ -548,8 +606,8 @@ describe('AuthService', () => {
 
       const result = await service.resendVerification('verified@example.com');
 
-      expect(result.message).toContain('verification email has been sent');
-      expect(emailService.sendVerificationEmail).not.toHaveBeenCalled();
+      expect(result.message).toContain('a verification email has been sent');
+      expect(emailService.sendVerificationCode).not.toHaveBeenCalled();
     });
 
     it('generates a new token and saves it for unverified user', async () => {
@@ -560,18 +618,18 @@ describe('AuthService', () => {
       await service.resendVerification('test@example.com');
 
       expect(user.emailVerificationToken).toBeDefined();
-      expect(user.emailVerificationToken).toHaveLength(64); // 32 bytes hex
+      expect(user.emailVerificationToken).toMatch(/^\d{6}$/); // 6-digit code
       expect(user.emailVerificationToken).not.toBe('old-token'); // new token
       expect(user.emailVerificationTokenExpires).toBeInstanceOf(Date);
       expect(user.emailVerificationTokenExpires!.getTime()).toBeGreaterThan(Date.now());
       expect(usersService.save).toHaveBeenCalledWith(user);
     });
 
-    it('propagates error when emailService.sendVerificationEmail fails', async () => {
+    it('propagates error when emailService.sendVerificationCode fails', async () => {
       const user = makeUser({ emailVerified: false });
       usersService.findByEmail.mockResolvedValue(user);
       usersService.save.mockResolvedValue(user);
-      emailService.sendVerificationEmail.mockRejectedValue(new Error('Email failed'));
+      emailService.sendVerificationCode.mockRejectedValue(new Error('Email failed'));
 
       await expect(service.resendVerification('test@example.com')).rejects.toThrow('Email failed');
       // Token was already saved before email failed
@@ -804,7 +862,10 @@ describe('AuthService', () => {
 
       expect(result.access_token).toBe('jwt-token');
       expect(loginSessionRepo.update).toHaveBeenCalledWith('s1', { lastSeenAt: expect.any(Date) });
-      expect(jwtService.sign).toHaveBeenCalledWith({ sub: user.id, email: user.email, sid: 's1' });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        { sub: user.id, email: user.email, sid: 's1' },
+        expect.anything(),
+      );
     });
 
     it('throws BadRequestException when sessionId is undefined', async () => {
@@ -1033,6 +1094,69 @@ describe('AuthService', () => {
       expect(result.methods.passwordReset).toBe(false);
       expect(result.methods.recoveryCodes).toBe(false);
       expect(result.methods.trustedContacts).toEqual([]);
+    });
+  });
+
+  // ─── Magic link ─────────────────────────────────────────────────────────
+
+  describe('magic link', () => {
+    it('stores a hashed one-time token and emails a sign-in link for an existing user', async () => {
+      const user = makeUser({ email: 'test@example.com', emailVerified: true });
+      usersService.findByEmail.mockResolvedValue(user);
+
+      const result = await service.requestMagicLink('test@example.com');
+
+      expect(result.message).toContain('sign-in link');
+      expect(usersService.save).toHaveBeenCalledWith(
+        expect.objectContaining({ magicLinkTokenHash: 'aabbccdd11223344' }),
+      );
+      expect(emailService.sendMagicLinkEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        expect.stringContaining('/verify-link?token='),
+      );
+    });
+
+    it('does not reveal whether an account exists for an unknown email', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+
+      const result = await service.requestMagicLink('nobody@example.com');
+
+      expect(result.message).toContain('sign-in link');
+      expect(usersService.save).not.toHaveBeenCalled();
+      expect(emailService.sendMagicLinkEmail).not.toHaveBeenCalled();
+    });
+
+    it('verifies a valid magic link, marks the email verified, and issues a token', async () => {
+      const user = makeUser({
+        email: 'test@example.com',
+        emailVerified: false,
+        magicLinkTokenHash: 'aabbccdd11223344',
+        magicLinkTokenExpiresAt: new Date(Date.now() + 15 * 60_000),
+      });
+      usersService.findByMagicLinkTokenHash.mockResolvedValue(user);
+      loginSessionRepo.create.mockReturnValue({ id: 'session-ml' } as any);
+      loginSessionRepo.save.mockResolvedValue({ id: 'session-ml' } as any);
+      jwtService.sign.mockReturnValue('magic-jwt-token');
+
+      const result = await service.verifyMagicLink('the-raw-token', {
+        headers: { 'user-agent': 'test' },
+      } as any);
+
+      expect(usersService.findByMagicLinkTokenHash).toHaveBeenCalledWith('aabbccdd11223344');
+      expect(usersService.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailVerified: true,
+          magicLinkTokenHash: null,
+          magicLinkTokenExpiresAt: null,
+        }),
+      );
+      expect(result.access_token).toBe('magic-jwt-token');
+    });
+
+    it('rejects an invalid or expired magic link', async () => {
+      usersService.findByMagicLinkTokenHash.mockResolvedValue(undefined);
+
+      await expect(service.verifyMagicLink('bad-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

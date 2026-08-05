@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAuthToken, setAuthTokenStorage } from './auth-storage';
 import { enqueueOfflineOperation } from './offlineSync';
 import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
 
@@ -217,7 +218,7 @@ export const getTrendingHeatmapData = async (timeRange: string = '24h', region: 
 };
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = getAuthToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -284,17 +285,16 @@ api.interceptors.response.use(
 );
 
 export const setAuthToken = (token: string | null) => {
+  setAuthTokenStorage(token);
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    localStorage.setItem('access_token', token);
   } else {
     delete api.defaults.headers.common['Authorization'];
-    localStorage.removeItem('access_token');
   }
 };
 
 // Set the initial token on page load
-const token = localStorage.getItem('access_token');
+const token = getAuthToken();
 setAuthToken(token);
 
 // Avatars are stored as bare IPFS CIDs (e.g. "Qm…"). Resolve them through a public
@@ -323,6 +323,11 @@ const normalizeUserProfile = (data: any): UserProfile => {
 export const signUp = async (data: AuthData) => {
   const response = await api.post('/auth/signup', data);
   return response.data;
+};
+
+export const getCaptcha = async () => {
+  const response = await api.get('/auth/captcha');
+  return response.data as { id: string; expression: string };
 };
 
 export const logoutFromServer = async () => {
@@ -403,9 +408,19 @@ export const disable2FA = async (data: { token: string }) => {
   return response.data;
 };
 
-export const verify2FA = async (data: { tempToken: string; token: string }) => {
+export const verify2FA = async (data: { tempToken: string; token: string; rememberMe?: boolean }) => {
   const response = await api.post('/auth/2fa/verify', data);
   return response.data;
+};
+
+export const requestMagicLink = async (data: { email: string }) => {
+  const response = await api.post('/auth/magic-link/request', data);
+  return response.data as { message: string };
+};
+
+export const verifyMagicLink = async (data: { token: string }) => {
+  const response = await api.post('/auth/magic-link/verify', data);
+  return response.data as { access_token: string };
 };
 
 export const linkWallet = async (data: {
@@ -466,6 +481,7 @@ export interface LoginSession {
   lastSeenAt: string | null;
   approvedAt: string | null;
   suspicious: boolean;
+  isTrusted?: boolean;
   createdAt: string;
   updatedAt: string;
   isCurrent?: boolean;
@@ -2200,7 +2216,7 @@ export const deleteNote = async (noteId: string) => {
 
 export const getNotesForPost = async (postId: string) => {
   const response = await api.get(`/notes/post/${postId}`);
-  return response.data;
+  return Array.isArray(response.data) ? response.data : [];
 };
 
 export const createCommunityNote = async (content: string, postId: string) => {
@@ -2839,5 +2855,115 @@ export const setBirthDate = async (birthDate: string) => {
 
 export const getAgeVerificationStatus = async () => {
   const response = await api.get('/users/me/age-verification-status');
+  return response.data;
+};
+
+// ---- Watchlist -------------------------------------------------------------
+
+export const getWatchlist = async () => {
+  const response = await api.get('/watchlist');
+  return response.data;
+};
+
+export const addToWatchlist = async (postId: string) => {
+  const response = await api.post(`/watchlist/${postId}`);
+  return response.data;
+};
+
+export const removeFromWatchlist = async (postId: string) => {
+  const response = await api.delete(`/watchlist/${postId}`);
+  return response.data;
+};
+
+// ---- User mute -------------------------------------------------------------
+
+export const muteUser = async (userId: string) => {
+  const response = await api.post(`/users/${userId}/mute`);
+  return response.data;
+};
+
+export const unmuteUser = async (userId: string) => {
+  const response = await api.delete(`/users/${userId}/mute`);
+  return response.data;
+};
+
+export const getMutedUsers = async () => {
+  const response = await api.get('/users/muted');
+  return response.data;
+};
+
+// ---- Custom-event webhooks -------------------------------------------------
+
+export const listWebhookEndpoints = async () => {
+  const response = await api.get('/webhooks/endpoints');
+  return response.data;
+};
+
+export const createWebhookEndpoint = async (data: { url: string; events: string[] }) => {
+  const response = await api.post('/webhooks/endpoints', data);
+  return response.data;
+};
+
+export const updateWebhookEndpoint = async (
+  endpointId: string,
+  data: { url?: string; events?: string[]; active?: boolean },
+) => {
+  const response = await api.patch(`/webhooks/endpoints/${endpointId}`, data);
+  return response.data;
+};
+
+export const deleteWebhookEndpoint = async (endpointId: string) => {
+  const response = await api.delete(`/webhooks/endpoints/${endpointId}`);
+  return response.data;
+};
+
+export const rotateWebhookSecret = async (endpointId: string) => {
+  const response = await api.post(`/webhooks/endpoints/${endpointId}/rotate-secret`);
+  return response.data;
+};
+
+export const getWebhookDeliveries = async (endpointId: string) => {
+  const response = await api.get(`/webhooks/endpoints/${endpointId}/deliveries`);
+  return response.data;
+};
+
+// ---- Profile theme ---------------------------------------------------------
+
+export const saveUserTheme = async (data: { theme: string; themeColor?: string }) => {
+  const response = await api.put('/users/me/theme', data);
+  return response.data;
+};
+
+// ---- Revenue forecasting ---------------------------------------------------
+
+export const getRevenueForecast = async () => {
+  const response = await api.get('/creator-analytics/forecast');
+  return response.data;
+};
+
+// ---- Pay-per-view ----------------------------------------------------------
+
+export const purchasePayPerView = async (data: {
+  creatorId: string;
+  contentId: string;
+  contentType: 'article' | 'podcast' | 'course' | 'post';
+  price: number;
+}) => {
+  const response = await api.post('/creator/pay-per-view', data);
+  return response.data;
+};
+
+// ---- Moderation appeals ----------------------------------------------------
+
+export const submitModerationAppeal = async (
+  reviewId: string,
+  appealReason: string,
+  additionalContext?: string,
+) => {
+  const response = await api.post(`/moderation/neural/${reviewId}/appeal`, {
+    flagId: reviewId,
+    appealReason,
+    additionalContext,
+  });
   return response.data;
 };

@@ -52,6 +52,10 @@ export class Payout {
   @Column({ type: 'timestamp with time zone', nullable: true })
   processedAt: Date | null;
 
+  /** When auto-payout scheduling should release this payout (null = manual only). */
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  dueAt: Date | null;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any> | null;
 

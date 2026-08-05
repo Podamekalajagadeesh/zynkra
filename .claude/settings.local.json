@@ -97,7 +97,28 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('SCRIPTS:', json.dumps\\(d['scripts'], indent=2\\)\\); print\\('DEPS:', list\\(d.get\\('dependencies',{}\\).keys\\(\\)\\)\\)\")",
       "Bash(echo \"SERVER_TSC_EXIT=$?\")",
       "Bash(echo \"CLIENT_TSC_EXIT=$?\")",
-      "Bash(awk '{print $2, $3, $10}')"
+      "Bash(awk '{print $2, $3, $10}')",
+      "Bash(docker --version)",
+      "Bash(openssl rand *)",
+      "Bash(awk '{print $2}')",
+      "Bash(sudo apt-get update -qq)",
+      "Bash(sudo apt-get install -y -qq libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev)",
+      "Bash(ps -eo pid,ppid,stat,etime,cmd)",
+      "Bash(grep -vE \"^SENTRY_DSN=$|^OPENROUTER_API_KEY=$\" .env)",
+      "Bash(mv .env.tmp .env)",
+      "Bash(pkill -f \"nest start\")",
+      "Bash(pkill -f \"node.*dist/main\")",
+      "Bash(echo \"server pid: $!\")",
+      "Bash(kill 42372)",
+      "Bash(echo \"server restarted, pid $!\")",
+      "Bash(echo \"client pid: $!\")",
+      "Bash(psql -h localhost -U postgres -l)",
+      "Bash(sed 's/=.*$/=***/')",
+      "Bash(break)",
+      "Bash(grep 'Verification code to __CMDSUB_OUTPUT__' /tmp/zynkra-server.log)",
+      "Bash(pkill -f \"nest start --watch\")",
+      "Bash(netstat -ltnp)",
+      "Bash(grep -oE \"\\(api|axios\\)\\\\.\\(get|post|put|patch|delete\\)\\\\\\([\\\\`'\\\\\"]/[a-z-]+\" src/lib/api.ts)"
     ]
   }
 }

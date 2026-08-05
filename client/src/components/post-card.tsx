@@ -23,6 +23,8 @@ import {
   removeBookmark,
   addToWatchLater,
   removeFromWatchLater,
+  addToWatchlist,
+  removeFromWatchlist,
   addToReadLater,
   removeFromReadLater,
   searchUsers,
@@ -278,6 +280,7 @@ export function PostCard({
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(post.bookmarked || false);
   const [isInWatchLater, setIsInWatchLater] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [isInReadLater, setIsInReadLater] = useState(false);
   const [showCollections, setShowCollections] = useState(false);
   const [showSaveOptions, setShowSaveOptions] = useState(false);
@@ -448,6 +451,24 @@ export function PostCard({
     } catch (error) {
       console.error('Failed to toggle read later:', error);
       addToast('Failed to update read later list', 'error');
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    try {
+      if (isInWatchlist) {
+        await removeFromWatchlist(post.id);
+        setIsInWatchlist(false);
+        addToast('Removed from watchlist', 'success');
+      } else {
+        await addToWatchlist(post.id);
+        setIsInWatchlist(true);
+        addToast('Added to watchlist', 'success');
+      }
+      setShowSaveOptions(false);
+    } catch (error) {
+      console.error('Failed to toggle watchlist:', error);
+      addToast('Failed to update watchlist', 'error');
     }
   };
 
@@ -1579,6 +1600,16 @@ export function PostCard({
                   <div>
                     <p className="font-medium">Add to collection</p>
                     <p className="text-sm text-gray-500">Save to a custom collection</p>
+                  </div>
+                </button>
+                <button
+                  onClick={handleAddToWatchlist}
+                  className={`w-full text-left p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded flex items-center gap-3 ${isInWatchlist ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
+                >
+                  <Bookmark className="w-5 h-5" />
+                  <div>
+                    <p className="font-medium">{isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}</p>
+                    <p className="text-sm text-gray-500">Save to watchlist</p>
                   </div>
                 </button>
                 {post.media.some(m => m.type === 'video') && (

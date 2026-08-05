@@ -160,6 +160,26 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post(':id/mute')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async mute(@Request() req, @Param('id') id: string): Promise<void> {
+    return this.usersService.mute(req.user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/mute')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unmute(@Request() req, @Param('id') id: string): Promise<void> {
+    return this.usersService.unmute(req.user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('muted')
+  async getMutedUsers(@Request() req): Promise<User[]> {
+    return this.usersService.getMutedUsers(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('blocked/keywords')
   async getBlockedKeywords(@Request() req): Promise<string[]> {
     return this.usersService.getBlockedKeywords(req.user.userId);
