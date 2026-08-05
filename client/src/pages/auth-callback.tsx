@@ -19,9 +19,7 @@ export function AuthCallbackPage() {
           return;
         }
 
-        // Store token in localStorage
-        localStorage.setItem('access_token', token);
-        // Update axios default header
+        // Store token in the active store (respects the remember-me flag)
         setAuthToken(token);
         // Dispatch auth change event so App component updates state
         window.dispatchEvent(new Event('authchange'));

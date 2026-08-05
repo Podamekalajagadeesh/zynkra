@@ -64,18 +64,36 @@ export class WebauthnService {
     return this.authenticatorsRepository.save(newAuthenticator);
   }
 
-  async getAuthenticationOptions(user: User) {
+  async getAuthenticationOptions(user: User, opts?: { biometric?: boolean }) {
     const existingAuthenticators = await this.authenticatorsRepository.find({
       where: { user: { id: user.id } },
     });
 
-    return generateAuthenticationOptions({
-      allowCredentials: existingAuthenticators.map((auth) => ({
-        id: Buffer.from(auth.credentialID, 'base64'),
-        type: 'public-key',
-        transports: auth.transports ? auth.transports.split(',') as any : [],
-      })),
-    });
+    let credentials = existingAuthenticators.map((auth) => ({
+      id: Buffer.from(auth.credentialID, 'base64'),
+      type: 'public-key' as const,
+      transports: auth.transports ? (auth.transports.split(',') as any) : [],
+    }));
+
+    if (opts?.biometric) {
+      // Platform authenticators report an "internal" transport. Filter the
+      // allow-list to those so the OS shows the Face ID / Touch ID / Windows Hello
+      // prompt, and require user verification. Transports is often empty in
+      // practice, so fall back to all credentials rather than breaking login when
+      // none are labelled internal.
+      const platformCredentials = credentials.filter((cred) =>
+        cred.transports.includes('internal'),
+      );
+      if (platformCredentials.length > 0) {
+        credentials = platformCredentials;
+      }
+      return generateAuthenticationOptions({
+        allowCredentials: credentials,
+        userVerification: 'required',
+      });
+    }
+
+    return generateAuthenticationOptions({ allowCredentials: credentials });
   }
 
   async verifyAuthentication(

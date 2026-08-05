@@ -6,6 +6,7 @@ import { PostReaction } from '../posts/entities/post-reaction.entity';
 import { PostsService } from '../posts/posts.service';
 import { Post } from '../posts/entities/post.entity';
 import { User } from '../users/entities/user.entity';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 describe('ReactionsService', () => {
   let service: ReactionsService;
@@ -31,6 +32,10 @@ describe('ReactionsService', () => {
           useValue: {
             findOne: jest.fn(),
           },
+        },
+        {
+          provide: WebhooksService,
+          useValue: { dispatchEvent: jest.fn() },
         },
       ],
     }).compile();

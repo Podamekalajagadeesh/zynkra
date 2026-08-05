@@ -72,6 +72,54 @@ const authHandlers = [
   http.post('*/auth/reset-password', () => {
     return HttpResponse.json({ message: 'Password has been reset successfully.' });
   }),
+
+  http.get('*/auth/captcha', () => {
+    return HttpResponse.json({ id: 'cap-1', expression: '3 + 5' });
+  }),
+
+  http.post('*/auth/magic-link/request', () => {
+    return HttpResponse.json({
+      message: 'If an account exists for that email, a sign-in link has been sent.',
+    });
+  }),
+
+  http.post('*/auth/magic-link/verify', async ({ request }) => {
+    const body = (await request.json()) as Record<string, string>;
+    if (!body.token || body.token === 'expired-token') {
+      return HttpResponse.json(
+        { message: 'This sign-in link is invalid or has expired.' },
+        { status: 401 },
+      );
+    }
+    return HttpResponse.json({ access_token: 'mock-jwt-token' });
+  }),
+
+  http.post('*/auth/webauthn/authentication', () => {
+    return HttpResponse.json({ challenge: 'mock-challenge', allowCredentials: [] });
+  }),
+
+  http.post('*/auth/webauthn/authentication/verify', () => {
+    return HttpResponse.json({ access_token: 'mock-jwt-token' });
+  }),
+
+  http.get('*/auth/sessions', () => {
+    return HttpResponse.json([
+      {
+        id: 'session-1',
+        deviceName: 'Chrome on Linux',
+        userAgent: 'Chrome',
+        ipAddress: '127.0.0.1',
+        revokedAt: null,
+        lastSeenAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        suspicious: false,
+        isTrusted: true,
+        isCurrent: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }),
 ];
 
 export const handlers = [

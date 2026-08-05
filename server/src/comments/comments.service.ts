@@ -14,6 +14,7 @@ import { NotificationType } from '../notifications/entities/notification.entity'
 import { SentimentService } from '../sentiment/sentiment.service';
 import { SentimentType as ServiceSentimentType } from '../sentiment/sentiment.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class CommentsService {
@@ -27,6 +28,7 @@ export class CommentsService {
     private readonly userInterestsService: UserInterestsService,
     private readonly sentimentService: SentimentService,
     private readonly visibilityService: VisibilityService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   private canUserComment(commentingUser: User, postOwner: User): boolean {
@@ -158,6 +160,13 @@ export class CommentsService {
     if (post.tags && post.user.id !== user.id) {
       await this.userInterestsService.recordInteraction(user, post.tags, 'comment');
     }
+
+    void this.webhooksService.dispatchEvent('comment.created', {
+      commentId: savedComment.id,
+      postId: post.id,
+      authorId: user.id,
+      parentId: parent?.id ?? null,
+    });
 
     return savedComment;
   }

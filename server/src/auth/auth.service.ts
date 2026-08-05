@@ -10,9 +10,12 @@ import { SignInDto } from './dto/sign-in.dto';
 import { User } from '../users/entities/user.entity';
 import { EmailService } from '../email/email.service';
 import { createHash, createHmac, randomBytes } from 'crypto';
+import type { StringValue } from 'ms';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { LoginSession } from './entities/login-session.entity';
+import { CaptchaService } from './captcha.service';
+import { InviteCodesService } from '../invite-codes/invite-codes.service';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +30,8 @@ export class AuthService {
     private readonly notificationsService: NotificationsService,
     @InjectRepository(LoginSession)
     private readonly loginSessionsRepository: Repository<LoginSession>,
+    private readonly captchaService: CaptchaService,
+    private readonly inviteCodesService: InviteCodesService,
   ) {}
 
   private get clientUrl(): string {
@@ -115,8 +120,8 @@ export class AuthService {
     return null;
   }
 
-  private async createLoginSession(user: User, req?: any): Promise<LoginSession> {
-    const suspicious = await this.isSuspiciousSession(user.id, req);
+  private async createLoginSession(user: User, req?: any, isTrusted = false): Promise<LoginSession> {
+    const suspicious = isTrusted ? false : await this.isSuspiciousSession(user.id, req);
     const session = this.loginSessionsRepository.create({
       user,
       deviceName: this.getRequestDeviceName(req),
@@ -126,6 +131,7 @@ export class AuthService {
       revokedAt: null,
       approvedAt: suspicious ? null : new Date(),
       suspicious,
+      isTrusted,
     });
 
     return this.loginSessionsRepository.save(session);
@@ -168,11 +174,16 @@ export class AuthService {
     );
 
     if (user.email) {
-      await this.emailService.sendLoginAlertEmail(user.email, {
-        deviceName: session.deviceName,
-        ipAddress: session.ipAddress,
-        suspicious: session.suspicious,
-      });
+      try {
+        await this.emailService.sendLoginAlertEmail(user.email, {
+          deviceName: session.deviceName,
+          ipAddress: session.ipAddress,
+          suspicious: session.suspicious,
+        });
+      } catch (err) {
+        // A login-alert email must never fail the login itself.
+        this.logger.warn(`Failed to send login alert email to ${user.email}`);
+      }
     }
   }
 
@@ -190,21 +201,89 @@ export class AuthService {
     return `${visible}***@${domain}`;
   }
 
-  private async issueAccessToken(user: User, req?: any): Promise<{ access_token: string }> {
-    const session = await this.createLoginSession(user, req);
+  private getTokenExpiry(rememberMe: boolean): StringValue {
+    return this.configService.get<string>(
+      rememberMe ? 'JWT_REMEMBER_ME_EXPIRES' : 'JWT_EXPIRES_IN',
+      rememberMe ? '30d' : '60m',
+    ) as StringValue;
+  }
+
+  private async issueAccessToken(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
+    const session = await this.createLoginSession(user, req, rememberMe);
     await this.notifyLoginAlert(user, session);
     const payload = { sub: user.id, email: user.email, sid: session.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        expiresIn: this.getTokenExpiry(rememberMe),
+      }),
     };
   }
 
-  async login(user: User, req?: any): Promise<{ access_token: string }> {
+  async login(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
+    return this.issueAccessToken(user, req, rememberMe);
+  }
+
+  async requestMagicLink(email: string): Promise<{ message: string }> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.email) {
+      return { message: 'If an account exists for that email, a sign-in link has been sent.' };
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const ttlMinutes = this.configService.get<number>('MAGIC_LINK_TTL_MINUTES', 15);
+    user.magicLinkTokenHash = createHash('sha256').update(token).digest('hex');
+    user.magicLinkTokenExpiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+    await this.usersService.save(user);
+
+    const link = `${this.clientUrl}/verify-link?token=${token}`;
+    try {
+      await this.emailService.sendMagicLinkEmail(user.email, link);
+    } catch (err) {
+      this.logger.warn(`Failed to send magic link email to ${user.email}`);
+    }
+
+    return { message: 'If an account exists for that email, a sign-in link has been sent.' };
+  }
+
+  async verifyMagicLink(token: string, req?: any): Promise<{ access_token: string }> {
+    const hash = createHash('sha256').update(token).digest('hex');
+    const user = await this.usersService.findByMagicLinkTokenHash(hash);
+    if (!user || !user.magicLinkTokenExpiresAt || user.magicLinkTokenExpiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedException('This sign-in link is invalid or has expired.');
+    }
+
+    user.magicLinkTokenHash = null;
+    user.magicLinkTokenExpiresAt = null;
+    user.emailVerified = true;
+    await this.usersService.save(user);
+
     return this.issueAccessToken(user, req);
   }
 
   async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
-    const { username, email, password } = signUpDto;
+    const { username, email, password, birthDate, captchaId, captchaAnswer, inviteCode } = signUpDto;
+
+    if (!this.captchaService.verify(captchaId, captchaAnswer)) {
+      throw new BadRequestException('CAPTCHA failed or expired. Please try again.');
+    }
+
+    const minimumAge = this.configService.get<number>('MINIMUM_AGE', 13);
+    const age = this.computeAge(birthDate);
+    if (age === null || age < minimumAge) {
+      throw new BadRequestException(`You must be at least ${minimumAge} years old to register.`);
+    }
+
+    const inviteRequired = this.configService.get<string>('INVITE_CODE_REQUIRED', 'false') === 'true';
+    if (inviteRequired && !inviteCode) {
+      throw new BadRequestException('An invite code is required to register.');
+    }
+    let consumeInvite = false;
+    if (inviteCode) {
+      consumeInvite = this.inviteCodesService.isUsable(await this.inviteCodesService.findByCode(inviteCode));
+      if (!consumeInvite) {
+        throw new BadRequestException('Invalid or expired invite code.');
+      }
+    }
 
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
@@ -228,15 +307,39 @@ export class AuthService {
       username,
       email,
       password_hash,
+      birthDate,
+      birthDateVerifiedAt: new Date(),
       emailVerificationToken,
       emailVerificationTokenExpires,
     });
 
-    await this.emailService.sendVerificationCode(user.email, emailVerificationCode);
+    if (consumeInvite) {
+      await this.inviteCodesService.consume(inviteCode!);
+    }
+
+    try {
+      await this.emailService.sendVerificationCode(user.email, emailVerificationCode);
+    } catch (err) {
+      // The account is created and the code is stored — a provider rejection
+      // (e.g. unverified sender) must not fail the signup itself.
+      this.logger.warn(`Failed to send verification code to ${user.email}`);
+    }
 
     return {
       message: 'Signup successful. A 6-digit verification code has been sent to your email.',
     };
+  }
+
+  private computeAge(birthDate: string): number | null {
+    const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const hasHadBirthday =
+      today.getMonth() > birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+    if (!hasHadBirthday) age -= 1;
+    return age;
   }
 
   async resendVerification(email: string): Promise<{ message: string }> {
@@ -307,7 +410,7 @@ export class AuthService {
   }
 
   async signIn(signInDto: SignInDto, req?: any): Promise<{ access_token: string } | { twoFactorEnabled: true; tempToken: string }> {
-    const { email, username, password } = signInDto;
+    const { email, username, password, rememberMe } = signInDto;
     const identifier = email || username;
 
     if (!identifier) {
@@ -328,13 +431,13 @@ export class AuthService {
 
     if (user.twoFactorEnabled && user.twoFactorSecret) {
       const tempToken = this.jwtService.sign(
-        { sub: user.id, purpose: 'two-factor-login' },
+        { sub: user.id, purpose: 'two-factor-login', rememberMe: rememberMe ?? false },
         { expiresIn: '10m' },
       );
       return { twoFactorEnabled: true, tempToken };
     }
 
-    return this.issueAccessToken(user, req);
+    return this.issueAccessToken(user, req, rememberMe);
   }
 
   async validateUser(email: string): Promise<User> {
@@ -461,7 +564,7 @@ export class AuthService {
   }
 
   async verify2FALogin(tempToken: string, token: string, req?: any): Promise<{ access_token: string }> {
-    let payload: { sub: string; purpose?: string };
+    let payload: { sub: string; purpose?: string; rememberMe?: boolean };
 
     try {
       payload = this.jwtService.verify(tempToken);
@@ -482,7 +585,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid 2FA token');
     }
 
-    return this.issueAccessToken(user, req);
+    return this.issueAccessToken(user, req, payload.rememberMe ?? false);
   }
 
   async generateRecoveryCodes(userId: string): Promise<{ codes: string[] }> {
@@ -733,7 +836,9 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email, sid: session.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        expiresIn: this.getTokenExpiry(session.isTrusted),
+      }),
     };
   }
 

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PostReaction } from '../posts/entities/post-reaction.entity';
 import { PostsService } from '../posts/posts.service';
 import { User } from '../users/entities/user.entity';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class ReactionsService {
@@ -11,6 +12,7 @@ export class ReactionsService {
     @InjectRepository(PostReaction)
     private readonly postReactionsRepository: Repository<PostReaction>,
     private readonly postsService: PostsService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async addReaction(
@@ -45,6 +47,12 @@ export class ReactionsService {
       reaction,
     });
 
-    return this.postReactionsRepository.save(newReaction);
+    const saved = await this.postReactionsRepository.save(newReaction);
+    void this.webhooksService.dispatchEvent('reaction.created', {
+      postId,
+      userId,
+      reaction,
+    });
+    return saved;
   }
 }

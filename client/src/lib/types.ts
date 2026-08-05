@@ -66,6 +66,11 @@ export interface AuthData {
   username?: string;
   email?: string;
   password?: string;
+  birthDate?: string;
+  captchaId?: string;
+  captchaAnswer?: string;
+  inviteCode?: string;
+  rememberMe?: boolean;
 }
 
 export interface LifeEvent {

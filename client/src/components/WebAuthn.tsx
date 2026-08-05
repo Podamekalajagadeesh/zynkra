@@ -8,12 +8,14 @@ interface WebAuthnProps {
   onError: (error: string) => void;
   email?: string;
   mode: 'register' | 'login';
+  biometric?: boolean;
+  rememberMe?: boolean;
   className?: string;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   children?: React.ReactNode;
 }
 
-const WebAuthn = ({ onSuccess, onError, email, mode, className, variant, children }: WebAuthnProps) => {
+const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, className, variant, children }: WebAuthnProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,9 +50,13 @@ const WebAuthn = ({ onSuccess, onError, email, mode, className, variant, childre
     setIsLoading(true);
     setError(null);
     try {
-      const { data: options } = await axios.post('/auth/webauthn/authentication', { email });
+      const { data: options } = await axios.post('/auth/webauthn/authentication', {
+        email,
+        biometric: biometric || undefined,
+      });
       const assertion = await startAuthentication(options);
-      const { data } = await axios.post('/auth/webauthn/authentication/verify', assertion);
+      const verifyBody = rememberMe ? { ...assertion, rememberMe: true } : assertion;
+      const { data } = await axios.post('/auth/webauthn/authentication/verify', verifyBody);
       onSuccess(data);
     } catch (err) {
       console.error(err);
@@ -81,7 +87,9 @@ const WebAuthn = ({ onSuccess, onError, email, mode, className, variant, childre
       )}
       {mode === 'login' && (
         <button onClick={handleLogin} disabled={isLoading} className={resolvedClassName}>
-          {isLoading ? 'Logging in...' : children || 'Login with Passkey'}
+          {isLoading
+            ? 'Logging in...'
+            : children || (biometric ? 'Sign in with Face ID / Fingerprint' : 'Login with Passkey')}
         </button>
       )}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}

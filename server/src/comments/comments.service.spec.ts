@@ -59,6 +59,7 @@ describe('CommentsService', () => {
         { provide: UserInterestsService, useValue: { recordInteraction: jest.fn() } },
         { provide: SentimentService, useValue: { analyzeSentiment: jest.fn().mockResolvedValue({ sentiment: 'neutral', score: 0, confidence: 0.5 }) } },
         { provide: VisibilityService, useValue: { isBlockedEither: jest.fn().mockResolvedValue(false), getBlockedIdSet: jest.fn().mockResolvedValue(new Set()) } },
+        { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
       ],
     }).compile();
 

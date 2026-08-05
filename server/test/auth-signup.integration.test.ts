@@ -22,6 +22,7 @@ import request from 'supertest';
 
 import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
+import { CaptchaService } from '../src/auth/captcha.service';
 import { UsersService } from '../src/users/users.service';
 import { EmailService } from '../src/email/email.service';
 import { NotificationsService } from '../src/notifications/notifications.service';
@@ -82,6 +83,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
           provide: UsersService,
           useValue: { findOneById: jest.fn() },
         },
+        {
+          provide: CaptchaService,
+          useValue: { generate: jest.fn(), verify: jest.fn().mockReturnValue(true) },
+        },
       ],
     }).compile();
 
@@ -114,7 +119,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
       .send({
         username: 'newuser',
         email: 'new@example.com',
-        password: 'password123',
+        password: 'Password123!',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       });
 
     expect(response.status).toBe(201);
@@ -122,7 +130,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
     expect(authService.signUp).toHaveBeenCalledWith({
       username: 'newuser',
       email: 'new@example.com',
-      password: 'password123',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
     });
   });
 
@@ -133,7 +144,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
       .post('/auth/signup')
       .send({
         email: 'new@example.com',
-        password: 'password123',
+        password: 'Password123!',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       });
 
     expect(response.status).toBe(400);
@@ -197,7 +211,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
       .send({
         username: 'user name!',
         email: 'new@example.com',
-        password: 'password123',
+        password: 'Password123!',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       });
 
     expect(response.status).toBe(400);
@@ -210,7 +227,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
       .send({
         username: 'ab',
         email: 'new@example.com',
-        password: 'password123',
+        password: 'Password123!',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       });
 
     expect(response.status).toBe(400);
@@ -228,7 +248,10 @@ describe('POST /auth/signup (HTTP integration)', () => {
       .send({
         username: 'newuser',
         email: 'taken@example.com',
-        password: 'password123',
+        password: 'Password123!',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
       });
 
     expect(response.status).toBe(409);

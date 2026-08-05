@@ -127,6 +127,31 @@ export class EmailService {
     }
   }
 
+  async sendMagicLinkEmail(email: string, url: string) {
+    const subject = 'Sign in to your Zynkra account';
+    const text = `Sign in to Zynkra: ${url}`;
+    const html = `<p>Click the link below to sign in to your Zynkra account:</p><p><a href="${url}">${url}</a></p><p>This link expires in 15 minutes and can only be used once.</p>`;
+
+    if (!this.transporter) {
+      this.logger.log(`(DEV) Magic link email to ${email}: ${url}`);
+      return Promise.resolve();
+    }
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromAddress,
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(`Magic link email sent to ${email}`);
+    } catch (err) {
+      this.logger.error(`Failed to send magic link email to ${email}`, err as any);
+      throw err;
+    }
+  }
+
   async sendLoginAlertEmail(email: string, data: { deviceName: string | null; ipAddress: string | null; suspicious: boolean }) {
     const subject = 'New login to your Zynkra account';
     const text = `New login detected. Device: ${data.deviceName ?? 'unknown'}, IP: ${data.ipAddress ?? 'unknown'}.`;

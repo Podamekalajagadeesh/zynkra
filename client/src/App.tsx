@@ -11,7 +11,7 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText, Trophy, Package, KeyRound } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText, Trophy, Package, KeyRound, Webhook, Leaf } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
@@ -45,6 +45,9 @@ const ReelPage = lazy(() => import('./pages/ReelPage').then((module) => ({ defau
 const EmailVerificationPage = lazy(() =>
   import('./pages/email-verification').then(module => ({ default: module.EmailVerificationPage }))
 );
+const VerifyLinkPage = lazy(() =>
+  import('./pages/verify-link').then(module => ({ default: module.VerifyLinkPage }))
+);
 const GroupsPage = lazy(() =>
   import('./pages/groups').then(module => ({ default: module.GroupsPage }))
 );
@@ -69,6 +72,11 @@ const SubscriptionBundlesPage = lazy(() => import('./pages/subscription-bundles'
 const InvoicesPage = lazy(() => import('./pages/invoices').then((module) => ({ default: module.InvoicesPage })));
 const TaxDocumentsPage = lazy(() => import('./pages/tax-documents').then((module) => ({ default: module.TaxDocumentsPage })));
 const OAuthAppsPage = lazy(() => import('./pages/oauth-apps').then((module) => ({ default: module.OAuthAppsPage })));
+const WebhooksPage = lazy(() => import('./pages/webhooks').then((module) => ({ default: module.WebhooksPage })));
+const WatchlistPage = lazy(() => import('./pages/watchlist').then((module) => ({ default: module.WatchlistPage })));
+const MutedUsersPage = lazy(() => import('./pages/muted-users').then((module) => ({ default: module.MutedUsersPage })));
+const DataExportPage = lazy(() => import('./pages/DataExport').then((module) => ({ default: module.default })));
+const SustainabilityPage = lazy(() => import('./pages/sustainability').then((module) => ({ default: module.SustainabilityPage })));
 const BlockchainIdentityPage = lazy(() => import('./pages/blockchain-identity').then((module) => ({ default: module.default })));
 const SearchResultsPage = lazy(() => import('./pages/search').then((module) => ({ default: module.default })));
 const NotificationsPage = lazy(() => import('./pages/notifications').then((module) => ({ default: module.default })));
@@ -227,6 +235,8 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
       { to: '/marketplace/saved', label: 'Saved', icon: Heart },
       { to: '/events', label: 'Events', icon: Calendar },
       { to: '/fundraisers', label: 'Fundraisers', icon: HandHeart },
+      { to: '/watchlist', label: 'Watchlist', icon: Bookmark },
+      { to: '/sustainability', label: 'Sustainability', icon: Leaf },
     ],
   },
   {
@@ -238,6 +248,7 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
       { to: '/invoices', label: 'Invoices', icon: FileText },
       { to: '/tax-documents', label: 'Tax Documents', icon: FileText },
       { to: '/oauth/apps', label: 'OAuth Apps', icon: KeyRound },
+      { to: '/webhooks', label: 'Webhooks', icon: Webhook },
       { to: '/scheduler', label: 'Content Scheduler', icon: CalendarDays },
       { to: '/livestream/schedule', label: 'Schedule Stream', icon: Calendar },
       { to: '/nonprofit', label: 'Nonprofit Tools', icon: Building2 },
@@ -249,7 +260,6 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
 const CREATE_ITEMS: { to: string; label: string }[] = [
   { to: '/create-post', label: 'Create Post' },
   { to: '/create-reel', label: 'Create Reel' },
-  { to: '/forms/new', label: 'Create Form' },
 ];
 
 const navLinkBase =
@@ -789,6 +799,7 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                     <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
+                    <Route path="/verify-link" element={<VerifyLinkPage />} />
                     <Route path="/auth/callback" element={<AuthCallbackPage />} />
                     <Route path="/terms" element={<TermsPage />} />
                     <Route path="/privacy" element={<PrivacyPage />} />
@@ -1041,6 +1052,46 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <OAuthAppsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/webhooks"
+                      element={
+                        <ProtectedRoute>
+                          <WebhooksPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/watchlist"
+                      element={
+                        <ProtectedRoute>
+                          <WatchlistPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/muted-users"
+                      element={
+                        <ProtectedRoute>
+                          <MutedUsersPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/data-export"
+                      element={
+                        <ProtectedRoute>
+                          <DataExportPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/sustainability"
+                      element={
+                        <ProtectedRoute>
+                          <SustainabilityPage />
                         </ProtectedRoute>
                       }
                     />

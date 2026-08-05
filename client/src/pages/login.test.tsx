@@ -204,4 +204,71 @@ describe('LoginPage', () => {
       expect(screen.getByLabelText(/two-factor authentication code/i)).toBeInTheDocument();
     });
   });
+
+  // --- Remember me ---
+
+  it('renders a remember me checkbox and includes rememberMe in the signin payload', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    let capturedBody: any;
+    server.use(
+      http.post('*/auth/signin', async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({ access_token: 'test-jwt-token' });
+      }),
+      http.get('*/users/me', () => {
+        return HttpResponse.json({ id: 'user-1', username: 'testuser', email: 'test@example.com' });
+      }),
+    );
+
+    const rememberCheckbox = screen.getByLabelText(/remember me/i);
+    expect(rememberCheckbox).toBeInTheDocument();
+    await user.click(rememberCheckbox);
+
+    await user.type(screen.getByLabelText(/email or username/i), 'test@example.com');
+    await user.type(screen.getByPlaceholderText('••••••••'), 'password123');
+    fireEvent.submit(document.querySelector('form')!);
+
+    await waitFor(() => {
+      expect(capturedBody).toBeDefined();
+    });
+    expect(capturedBody.rememberMe).toBe(true);
+  });
+
+  // --- Magic link / passwordless ---
+
+  it('sends a magic link request from the password tab', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    let capturedBody: any;
+    server.use(
+      http.post('*/auth/magic-link/request', async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({ message: 'If an account exists for that email, a sign-in link has been sent.' });
+      })
+    );
+
+    await user.click(screen.getByRole('button', { name: /email me a sign-in link instead/i }));
+    await user.type(screen.getByLabelText(/sign in with email link/i), 'magic@example.com');
+    await user.click(screen.getByRole('button', { name: /send sign-in link/i }));
+
+    await waitFor(() => {
+      expect(capturedBody.email).toBe('magic@example.com');
+    });
+    expect(screen.getByText(/sign-in link has been sent/i)).toBeInTheDocument();
+  });
+
+  // --- Biometric ---
+
+  it('shows the Face ID / Fingerprint biometric button in the passkey tab', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    await user.click(screen.getByRole('tab', { name: /passkey/i }));
+
+    expect(screen.getByRole('button', { name: /sign in with passkey/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /face id \/ fingerprint/i })).toBeInTheDocument();
+  });
 });

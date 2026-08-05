@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 
 // Mock encryption service (uses IndexedDB which is not available in jsdom)
@@ -110,7 +110,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('account-count').textContent).toBe('2');
   });
 
-  it('logout removes the active account and switches to next', () => {
+  it('logout removes the active account and switches to next', async () => {
     render(
       <AuthProvider>
         <TestConsumer />
@@ -128,11 +128,14 @@ describe('AuthContext', () => {
       screen.getByTestId('logout').click();
     });
 
-    expect(screen.getByTestId('account-count').textContent).toBe('0');
+    // logout awaits the server call, so the account removal is async
+    await waitFor(() => {
+      expect(screen.getByTestId('account-count').textContent).toBe('0');
+    });
     expect(screen.getByTestId('active-user').textContent).toBe('none');
   });
 
-  it('logout clears all accounts and marks as logged out', () => {
+  it('logout clears all accounts and marks as logged out', async () => {
     render(
       <AuthProvider>
         <TestConsumer />
@@ -150,8 +153,11 @@ describe('AuthContext', () => {
       screen.getByTestId('logout').click();
     });
 
-    expect(screen.getByTestId('account-count').textContent).toBe('0');
-    expect(screen.getByTestId('is-logged-in').textContent).toBe('false');
+    // logout awaits the server call, so the state updates are async
+    await waitFor(() => {
+      expect(screen.getByTestId('account-count').textContent).toBe('0');
+      expect(screen.getByTestId('is-logged-in').textContent).toBe('false');
+    });
 
     // localStorage is updated with empty accounts array
     const stored = JSON.parse(localStorage.getItem('zynkra_accounts') || '{}');

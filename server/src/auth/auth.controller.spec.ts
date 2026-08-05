@@ -9,6 +9,7 @@ import { BadRequestException } from '@nestjs/common';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
 import { UsersService } from '../users/users.service';
 
@@ -16,6 +17,7 @@ describe('AuthController', () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
   let usersService: jest.Mocked<UsersService>;
+  let webauthnService: jest.Mocked<WebauthnService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +53,8 @@ describe('AuthController', () => {
             socialLogin: jest.fn(),
             validateUser: jest.fn(),
             login: jest.fn(),
+            requestMagicLink: jest.fn(),
+            verifyMagicLink: jest.fn(),
           },
         },
         {
@@ -71,19 +75,34 @@ describe('AuthController', () => {
             findOneById: jest.fn(),
           },
         },
+        {
+          provide: CaptchaService,
+          useValue: {
+            generate: jest.fn().mockReturnValue({ id: 'cap-1', expression: '1 + 1' }),
+            verify: jest.fn().mockReturnValue(true),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get(AuthService) as jest.Mocked<AuthService>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
+    webauthnService = module.get(WebauthnService) as jest.Mocked<WebauthnService>;
   });
 
   // ─── POST /auth/signup ────────────────────────────────────────────────
 
   describe('POST /auth/signup', () => {
     it('calls authService.signUp with the DTO', async () => {
-      const dto = { username: 'newuser', email: 'new@example.com', password: 'password123' };
+      const dto = {
+        username: 'newuser',
+        email: 'new@example.com',
+        password: 'password123',
+        birthDate: '1990-01-01',
+        captchaId: 'cap-1',
+        captchaAnswer: '12',
+      };
       authService.signUp.mockResolvedValue({ message: 'Signup successful. Please check your email to verify your account.' });
 
       const result = await controller.signUp(dto);
@@ -273,6 +292,64 @@ describe('AuthController', () => {
       const result = await controller.getRecoveryOptions('test@example.com' as any);
 
       expect(authService.getRecoveryOptions).toHaveBeenCalledWith('test@example.com');
+    });
+  });
+
+  // ─── Magic link ────────────────────────────────────────────────────────
+
+  describe('magic link', () => {
+    it('POST /auth/magic-link/request calls authService.requestMagicLink with the email', async () => {
+      authService.requestMagicLink.mockResolvedValue({ message: 'Sign-in link sent.' });
+
+      const result = await controller.requestMagicLink({ email: 'test@example.com' });
+
+      expect(authService.requestMagicLink).toHaveBeenCalledWith('test@example.com');
+      expect(result).toEqual({ message: 'Sign-in link sent.' });
+    });
+
+    it('POST /auth/magic-link/verify calls authService.verifyMagicLink with the token and req', async () => {
+      authService.verifyMagicLink.mockResolvedValue({ access_token: 'jwt' });
+
+      const req = { headers: { 'user-agent': 'test' } };
+      const result = await controller.verifyMagicLink(req as any, { token: 'abc' });
+
+      expect(authService.verifyMagicLink).toHaveBeenCalledWith('abc', req);
+      expect(result).toEqual({ access_token: 'jwt' });
+    });
+  });
+
+  // ─── WebAuthn biometric / remember-me passthrough ─────────────────────
+
+  describe('WebAuthn authentication', () => {
+    it('passes biometric to the webauthn service', async () => {
+      const user = { id: 'user-1', email: 'test@example.com' };
+      authService.validateUser.mockResolvedValue(user as any);
+      webauthnService.getAuthenticationOptions.mockResolvedValue({ challenge: 'c' } as any);
+
+      await controller.getWebAuthnAuthenticationOptions(
+        { email: 'test@example.com', biometric: true },
+        {} as any,
+      );
+
+      expect(webauthnService.getAuthenticationOptions).toHaveBeenCalledWith(user, { biometric: true });
+    });
+
+    it('passes rememberMe to the login call after a successful verification', async () => {
+      const user = { id: 'user-1' };
+      usersService.findOneById.mockResolvedValue(user as any);
+      webauthnService.verifyAuthentication.mockResolvedValue({
+        verified: true,
+        authenticationInfo: {},
+      } as any);
+      authService.login.mockResolvedValue({ access_token: 'jwt' } as any);
+
+      const result = await controller.verifyWebAuthnAuthentication(
+        { rememberMe: true } as any,
+        { userId: 'user-1', challenge: 'c' } as any,
+      );
+
+      expect(authService.login).toHaveBeenCalledWith(user, undefined, true);
+      expect(result).toEqual({ access_token: 'jwt' });
     });
   });
 });

@@ -17,13 +17,14 @@ import { Article } from '../articles/article.entity';
 import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from '../newsletters/newsletter.entity';
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
+import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Post, User, Tip, Order, OrderItem, Product, Subscription, PageView, Follow,
       Article, Newsletter, NewsletterSubscriber, NewsletterSubscription,
-      Podcast, Course, CourseEnrollment, CourseLesson,
+      Podcast, Course, CourseEnrollment, CourseLesson, LedgerEntry,
     ])
   ],
   controllers: [AnalyticsController, CreatorAnalyticsController],

@@ -44,6 +44,11 @@ export function SessionsPage() {
               <p className="font-semibold">
                 {session.userAgent}
                 {session.isCurrent && <span className="text-green-500 ml-2">(This device)</span>}
+                {session.isTrusted && (
+                  <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    Trusted
+                  </span>
+                )}
               </p>
               <p className="text-sm text-gray-500">
                 Last used: {new Date(session.lastSeenAt).toLocaleString()} &bull; IP: {session.ipAddress}

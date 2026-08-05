@@ -254,6 +254,12 @@ export class User {
   @Column({ nullable: true })
   trustedRecoveryCodeExpiresAt: Date | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  magicLinkTokenHash: string | null;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  magicLinkTokenExpiresAt: Date | null;
+
   @Column({ nullable: true })
   provider: string;
 
@@ -466,6 +472,17 @@ export class User {
 
   @ManyToMany(() => User, (user) => user.blockedUsers)
   blockedBy: User[];
+
+  @ManyToMany(() => User, (user) => user.mutedBy)
+  @JoinTable({
+    name: 'user_mutes',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'mutedUserId', referencedColumnName: 'id' },
+  })
+  mutedUsers: User[];
+
+  @ManyToMany(() => User, (user) => user.mutedUsers)
+  mutedBy: User[];
 
   @Column({ type: 'jsonb', nullable: true, default: () => "'[]'" })
   followedHashtags: { id: string; name: string }[];

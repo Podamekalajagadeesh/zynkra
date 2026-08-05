@@ -1,17 +1,20 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Repository } from 'typeorm';
 import { PaymentTransaction } from './entities/payment-transaction.entity';
 import { Payout } from './entities/payout.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Stripe = require('stripe');
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
   private readonly stripe: any;
   private readonly paymentsEnabled: boolean;
   /** Stripe Connect payouts require both payments and a usable Stripe client. */
@@ -28,6 +31,8 @@ export class PaymentsService {
     private readonly usersRepository: Repository<User>,
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => WebhooksService))
+    private readonly webhooksService: WebhooksService,
   ) {
     const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     this.paymentsEnabled =
@@ -312,6 +317,69 @@ export class PaymentsService {
     });
   }
 
+  /**
+   * Schedules a payout to be released automatically at `dueAt`. The wallet is
+   * debited immediately; the payout stays pending until the cron releases it.
+   */
+  async schedulePayout(
+    creatorId: string,
+    amount: number,
+    purpose: string,
+    dueAt: Date,
+  ) {
+    const payoutAmount = Number(amount);
+    if (!Number.isFinite(payoutAmount) || payoutAmount <= 0) {
+      throw new BadRequestException('Payout amount must be greater than zero');
+    }
+    if (!(dueAt instanceof Date) || Number.isNaN(dueAt.getTime())) {
+      throw new BadRequestException('Invalid dueAt date');
+    }
+
+    const creator = await this.usersRepository.findOne({ where: { id: creatorId } });
+    if (!creator) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    const payoutRef = `payout_${creatorId}_${await this.nextPayoutSuffix()}`;
+    await this.walletService.debit(creatorId, payoutAmount, {
+      purpose,
+      type: 'payout',
+      reference: payoutRef,
+    });
+
+    const payout = this.payoutRepository.create({
+      creator: { id: creatorId } as any,
+      amount: payoutAmount,
+      currency: 'usd',
+      status: 'pending',
+      purpose,
+      payoutId: payoutRef,
+      dueAt,
+    });
+    const saved = await this.payoutRepository.save(payout);
+    return this.serializePayout(saved, { mode: 'manual' });
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async autoProcessDuePayouts(): Promise<void> {
+    const due = await this.payoutRepository.find({
+      where: { status: 'pending', dueAt: LessThanOrEqual(new Date()) },
+      relations: ['creator'],
+    });
+    for (const payout of due) {
+      try {
+        await this.approvePayout(payout.id);
+        this.logger.log(
+          `Auto-released scheduled payout ${payout.id} (${payout.amount} ${payout.currency})`,
+        );
+      } catch (err) {
+        this.logger.warn(
+          `Failed to auto-release payout ${payout.id}: ${(err as Error).message}`,
+        );
+      }
+    }
+  }
+
   async approvePayout(payoutId: string) {
     const payout = await this.getPayoutOrThrow(payoutId);
     if (payout.status !== 'pending') {
@@ -320,6 +388,15 @@ export class PaymentsService {
     payout.status = 'paid';
     payout.processedAt = new Date();
     await this.payoutRepository.save(payout);
+
+    void this.webhooksService.dispatchEvent('payment.payout_completed', {
+      payoutId: payout.id,
+      payoutReference: payout.payoutId,
+      creatorId: payout.creator?.id,
+      amount: payout.amount,
+      currency: payout.currency,
+    });
+
     return this.serializePayout(payout, { mode: 'manual' });
   }
 

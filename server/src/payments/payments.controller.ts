@@ -57,6 +57,21 @@ export class PaymentsController {
     return this.paymentsService.requestPayout(userId, body.amount, body.purpose || 'creator-payout');
   }
 
+  @Post('payouts/schedule')
+  @UseGuards(JwtAuthGuard)
+  async schedulePayout(
+    @Req() req,
+    @Body() body: { amount: number; dueAt: string; purpose?: string },
+  ) {
+    const userId = req.user?.userId || req.user?.id;
+    return this.paymentsService.schedulePayout(
+      userId,
+      body.amount,
+      body.purpose || 'creator-payout',
+      new Date(body.dueAt),
+    );
+  }
+
   @Post('process')
   @UseGuards(JwtAuthGuard)
   async processPayment(@Req() req, @Body() body: { amount: number; currency: string; paymentMethod: string; paymentDetails: any }) {

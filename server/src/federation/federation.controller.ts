@@ -75,6 +75,47 @@ export class FederationController {
     return this.federationService.sendFollow(followDto, user.id);
   }
 
+  @Post('users/:remoteUserId/block')
+  @UseGuards(JwtAuthGuard)
+  async blockRemoteUser(@Param('remoteUserId') remoteUserId: string, @CurrentUser() user: any) {
+    await this.federationService.blockRemoteUser(user.userId || user.id, remoteUserId);
+    return { success: true, message: 'Remote user blocked' };
+  }
+
+  @Post('users/:remoteUserId/unblock')
+  @UseGuards(JwtAuthGuard)
+  async unblockRemoteUser(@Param('remoteUserId') remoteUserId: string, @CurrentUser() user: any) {
+    await this.federationService.unblockRemoteUser(user.userId || user.id, remoteUserId);
+    return { success: true, message: 'Remote user unblocked' };
+  }
+
+  @Post('users/:remoteUserId/mute')
+  @UseGuards(JwtAuthGuard)
+  async muteRemoteUser(@Param('remoteUserId') remoteUserId: string, @CurrentUser() user: any) {
+    await this.federationService.muteRemoteUser(user.userId || user.id, remoteUserId);
+    return { success: true, message: 'Remote user muted' };
+  }
+
+  @Post('users/:remoteUserId/unmute')
+  @UseGuards(JwtAuthGuard)
+  async unmuteRemoteUser(@Param('remoteUserId') remoteUserId: string, @CurrentUser() user: any) {
+    await this.federationService.unmuteRemoteUser(user.userId || user.id, remoteUserId);
+    return { success: true, message: 'Remote user unmuted' };
+  }
+
+  @Get('moderations')
+  @UseGuards(JwtAuthGuard)
+  async getRemoteModerations(@CurrentUser() user: any) {
+    return this.federationService.getRemoteModerations(user.userId || user.id);
+  }
+
+  @Get('posts/:activityId/replies')
+  @UseGuards(JwtAuthGuard)
+  async getRemoteReplies(@Param('activityId') activityId: string) {
+    const decodedActivityId = decodeURIComponent(activityId);
+    return this.federationService.getRemoteReplies(decodedActivityId);
+  }
+
   @Get('stats')
   async getStats() {
     return this.federationService.getInstanceFederationStats();

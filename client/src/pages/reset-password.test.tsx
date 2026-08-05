@@ -113,7 +113,7 @@ describe('ResetPasswordPage', () => {
     fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {
-      expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument();
+      expect(screen.getByText(/network error/i)).toBeInTheDocument();
     });
   });
 

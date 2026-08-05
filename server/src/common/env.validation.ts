@@ -10,6 +10,10 @@ export const envValidationSchema = Joi.object({
     'any.required': 'JWT_SECRET is not set — see server/.env.example',
     'string.min': 'JWT_SECRET must be at least 32 characters',
   }),
+  // Access-token lifetime. JWT_EXPIRES_IN applies to normal logins; the
+  // "remember me" flow uses a longer lifetime via JWT_REMEMBER_ME_EXPIRES.
+  JWT_EXPIRES_IN: Joi.string().default('60m').optional(),
+  JWT_REMEMBER_ME_EXPIRES: Joi.string().default('30d').optional(),
   SESSION_SECRET: Joi.string().min(32).required().messages({
     'any.required': 'SESSION_SECRET is not set — see server/.env.example',
     'string.min': 'SESSION_SECRET must be at least 32 characters',
@@ -50,6 +54,13 @@ export const envValidationSchema = Joi.object({
   CRYPTO_PAYOUTS_ENABLED: Joi.string().valid('true', 'false').optional().default('false'),
   CRYPTO_PAYOUT_PRIVATE_KEY: Joi.string().allow('').optional(),
   CRYPTO_PAYOUT_CHAINS: Joi.string().optional().default('8453'),
+
+  // Email / SMTP (optional — console-logged when unset)
+  SMTP_HOST: Joi.string().optional(),
+  SMTP_PORT: Joi.number().port().optional(),
+  SMTP_USER: Joi.string().optional(),
+  SMTP_PASS: Joi.string().optional(),
+  FROM_EMAIL: Joi.string().email().optional(),
 
   // AI / OpenRouter (optional — features fall back to templates when unset)
   OPENROUTER_API_KEY: Joi.string().optional(),

@@ -7,6 +7,7 @@ import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from '../new
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
 import { User } from '../users/entities/user.entity';
+import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
 
 @Injectable()
 export class CreatorAnalyticsService {
@@ -22,6 +23,7 @@ export class CreatorAnalyticsService {
     @InjectRepository(CourseEnrollment) private readonly enrollmentsRepo: Repository<CourseEnrollment>,
     @InjectRepository(CourseLesson) private readonly lessonsRepo: Repository<CourseLesson>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
+    @InjectRepository(LedgerEntry) private readonly ledgerRepo: Repository<LedgerEntry>,
   ) {}
 
   /**
@@ -155,6 +157,86 @@ export class CreatorAnalyticsService {
       totalPlays,
       avgPlaysPerEpisode: published.length > 0 ? Math.round(totalPlays / published.length) : 0,
       recentEpisodes: podcasts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10),
+    };
+  }
+
+  /**
+   * Projects the creator's revenue over the next 30 days by fitting a linear
+   * trend to their per-day ledger credits from the last 30 days.
+   */
+  async forecastRevenue(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) return null;
+
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const entries = await this.ledgerRepo.find({
+      where: {
+        user: { id: userId } as any,
+        createdAt: MoreThan(since),
+        amount: MoreThan(0),
+      },
+    });
+
+    // Aggregate credits into a per-day revenue series.
+    const dayTotals: Record<string, number> = {};
+    for (const entry of entries) {
+      const day = entry.createdAt.toISOString().slice(0, 10);
+      dayTotals[day] = (dayTotals[day] ?? 0) + Number(entry.amount);
+    }
+    const sortedDays = Object.keys(dayTotals).sort();
+    const n = sortedDays.length;
+    const points = sortedDays.map((day) => ({
+      x: sortedDays.indexOf(day),
+      y: dayTotals[day],
+    }));
+
+    // Least-squares linear fit over the observed series.
+    let meanX = 0;
+    let meanY = 0;
+    for (const p of points) {
+      meanX += p.x;
+      meanY += p.y;
+    }
+    meanX /= n || 1;
+    meanY /= n || 1;
+    let num = 0;
+    let den = 0;
+    for (const p of points) {
+      num += (p.x - meanX) * (p.y - meanY);
+      den += (p.x - meanX) ** 2;
+    }
+    const slope = den > 0 ? num / den : 0;
+    const intercept = meanY - slope * meanX;
+
+    // Project the next 30 days from the fitted trend.
+    let projected30d = 0;
+    for (let k = 0; k < 30; k++) {
+      projected30d += Math.max(0, slope * (n + k) + intercept);
+    }
+
+    // R² — how well the trend explains observed variance.
+    let ssRes = 0;
+    let ssTot = 0;
+    for (const p of points) {
+      const predicted = slope * p.x + intercept;
+      ssRes += (p.y - predicted) ** 2;
+      ssTot += (p.y - meanY) ** 2;
+    }
+    const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+    const confidence = Math.round(
+      Math.max(0, Math.min(100, r2 * 100 * Math.min(1, n / 14))),
+    );
+
+    return {
+      projected30d: Math.round(projected30d * 100) / 100,
+      confidence,
+      breakdown: {
+        observedDays: n,
+        avgDailyRevenue: Math.round(meanY * 100) / 100,
+        trendPerDay: Math.round(slope * 100) / 100,
+        last30dRevenue:
+          Math.round(points.reduce((s, p) => s + p.y, 0) * 100) / 100,
+      },
     };
   }
 }

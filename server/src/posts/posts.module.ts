@@ -29,6 +29,7 @@ import { ProfileReviewModule } from '../tags/profile-review.module';
 import { Media } from '../media/entities/media.entity';
 import { TimelineReview } from '../timeline-review/entities/timeline-review.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { Subscription } from '../subscriptions/entities/subscription.entity';
     TimelineReviewModule,
     MediaModule,
     ProfileReviewModule,
+    WebhooksModule,
   ],
   providers: [PostsService],
   controllers: [PostsController],

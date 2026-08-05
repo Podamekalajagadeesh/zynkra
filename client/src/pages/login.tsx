@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../hooks/useAuth';
 import {
+  api,
   login,
   setAuthToken,
   getProfile,
@@ -16,7 +17,9 @@ import {
   requestTrustedContactRecovery,
   verifyTrustedContactRecovery,
   resendVerification,
+  requestMagicLink,
 } from '../lib/api';
+import { isRemembered, setRememberMe } from '../lib/auth-storage';
 import axios from 'axios';
 
 import { AuthLayout } from '../components/AuthLayout';
@@ -47,8 +50,39 @@ export function LoginPage() {
   const [trustedContactCode, setTrustedContactCode] = useState('');
   const [recoveryOptions, setRecoveryOptions] = useState<{ trustedContacts: string[] } | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [rememberMe, setRememberMeState] = useState<boolean>(() => isRemembered());
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [isSendingMagicLink, setIsSendingMagicLink] = useState(false);
+  const [magicLinkMessage, setMagicLinkMessage] = useState('');
 
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMeState(checked);
+    setRememberMe(checked);
+  };
 
+  const handleSendMagicLink = async () => {
+    setError(null);
+    setMagicLinkMessage('');
+    if (!identifier || !identifier.includes('@')) {
+      setError('Enter your email address above to receive a sign-in link.');
+      return;
+    }
+    setIsSendingMagicLink(true);
+    try {
+      const res = await requestMagicLink({ email: identifier });
+      setMagicLinkMessage(res.message || 'Check your email for your sign-in link.');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Failed to send sign-in link.');
+      } else {
+        setError('Failed to send sign-in link.');
+      }
+    } finally {
+      setIsSendingMagicLink(false);
+    }
+  };
 
   const handleStandardLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +97,7 @@ export function LoginPage() {
       const loginData = {
         [isEmail ? 'email' : 'username']: identifier,
         password,
+        rememberMe,
       };
       const response = await login(loginData);
 
@@ -89,6 +124,38 @@ export function LoginPage() {
       }
     }
   };
+
+    const handleVerifyCode = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      if (!identifier || !identifier.includes('@')) {
+        setError('Enter the email you used to sign up in the field above first.');
+        return;
+      }
+      if (!verifyCode || verifyCode.length !== 6) {
+        setError('Please enter the 6-digit code sent to your email');
+        return;
+      }
+      setIsVerifying(true);
+      try {
+        const response = await api.post('/auth/verify-code', { email: identifier, code: verifyCode });
+        const { access_token } = response.data;
+        setAuthToken(access_token);
+        const user = await getProfile();
+        await addAccount({ user, token: access_token });
+        addToast('Email verified! You are now logged in.', 'success');
+        navigate('/');
+      } catch (err) {
+        setIsVerifying(false);
+        if (axios.isAxiosError(err) && err.response) {
+          setError(err.response.data.message || 'Verification failed');
+          addToast(err.response.data.message || 'Verification failed', 'error');
+        } else {
+          setError('An unexpected error occurred');
+          addToast('An unexpected error occurred', 'error');
+        }
+      }
+    };
 
     const handleResendVerification = async () => {
       setError(null);
@@ -125,6 +192,7 @@ export function LoginPage() {
       const loginData = {
         tempToken,
         token,
+        rememberMe,
       };
       const { access_token } = await verify2FA(loginData);
       setAuthToken(access_token);
@@ -291,11 +359,28 @@ export function LoginPage() {
         <div className="mb-5 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
           <div>{error}</div>
           {typeof error === 'string' && error.toLowerCase().includes('verify') ? (
-            <div className="mt-3 flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={handleResendVerification} disabled={isResending}>
-                {isResending ? 'Resending...' : 'Resend verification email'}
-              </Button>
-              <div className="text-xs text-dark-500 dark:text-dark-300">Make sure your email is entered above.</div>
+            <div className="mt-3 space-y-3">
+              <form onSubmit={handleVerifyCode} className="flex items-center gap-2">
+                <Input
+                  id="verify-code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={verifyCode}
+                  onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  className="text-center tracking-[4px]"
+                />
+                <Button type="submit" variant="primary" size="sm" disabled={isVerifying}>
+                  {isVerifying ? 'Verifying...' : 'Verify'}
+                </Button>
+              </form>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleResendVerification} disabled={isResending}>
+                  {isResending ? 'Resending...' : 'Resend verification email'}
+                </Button>
+                <div className="text-xs text-dark-500 dark:text-dark-300">Make sure your email is entered above.</div>
+              </div>
             </div>
           ) : null}
         </div>
@@ -365,6 +450,17 @@ export function LoginPage() {
                   placeholder="••••••••"
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <label className="flex cursor-pointer select-none items-center gap-2 text-sm text-dark-600 dark:text-dark-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => handleRememberMeChange(e.target.checked)}
+                    className="h-4 w-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  Remember me
+                </label>
+              </div>
               <Button
                 type="submit"
                 variant="primary"
@@ -374,6 +470,40 @@ export function LoginPage() {
               >
                 {isLoading ? 'Logging in...' : 'Log In'}
               </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowMagicLink((v) => !v)}
+                  className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+                >
+                  {showMagicLink ? 'Hide' : 'Email me a sign-in link instead'}
+                </button>
+              </div>
+              {showMagicLink && (
+                <div className="space-y-2 rounded-xl border border-dark-200 bg-dark-50/50 p-4 dark:border-dark-700 dark:bg-dark-800/40">
+                  <Label htmlFor="magic-link-email">Sign in with email link</Label>
+                  <Input
+                    id="magic-link-email"
+                    type="email"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    className="w-full"
+                    onClick={handleSendMagicLink}
+                    disabled={isSendingMagicLink}
+                  >
+                    {isSendingMagicLink ? 'Sending...' : 'Send sign-in link'}
+                  </Button>
+                  {magicLinkMessage && (
+                    <p className="text-sm text-green-600 dark:text-green-400">{magicLinkMessage}</p>
+                  )}
+                </div>
+              )}
             </form>
           )}
         </TabsContent>
@@ -478,6 +608,7 @@ export function LoginPage() {
               <WebAuthn
                 mode="login"
                 email={identifier}
+                rememberMe={rememberMe}
                 onSuccess={async (data) => {
                   if ('access_token' in data) {
                     setAuthToken(data.access_token);
@@ -495,6 +626,29 @@ export function LoginPage() {
                 variant="outline"
               >
                 Sign in with Passkey
+              </WebAuthn>
+              <WebAuthn
+                mode="login"
+                biometric
+                email={identifier}
+                rememberMe={rememberMe}
+                onSuccess={async (data) => {
+                  if ('access_token' in data) {
+                    setAuthToken(data.access_token);
+                    const user = await getProfile();
+                    addAccount({ user, token: data.access_token });
+                    addToast('Logged in with Face ID / Fingerprint!', 'success');
+                    navigate('/');
+                  }
+                }}
+                onError={(err) => {
+                  setError(err);
+                  addToast(err, 'error');
+                }}
+                className="w-full"
+                variant="outline"
+              >
+                Sign in with Face ID / Fingerprint
               </WebAuthn>
             </Suspense>
           </div>

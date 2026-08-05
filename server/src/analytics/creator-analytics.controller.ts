@@ -29,4 +29,10 @@ export class CreatorAnalyticsController {
   async getPodcastAnalytics(@Req() req) {
     return this.analyticsService.getPodcastAnalytics(req.user.userId || req.user.id);
   }
+
+  @Get('forecast')
+  @UseGuards(JwtAuthGuard)
+  async getRevenueForecast(@Req() req) {
+    return this.analyticsService.forecastRevenue(req.user.userId || req.user.id);
+  }
 }

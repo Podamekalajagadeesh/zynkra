@@ -162,10 +162,15 @@ export class WalletService {
     }
 
     return this.dataSource.transaction(async (manager) => {
-      const user = await manager.findOne(User, {
-        where: { id: userId },
-        lock: { mode: 'pessimistic_write' },
-      });
+      // Query builder (not findOne) so eager relations like `reputation` are
+      // not LEFT JOINed — Postgres rejects FOR UPDATE on the nullable side of
+      // an outer join, which broke every wallet movement.
+      const user = await manager
+        .getRepository(User)
+        .createQueryBuilder('user')
+        .setLock('pessimistic_write')
+        .where('user.id = :id', { id: userId })
+        .getOne();
       if (!user) {
         throw new UnauthorizedException('User not found');
       }

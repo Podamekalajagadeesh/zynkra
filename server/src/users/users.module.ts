@@ -11,6 +11,7 @@ import { UsersController } from './users.controller';
 import { StorageModule } from '../storage/storage.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PagesModule } from '../pages/pages.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PagesModule } from '../pages/pages.module';
     StorageModule,
     forwardRef(() => NotificationsModule),
     PagesModule,
+    WebhooksModule,
   ],
   providers: [UsersService],
   exports: [UsersService, TypeOrmModule],

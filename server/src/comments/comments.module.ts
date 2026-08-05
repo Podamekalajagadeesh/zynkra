@@ -10,6 +10,7 @@ import { MentionsModule } from '../mentions/mentions.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SentimentModule } from '../sentiment/sentiment.module';
 import { UserInterestsModule } from '../user-interests/user-interests.module';
+import { WebhooksModule } from '../webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserInterestsModule } from '../user-interests/user-interests.module';
     NotificationsModule,
     MentionsModule,
     SentimentModule,
+    WebhooksModule,
   ],
   controllers: [CommentsController],
   providers: [CommentsService],
