@@ -29,8 +29,10 @@ describe('PaymentsService demo scenario', () => {
     const service = new PaymentsService(
       paymentRepository as any,
       payoutRepository as any,
+      {} as any,
       walletService as any,
       configService as any,
+      {} as any,
     );
 
     const result = await service.createDemoPaymentScenario(12.5, 'usd', 'creator-1', 'payer-1');

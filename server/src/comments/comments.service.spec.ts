@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { UserInterestsService } from '../user-interests/user-interests.service';
 import { SentimentService } from '../sentiment/sentiment.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const u = new User();

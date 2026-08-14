@@ -10,6 +10,7 @@ import { Post } from '../posts/entities/post.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../storage/storage.service';
 import { LifeEvent } from './entities/life-event.entity';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const user = new User();
@@ -111,6 +112,12 @@ describe('UsersService', () => {
           provide: StorageService,
           useValue: {
             upload: jest.fn().mockResolvedValue('https://storage.example.com/file.jpg'),
+          },
+        },
+        {
+          provide: WebhooksService,
+          useValue: {
+            dispatchEvent: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],

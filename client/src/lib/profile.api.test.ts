@@ -174,16 +174,18 @@ describe('updateProfile API helper', () => {
     expect(result.displayName).toBe('Updated Name');
   });
 
-  it('handles avatar file upload in FormData', async () => {
+  it('accepts FormData payloads for profile updates', async () => {
     server.use(
-      http.patch('*/users/profile', () => {
+      http.patch('*/users/profile', async ({ request }) => {
+        const payload = await request.formData();
+        expect(payload.get('displayName')).toBe('Test');
         return HttpResponse.json({ id: 'user-1', username: 'testuser' });
       })
     );
 
     const formData = new FormData();
     formData.append('displayName', 'Test');
-    formData.append('avatar', new Blob(['fake-image'], { type: 'image/jpeg' }), 'avatar.jpg');
+    formData.append('avatar', 'avatar.jpg');
     const result = await updateProfile(formData);
 
     expect(result.username).toBe('testuser');

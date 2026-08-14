@@ -1499,11 +1499,7 @@ export const getNfts = async (walletAddress: string) => {
 };
 
 export const updateProfile = async (formData: FormData) => {
-  const response = await api.patch('/users/profile', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await api.patch('/users/profile', formData);
   return normalizeUserProfile(response.data);
 };
 
