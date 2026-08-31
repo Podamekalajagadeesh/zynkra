@@ -1,0 +1,24 @@
+{
+  "id": "17.2 Video Calls",
+  "name": "Video Calls",
+  "slug": "video-calls",
+  "featureCount": 16,
+  "features": [
+    "One-to-One Video",
+    "Group Video",
+    "Camera Controls",
+    "Background Blur",
+    "Virtual Background",
+    "Filters",
+    "Reactions",
+    "Chat",
+    "Screen Share",
+    "Recording Controls",
+    "Layouts",
+    "Speaker View",
+    "Gallery View",
+    "Picture-in-Picture",
+    "Low Bandwidth Mode",
+    "Call Security"
+  ]
+}

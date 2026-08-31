@@ -1,0 +1,24 @@
+{
+  "id": "46.3 Personal Shopping",
+  "name": "Personal Shopping",
+  "slug": "personal-shopping",
+  "featureCount": 16,
+  "features": [
+    "Shopping Preferences",
+    "Budget",
+    "Size",
+    "Style",
+    "Brand Preferences",
+    "Product Preferences",
+    "Shopping History",
+    "Wishlists",
+    "Gift Suggestions",
+    "Personalized Recommendations",
+    "Price Alerts",
+    "Stock Alerts",
+    "Deal Alerts",
+    "Shopping Lists",
+    "Purchase Reminders",
+    "Shopping Memory"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "22.4 Community Discovery",
+  "name": "Community Discovery",
+  "slug": "community-discovery",
+  "featureCount": 16,
+  "features": [
+    "Recommended Communities",
+    "Nearby Communities",
+    "Interest Matching",
+    "Friend Communities",
+    "Creator Communities",
+    "Trending Communities",
+    "New Communities",
+    "Popular Communities",
+    "Private Communities",
+    "Verified Communities",
+    "Community Search",
+    "Community Categories",
+    "Community Tags",
+    "Community Recommendations",
+    "Community Alerts",
+    "Community History"
+  ]
+}

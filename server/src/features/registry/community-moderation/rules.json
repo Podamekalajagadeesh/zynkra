@@ -1,0 +1,24 @@
+{
+  "id": "27.3 Rules",
+  "name": "Rules",
+  "slug": "rules",
+  "featureCount": 16,
+  "features": [
+    "Community Rules",
+    "Content Rules",
+    "Member Rules",
+    "Posting Rules",
+    "Comment Rules",
+    "Media Rules",
+    "Link Rules",
+    "Spam Rules",
+    "Promotion Rules",
+    "Enforcement Policies",
+    "Warning Policies",
+    "Ban Policies",
+    "Appeal Policies",
+    "Rule Versioning",
+    "Rule Notifications",
+    "Rule Analytics"
+  ]
+}

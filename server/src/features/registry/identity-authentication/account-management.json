@@ -1,0 +1,24 @@
+{
+  "id": "01.3 Account Management",
+  "name": "Account Management",
+  "slug": "account-management",
+  "featureCount": 16,
+  "features": [
+    "Account Dashboard",
+    "Account Switching",
+    "Multiple Accounts",
+    "Account Linking",
+    "Account Deactivation",
+    "Account Reactivation",
+    "Account Deletion",
+    "Account Recovery",
+    "Account History",
+    "Account Export",
+    "Account Import",
+    "Account Preferences",
+    "Account Notifications",
+    "Account Sessions",
+    "Account Permissions",
+    "Account Controls"
+  ]
+}

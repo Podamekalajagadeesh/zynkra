@@ -2,6 +2,7 @@ import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
 import axios, { AxiosError } from 'axios';
 import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { api } from '../lib/api';
 
 interface WebAuthnProps {
   onSuccess: (data: { message: string } | { access_token: string }) => void;
@@ -23,9 +24,9 @@ const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, clas
     setIsLoading(true);
     setError(null);
     try {
-      const { data: options } = await axios.post('/auth/webauthn/registration');
+      const { data: options } = await api.post('/auth/webauthn/registration');
       const attestation = await startRegistration(options);
-      await axios.post('/auth/webauthn/registration/verify', attestation);
+      await api.post('/auth/webauthn/registration/verify', attestation);
       onSuccess({ message: 'Registration successful!' });
     } catch (err) {
       console.error(err);
@@ -50,13 +51,13 @@ const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, clas
     setIsLoading(true);
     setError(null);
     try {
-      const { data: options } = await axios.post('/auth/webauthn/authentication', {
+      const { data: options } = await api.post('/auth/webauthn/authentication', {
         email,
         biometric: biometric || undefined,
       });
       const assertion = await startAuthentication(options);
       const verifyBody = rememberMe ? { ...assertion, rememberMe: true } : assertion;
-      const { data } = await axios.post('/auth/webauthn/authentication/verify', verifyBody);
+      const { data } = await api.post('/auth/webauthn/authentication/verify', verifyBody);
       onSuccess(data);
     } catch (err) {
       console.error(err);

@@ -1,0 +1,24 @@
+{
+  "id": "40.2 Writing AI",
+  "name": "Writing AI",
+  "slug": "writing-ai",
+  "featureCount": 16,
+  "features": [
+    "Post Writing",
+    "Article Writing",
+    "Thread Writing",
+    "Script Writing",
+    "Comment Replies",
+    "Message Drafts",
+    "Bio Writing",
+    "Profile Writing",
+    "Product Descriptions",
+    "Business Descriptions",
+    "Event Descriptions",
+    "Ad Copy",
+    "Story Writing",
+    "Brainstorming",
+    "Rewriting",
+    "Proofreading"
+  ]
+}

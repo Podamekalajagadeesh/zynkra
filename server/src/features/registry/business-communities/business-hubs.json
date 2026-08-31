@@ -1,0 +1,24 @@
+{
+  "id": "25.1 Business Hubs",
+  "name": "Business Hubs",
+  "slug": "business-hubs",
+  "featureCount": 16,
+  "features": [
+    "Business Groups",
+    "Company Communities",
+    "Industry Hubs",
+    "Professional Forums",
+    "Networking",
+    "Business Events",
+    "Business Discussions",
+    "Business Resources",
+    "Job Discussions",
+    "Business Polls",
+    "Business News",
+    "Industry Trends",
+    "Expert Profiles",
+    "Business Pages",
+    "Business Discovery",
+    "Business Analytics"
+  ]
+}

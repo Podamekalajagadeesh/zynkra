@@ -1,0 +1,24 @@
+{
+  "id": "24.1 Learning Hubs",
+  "name": "Learning Hubs",
+  "slug": "learning-hubs",
+  "featureCount": 16,
+  "features": [
+    "Subject Hubs",
+    "Topic Hubs",
+    "Study Groups",
+    "Teacher Profiles",
+    "Student Profiles",
+    "Learning Feeds",
+    "Learning Discussions",
+    "Resources",
+    "Notes",
+    "Questions",
+    "Answers",
+    "Polls",
+    "Quizzes",
+    "Progress",
+    "Learning Recommendations",
+    "Learning Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "19.1 Notification Core",
+  "name": "Notification Core",
+  "slug": "notification-core",
+  "featureCount": 16,
+  "features": [
+    "Likes",
+    "Comments",
+    "Replies",
+    "Follows",
+    "Friend Requests",
+    "Mentions",
+    "Tags",
+    "Messages",
+    "Group Activity",
+    "Community Activity",
+    "Creator Activity",
+    "Business Activity",
+    "Marketplace Activity",
+    "Booking Activity",
+    "Security Alerts",
+    "System Alerts"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "05. POSTS & PUBLISHING",
+  "name": "POSTS & PUBLISHING",
+  "slug": "posts-publishing",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "05.1 Post Creation",
+      "name": "Post Creation",
+      "slug": "post-creation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/posts-publishing/post-creation.json"
+    },
+    {
+      "id": "05.2 Post Editing",
+      "name": "Post Editing",
+      "slug": "post-editing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/posts-publishing/post-editing.json"
+    },
+    {
+      "id": "05.3 Post Interaction",
+      "name": "Post Interaction",
+      "slug": "post-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/posts-publishing/post-interaction.json"
+    },
+    {
+      "id": "05.4 Publishing Controls",
+      "name": "Publishing Controls",
+      "slug": "publishing-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/posts-publishing/publishing-controls.json"
+    }
+  ]
+}

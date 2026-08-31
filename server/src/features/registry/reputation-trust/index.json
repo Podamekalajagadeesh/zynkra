@@ -1,0 +1,36 @@
+{
+  "id": "28. REPUTATION & TRUST",
+  "name": "REPUTATION & TRUST",
+  "slug": "reputation-trust",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "28.1 Reputation Core",
+      "name": "Reputation Core",
+      "slug": "reputation-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/reputation-trust/reputation-core.json"
+    },
+    {
+      "id": "28.2 Reviews",
+      "name": "Reviews",
+      "slug": "reviews",
+      "featureCount": 16,
+      "file": "server/src/features/registry/reputation-trust/reviews.json"
+    },
+    {
+      "id": "28.3 Trust Signals",
+      "name": "Trust Signals",
+      "slug": "trust-signals",
+      "featureCount": 16,
+      "file": "server/src/features/registry/reputation-trust/trust-signals.json"
+    },
+    {
+      "id": "28.4 Verification",
+      "name": "Verification",
+      "slug": "verification",
+      "featureCount": 16,
+      "file": "server/src/features/registry/reputation-trust/verification.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "18.4 Collaborative Sessions",
+  "name": "Collaborative Sessions",
+  "slug": "collaborative-sessions",
+  "featureCount": 16,
+  "features": [
+    "Shared Workspace",
+    "Shared Notes",
+    "Shared Tasks",
+    "Shared Calendar",
+    "Shared Media",
+    "Shared Documents",
+    "Shared Links",
+    "Shared Polls",
+    "Shared Whiteboards",
+    "Shared Files",
+    "Real-Time Editing",
+    "Participant Roles",
+    "Session History",
+    "Session Recording",
+    "AI Summary",
+    "AI Action Items"
+  ]
+}

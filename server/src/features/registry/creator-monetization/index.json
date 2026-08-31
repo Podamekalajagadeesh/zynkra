@@ -1,0 +1,36 @@
+{
+  "id": "32. CREATOR MONETIZATION",
+  "name": "CREATOR MONETIZATION",
+  "slug": "creator-monetization",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "32.1 Memberships",
+      "name": "Memberships",
+      "slug": "memberships",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-monetization/memberships.json"
+    },
+    {
+      "id": "32.2 Subscriptions",
+      "name": "Subscriptions",
+      "slug": "subscriptions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-monetization/subscriptions.json"
+    },
+    {
+      "id": "32.3 Tips",
+      "name": "Tips",
+      "slug": "tips",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-monetization/tips.json"
+    },
+    {
+      "id": "32.4 Paid Content",
+      "name": "Paid Content",
+      "slug": "paid-content",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-monetization/paid-content.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "54.1 Product Listings",
+  "name": "Product Listings",
+  "slug": "product-listings",
+  "featureCount": 16,
+  "features": [
+    "Product Name",
+    "Description",
+    "Images",
+    "Videos",
+    "Price",
+    "Variants",
+    "Inventory",
+    "Categories",
+    "Tags",
+    "Seller",
+    "Reviews",
+    "Shipping",
+    "Discounts",
+    "Coupons",
+    "Product Search",
+    "Product Analytics"
+  ]
+}

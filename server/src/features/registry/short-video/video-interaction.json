@@ -1,0 +1,24 @@
+{
+  "id": "08.4 Video Interaction",
+  "name": "Video Interaction",
+  "slug": "video-interaction",
+  "featureCount": 16,
+  "features": [
+    "Likes",
+    "Comments",
+    "Replies",
+    "Shares",
+    "Saves",
+    "Reposts",
+    "Remix",
+    "Duet",
+    "Stitch",
+    "Mentions",
+    "Tags",
+    "Captions",
+    "Translation",
+    "Download Controls",
+    "Report",
+    "Hide"
+  ]
+}

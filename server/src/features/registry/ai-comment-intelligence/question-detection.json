@@ -1,0 +1,24 @@
+{
+  "id": "49.3 Question Detection",
+  "name": "Question Detection",
+  "slug": "question-detection",
+  "featureCount": 16,
+  "features": [
+    "Detect Questions",
+    "Group Questions",
+    "Similar Questions",
+    "Answer Suggestions",
+    "Creator Questions",
+    "Community Questions",
+    "FAQ Generation",
+    "Question Prioritization",
+    "Unanswered Questions",
+    "Question Search",
+    "Question Notifications",
+    "Question Analytics",
+    "Question Summaries",
+    "AI Answers",
+    "Human Answer Requests",
+    "Question Moderation"
+  ]
+}

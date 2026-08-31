@@ -1,0 +1,24 @@
+{
+  "id": "44.3 Audience Insights",
+  "name": "Audience Insights",
+  "slug": "audience-insights",
+  "featureCount": 16,
+  "features": [
+    "Audience Interests",
+    "Audience Demographics",
+    "Audience Locations",
+    "Audience Languages",
+    "Audience Activity",
+    "Audience Retention",
+    "Audience Engagement",
+    "Audience Growth",
+    "Audience Segments",
+    "Audience Preferences",
+    "Audience Trends",
+    "Audience Overlap",
+    "Audience Recommendations",
+    "Audience Reports",
+    "Audience Predictions",
+    "Audience Controls"
+  ]
+}

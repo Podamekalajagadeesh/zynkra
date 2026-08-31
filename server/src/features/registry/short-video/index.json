@@ -1,0 +1,36 @@
+{
+  "id": "08. SHORT VIDEO",
+  "name": "SHORT VIDEO",
+  "slug": "short-video",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "08.1 Reels",
+      "name": "Reels",
+      "slug": "reels",
+      "featureCount": 16,
+      "file": "server/src/features/registry/short-video/reels.json"
+    },
+    {
+      "id": "08.2 Shorts",
+      "name": "Shorts",
+      "slug": "shorts",
+      "featureCount": 16,
+      "file": "server/src/features/registry/short-video/shorts.json"
+    },
+    {
+      "id": "08.3 Video Discovery",
+      "name": "Video Discovery",
+      "slug": "video-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/short-video/video-discovery.json"
+    },
+    {
+      "id": "08.4 Video Interaction",
+      "name": "Video Interaction",
+      "slug": "video-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/short-video/video-interaction.json"
+    }
+  ]
+}

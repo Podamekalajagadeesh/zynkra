@@ -1,0 +1,24 @@
+{
+  "id": "21.4 Forum Moderation",
+  "name": "Forum Moderation",
+  "slug": "forum-moderation",
+  "featureCount": 16,
+  "features": [
+    "Moderator Roles",
+    "Content Review",
+    "Reports",
+    "Spam Detection",
+    "Rule Enforcement",
+    "Bans",
+    "Mutes",
+    "Warnings",
+    "Approvals",
+    "Appeals",
+    "Moderator Queue",
+    "Audit Logs",
+    "Automated Moderation",
+    "AI Moderation",
+    "Moderation Analytics",
+    "Policy Management"
+  ]
+}

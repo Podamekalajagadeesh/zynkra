@@ -1,0 +1,24 @@
+{
+  "id": "33.1 Brand Deals",
+  "name": "Brand Deals",
+  "slug": "brand-deals",
+  "featureCount": 16,
+  "features": [
+    "Brand Discovery",
+    "Creator Discovery",
+    "Sponsorship Requests",
+    "Deal Matching",
+    "Campaign Briefs",
+    "Deliverables",
+    "Pricing",
+    "Negotiation",
+    "Contracts",
+    "Payments",
+    "Deadlines",
+    "Approvals",
+    "Content Review",
+    "Performance",
+    "Reporting",
+    "Deal History"
+  ]
+}

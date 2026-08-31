@@ -1,0 +1,24 @@
+{
+  "id": "24.3 Study Groups",
+  "name": "Study Groups",
+  "slug": "study-groups",
+  "featureCount": 16,
+  "features": [
+    "Create Study Group",
+    "Invite Students",
+    "Group Chat",
+    "Study Sessions",
+    "Shared Notes",
+    "Shared Files",
+    "Whiteboard",
+    "Polls",
+    "Quizzes",
+    "Assignments",
+    "Progress",
+    "Reminders",
+    "Study Calendar",
+    "Peer Review",
+    "Group Moderation",
+    "Study Analytics"
+  ]
+}

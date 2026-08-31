@@ -1,0 +1,36 @@
+{
+  "id": "21. FORUMS",
+  "name": "FORUMS",
+  "slug": "forums",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "21.1 Forum Core",
+      "name": "Forum Core",
+      "slug": "forum-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/forums/forum-core.json"
+    },
+    {
+      "id": "21.2 Discussions",
+      "name": "Discussions",
+      "slug": "discussions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/forums/discussions.json"
+    },
+    {
+      "id": "21.3 Threads",
+      "name": "Threads",
+      "slug": "threads",
+      "featureCount": 16,
+      "file": "server/src/features/registry/forums/threads.json"
+    },
+    {
+      "id": "21.4 Forum Moderation",
+      "name": "Forum Moderation",
+      "slug": "forum-moderation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/forums/forum-moderation.json"
+    }
+  ]
+}

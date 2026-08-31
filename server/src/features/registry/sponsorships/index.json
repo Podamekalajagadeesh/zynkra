@@ -1,0 +1,36 @@
+{
+  "id": "33. SPONSORSHIPS",
+  "name": "SPONSORSHIPS",
+  "slug": "sponsorships",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "33.1 Brand Deals",
+      "name": "Brand Deals",
+      "slug": "brand-deals",
+      "featureCount": 16,
+      "file": "server/src/features/registry/sponsorships/brand-deals.json"
+    },
+    {
+      "id": "33.2 Campaigns",
+      "name": "Campaigns",
+      "slug": "campaigns",
+      "featureCount": 16,
+      "file": "server/src/features/registry/sponsorships/campaigns.json"
+    },
+    {
+      "id": "33.3 Contracts",
+      "name": "Contracts",
+      "slug": "contracts",
+      "featureCount": 16,
+      "file": "server/src/features/registry/sponsorships/contracts.json"
+    },
+    {
+      "id": "33.4 Campaign Analytics",
+      "name": "Campaign Analytics",
+      "slug": "campaign-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/sponsorships/campaign-analytics.json"
+    }
+  ]
+}

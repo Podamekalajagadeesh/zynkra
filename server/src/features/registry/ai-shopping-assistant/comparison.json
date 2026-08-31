@@ -1,0 +1,24 @@
+{
+  "id": "46.2 Comparison",
+  "name": "Comparison",
+  "slug": "comparison",
+  "featureCount": 16,
+  "features": [
+    "Price Comparison",
+    "Specification Comparison",
+    "Review Comparison",
+    "Seller Comparison",
+    "Shipping Comparison",
+    "Warranty Comparison",
+    "Feature Comparison",
+    "Value Comparison",
+    "Rating Comparison",
+    "Availability Comparison",
+    "Local Comparison",
+    "AI Summary",
+    "Pros & Cons",
+    "Best Choice",
+    "Budget Choice",
+    "Premium Choice"
+  ]
+}

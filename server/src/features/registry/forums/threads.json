@@ -1,0 +1,24 @@
+{
+  "id": "21.3 Threads",
+  "name": "Threads",
+  "slug": "threads",
+  "featureCount": 16,
+  "features": [
+    "Thread Creation",
+    "Replies",
+    "Nested Replies",
+    "Thread Editing",
+    "Thread Deletion",
+    "Thread Pinning",
+    "Thread Locking",
+    "Thread Following",
+    "Thread Search",
+    "Thread Tags",
+    "Thread Voting",
+    "Thread Sharing",
+    "Thread Saving",
+    "Thread Notifications",
+    "Thread Moderation",
+    "Thread Analytics"
+  ]
+}

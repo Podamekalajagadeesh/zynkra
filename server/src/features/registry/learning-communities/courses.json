@@ -1,0 +1,24 @@
+{
+  "id": "24.2 Courses",
+  "name": "Courses",
+  "slug": "courses",
+  "featureCount": 16,
+  "features": [
+    "Course Creation",
+    "Lessons",
+    "Videos",
+    "Articles",
+    "Audio",
+    "Assignments",
+    "Quizzes",
+    "Certificates",
+    "Progress Tracking",
+    "Course Discussions",
+    "Course Chat",
+    "Course Reviews",
+    "Course Search",
+    "Course Recommendations",
+    "Course Pricing",
+    "Course Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "52.3 Sales Pipeline",
+  "name": "Sales Pipeline",
+  "slug": "sales-pipeline",
+  "featureCount": 16,
+  "features": [
+    "Pipeline",
+    "Stages",
+    "Deals",
+    "Opportunities",
+    "Deal Value",
+    "Deal Probability",
+    "Deal Owners",
+    "Deal Notes",
+    "Deal Tasks",
+    "Follow-Ups",
+    "Proposals",
+    "Contracts",
+    "Closing",
+    "Lost Deals",
+    "Pipeline Analytics",
+    "Sales Forecast"
+  ]
+}

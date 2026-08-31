@@ -11,6 +11,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
+import { BiometricAuthService } from './biometric-auth.service';
 import { UsersService } from '../users/users.service';
 
 describe('AuthController', () => {
@@ -18,6 +19,7 @@ describe('AuthController', () => {
   let authService: jest.Mocked<AuthService>;
   let usersService: jest.Mocked<UsersService>;
   let webauthnService: jest.Mocked<WebauthnService>;
+  let biometricAuthService: jest.Mocked<BiometricAuthService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -70,6 +72,20 @@ describe('AuthController', () => {
           },
         },
         {
+          provide: BiometricAuthService,
+          useValue: {
+            registerBiometricDevice: jest.fn(),
+            verifyBiometricAuthentication: jest.fn(),
+            generateBiometricChallenge: jest.fn(),
+            verifyBiometricChallenge: jest.fn(),
+            listBiometricDevices: jest.fn(),
+            disableBiometricDevice: jest.fn(),
+            enableBiometricDevice: jest.fn(),
+            deleteBiometricDevice: jest.fn(),
+            getBiometricDeviceStatus: jest.fn(),
+          },
+        },
+        {
           provide: UsersService,
           useValue: {
             findOneById: jest.fn(),
@@ -89,6 +105,7 @@ describe('AuthController', () => {
     authService = module.get(AuthService) as jest.Mocked<AuthService>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     webauthnService = module.get(WebauthnService) as jest.Mocked<WebauthnService>;
+    biometricAuthService = module.get(BiometricAuthService) as jest.Mocked<BiometricAuthService>;
   });
 
   // ─── POST /auth/signup ────────────────────────────────────────────────
@@ -233,6 +250,32 @@ describe('AuthController', () => {
 
       expect(authService.generateRecoveryCodes).toHaveBeenCalledWith('user-1');
       expect(result.codes).toHaveLength(1);
+    });
+  });
+
+  // ─── Biometric auth endpoints ───────────────────────────────────────────
+
+  describe('Biometric auth endpoints', () => {
+    it('POST /auth/biometric/challenge delegates to the biometric service', async () => {
+      biometricAuthService.generateBiometricChallenge.mockResolvedValue({ challengeId: 'challenge-1', challenge: 'abc', expiresIn: 300 });
+
+      const result = await controller.generateBiometricChallenge({ user: { userId: 'user-1' } } as any);
+
+      expect(biometricAuthService.generateBiometricChallenge).toHaveBeenCalledWith('user-1');
+      expect(result.challengeId).toBe('challenge-1');
+    });
+
+    it('POST /auth/biometric/verify delegates to the biometric service', async () => {
+      biometricAuthService.verifyBiometricChallenge.mockResolvedValue({ success: true, message: 'Biometric authentication successful' });
+
+      const result = await controller.verifyBiometricChallenge({ user: { userId: 'user-1' } } as any, {
+        challengeId: 'challenge-1',
+        deviceId: 'device-1',
+        biometricData: Buffer.from('sample'),
+      });
+
+      expect(biometricAuthService.verifyBiometricChallenge).toHaveBeenCalledWith('challenge-1', 'user-1', 'device-1', Buffer.from('sample'));
+      expect(result.success).toBe(true);
     });
   });
 

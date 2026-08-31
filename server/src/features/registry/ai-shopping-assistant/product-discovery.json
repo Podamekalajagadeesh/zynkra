@@ -1,0 +1,24 @@
+{
+  "id": "46.1 Product Discovery",
+  "name": "Product Discovery",
+  "slug": "product-discovery",
+  "featureCount": 16,
+  "features": [
+    "Natural Language Shopping",
+    "Product Search",
+    "Visual Search",
+    "Voice Shopping",
+    "Category Discovery",
+    "Brand Discovery",
+    "Local Products",
+    "Trending Products",
+    "New Products",
+    "Personalized Products",
+    "Similar Products",
+    "Alternative Products",
+    "Deal Discovery",
+    "Stock Discovery",
+    "Seller Discovery",
+    "Product Recommendations"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "60. COMMERCE, PAYMENTS & TRUST",
+  "name": "COMMERCE, PAYMENTS & TRUST",
+  "slug": "commerce-payments-trust",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "60.1 Cart & Checkout",
+      "name": "Cart & Checkout",
+      "slug": "cart-checkout",
+      "featureCount": 16,
+      "file": "server/src/features/registry/commerce-payments-trust/cart-checkout.json"
+    },
+    {
+      "id": "60.2 Payments",
+      "name": "Payments",
+      "slug": "payments",
+      "featureCount": 16,
+      "file": "server/src/features/registry/commerce-payments-trust/payments.json"
+    },
+    {
+      "id": "60.3 Escrow & Disputes",
+      "name": "Escrow & Disputes",
+      "slug": "escrow-disputes",
+      "featureCount": 16,
+      "file": "server/src/features/registry/commerce-payments-trust/escrow-disputes.json"
+    },
+    {
+      "id": "60.4 Shipping & Inventory",
+      "name": "Shipping & Inventory",
+      "slug": "shipping-inventory",
+      "featureCount": 16,
+      "file": "server/src/features/registry/commerce-payments-trust/shipping-inventory.json"
+    }
+  ]
+}

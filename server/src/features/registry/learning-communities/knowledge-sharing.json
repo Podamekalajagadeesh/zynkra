@@ -1,0 +1,24 @@
+{
+  "id": "24.4 Knowledge Sharing",
+  "name": "Knowledge Sharing",
+  "slug": "knowledge-sharing",
+  "featureCount": 16,
+  "features": [
+    "Questions",
+    "Answers",
+    "Tutorials",
+    "Guides",
+    "Resources",
+    "Bookmarks",
+    "Citations",
+    "Expert Profiles",
+    "Knowledge Tags",
+    "Topic Pages",
+    "Discussions",
+    "Reviews",
+    "Community Voting",
+    "Best Answers",
+    "AI Summaries",
+    "AI Explanations"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "35.3 Pricing",
+  "name": "Pricing",
+  "slug": "pricing",
+  "featureCount": 16,
+  "features": [
+    "Product Pricing",
+    "Service Pricing",
+    "Subscription Pricing",
+    "Membership Pricing",
+    "Event Pricing",
+    "Dynamic Pricing",
+    "Discount Pricing",
+    "Coupon Pricing",
+    "Regional Pricing",
+    "Currency Pricing",
+    "Tier Pricing",
+    "Bundle Pricing",
+    "Promotional Pricing",
+    "Price History",
+    "Price Analytics",
+    "Pricing Recommendations"
+  ]
+}

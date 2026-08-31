@@ -1,0 +1,24 @@
+{
+  "id": "29.2 Creator Pages",
+  "name": "Creator Pages",
+  "slug": "creator-pages",
+  "featureCount": 16,
+  "features": [
+    "Creator Feed",
+    "Creator Videos",
+    "Creator Stories",
+    "Creator Articles",
+    "Creator Audio",
+    "Creator Live",
+    "Creator Communities",
+    "Creator Products",
+    "Creator Services",
+    "Creator Events",
+    "Creator Memberships",
+    "Creator Store",
+    "Creator Reviews",
+    "Creator Analytics",
+    "Creator Recommendations",
+    "Creator Sharing"
+  ]
+}

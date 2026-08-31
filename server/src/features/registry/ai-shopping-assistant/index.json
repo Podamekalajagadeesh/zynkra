@@ -1,0 +1,36 @@
+{
+  "id": "46. AI SHOPPING ASSISTANT",
+  "name": "AI SHOPPING ASSISTANT",
+  "slug": "ai-shopping-assistant",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "46.1 Product Discovery",
+      "name": "Product Discovery",
+      "slug": "product-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-shopping-assistant/product-discovery.json"
+    },
+    {
+      "id": "46.2 Comparison",
+      "name": "Comparison",
+      "slug": "comparison",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-shopping-assistant/comparison.json"
+    },
+    {
+      "id": "46.3 Personal Shopping",
+      "name": "Personal Shopping",
+      "slug": "personal-shopping",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-shopping-assistant/personal-shopping.json"
+    },
+    {
+      "id": "46.4 Purchase Assistance",
+      "name": "Purchase Assistance",
+      "slug": "purchase-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-shopping-assistant/purchase-assistance.json"
+    }
+  ]
+}

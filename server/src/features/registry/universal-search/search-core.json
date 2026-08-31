@@ -1,0 +1,24 @@
+{
+  "id": "13.1 Search Core",
+  "name": "Search Core",
+  "slug": "search-core",
+  "featureCount": 16,
+  "features": [
+    "Global Search",
+    "Search Suggestions",
+    "Recent Searches",
+    "Saved Searches",
+    "Search History",
+    "Search Filters",
+    "Search Sorting",
+    "Search Categories",
+    "Search Autocomplete",
+    "Search Corrections",
+    "Trending Searches",
+    "Search Personalization",
+    "Search Privacy",
+    "Search Alerts",
+    "Search Analytics",
+    "Search Preferences"
+  ]
+}

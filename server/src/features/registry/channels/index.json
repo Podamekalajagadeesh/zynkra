@@ -1,0 +1,36 @@
+{
+  "id": "16. CHANNELS",
+  "name": "CHANNELS",
+  "slug": "channels",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "16.1 Channel Core",
+      "name": "Channel Core",
+      "slug": "channel-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/channels/channel-core.json"
+    },
+    {
+      "id": "16.2 Channel Publishing",
+      "name": "Channel Publishing",
+      "slug": "channel-publishing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/channels/channel-publishing.json"
+    },
+    {
+      "id": "16.3 Channel Interaction",
+      "name": "Channel Interaction",
+      "slug": "channel-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/channels/channel-interaction.json"
+    },
+    {
+      "id": "16.4 Channel Management",
+      "name": "Channel Management",
+      "slug": "channel-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/channels/channel-management.json"
+    }
+  ]
+}

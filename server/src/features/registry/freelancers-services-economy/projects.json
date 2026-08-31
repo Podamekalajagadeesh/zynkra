@@ -1,0 +1,24 @@
+{
+  "id": "58.2 Projects",
+  "name": "Projects",
+  "slug": "projects",
+  "featureCount": 16,
+  "features": [
+    "Project Creation",
+    "Project Description",
+    "Budget",
+    "Deadline",
+    "Skills",
+    "Requirements",
+    "Attachments",
+    "Milestones",
+    "Project Search",
+    "Project Filters",
+    "Project Recommendations",
+    "Project Invitations",
+    "Project Applications",
+    "Project Status",
+    "Project History",
+    "Project Analytics"
+  ]
+}

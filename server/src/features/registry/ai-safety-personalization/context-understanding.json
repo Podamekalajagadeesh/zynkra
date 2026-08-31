@@ -1,0 +1,24 @@
+{
+  "id": "50.2 Context Understanding",
+  "name": "Context Understanding",
+  "slug": "context-understanding",
+  "featureCount": 16,
+  "features": [
+    "User Context",
+    "Conversation Context",
+    "Content Context",
+    "Community Context",
+    "Location Context",
+    "Time Context",
+    "Relationship Context",
+    "Creator Context",
+    "Business Context",
+    "Shopping Context",
+    "Event Context",
+    "Intent Context",
+    "Language Context",
+    "Device Context",
+    "Session Context",
+    "Context Controls"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "07.2 Story Interaction",
+  "name": "Story Interaction",
+  "slug": "story-interaction",
+  "featureCount": 16,
+  "features": [
+    "Story Views",
+    "Story Likes",
+    "Story Replies",
+    "Story Reactions",
+    "Story Shares",
+    "Story Mentions",
+    "Story Polls",
+    "Story Questions",
+    "Story Quizzes",
+    "Story Links",
+    "Story Stickers",
+    "Story Music",
+    "Story Captions",
+    "Story Translation",
+    "Story Reporting",
+    "Story Hiding"
+  ]
+}

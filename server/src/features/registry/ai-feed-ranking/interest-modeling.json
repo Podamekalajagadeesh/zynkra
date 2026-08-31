@@ -1,0 +1,24 @@
+{
+  "id": "37.2 Interest Modeling",
+  "name": "Interest Modeling",
+  "slug": "interest-modeling",
+  "featureCount": 16,
+  "features": [
+    "Topic Interests",
+    "Creator Interests",
+    "Community Interests",
+    "Format Interests",
+    "Location Interests",
+    "Language Interests",
+    "Time Preferences",
+    "Engagement Preferences",
+    "Negative Interests",
+    "Temporary Interests",
+    "Long-Term Interests",
+    "Emerging Interests",
+    "Interest Confidence",
+    "Interest History",
+    "Interest Controls",
+    "Interest Reset"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "34. BRAND MARKETPLACE",
+  "name": "BRAND MARKETPLACE",
+  "slug": "brand-marketplace",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "34.1 Brand Discovery",
+      "name": "Brand Discovery",
+      "slug": "brand-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/brand-marketplace/brand-discovery.json"
+    },
+    {
+      "id": "34.2 Creator Discovery",
+      "name": "Creator Discovery",
+      "slug": "creator-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/brand-marketplace/creator-discovery.json"
+    },
+    {
+      "id": "34.3 Campaign Matching",
+      "name": "Campaign Matching",
+      "slug": "campaign-matching",
+      "featureCount": 16,
+      "file": "server/src/features/registry/brand-marketplace/campaign-matching.json"
+    },
+    {
+      "id": "34.4 Marketplace Management",
+      "name": "Marketplace Management",
+      "slug": "marketplace-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/brand-marketplace/marketplace-management.json"
+    }
+  ]
+}

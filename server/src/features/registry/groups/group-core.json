@@ -1,0 +1,24 @@
+{
+  "id": "20.1 Group Core",
+  "name": "Group Core",
+  "slug": "group-core",
+  "featureCount": 16,
+  "features": [
+    "Create Group",
+    "Public Groups",
+    "Private Groups",
+    "Hidden Groups",
+    "Group Profiles",
+    "Group Description",
+    "Group Rules",
+    "Group Categories",
+    "Group Search",
+    "Group Discovery",
+    "Group Invitations",
+    "Join Requests",
+    "Membership",
+    "Group Verification",
+    "Group Privacy",
+    "Group Settings"
+  ]
+}

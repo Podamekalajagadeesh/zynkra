@@ -1,0 +1,36 @@
+{
+  "id": "17. VOICE & VIDEO CALLS",
+  "name": "VOICE & VIDEO CALLS",
+  "slug": "voice-video-calls",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "17.1 Voice Calls",
+      "name": "Voice Calls",
+      "slug": "voice-calls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/voice-video-calls/voice-calls.json"
+    },
+    {
+      "id": "17.2 Video Calls",
+      "name": "Video Calls",
+      "slug": "video-calls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/voice-video-calls/video-calls.json"
+    },
+    {
+      "id": "17.3 Group Calls",
+      "name": "Group Calls",
+      "slug": "group-calls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/voice-video-calls/group-calls.json"
+    },
+    {
+      "id": "17.4 Call Tools",
+      "name": "Call Tools",
+      "slug": "call-tools",
+      "featureCount": 16,
+      "file": "server/src/features/registry/voice-video-calls/call-tools.json"
+    }
+  ]
+}

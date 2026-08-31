@@ -1,0 +1,24 @@
+{
+  "id": "09.2 Live Streaming",
+  "name": "Live Streaming",
+  "slug": "live-streaming",
+  "featureCount": 16,
+  "features": [
+    "Go Live",
+    "Scheduled Live",
+    "Public Live",
+    "Private Live",
+    "Subscriber Live",
+    "Guest Live",
+    "Co-hosts",
+    "Screen Sharing",
+    "Live Chat",
+    "Live Polls",
+    "Live Q&A",
+    "Live Reactions",
+    "Live Moderation",
+    "Live Gifts",
+    "Live Analytics",
+    "Live Replay"
+  ]
+}

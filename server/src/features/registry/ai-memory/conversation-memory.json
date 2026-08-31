@@ -1,0 +1,24 @@
+{
+  "id": "42.3 Conversation Memory",
+  "name": "Conversation Memory",
+  "slug": "conversation-memory",
+  "featureCount": 16,
+  "features": [
+    "Chat History",
+    "Important Conversations",
+    "Saved Conversations",
+    "Conversation Summaries",
+    "User Decisions",
+    "User Goals",
+    "User Projects",
+    "Important People",
+    "Important Topics",
+    "Follow-Up Memory",
+    "Conversation Search",
+    "Memory Tags",
+    "Memory Editing",
+    "Memory Deletion",
+    "Memory Export",
+    "Memory Permissions"
+  ]
+}

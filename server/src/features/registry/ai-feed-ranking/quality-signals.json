@@ -1,0 +1,24 @@
+{
+  "id": "37.3 Quality Signals",
+  "name": "Quality Signals",
+  "slug": "quality-signals",
+  "featureCount": 16,
+  "features": [
+    "Content Quality",
+    "Originality",
+    "Engagement Quality",
+    "Watch Completion",
+    "Comment Quality",
+    "Share Quality",
+    "Save Quality",
+    "Report Signals",
+    "Spam Signals",
+    "Trust Signals",
+    "Creator Quality",
+    "Community Quality",
+    "Freshness",
+    "Relevance",
+    "Diversity",
+    "Safety"
+  ]
+}

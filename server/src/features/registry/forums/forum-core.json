@@ -1,0 +1,24 @@
+{
+  "id": "21.1 Forum Core",
+  "name": "Forum Core",
+  "slug": "forum-core",
+  "featureCount": 16,
+  "features": [
+    "Forum Creation",
+    "Categories",
+    "Subforums",
+    "Forum Profiles",
+    "Rules",
+    "Search",
+    "Discovery",
+    "Membership",
+    "Roles",
+    "Permissions",
+    "Verification",
+    "Privacy",
+    "Notifications",
+    "Analytics",
+    "Settings",
+    "Forum Branding"
+  ]
+}

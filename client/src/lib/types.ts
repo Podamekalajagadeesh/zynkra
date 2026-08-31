@@ -158,6 +158,7 @@ export interface UserProfile {
     likes?: boolean;
     comments?: boolean;
     newFollowers?: boolean;
+    messages?: boolean;
   };
   followedHashtags?: { id: string; name: string }[];
   blockedKeywords?: string[];

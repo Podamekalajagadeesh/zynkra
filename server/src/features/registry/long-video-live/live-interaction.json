@@ -1,0 +1,24 @@
+{
+  "id": "09.3 Live Interaction",
+  "name": "Live Interaction",
+  "slug": "live-interaction",
+  "featureCount": 16,
+  "features": [
+    "Live Comments",
+    "Live Reactions",
+    "Live Questions",
+    "Live Polls",
+    "Live Guests",
+    "Live Invites",
+    "Live Sharing",
+    "Live Clips",
+    "Live Gifts",
+    "Live Subscriptions",
+    "Live Moderation",
+    "Slow Mode",
+    "Comment Filters",
+    "Viewer Management",
+    "Block Viewer",
+    "Report Viewer"
+  ]
+}

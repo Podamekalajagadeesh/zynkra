@@ -1,0 +1,36 @@
+{
+  "id": "19. NOTIFICATIONS",
+  "name": "NOTIFICATIONS",
+  "slug": "notifications",
+  "featureCount": 63,
+  "modules": [
+    {
+      "id": "19.1 Notification Core",
+      "name": "Notification Core",
+      "slug": "notification-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/notifications/notification-core.json"
+    },
+    {
+      "id": "19.2 Smart Notifications",
+      "name": "Smart Notifications",
+      "slug": "smart-notifications",
+      "featureCount": 16,
+      "file": "server/src/features/registry/notifications/smart-notifications.json"
+    },
+    {
+      "id": "19.3 Notification Preferences",
+      "name": "Notification Preferences",
+      "slug": "notification-preferences",
+      "featureCount": 15,
+      "file": "server/src/features/registry/notifications/notification-preferences.json"
+    },
+    {
+      "id": "19.4 Notification History",
+      "name": "Notification History",
+      "slug": "notification-history",
+      "featureCount": 16,
+      "file": "server/src/features/registry/notifications/notification-history.json"
+    }
+  ]
+}

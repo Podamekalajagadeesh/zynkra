@@ -1,0 +1,24 @@
+{
+  "id": "39.1 Natural Language Search",
+  "name": "Natural Language Search",
+  "slug": "natural-language-search",
+  "featureCount": 16,
+  "features": [
+    "Conversational Search",
+    "Question Search",
+    "Intent Detection",
+    "Context Search",
+    "Follow-Up Search",
+    "Query Refinement",
+    "Search Summaries",
+    "Search Answers",
+    "Search Recommendations",
+    "Search Comparisons",
+    "Search Explanations",
+    "Search Sources",
+    "Search Filters",
+    "Search History",
+    "Search Personalization",
+    "Search Preferences"
+  ]
+}

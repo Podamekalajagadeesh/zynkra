@@ -1,0 +1,24 @@
+{
+  "id": "35.2 Revenue Tracking",
+  "name": "Revenue Tracking",
+  "slug": "revenue-tracking",
+  "featureCount": 16,
+  "features": [
+    "Revenue Dashboard",
+    "Daily Revenue",
+    "Monthly Revenue",
+    "Annual Revenue",
+    "Revenue by Product",
+    "Revenue by Content",
+    "Revenue by Customer",
+    "Revenue by Campaign",
+    "Revenue by Service",
+    "Revenue by Subscription",
+    "Revenue Trends",
+    "Revenue Forecasting",
+    "Revenue Goals",
+    "Revenue Reports",
+    "Revenue Export",
+    "Revenue History"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "18.2 Whiteboards",
+  "name": "Whiteboards",
+  "slug": "whiteboards",
+  "featureCount": 16,
+  "features": [
+    "Collaborative Whiteboard",
+    "Drawing",
+    "Shapes",
+    "Text",
+    "Sticky Notes",
+    "Images",
+    "Connectors",
+    "Templates",
+    "Real-Time Editing",
+    "Cursors",
+    "Comments",
+    "Version History",
+    "Export",
+    "Sharing",
+    "Permissions",
+    "Whiteboard Search"
+  ]
+}

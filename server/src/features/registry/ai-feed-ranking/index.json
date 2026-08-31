@@ -1,0 +1,36 @@
+{
+  "id": "37. AI FEED RANKING",
+  "name": "AI FEED RANKING",
+  "slug": "ai-feed-ranking",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "37.1 Ranking",
+      "name": "Ranking",
+      "slug": "ranking",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-feed-ranking/ranking.json"
+    },
+    {
+      "id": "37.2 Interest Modeling",
+      "name": "Interest Modeling",
+      "slug": "interest-modeling",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-feed-ranking/interest-modeling.json"
+    },
+    {
+      "id": "37.3 Quality Signals",
+      "name": "Quality Signals",
+      "slug": "quality-signals",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-feed-ranking/quality-signals.json"
+    },
+    {
+      "id": "37.4 Feed Controls",
+      "name": "Feed Controls",
+      "slug": "feed-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-feed-ranking/feed-controls.json"
+    }
+  ]
+}

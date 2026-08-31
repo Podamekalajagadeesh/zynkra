@@ -1,0 +1,24 @@
+{
+  "id": "15.4 Message Discovery",
+  "name": "Message Discovery",
+  "slug": "message-discovery",
+  "featureCount": 16,
+  "features": [
+    "Chat Search",
+    "Media Search",
+    "File Search",
+    "Link Search",
+    "Voice Search",
+    "Message Filters",
+    "Recent Chats",
+    "Suggested Chats",
+    "Contact Discovery",
+    "Message Requests",
+    "Archived Chats",
+    "Group Discovery",
+    "Channel Discovery",
+    "Chat Recommendations",
+    "AI Search",
+    "AI Summaries"
+  ]
+}

@@ -5,6 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
+import { BiometricAuthService } from './biometric-auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -25,6 +26,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly captchaService: CaptchaService,
     private readonly webauthnService: WebauthnService,
+    private readonly biometricAuthService: BiometricAuthService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -38,7 +40,55 @@ export class AuthController {
     return this.authService.socialLogin(req, res);
   }
 
+  @Get('facebook')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookAuth() {}
 
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  facebookAuthRedirect(@Req() req, @Res() res) {
+    return this.authService.socialLogin(req, res);
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubAuth() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  githubAuthRedirect(@Req() req, @Res() res) {
+    return this.authService.socialLogin(req, res);
+  }
+
+  @Get('discord')
+  @UseGuards(AuthGuard('discord'))
+  async discordAuth() {}
+
+  @Get('discord/callback')
+  @UseGuards(AuthGuard('discord'))
+  discordAuthRedirect(@Req() req, @Res() res) {
+    return this.authService.socialLogin(req, res);
+  }
+
+  @Get('twitter')
+  @UseGuards(AuthGuard('twitter'))
+  async twitterAuth() {}
+
+  @Get('twitter/callback')
+  @UseGuards(AuthGuard('twitter'))
+  twitterAuthRedirect(@Req() req, @Res() res) {
+    return this.authService.socialLogin(req, res);
+  }
+
+  @Get('apple')
+  @UseGuards(AuthGuard('apple'))
+  async appleAuth() {}
+
+  @Get('apple/callback')
+  @UseGuards(AuthGuard('apple'))
+  appleAuthRedirect(@Req() req, @Res() res) {
+    return this.authService.socialLogin(req, res);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup')
@@ -68,6 +118,79 @@ export class AuthController {
   @Post('2fa/disable')
   async disableTwoFactor(@Req() req, @Body() body: { token: string }) {
     return this.authService.disable2FA(req.user.userId, body.token);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('biometric/devices')
+  async getBiometricDevices(@Request() req) {
+    return this.biometricAuthService.listBiometricDevices(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('biometric/register')
+  async registerBiometricDevice(
+    @Request() req,
+    @Body() body: { deviceId: string; deviceName?: string; biometricType?: 'fingerprint' | 'face' | 'iris'; biometricData: string },
+  ) {
+    const binary = typeof body.biometricData === 'string'
+      ? Buffer.from(body.biometricData, 'base64')
+      : Buffer.from(body.biometricData ?? []);
+
+    return this.biometricAuthService.registerBiometricDevice(
+      req.user.userId,
+      body.deviceId,
+      body.deviceName || 'Biometric Device',
+      body.biometricType || 'face',
+      binary,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('biometric/challenge')
+  async generateBiometricChallenge(@Request() req) {
+    return this.biometricAuthService.generateBiometricChallenge(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('biometric/verify')
+  async verifyBiometricChallenge(
+    @Request() req,
+    @Body() body: { challengeId: string; deviceId: string; biometricData: string | Buffer },
+  ) {
+    const binary = typeof body.biometricData === 'string'
+      ? Buffer.from(body.biometricData, 'base64')
+      : Buffer.from(body.biometricData ?? []);
+
+    return this.biometricAuthService.verifyBiometricChallenge(
+      body.challengeId,
+      req.user.userId,
+      body.deviceId,
+      binary,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('biometric/devices/:id')
+  async deleteBiometricDevice(@Request() req, @Param('id') id: string) {
+    return this.biometricAuthService.deleteBiometricDevice(req.user.userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('brainwave/devices')
+  async getBrainwaveDevices(@Request() req) {
+    return this.authService.getBrainwaveDevices(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('brainwave/devices/register')
+  async registerBrainwaveDevice(@Request() req, @Body() body: { deviceModel?: string }) {
+    return this.authService.registerBrainwaveDevice(req.user.userId, body?.deviceModel);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('brainwave/devices/:id')
+  async removeBrainwaveDevice(@Request() req, @Param('id') id: string) {
+    return this.authService.removeBrainwaveDevice(req.user.userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -129,6 +252,20 @@ export class AuthController {
     return this.authService.signUp(signUpDto);
   }
 
+  @Throttle(STRICT)
+  @Get('check-email')
+  async checkEmailAvailability(@Query('email') email: string) {
+    const user = await this.usersService.findByEmail(email);
+    return { available: !user };
+  }
+
+  @Throttle(STRICT)
+  @Get('check-username')
+  async checkUsernameAvailability(@Query('username') username: string) {
+    const user = await this.usersService.findByUsername(username);
+    return { available: !user };
+  }
+
   @Throttle(EMAIL_SENDING)
   @Post('resend-verification')
   async resendVerification(@Body() body: { email: string }) {
@@ -172,10 +309,22 @@ export class AuthController {
   }
 
   @Throttle(EMAIL_SENDING)
-  @Post('magic-link/request')
-  async requestMagicLink(@Body() magicLinkRequestDto: MagicLinkRequestDto) {
-    return this.authService.requestMagicLink(magicLinkRequestDto.email);
-  }
+    @Post('magic-link/request')
+    async requestMagicLink(@Body() magicLinkRequestDto: MagicLinkRequestDto) {
+        return this.authService.requestMagicLink(magicLinkRequestDto.email);
+    }
+
+    @Post('guest')
+    @HttpCode(HttpStatus.CREATED)
+    async createGuestUser(@Req() req: any) {
+        return this.authService.guestSignIn(req);
+    }
+
+    @Post('anonymous')
+    @HttpCode(HttpStatus.CREATED)
+    async createAnonymousUser(@Req() req: any) {
+        return this.authService.anonymousSignIn(req);
+    }
 
   @Throttle(STRICT)
   @Post('magic-link/verify')

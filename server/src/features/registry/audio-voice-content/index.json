@@ -1,0 +1,36 @@
+{
+  "id": "11. AUDIO & VOICE CONTENT",
+  "name": "AUDIO & VOICE CONTENT",
+  "slug": "audio-voice-content",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "11.1 Audio Posts",
+      "name": "Audio Posts",
+      "slug": "audio-posts",
+      "featureCount": 16,
+      "file": "server/src/features/registry/audio-voice-content/audio-posts.json"
+    },
+    {
+      "id": "11.2 Voice Notes",
+      "name": "Voice Notes",
+      "slug": "voice-notes",
+      "featureCount": 16,
+      "file": "server/src/features/registry/audio-voice-content/voice-notes.json"
+    },
+    {
+      "id": "11.3 Audio Discovery",
+      "name": "Audio Discovery",
+      "slug": "audio-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/audio-voice-content/audio-discovery.json"
+    },
+    {
+      "id": "11.4 Audio Interaction",
+      "name": "Audio Interaction",
+      "slug": "audio-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/audio-voice-content/audio-interaction.json"
+    }
+  ]
+}

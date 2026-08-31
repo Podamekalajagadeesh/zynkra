@@ -11,6 +11,11 @@ export const updatePrivacy = async (privacy: {
   tagPrivacy?: TagPrivacy;
   messagePrivacy?: MessagePrivacy;
   profilePrivacy?: 'public' | 'private';
+  showOnlineStatus?: boolean;
+  readReceipts?: boolean;
+  mentions?: 'everyone' | 'friends' | 'no-one';
+  activityVisibility?: 'public' | 'friends' | 'private';
+  adPersonalization?: boolean;
   screenshotProtection?: {
     enabled?: boolean;
     level?: string;
@@ -325,6 +330,26 @@ export const signUp = async (data: AuthData) => {
   return response.data;
 };
 
+export const checkEmailAvailability = async (email: string): Promise<{ available: boolean }> => {
+  const response = await api.get('/auth/check-email', { params: { email } });
+  return response.data as { available: boolean };
+};
+
+export const checkUsernameAvailability = async (username: string): Promise<{ available: boolean }> => {
+  const response = await api.get('/auth/check-username', { params: { username } });
+  return response.data as { available: boolean };
+};
+
+export const createGuestUser = async (): Promise<{ access_token: string }> => {
+  const response = await api.post('/auth/guest');
+  return response.data as { access_token: string };
+};
+
+export const createAnonymousUser = async (): Promise<{ access_token: string }> => {
+  const response = await api.post('/auth/anonymous');
+  return response.data as { access_token: string };
+};
+
 export const getCaptcha = async () => {
   const response = await api.get('/auth/captcha');
   return response.data as { id: string; expression: string };
@@ -499,6 +524,56 @@ export const recoverAccount = async (data: { identifier: string; recoveryCode: s
   return response.data;
 };
 
+export const getAccountDashboard = async () => {
+  const response = await api.get('/users/me/account-dashboard');
+  return response.data as {
+    account: { accountId: string; deactivated: boolean; switchingEnabled: boolean };
+    preferences: { theme?: string; language?: string; timezone?: string };
+    notifications: { emailDigest?: boolean; pushAlerts?: boolean; securityAlerts?: boolean };
+    linkedAccounts: Array<{ provider: string; displayName?: string; email?: string; isPrimary?: boolean }>;
+    history: Array<{ summary: string; occurredAt: string; type: string }>;
+    privacy: { showOnlineStatus?: boolean; readReceipts?: boolean; mentions?: string; activityVisibility?: string };
+    recoveryStatus: { status?: string; method?: string } | null;
+    appeals: Array<{ status?: string; reason?: string }>;
+    securityCenter: {
+      exportUrl?: string;
+      logs?: Array<{ message: string; timestamp: string; type: string }>;
+      connectedAccounts?: Array<{ provider: string }>;
+      trustedDevices?: Array<{ deviceName: string }>;
+      securityAlerts?: Array<{ message: string; severity?: string }>;
+      pendingApprovals?: Array<{ deviceName: string }>;
+    };
+  };
+};
+
+export const getSecurityCenter = async () => {
+  const response = await api.get('/users/me/security-center');
+  return response.data as {
+    accountId: string;
+    exportUrl: string;
+    logs: Array<{ id: string; message: string; timestamp: string; type: string }>;
+    connectedAccounts: Array<{ provider: string }>;
+    trustedDevices: Array<{ deviceName: string }>;
+    recoveryStatus: { status?: string; method?: string } | null;
+    pendingAppeals: Array<{ id: string; status?: string; reason?: string }>;
+    securityAlerts: Array<{ id: string; message: string; severity?: string }>;
+    pendingApprovals: Array<{ id: string; deviceName: string }>;
+  };
+};
+
+export const getVerificationStatus = async () => {
+  const response = await api.get('/users/me/verification-status');
+  return response.data as {
+    accountId: string;
+    verified: boolean;
+    status: 'not_started' | 'pending' | 'approved' | 'rejected';
+    type: 'identity' | 'creator' | 'business' | 'organization' | 'other';
+    appealId?: string;
+    reviewedAt?: string;
+    appeals: Array<{ id: string; status?: string; reason?: string }>;
+  };
+};
+
 export const getLoginSessions = async () => {
   const response = await api.get('/auth/sessions');
   return response.data as LoginSession[];
@@ -545,6 +620,50 @@ export const registerBrainwaveDevice = async () => {
 export const removeBrainwaveDevice = async (deviceId: string) => {
   const response = await api.delete(`/auth/brainwave/devices/${deviceId}`);
   return response.data as { message: string };
+};
+
+export const getBiometricDevices = async () => {
+  const response = await api.get('/auth/biometric/devices');
+  return response.data as Array<{
+    id: string;
+    userId: string;
+    deviceId: string;
+    deviceName: string;
+    biometricType: 'fingerprint' | 'face' | 'iris';
+    enabled: boolean;
+    lastUsedAt: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+};
+
+export const registerBiometricDevice = async (payload: {
+  deviceId: string;
+  deviceName?: string;
+  biometricType?: 'fingerprint' | 'face' | 'iris';
+  biometricData: string;
+}) => {
+  const response = await api.post('/auth/biometric/register', payload);
+  return response.data as { id: string; deviceName: string; deviceId: string; biometricType: string };
+};
+
+export const generateBiometricChallenge = async () => {
+  const response = await api.post('/auth/biometric/challenge');
+  return response.data as { challengeId: string; challenge: string; expiresIn: number };
+};
+
+export const verifyBiometricChallenge = async (payload: {
+  challengeId: string;
+  deviceId: string;
+  biometricData: string;
+}) => {
+  const response = await api.post('/auth/biometric/verify', payload);
+  return response.data as { success: boolean; message: string };
+};
+
+export const removeBiometricDevice = async (deviceId: string) => {
+  const response = await api.delete(`/auth/biometric/devices/${deviceId}`);
+  return response.data as { success: boolean; message: string };
 };
 
 export const getRecoveryOptions = async (identifier: string) => {
@@ -914,6 +1033,29 @@ export const getTrendingFeed = async (limit = 20) => {
   return response.data;
 };
 
+export const getTrendingTopics = async (days = 7, limit = 10) => {
+  const response = await api.get('/trends', { params: { days, limit } });
+  return response.data as {
+    globalTrends: { tag: string; occurrenceCount: number; score: number }[];
+    days: number;
+  };
+};
+
+export const searchByImageAndText = async (file: File, query: string) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  const response = await api.post(buildImageTextSearchPath(query), formData);
+  return response.data;
+};
+
+export const buildImageTextSearchPath = (query: string) =>
+  `/search/image-text?q=${encodeURIComponent(query.trim())}`;
+
+export const webSearch = async (query: string) => {
+  const response = await api.get('/search/web', { params: { q: query } });
+  return response.data as { query: string; results: { title: string; snippet?: string; url: string }[] };
+};
+
 export const getExploreFeed = async (category?: string) => {
   const queryString = category ? `?category=${encodeURIComponent(category)}` : '';
   const response = await api.get(`/feed/explore${queryString}`);
@@ -1068,6 +1210,11 @@ export const sendMessage = async (
 export const getConversations = async () => {
   const response = await api.get('/dms/conversations');
   return response.data;
+};
+
+export const markConversationAsRead = async (conversationId: string) => {
+  const response = await api.post(`/dms/conversations/${conversationId}/read`);
+  return response.data as { conversationId: string; markedCount: number };
 };
 
 export const getMessages = async (
@@ -2082,6 +2229,36 @@ export const oauthExchangeToken = async (data: {
 
 export const search = async (query: string) => {
   const response = await api.get('/search', { params: { q: query } });
+  return response.data;
+};
+
+export const deactivateAccount = async (reason?: string) => {
+  const response = await api.post('/users/deactivate', { reason });
+  return response.data as { message?: string; status: 'deactivated' };
+};
+
+export const reactivateAccount = async () => {
+  const response = await api.post('/users/reactivate');
+  return response.data as { id: string; status: 'active'; message?: string };
+};
+
+export const switchAccount = async (accountId: string) => {
+  const response = await api.post('/users/me/account-switch', { accountId });
+  return response.data as { accountId: string; switched: boolean; message: string };
+};
+
+export const deleteAccountPermanently = async () => {
+  const response = await api.delete('/users/me');
+  return response.data as { message: string };
+};
+
+export const getPrivacySettings = async () => {
+  const response = await api.get('/users/me/privacy');
+  return response.data;
+};
+
+export const followUpSearch = async (previousQuery: string, followUpQuery: string) => {
+  const response = await api.post('/search/follow-up', { previousQuery, followUpQuery });
   return response.data;
 };
 

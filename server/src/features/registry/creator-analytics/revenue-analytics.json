@@ -1,0 +1,24 @@
+{
+  "id": "31.4 Revenue Analytics",
+  "name": "Revenue Analytics",
+  "slug": "revenue-analytics",
+  "featureCount": 16,
+  "features": [
+    "Total Revenue",
+    "Creator Revenue",
+    "Membership Revenue",
+    "Subscription Revenue",
+    "Tips",
+    "Gifts",
+    "Sponsorship Revenue",
+    "Product Revenue",
+    "Service Revenue",
+    "Affiliate Revenue",
+    "Revenue by Content",
+    "Revenue by Audience",
+    "Revenue Trends",
+    "Payout History",
+    "Revenue Forecast",
+    "Financial Reports"
+  ]
+}

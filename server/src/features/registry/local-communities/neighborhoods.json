@@ -1,0 +1,24 @@
+{
+  "id": "23.2 Neighborhoods",
+  "name": "Neighborhoods",
+  "slug": "neighborhoods",
+  "featureCount": 16,
+  "features": [
+    "Neighborhood Pages",
+    "Neighborhood Groups",
+    "Neighborhood Posts",
+    "Neighborhood Events",
+    "Local Announcements",
+    "Local Polls",
+    "Local Discussions",
+    "Local Alerts",
+    "Local Marketplace",
+    "Local Services",
+    "Local Recommendations",
+    "Local Reviews",
+    "Local Businesses",
+    "Local Creators",
+    "Local Moderation",
+    "Neighborhood Analytics"
+  ]
+}

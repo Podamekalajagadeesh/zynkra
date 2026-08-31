@@ -1,0 +1,24 @@
+{
+  "id": "53.1 Unified Inbox",
+  "name": "Unified Inbox",
+  "slug": "unified-inbox",
+  "featureCount": 16,
+  "features": [
+    "DMs",
+    "Comments",
+    "Reviews",
+    "Support",
+    "Orders",
+    "Bookings",
+    "Questions",
+    "Leads",
+    "Mentions",
+    "Social Messages",
+    "Business Messages",
+    "Community Messages",
+    "Email Integration",
+    "Message Search",
+    "Filters",
+    "Priority"
+  ]
+}

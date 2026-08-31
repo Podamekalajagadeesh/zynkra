@@ -1,0 +1,24 @@
+{
+  "id": "52.4 Customer Intelligence",
+  "name": "Customer Intelligence",
+  "slug": "customer-intelligence",
+  "featureCount": 16,
+  "features": [
+    "Customer Segmentation",
+    "Churn Prediction",
+    "Customer Value",
+    "Purchase Patterns",
+    "Engagement Patterns",
+    "Communication Preferences",
+    "Product Preferences",
+    "Service Preferences",
+    "Customer Sentiment",
+    "Customer Health",
+    "Customer Recommendations",
+    "Next Best Action",
+    "Retention Recommendations",
+    "Customer Reports",
+    "Customer Analytics",
+    "Customer Insights"
+  ]
+}

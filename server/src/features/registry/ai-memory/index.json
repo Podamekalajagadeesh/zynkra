@@ -1,0 +1,36 @@
+{
+  "id": "42. AI MEMORY",
+  "name": "AI MEMORY",
+  "slug": "ai-memory",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "42.1 Memory Core",
+      "name": "Memory Core",
+      "slug": "memory-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-memory/memory-core.json"
+    },
+    {
+      "id": "42.2 Preference Memory",
+      "name": "Preference Memory",
+      "slug": "preference-memory",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-memory/preference-memory.json"
+    },
+    {
+      "id": "42.3 Conversation Memory",
+      "name": "Conversation Memory",
+      "slug": "conversation-memory",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-memory/conversation-memory.json"
+    },
+    {
+      "id": "42.4 User Controls",
+      "name": "User Controls",
+      "slug": "user-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-memory/user-controls.json"
+    }
+  ]
+}

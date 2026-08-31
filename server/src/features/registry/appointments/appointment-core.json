@@ -1,0 +1,24 @@
+{
+  "id": "56.1 Appointment Core",
+  "name": "Appointment Core",
+  "slug": "appointment-core",
+  "featureCount": 16,
+  "features": [
+    "Create Appointment",
+    "Book Appointment",
+    "Edit Appointment",
+    "Cancel Appointment",
+    "Reschedule Appointment",
+    "Appointment ID",
+    "Appointment Status",
+    "Appointment Type",
+    "Duration",
+    "Date",
+    "Time",
+    "Time Zone",
+    "Location",
+    "Online Meeting",
+    "Appointment Notes",
+    "Appointment History"
+  ]
+}

@@ -12,4 +12,7 @@ export class NotificationSettings {
 
   @Column({ default: true })
   newFollowers: boolean;
+
+  @Column({ default: true })
+  messages: boolean;
 }

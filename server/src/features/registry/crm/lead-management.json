@@ -1,0 +1,24 @@
+{
+  "id": "52.2 Lead Management",
+  "name": "Lead Management",
+  "slug": "lead-management",
+  "featureCount": 16,
+  "features": [
+    "Leads",
+    "Lead Capture",
+    "Lead Sources",
+    "Lead Scoring",
+    "Lead Status",
+    "Lead Assignment",
+    "Lead Notes",
+    "Lead Tags",
+    "Lead Search",
+    "Lead Filters",
+    "Lead Follow-Up",
+    "Lead Reminders",
+    "Lead Conversion",
+    "Lead History",
+    "Lead Analytics",
+    "Lead Automation"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "30.3 Asset Management",
+  "name": "Asset Management",
+  "slug": "asset-management",
+  "featureCount": 16,
+  "features": [
+    "Media Library",
+    "Folders",
+    "Tags",
+    "Search",
+    "Filters",
+    "Sorting",
+    "Favorites",
+    "Shared Assets",
+    "Brand Assets",
+    "Templates",
+    "File Versions",
+    "File Permissions",
+    "Downloads",
+    "Uploads",
+    "Archive",
+    "Recovery"
+  ]
+}

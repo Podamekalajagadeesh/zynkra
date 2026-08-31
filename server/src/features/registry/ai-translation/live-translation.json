@@ -1,0 +1,24 @@
+{
+  "id": "41.2 Live Translation",
+  "name": "Live Translation",
+  "slug": "live-translation",
+  "featureCount": 16,
+  "features": [
+    "Live Chat Translation",
+    "Live Comment Translation",
+    "Live Voice Translation",
+    "Live Call Translation",
+    "Live Meeting Translation",
+    "Live Event Translation",
+    "Real-Time Captions",
+    "Language Detection",
+    "Speaker Detection",
+    "Translation Controls",
+    "Translation Delay Controls",
+    "Language Switching",
+    "Translation History",
+    "Translation Quality",
+    "Translation Settings",
+    "Translation Privacy"
+  ]
+}

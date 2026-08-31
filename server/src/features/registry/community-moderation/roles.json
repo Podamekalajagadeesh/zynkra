@@ -1,0 +1,24 @@
+{
+  "id": "27.2 Roles",
+  "name": "Roles",
+  "slug": "roles",
+  "featureCount": 16,
+  "features": [
+    "Owner",
+    "Admin",
+    "Moderator",
+    "Editor",
+    "Contributor",
+    "Verified Member",
+    "Member",
+    "Guest",
+    "Custom Roles",
+    "Role Permissions",
+    "Role Assignment",
+    "Role Removal",
+    "Role History",
+    "Permission Templates",
+    "Role Analytics",
+    "Role Settings"
+  ]
+}

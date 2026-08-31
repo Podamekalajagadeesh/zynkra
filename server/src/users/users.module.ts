@@ -12,6 +12,7 @@ import { StorageModule } from '../storage/storage.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PagesModule } from '../pages/pages.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
+import { AccountManagementService } from '../features/account-management/account-management.service';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { WebhooksModule } from '../webhooks/webhooks.module';
     PagesModule,
     WebhooksModule,
   ],
-  providers: [UsersService],
+  providers: [UsersService, AccountManagementService],
   exports: [UsersService, TypeOrmModule],
   controllers: [UsersController],
 })

@@ -1,0 +1,24 @@
+{
+  "id": "51.1 Business Profiles",
+  "name": "Business Profiles",
+  "slug": "business-profiles",
+  "featureCount": 16,
+  "features": [
+    "Business Name",
+    "Logo",
+    "Cover",
+    "Description",
+    "Category",
+    "Location",
+    "Hours",
+    "Website",
+    "Contact",
+    "Products",
+    "Services",
+    "Reviews",
+    "Team",
+    "Verification",
+    "Business Badge",
+    "Business Analytics"
+  ]
+}

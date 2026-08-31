@@ -4,38 +4,99 @@ import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api } from '../lib/api';
+import { api, getAgeVerificationStatus, setBirthDate, updatePrivacy } from '../lib/api';
 
 export default function DataPrivacyPage() {
-  const [exportStatus, setExportStatus] = useState(null);
+  const [exportStatus, setExportStatus] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState(true);
+  const [readReceipts, setReadReceipts] = useState(true);
+  const [mentions, setMentions] = useState<'everyone' | 'friends' | 'no-one'>('everyone');
+  const [activityVisibility, setActivityVisibility] = useState<'public' | 'friends' | 'private'>('friends');
+  const [adPersonalization, setAdPersonalization] = useState(true);
+  const [birthDate, setBirthDateValue] = useState('');
+  const [ageStatus, setAgeStatus] = useState<any>(null);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const { addToast } = useToast();
 
   useEffect(() => {
-    const fetchExportStatus = async () => {
+    const fetchData = async () => {
       try {
         const response = await api.get('/data-export');
         setExportStatus(response.data);
-      } catch (error) {
-        // Ignore errors, as it's expected that there may not be an export yet
+      } catch {
+        // ignore
+      }
+
+      try {
+        const profileResponse = await api.get('/users/me');
+        const profile = profileResponse.data ?? {};
+        setOnlineStatus(profile.showOnlineStatus !== false);
+        setReadReceipts(profile.readReceipts !== false);
+        setMentions((profile.mentions as any) ?? 'everyone');
+        setActivityVisibility((profile.activityVisibility as any) ?? 'friends');
+        setAdPersonalization(profile.adPersonalization !== false);
+        if (profile.birthDate) {
+          setBirthDateValue(new Date(profile.birthDate).toISOString().slice(0, 10));
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        const status = await getAgeVerificationStatus();
+        setAgeStatus(status);
+      } catch {
+        // ignore
       }
     };
 
-    fetchExportStatus();
-
-    const interval = setInterval(fetchExportStatus, 5000);
-
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handlePrivacySave = async () => {
+    setSavingPrivacy(true);
+    try {
+      await updatePrivacy({
+        showOnlineStatus: onlineStatus,
+        readReceipts: readReceipts,
+        mentions,
+        activityVisibility,
+        adPersonalization,
+      } as any);
+      addToast('Privacy settings saved', 'success');
+    } catch {
+      addToast('Failed to save privacy settings', 'error');
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
+
+  const handleSetBirthDate = async () => {
+    if (!birthDate) {
+      addToast('Choose a birth date to continue', 'error');
+      return;
+    }
+    try {
+      await setBirthDate(birthDate);
+      const status = await getAgeVerificationStatus();
+      setAgeStatus(status);
+      addToast('Age verification updated', 'success');
+    } catch {
+      addToast('Failed to update age verification', 'error');
+    }
+  };
 
   const handleExport = async () => {
     setExporting(true);
     try {
       await api.post('/data-export');
       addToast('Data export started', 'success');
-    } catch (error) {
+    } catch {
       addToast('Failed to start data export', 'error');
     } finally {
       setExporting(false);
@@ -48,9 +109,8 @@ export default function DataPrivacyPage() {
       await api.delete('/data-deletion');
       addToast('Account deletion requested', 'success');
       setDeleteDialogOpen(false);
-      // Redirect to home page after successful deletion request
       window.location.href = '/';
-    } catch (error) {
+    } catch {
       addToast('Failed to request account deletion', 'error');
     } finally {
       setDeleting(false);
@@ -63,7 +123,86 @@ export default function DataPrivacyPage() {
       description="Manage your data and privacy settings in compliance with GDPR/CCPA."
     >
       <div className="space-y-8">
-        {/* Data Export Section */}
+        <div className="space-y-4 rounded-2xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900/70">
+          <div>
+            <h2 className="text-lg font-bold">Privacy controls</h2>
+            <p className="text-sm text-gray-500">
+              Manage the visibility of your profile activity and communication preferences.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+              <span className="text-sm font-medium">Online status</span>
+              <input type="checkbox" checked={onlineStatus} onChange={(e) => setOnlineStatus(e.target.checked)} className="h-4 w-4" />
+            </label>
+
+            <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+              <span className="text-sm font-medium">Read receipts</span>
+              <input type="checkbox" checked={readReceipts} onChange={(e) => setReadReceipts(e.target.checked)} className="h-4 w-4" />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Mentions</span>
+              <select value={mentions} onChange={(e) => setMentions(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="everyone">Everyone</option>
+                <option value="friends">Friends</option>
+                <option value="no-one">No one</option>
+              </select>
+            </label>
+
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Activity visibility</span>
+              <select value={activityVisibility} onChange={(e) => setActivityVisibility(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="public">Public</option>
+                <option value="friends">Friends</option>
+                <option value="private">Private</option>
+              </select>
+            </label>
+          </div>
+
+          <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+            <span className="text-sm font-medium">Personalized ads</span>
+            <input type="checkbox" checked={adPersonalization} onChange={(e) => setAdPersonalization(e.target.checked)} className="h-4 w-4" />
+          </label>
+
+          <div className="flex justify-end">
+            <Button onClick={handlePrivacySave} disabled={savingPrivacy}>
+              {savingPrivacy ? 'Saving...' : 'Save privacy settings'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-2xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900/70">
+          <div>
+            <h2 className="text-lg font-bold">Age verification</h2>
+            <p className="text-sm text-gray-500">
+              Confirm your age to unlock age-appropriate experiences and meet platform requirements.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="flex-1 text-sm">
+              <span className="mb-1 block font-medium">Birth date</span>
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDateValue(e.target.value)}
+                className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900"
+              />
+            </label>
+            <Button variant="secondary" onClick={handleSetBirthDate}>Verify age</Button>
+          </div>
+
+          {ageStatus && (
+            <div className="rounded-xl border border-dashed border-dark-200 bg-dark-50 p-3 text-sm text-dark-700 dark:border-dark-700 dark:bg-dark-800/70 dark:text-dark-200">
+              {ageStatus.verified ? `Verified: ${ageStatus.isAdult ? 'Adult' : 'Minor'} (${ageStatus.age ?? 'age unknown'} years old)` : `Status: ${ageStatus.birthDateSet ? 'Pending verification' : 'No birth date set'}`}
+            </div>
+          )}
+        </div>
+
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-bold">Export Your Data</h2>
@@ -87,7 +226,6 @@ export default function DataPrivacyPage() {
           )}
         </div>
 
-        {/* Data Deletion Section */}
         <div className="space-y-4 border-t pt-8">
           <div>
             <h2 className="text-lg font-bold">Request Account Deletion</h2>
@@ -104,7 +242,6 @@ export default function DataPrivacyPage() {
           </Button>
         </div>
 
-        {/* Privacy Policy Section */}
         <div className="space-y-4 border-t pt-8">
           <div>
             <h2 className="text-lg font-bold">Privacy Policy & Data Usage</h2>
@@ -118,7 +255,6 @@ export default function DataPrivacyPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

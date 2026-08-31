@@ -1,0 +1,36 @@
+{
+  "id": "45. AI BUSINESS ASSISTANT",
+  "name": "AI BUSINESS ASSISTANT",
+  "slug": "ai-business-assistant",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "45.1 Business Assistance",
+      "name": "Business Assistance",
+      "slug": "business-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-business-assistant/business-assistance.json"
+    },
+    {
+      "id": "45.2 Customer Assistance",
+      "name": "Customer Assistance",
+      "slug": "customer-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-business-assistant/customer-assistance.json"
+    },
+    {
+      "id": "45.3 Marketing Assistance",
+      "name": "Marketing Assistance",
+      "slug": "marketing-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-business-assistant/marketing-assistance.json"
+    },
+    {
+      "id": "45.4 Operations Assistance",
+      "name": "Operations Assistance",
+      "slug": "operations-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-business-assistant/operations-assistance.json"
+    }
+  ]
+}

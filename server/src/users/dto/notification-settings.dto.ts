@@ -16,4 +16,8 @@ export class NotificationSettingsDto {
   @IsBoolean()
   @IsOptional()
   newFollowers?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  messages?: boolean;
 }

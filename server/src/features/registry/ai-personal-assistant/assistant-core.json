@@ -1,0 +1,24 @@
+{
+  "id": "36.1 Assistant Core",
+  "name": "Assistant Core",
+  "slug": "assistant-core",
+  "featureCount": 16,
+  "features": [
+    "AI Chat",
+    "Context Awareness",
+    "Natural Language",
+    "Personalization",
+    "Conversation History",
+    "Multilingual Chat",
+    "Voice Chat",
+    "Image Understanding",
+    "File Understanding",
+    "Web-Connected Search",
+    "Recommendation",
+    "Explanation",
+    "Summarization",
+    "Brainstorming",
+    "Writing Assistance",
+    "Decision Assistance"
+  ]
+}

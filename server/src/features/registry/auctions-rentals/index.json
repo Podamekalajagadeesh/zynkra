@@ -1,0 +1,36 @@
+{
+  "id": "59. AUCTIONS & RENTALS",
+  "name": "AUCTIONS & RENTALS",
+  "slug": "auctions-rentals",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "59.1 Auctions",
+      "name": "Auctions",
+      "slug": "auctions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/auctions-rentals/auctions.json"
+    },
+    {
+      "id": "59.2 Bidding",
+      "name": "Bidding",
+      "slug": "bidding",
+      "featureCount": 16,
+      "file": "server/src/features/registry/auctions-rentals/bidding.json"
+    },
+    {
+      "id": "59.3 Rentals",
+      "name": "Rentals",
+      "slug": "rentals",
+      "featureCount": 16,
+      "file": "server/src/features/registry/auctions-rentals/rentals.json"
+    },
+    {
+      "id": "59.4 Rental Management",
+      "name": "Rental Management",
+      "slug": "rental-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/auctions-rentals/rental-management.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "38.2 Spam & Scam Detection",
+  "name": "Spam & Scam Detection",
+  "slug": "spam-scam-detection",
+  "featureCount": 16,
+  "features": [
+    "Spam Messages",
+    "Spam Comments",
+    "Spam Posts",
+    "Scam Links",
+    "Phishing",
+    "Fake Giveaways",
+    "Fake Shops",
+    "Fake Reviews",
+    "Payment Scams",
+    "Investment Scams",
+    "Impersonation",
+    "Bot Activity",
+    "Mass Messaging",
+    "Suspicious Transactions",
+    "Fraud Signals",
+    "Account Protection"
+  ]
+}

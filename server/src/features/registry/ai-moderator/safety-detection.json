@@ -1,0 +1,24 @@
+{
+  "id": "38.1 Safety Detection",
+  "name": "Safety Detection",
+  "slug": "safety-detection",
+  "featureCount": 16,
+  "features": [
+    "Spam Detection",
+    "Scam Detection",
+    "Harassment Detection",
+    "Hate Detection",
+    "Threat Detection",
+    "Adult Content Detection",
+    "Violence Detection",
+    "Self-Harm Risk Detection",
+    "Dangerous Content Detection",
+    "Impersonation Detection",
+    "Fake Account Detection",
+    "Bot Detection",
+    "Manipulation Detection",
+    "Coordinated Abuse Detection",
+    "Safety Alerts",
+    "Human Escalation"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "20.3 Group Membership",
+  "name": "Group Membership",
+  "slug": "group-membership",
+  "featureCount": 16,
+  "features": [
+    "Members",
+    "Admins",
+    "Moderators",
+    "Roles",
+    "Permissions",
+    "Member Requests",
+    "Member Invites",
+    "Member Removal",
+    "Member Blocking",
+    "Member Mute",
+    "Member Search",
+    "Member Lists",
+    "Member Badges",
+    "Member Reputation",
+    "Member Activity",
+    "Membership History"
+  ]
+}

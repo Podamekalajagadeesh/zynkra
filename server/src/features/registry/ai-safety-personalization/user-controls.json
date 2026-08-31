@@ -1,0 +1,24 @@
+{
+  "id": "50.4 User Controls",
+  "name": "User Controls",
+  "slug": "user-controls",
+  "featureCount": 16,
+  "features": [
+    "AI On/Off",
+    "Personalization On/Off",
+    "Memory On/Off",
+    "Recommendation Controls",
+    "Feed Controls",
+    "Search Controls",
+    "AI Data Controls",
+    "AI History",
+    "AI Export",
+    "AI Deletion",
+    "AI Permissions",
+    "Agent Permissions",
+    "Action Approval",
+    "Spending Limits",
+    "Transparency",
+    "AI Settings"
+  ]
+}

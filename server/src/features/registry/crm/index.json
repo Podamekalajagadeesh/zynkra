@@ -1,0 +1,36 @@
+{
+  "id": "52. CRM",
+  "name": "CRM",
+  "slug": "crm",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "52.1 Customer Profiles",
+      "name": "Customer Profiles",
+      "slug": "customer-profiles",
+      "featureCount": 16,
+      "file": "server/src/features/registry/crm/customer-profiles.json"
+    },
+    {
+      "id": "52.2 Lead Management",
+      "name": "Lead Management",
+      "slug": "lead-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/crm/lead-management.json"
+    },
+    {
+      "id": "52.3 Sales Pipeline",
+      "name": "Sales Pipeline",
+      "slug": "sales-pipeline",
+      "featureCount": 16,
+      "file": "server/src/features/registry/crm/sales-pipeline.json"
+    },
+    {
+      "id": "52.4 Customer Intelligence",
+      "name": "Customer Intelligence",
+      "slug": "customer-intelligence",
+      "featureCount": 16,
+      "file": "server/src/features/registry/crm/customer-intelligence.json"
+    }
+  ]
+}

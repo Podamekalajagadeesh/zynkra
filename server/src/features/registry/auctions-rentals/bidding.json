@@ -1,0 +1,24 @@
+{
+  "id": "59.2 Bidding",
+  "name": "Bidding",
+  "slug": "bidding",
+  "featureCount": 16,
+  "features": [
+    "Place Bid",
+    "Maximum Bid",
+    "Bid History",
+    "Bid Notifications",
+    "Outbid Alerts",
+    "Bid Limits",
+    "Bid Verification",
+    "Bid Cancellation Rules",
+    "Bid Extensions",
+    "Auction Ending",
+    "Winner Notification",
+    "Payment",
+    "Escrow",
+    "Dispute",
+    "Bid History",
+    "Bidding Analytics"
+  ]
+}

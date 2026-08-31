@@ -1,0 +1,24 @@
+{
+  "id": "18.1 Screen Sharing",
+  "name": "Screen Sharing",
+  "slug": "screen-sharing",
+  "featureCount": 16,
+  "features": [
+    "Share Screen",
+    "Share Window",
+    "Share App",
+    "Share Browser Tab",
+    "Presenter Mode",
+    "Annotation",
+    "Remote Control",
+    "Participant Control",
+    "Screen Recording",
+    "Audio Sharing",
+    "Quality Controls",
+    "Resolution Controls",
+    "Permission Controls",
+    "Privacy Masking",
+    "Screen Share History",
+    "Share Notifications"
+  ]
+}

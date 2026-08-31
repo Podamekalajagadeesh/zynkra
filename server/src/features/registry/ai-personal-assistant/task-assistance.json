@@ -1,0 +1,24 @@
+{
+  "id": "36.2 Task Assistance",
+  "name": "Task Assistance",
+  "slug": "task-assistance",
+  "featureCount": 16,
+  "features": [
+    "Task Planning",
+    "To-Do Creation",
+    "Reminders",
+    "Scheduling",
+    "Search Actions",
+    "Message Actions",
+    "Content Actions",
+    "Calendar Actions",
+    "Shopping Actions",
+    "Booking Actions",
+    "Community Actions",
+    "Creator Actions",
+    "Business Actions",
+    "Research",
+    "Follow-Up",
+    "Action Tracking"
+  ]
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Message } from '../../lib/types';
-import { Brain, Lock, ShieldCheck } from 'lucide-react';
+import { Brain, Lock, ShieldCheck, Volume2, VolumeX } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useE2EE } from '../../hooks/useE2EE';
 import { API_BASE_URL } from '../../lib/api';
@@ -16,6 +16,7 @@ export default function MessageContent({ message }: MessageContentProps) {
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [decryptError, setDecryptError] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { user } = useAuth();
   const { decryptMessage, isReady } = useE2EE(user?.id);
 
@@ -86,6 +87,26 @@ export default function MessageContent({ message }: MessageContentProps) {
     }
   })();
 
+  const speakMessage = () => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const text = decryptedContent || message.content;
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
     <div>
       {message.isNeural && (
@@ -144,7 +165,20 @@ export default function MessageContent({ message }: MessageContentProps) {
       ) : decryptError ? (
         <p className="text-sm text-red-500">Failed to decrypt message</p>
       ) : (
-        <p className="text-sm">{decryptedContent || message.content}</p>
+        <div className="flex items-start gap-2">
+          <p className="text-sm">{decryptedContent || message.content}</p>
+          {('speechSynthesis' in window) && (
+            <button
+              type="button"
+              onClick={speakMessage}
+              aria-label={isSpeaking ? 'Stop reading message aloud' : 'Read message aloud'}
+              title={isSpeaking ? 'Stop reading message aloud' : 'Read message aloud'}
+              className="shrink-0 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+            >
+              {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            </button>
+          )}
+        </div>
       )}
       {message.gift && (
         <div className="mt-2 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">

@@ -1,0 +1,24 @@
+{
+  "id": "51.2 Business Content",
+  "name": "Business Content",
+  "slug": "business-content",
+  "featureCount": 16,
+  "features": [
+    "Business Posts",
+    "Business Stories",
+    "Business Reels",
+    "Business Videos",
+    "Business Articles",
+    "Offers",
+    "Promotions",
+    "Events",
+    "Polls",
+    "Announcements",
+    "Product Posts",
+    "Service Posts",
+    "Customer Posts",
+    "Testimonials",
+    "Live",
+    "Content Analytics"
+  ]
+}

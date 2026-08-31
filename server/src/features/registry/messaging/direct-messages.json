@@ -1,0 +1,24 @@
+{
+  "id": "15.1 Direct Messages",
+  "name": "Direct Messages",
+  "slug": "direct-messages",
+  "featureCount": 16,
+  "features": [
+    "One-to-One DMs",
+    "Message Requests",
+    "Text Messages",
+    "Image Messages",
+    "Video Messages",
+    "Audio Messages",
+    "File Messages",
+    "GIFs",
+    "Stickers",
+    "Reactions",
+    "Replies",
+    "Message Editing",
+    "Message Deletion",
+    "Message Search",
+    "Pinned Messages",
+    "Disappearing Messages"
+  ]
+}

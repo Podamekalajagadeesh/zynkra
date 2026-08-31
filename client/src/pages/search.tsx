@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { search } from '../lib/api';
+import { followUpSearch, search, searchByImageAndText, webSearch } from '../lib/api';
 import { User, Post, Tag, Place, Event, Group, Product } from '../lib/types';
 import { PageShell } from '../components/PageShell';
 import { PostList } from '../components/post-list';
 import { Avatar } from '../components/Avatar';
-import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Mic, MicOff, Globe } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -21,13 +21,56 @@ type SearchResultsState = {
   imageSearchResults: Post[];
 };
 
+export const getSpeechRecognitionConstructor = () =>
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
 function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const [results, setResults] = useState<SearchResultsState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
+  const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
+  const [voiceSearchError, setVoiceSearchError] = useState<string | null>(null);
+  const [webResults, setWebResults] = useState<{ title: string; snippet?: string; url: string }[]>([]);
+  const [isWebSearchLoading, setIsWebSearchLoading] = useState(false);
+  const [followUpQuery, setFollowUpQuery] = useState('');
+  const [isFollowUpLoading, setIsFollowUpLoading] = useState(false);
+  const voiceRecognitionRef = useRef<SpeechRecognition | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const startVoiceSearch = () => {
+    const Recognition = getSpeechRecognitionConstructor();
+    if (!Recognition) {
+      setVoiceSearchError('Voice search is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => {
+      setVoiceSearchError(null);
+      setIsVoiceSearchActive(true);
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript?.trim();
+      if (transcript) setSearchParams({ q: transcript });
+    };
+    recognition.onerror = () => {
+      setVoiceSearchError('Voice search could not capture your request.');
+      setIsVoiceSearchActive(false);
+    };
+    recognition.onend = () => setIsVoiceSearchActive(false);
+    voiceRecognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopVoiceSearch = () => {
+    voiceRecognitionRef.current?.stop();
+    setIsVoiceSearchActive(false);
+  };
 
   useEffect(() => {
     if (!query) {
@@ -74,19 +117,19 @@ function SearchResultsPage() {
 
     setIsImageSearchLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/search/reverse-image`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: formData,
-        credentials: 'include',
-      });
-      const imageResults = await response.json();
+      const data = query.trim()
+        ? await searchByImageAndText(file, query.trim())
+        : await searchByImageAndText(file, '');
+      const imageResults = data?.imageSearchResults ?? [];
       setResults((prev) => prev ? { ...prev, imageSearchResults: imageResults } : { 
-        users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [], imageSearchResults: imageResults 
+        users: data?.users ?? [],
+        posts: data?.posts ?? [],
+        hashtags: data?.hashtags ?? [],
+        places: data?.places ?? [],
+        groups: data?.groups ?? [],
+        events: data?.events ?? [],
+        products: data?.products ?? [],
+        imageSearchResults: imageResults,
       });
     } catch (error) {
       console.error('Reverse image search failed:', error);
@@ -100,6 +143,33 @@ function SearchResultsPage() {
 
   const triggerImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleWebSearch = async () => {
+    if (!query.trim()) return;
+    setIsWebSearchLoading(true);
+    try {
+      const response = await webSearch(query);
+      setWebResults(response.results);
+    } catch {
+      setWebResults([]);
+    } finally {
+      setIsWebSearchLoading(false);
+    }
+  };
+
+  const handleFollowUpSearch = async () => {
+    if (!query.trim() || !followUpQuery.trim()) return;
+    setIsFollowUpLoading(true);
+    try {
+      const data = await followUpSearch(query, followUpQuery);
+      setSearchParams({ q: data.query });
+      setFollowUpQuery('');
+    } catch (error) {
+      console.error('Follow-up search failed:', error);
+    } finally {
+      setIsFollowUpLoading(false);
+    }
   };
 
   return (
@@ -136,7 +206,60 @@ function SearchResultsPage() {
           {isImageSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
           Reverse Image Search
         </Button>
+        <Button
+          onClick={isVoiceSearchActive ? stopVoiceSearch : startVoiceSearch}
+          variant="secondary"
+          className="flex items-center gap-2"
+          aria-label={isVoiceSearchActive ? 'Stop voice search' : 'Start voice search'}
+        >
+          {isVoiceSearchActive ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          {isVoiceSearchActive ? 'Stop Listening' : 'Voice Search'}
+        </Button>
+        <Button
+          onClick={handleWebSearch}
+          variant="secondary"
+          className="flex items-center gap-2"
+          disabled={isWebSearchLoading || !query.trim()}
+        >
+          {isWebSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+          Web Results
+        </Button>
       </div>
+      {query && (
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+          <Input
+            value={followUpQuery}
+            placeholder="Refine this search..."
+            onChange={(event) => setFollowUpQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') handleFollowUpSearch();
+            }}
+          />
+          <Button
+            onClick={handleFollowUpSearch}
+            disabled={isFollowUpLoading || !followUpQuery.trim()}
+          >
+            {isFollowUpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refine Search'}
+          </Button>
+        </div>
+      )}
+      {voiceSearchError && (
+        <p role="status" className="mb-6 text-sm text-red-600 dark:text-red-400">
+          {voiceSearchError}
+        </p>
+      )}
+      {webResults.length > 0 && (
+        <section className="mb-6 space-y-3" aria-label="Web search results">
+          <h2 className="text-xl font-bold">Web results</h2>
+          {webResults.map((result) => (
+            <a key={result.url} href={result.url} target="_blank" rel="noreferrer" className="block rounded-lg border border-dark-200 p-4 hover:bg-dark-50 dark:border-dark-700 dark:hover:bg-dark-800">
+              <p className="font-semibold text-primary-700 dark:text-primary-300">{result.title}</p>
+              {result.snippet && <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">{result.snippet}</p>}
+              <p className="mt-2 truncate text-xs text-dark-500">{result.url}</p>
+            </a>
+          ))}
+        </section>
+      )}
 
       {isLoading && (
         <div className="flex justify-center items-center p-8">

@@ -1,0 +1,24 @@
+{
+  "id": "20.2 Group Content",
+  "name": "Group Content",
+  "slug": "group-content",
+  "featureCount": 16,
+  "features": [
+    "Group Posts",
+    "Group Photos",
+    "Group Videos",
+    "Group Stories",
+    "Group Polls",
+    "Group Questions",
+    "Group Events",
+    "Group Files",
+    "Group Links",
+    "Group Announcements",
+    "Group Discussions",
+    "Group Live",
+    "Group Chat",
+    "Group Reels",
+    "Group Articles",
+    "Group Media"
+  ]
+}

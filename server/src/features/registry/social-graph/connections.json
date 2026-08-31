@@ -1,0 +1,24 @@
+{
+  "id": "03.1 Connections",
+  "name": "Connections",
+  "slug": "connections",
+  "featureCount": 16,
+  "features": [
+    "Follow",
+    "Unfollow",
+    "Friend Request",
+    "Accept Request",
+    "Reject Request",
+    "Remove Friend",
+    "Follow Back",
+    "Mutual Connections",
+    "Connection Suggestions",
+    "Connection Search",
+    "Connection Groups",
+    "Close Friends",
+    "Favorites",
+    "Favorites Management",
+    "Connection History",
+    "Connection Notifications"
+  ]
+}

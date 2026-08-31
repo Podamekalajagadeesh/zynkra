@@ -1,0 +1,24 @@
+{
+  "id": "45.1 Business Assistance",
+  "name": "Business Assistance",
+  "slug": "business-assistance",
+  "featureCount": 16,
+  "features": [
+    "Business Dashboard",
+    "Business Search",
+    "Customer Insights",
+    "Sales Insights",
+    "Revenue Insights",
+    "Marketing Insights",
+    "Content Suggestions",
+    "Business Recommendations",
+    "Competitor Analysis",
+    "Trend Analysis",
+    "Business Planning",
+    "Task Planning",
+    "Decision Support",
+    "Report Generation",
+    "Business Alerts",
+    "Business Memory"
+  ]
+}

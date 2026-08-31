@@ -1,0 +1,24 @@
+{
+  "id": "10.3 Threads",
+  "name": "Threads",
+  "slug": "threads",
+  "featureCount": 16,
+  "features": [
+    "Thread Creation",
+    "Thread Replies",
+    "Thread Editing",
+    "Thread Deletion",
+    "Thread Reposts",
+    "Thread Quotes",
+    "Thread Likes",
+    "Thread Saves",
+    "Thread Search",
+    "Thread Discovery",
+    "Thread Following",
+    "Thread Notifications",
+    "Thread Moderation",
+    "Thread Sharing",
+    "Thread Drafts",
+    "Thread Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "57.2 Seller Tools",
+  "name": "Seller Tools",
+  "slug": "seller-tools",
+  "featureCount": 16,
+  "features": [
+    "Seller Profile",
+    "Product Listings",
+    "Service Listings",
+    "Inventory",
+    "Pricing",
+    "Discounts",
+    "Orders",
+    "Shipping",
+    "Returns",
+    "Customer Messages",
+    "Reviews",
+    "Analytics",
+    "Payouts",
+    "Promotions",
+    "Seller Verification",
+    "Seller Dashboard"
+  ]
+}

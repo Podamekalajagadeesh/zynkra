@@ -1,0 +1,24 @@
+{
+  "id": "47.2 Appointment AI",
+  "name": "Appointment AI",
+  "slug": "appointment-ai",
+  "featureCount": 16,
+  "features": [
+    "Provider Matching",
+    "Availability Search",
+    "Appointment Booking",
+    "Rescheduling",
+    "Cancellation",
+    "Waitlist",
+    "Reminders",
+    "Follow-Ups",
+    "Provider Recommendations",
+    "Location Matching",
+    "Time Matching",
+    "Duration Matching",
+    "Price Matching",
+    "Appointment Preparation",
+    "Appointment Summary",
+    "Rebooking"
+  ]
+}

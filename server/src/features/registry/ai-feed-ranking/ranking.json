@@ -1,0 +1,24 @@
+{
+  "id": "37.1 Ranking",
+  "name": "Ranking",
+  "slug": "ranking",
+  "featureCount": 16,
+  "features": [
+    "Interest Ranking",
+    "Relationship Ranking",
+    "Freshness Ranking",
+    "Quality Ranking",
+    "Engagement Ranking",
+    "Watch-Time Ranking",
+    "Relevance Ranking",
+    "Topic Ranking",
+    "Creator Ranking",
+    "Community Ranking",
+    "Local Ranking",
+    "Trend Ranking",
+    "Diversity Ranking",
+    "Safety Ranking",
+    "Personalized Ranking",
+    "Ranking Experiments"
+  ]
+}

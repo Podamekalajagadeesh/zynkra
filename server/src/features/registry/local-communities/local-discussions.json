@@ -1,0 +1,24 @@
+{
+  "id": "23.3 Local Discussions",
+  "name": "Local Discussions",
+  "slug": "local-discussions",
+  "featureCount": 16,
+  "features": [
+    "Local Posts",
+    "Questions",
+    "Recommendations",
+    "Reviews",
+    "Alerts",
+    "Polls",
+    "Events",
+    "Community Chat",
+    "Announcements",
+    "Lost & Found",
+    "Local Help",
+    "Local Jobs",
+    "Local Services",
+    "Local Selling",
+    "Local Buying",
+    "Local Moderation"
+  ]
+}

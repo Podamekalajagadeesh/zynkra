@@ -1,0 +1,24 @@
+{
+  "id": "12.1 Media Tools",
+  "name": "Media Tools",
+  "slug": "media-tools",
+  "featureCount": 16,
+  "features": [
+    "Photo Editor",
+    "Video Editor",
+    "Audio Editor",
+    "Crop",
+    "Resize",
+    "Filters",
+    "Effects",
+    "Transitions",
+    "Text",
+    "Stickers",
+    "Music",
+    "Voiceover",
+    "Captions",
+    "Background Removal",
+    "Object Removal",
+    "Enhancement"
+  ]
+}

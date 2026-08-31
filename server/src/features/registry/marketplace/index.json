@@ -1,0 +1,36 @@
+{
+  "id": "57. MARKETPLACE",
+  "name": "MARKETPLACE",
+  "slug": "marketplace",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "57.1 Marketplace Core",
+      "name": "Marketplace Core",
+      "slug": "marketplace-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/marketplace/marketplace-core.json"
+    },
+    {
+      "id": "57.2 Seller Tools",
+      "name": "Seller Tools",
+      "slug": "seller-tools",
+      "featureCount": 16,
+      "file": "server/src/features/registry/marketplace/seller-tools.json"
+    },
+    {
+      "id": "57.3 Buyer Tools",
+      "name": "Buyer Tools",
+      "slug": "buyer-tools",
+      "featureCount": 16,
+      "file": "server/src/features/registry/marketplace/buyer-tools.json"
+    },
+    {
+      "id": "57.4 Marketplace Discovery",
+      "name": "Marketplace Discovery",
+      "slug": "marketplace-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/marketplace/marketplace-discovery.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "05.3 Post Interaction",
+  "name": "Post Interaction",
+  "slug": "post-interaction",
+  "featureCount": 16,
+  "features": [
+    "Like",
+    "Unlike",
+    "Comment",
+    "Reply",
+    "Share",
+    "Repost",
+    "Quote Post",
+    "Save",
+    "Bookmark",
+    "Send",
+    "React",
+    "Vote",
+    "Mention",
+    "Tag",
+    "Report",
+    "Hide"
+  ]
+}

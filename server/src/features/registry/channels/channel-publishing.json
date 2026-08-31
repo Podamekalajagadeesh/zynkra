@@ -1,0 +1,24 @@
+{
+  "id": "16.2 Channel Publishing",
+  "name": "Channel Publishing",
+  "slug": "channel-publishing",
+  "featureCount": 16,
+  "features": [
+    "Text Posts",
+    "Photo Posts",
+    "Video Posts",
+    "Audio Posts",
+    "Polls",
+    "Articles",
+    "Stories",
+    "Live Streams",
+    "Scheduled Posts",
+    "Drafts",
+    "Pinned Posts",
+    "Post Editing",
+    "Post Deletion",
+    "Cross Posting",
+    "Content Templates",
+    "Publishing Analytics"
+  ]
+}

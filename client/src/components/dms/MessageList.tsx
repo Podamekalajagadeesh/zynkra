@@ -16,6 +16,9 @@ interface MessageListProps {
   onReply: (message: Message) => void;
 }
 
+export const getReadReceiptLabel = (isRead: boolean) =>
+  isRead ? 'Read by recipient' : 'Sent';
+
 export const MessageList = ({
   conversationId,
   channelId,
@@ -267,7 +270,11 @@ export const MessageList = ({
                       {formatDateTime(msg.createdAt, { timeStyle: 'short' })}
                     </p>
                     {isOwn && (
-                      <div className="flex items-center">
+                      <div
+                        className="flex items-center"
+                        title={getReadReceiptLabel(isRead)}
+                        aria-label={getReadReceiptLabel(isRead)}
+                      >
                         <CheckCheck
                           size={16}
                           className={isRead ? 'text-blue-500' : 'text-gray-400'}

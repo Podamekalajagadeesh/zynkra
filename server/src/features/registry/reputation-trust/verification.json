@@ -1,0 +1,24 @@
+{
+  "id": "28.4 Verification",
+  "name": "Verification",
+  "slug": "verification",
+  "featureCount": 16,
+  "features": [
+    "Identity Verification",
+    "Business Verification",
+    "Creator Verification",
+    "Community Verification",
+    "Event Verification",
+    "Product Verification",
+    "Service Verification",
+    "Seller Verification",
+    "Review Verification",
+    "Transaction Verification",
+    "Verification Badges",
+    "Verification Requests",
+    "Verification Review",
+    "Verification Appeals",
+    "Verification History",
+    "Verification Settings"
+  ]
+}

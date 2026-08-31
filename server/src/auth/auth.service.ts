@@ -16,6 +16,7 @@ import { NotificationType } from '../notifications/entities/notification.entity'
 import { LoginSession } from './entities/login-session.entity';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesService } from '../invite-codes/invite-codes.service';
+import { BrainwaveDevice } from './entities/brainwave-device.entity';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +33,8 @@ export class AuthService {
     private readonly loginSessionsRepository: Repository<LoginSession>,
     private readonly captchaService: CaptchaService,
     private readonly inviteCodesService: InviteCodesService,
+    @InjectRepository(BrainwaveDevice)
+    private readonly brainwaveDevicesRepository: Repository<BrainwaveDevice>,
   ) {}
 
   private get clientUrl(): string {
@@ -221,6 +224,16 @@ export class AuthService {
 
   async login(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
     return this.issueAccessToken(user, req, rememberMe);
+  }
+
+  async guestSignIn(req?: any): Promise<{ access_token: string }> {
+    const user = await this.usersService.createGuestUser();
+    return this.issueAccessToken(user, req);
+  }
+
+  async anonymousSignIn(req?: any): Promise<{ access_token: string }> {
+    const user = await this.usersService.createAnonymousUser();
+    return this.issueAccessToken(user, req);
   }
 
   async requestMagicLink(email: string): Promise<{ message: string }> {
@@ -543,6 +556,49 @@ export class AuthService {
       enabled: user.twoFactorEnabled,
       hasSecret: !!user.twoFactorSecret,
     };
+  }
+
+  async getBrainwaveDevices(userId: string): Promise<Array<{
+    id: string;
+    deviceModel: string;
+    firmware: string;
+    registeredAt: string;
+    lastUsed: string;
+    accuracy: number;
+  }>> {
+    const devices = await this.brainwaveDevicesRepository.find({
+      where: { user: { id: userId } },
+      order: { registeredAt: 'DESC' },
+    });
+
+    return devices.map((device) => ({
+      id: device.id,
+      deviceModel: device.deviceModel,
+      firmware: device.firmware,
+      registeredAt: device.registeredAt.toISOString(),
+      lastUsed: (device.lastUsed ?? device.registeredAt).toISOString(),
+      accuracy: device.accuracy,
+    }));
+  }
+
+  async registerBrainwaveDevice(userId: string, deviceModel?: string): Promise<{ message: string; deviceId: string }> {
+    const device = this.brainwaveDevicesRepository.create({
+      user: { id: userId } as User,
+      deviceModel: deviceModel?.trim() || 'Unspecified device',
+      firmware: 'managed',
+      lastUsed: new Date(),
+      accuracy: 0,
+    });
+    const savedDevice = await this.brainwaveDevicesRepository.save(device);
+    return { message: 'Device registered successfully.', deviceId: savedDevice.id };
+  }
+
+  async removeBrainwaveDevice(userId: string, deviceId: string): Promise<{ message: string }> {
+    const result = await this.brainwaveDevicesRepository.delete({ id: deviceId, user: { id: userId } });
+    if (result.affected === 0) {
+      throw new NotFoundException('Device not found.');
+    }
+    return { message: 'Device removed successfully.' };
   }
 
   async disable2FA(userId: string, token: string): Promise<{ message: string }> {

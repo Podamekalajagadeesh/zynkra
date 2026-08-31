@@ -1,0 +1,36 @@
+{
+  "id": "35. REVENUE TOOLS",
+  "name": "REVENUE TOOLS",
+  "slug": "revenue-tools",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "35.1 Payouts",
+      "name": "Payouts",
+      "slug": "payouts",
+      "featureCount": 16,
+      "file": "server/src/features/registry/revenue-tools/payouts.json"
+    },
+    {
+      "id": "35.2 Revenue Tracking",
+      "name": "Revenue Tracking",
+      "slug": "revenue-tracking",
+      "featureCount": 16,
+      "file": "server/src/features/registry/revenue-tools/revenue-tracking.json"
+    },
+    {
+      "id": "35.3 Pricing",
+      "name": "Pricing",
+      "slug": "pricing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/revenue-tools/pricing.json"
+    },
+    {
+      "id": "35.4 Financial Reports",
+      "name": "Financial Reports",
+      "slug": "financial-reports",
+      "featureCount": 16,
+      "file": "server/src/features/registry/revenue-tools/financial-reports.json"
+    }
+  ]
+}

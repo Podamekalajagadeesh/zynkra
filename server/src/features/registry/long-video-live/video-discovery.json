@@ -1,0 +1,24 @@
+{
+  "id": "09.4 Video Discovery",
+  "name": "Video Discovery",
+  "slug": "video-discovery",
+  "featureCount": 16,
+  "features": [
+    "Video Search",
+    "Trending Videos",
+    "Recommended Videos",
+    "Topic Discovery",
+    "Creator Discovery",
+    "Playlist Discovery",
+    "Live Discovery",
+    "Upcoming Live",
+    "Popular Live",
+    "Local Live",
+    "Educational Videos",
+    "Entertainment Videos",
+    "News Videos",
+    "Community Videos",
+    "Saved Videos",
+    "Watch History"
+  ]
+}

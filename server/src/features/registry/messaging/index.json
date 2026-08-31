@@ -1,0 +1,36 @@
+{
+  "id": "15. MESSAGING",
+  "name": "MESSAGING",
+  "slug": "messaging",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "15.1 Direct Messages",
+      "name": "Direct Messages",
+      "slug": "direct-messages",
+      "featureCount": 16,
+      "file": "server/src/features/registry/messaging/direct-messages.json"
+    },
+    {
+      "id": "15.2 Group DMs",
+      "name": "Group DMs",
+      "slug": "group-dms",
+      "featureCount": 16,
+      "file": "server/src/features/registry/messaging/group-dms.json"
+    },
+    {
+      "id": "15.3 Message Management",
+      "name": "Message Management",
+      "slug": "message-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/messaging/message-management.json"
+    },
+    {
+      "id": "15.4 Message Discovery",
+      "name": "Message Discovery",
+      "slug": "message-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/messaging/message-discovery.json"
+    }
+  ]
+}

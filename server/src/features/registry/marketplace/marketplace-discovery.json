@@ -1,0 +1,24 @@
+{
+  "id": "57.4 Marketplace Discovery",
+  "name": "Marketplace Discovery",
+  "slug": "marketplace-discovery",
+  "featureCount": 16,
+  "features": [
+    "Product Discovery",
+    "Service Discovery",
+    "Local Selling",
+    "Nearby Sellers",
+    "Trending Products",
+    "Trending Services",
+    "New Listings",
+    "Popular Listings",
+    "Personalized Listings",
+    "Similar Listings",
+    "Deal Discovery",
+    "Category Discovery",
+    "Seller Discovery",
+    "Creator Shops",
+    "Community Shops",
+    "Marketplace Search"
+  ]
+}

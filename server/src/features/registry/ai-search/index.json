@@ -1,0 +1,36 @@
+{
+  "id": "39. AI SEARCH",
+  "name": "AI SEARCH",
+  "slug": "ai-search",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "39.1 Natural Language Search",
+      "name": "Natural Language Search",
+      "slug": "natural-language-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-search/natural-language-search.json"
+    },
+    {
+      "id": "39.2 Semantic Search",
+      "name": "Semantic Search",
+      "slug": "semantic-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-search/semantic-search.json"
+    },
+    {
+      "id": "39.3 Multimodal Search",
+      "name": "Multimodal Search",
+      "slug": "multimodal-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-search/multimodal-search.json"
+    },
+    {
+      "id": "39.4 Answer Generation",
+      "name": "Answer Generation",
+      "slug": "answer-generation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-search/answer-generation.json"
+    }
+  ]
+}

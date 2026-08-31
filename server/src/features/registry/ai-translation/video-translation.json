@@ -1,0 +1,24 @@
+{
+  "id": "41.3 Video Translation",
+  "name": "Video Translation",
+  "slug": "video-translation",
+  "featureCount": 16,
+  "features": [
+    "Video Subtitles",
+    "Auto Captions",
+    "Multi-Language Captions",
+    "Voice Dubbing",
+    "AI Dubbing",
+    "Speaker Matching",
+    "Lip Sync",
+    "Subtitle Editing",
+    "Subtitle Styling",
+    "Translation Review",
+    "Translation Export",
+    "Translation Versions",
+    "Language Selection",
+    "Translation Analytics",
+    "Translation History",
+    "Creator Controls"
+  ]
+}

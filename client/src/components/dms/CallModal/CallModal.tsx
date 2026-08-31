@@ -1,4 +1,5 @@
-import { X, Mic, MicOff, Video, VideoOff, Monitor, Square, Film, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { X, Mic, MicOff, Video, VideoOff, Monitor, Square, Film, Sparkles, PictureInPicture } from 'lucide-react';
 import { Button } from '../../ui/button';
 
 interface CallModalProps {
@@ -40,6 +41,8 @@ export function CallModal({
   localVideoRef,
   remoteVideoRef,
 }: CallModalProps) {
+  const [pipError, setPipError] = useState(false);
+
   if (!isOpen) return null;
 
   // Dynamic grid layout based on number of participants (supports large group calls)
@@ -67,6 +70,21 @@ export function CallModal({
       onStopRecording();
     } else {
       onStartRecording();
+    }
+  };
+
+  const handlePictureInPicture = async () => {
+    const video = remoteVideoRef.current;
+    if (!video || !document.pictureInPictureEnabled || !video.requestPictureInPicture) {
+      setPipError(true);
+      return;
+    }
+
+    try {
+      await video.requestPictureInPicture();
+      setPipError(false);
+    } catch {
+      setPipError(true);
     }
   };
 
@@ -190,6 +208,16 @@ export function CallModal({
             <Square size={18} className={isRecording ? 'fill-white' : ''} />
             {isRecording ? 'Stop Recording' : 'Record Call'}
           </Button>
+
+          <Button
+            onClick={handlePictureInPicture}
+            variant="secondary"
+            className="flex items-center gap-2"
+            aria-label="Open remote video in picture-in-picture"
+          >
+            <PictureInPicture size={18} />
+            Picture-in-Picture
+          </Button>
           
           {/* End call */}
           <Button onClick={onClose} variant="destructive" className="flex items-center gap-2">
@@ -197,6 +225,11 @@ export function CallModal({
             End Call
           </Button>
         </div>
+        {pipError && (
+          <p role="status" className="mt-3 text-center text-sm text-red-300">
+            Picture-in-Picture is unavailable for this video.
+          </p>
+        )}
       </div>
     </div>
   );

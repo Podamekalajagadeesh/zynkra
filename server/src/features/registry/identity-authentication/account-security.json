@@ -1,0 +1,23 @@
+{
+  "id": "01.1 Account Security",
+  "name": "Account Security",
+  "slug": "account-security",
+  "featureCount": 15,
+  "features": [
+    "Email Sign-up",
+    "Login",
+    "Logout",
+    "Password Reset",
+    "Passkeys",
+    "2FA",
+    "Biometric Login",
+    "Session Management",
+    "Device Management",
+    "Suspicious Login Alerts",
+    "Recovery Codes",
+    "Account Recovery",
+    "Security Logs",
+    "Login Approvals",
+    "Security Center"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "54.2 Service Listings",
+  "name": "Service Listings",
+  "slug": "service-listings",
+  "featureCount": 16,
+  "features": [
+    "Service Name",
+    "Description",
+    "Provider",
+    "Pricing",
+    "Packages",
+    "Duration",
+    "Availability",
+    "Location",
+    "Online Service",
+    "Reviews",
+    "Portfolio",
+    "Booking",
+    "Cancellation",
+    "Requirements",
+    "Service Search",
+    "Service Analytics"
+  ]
+}

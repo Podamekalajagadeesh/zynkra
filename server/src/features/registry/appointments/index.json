@@ -1,0 +1,36 @@
+{
+  "id": "56. APPOINTMENTS",
+  "name": "APPOINTMENTS",
+  "slug": "appointments",
+  "featureCount": 63,
+  "modules": [
+    {
+      "id": "56.1 Appointment Core",
+      "name": "Appointment Core",
+      "slug": "appointment-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/appointments/appointment-core.json"
+    },
+    {
+      "id": "56.2 Scheduling",
+      "name": "Scheduling",
+      "slug": "scheduling",
+      "featureCount": 16,
+      "file": "server/src/features/registry/appointments/scheduling.json"
+    },
+    {
+      "id": "56.3 Reminders",
+      "name": "Reminders",
+      "slug": "reminders",
+      "featureCount": 15,
+      "file": "server/src/features/registry/appointments/reminders.json"
+    },
+    {
+      "id": "56.4 Appointment Management",
+      "name": "Appointment Management",
+      "slug": "appointment-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/appointments/appointment-management.json"
+    }
+  ]
+}

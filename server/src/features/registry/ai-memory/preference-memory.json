@@ -1,0 +1,24 @@
+{
+  "id": "42.2 Preference Memory",
+  "name": "Preference Memory",
+  "slug": "preference-memory",
+  "featureCount": 16,
+  "features": [
+    "Content Preferences",
+    "Creator Preferences",
+    "Community Preferences",
+    "Language Preferences",
+    "Shopping Preferences",
+    "Communication Preferences",
+    "Notification Preferences",
+    "Schedule Preferences",
+    "Privacy Preferences",
+    "AI Preferences",
+    "Interest Preferences",
+    "Location Preferences",
+    "Format Preferences",
+    "Recommendation Preferences",
+    "Preference History",
+    "Preference Controls"
+  ]
+}

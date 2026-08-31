@@ -1,0 +1,24 @@
+{
+  "id": "57.3 Buyer Tools",
+  "name": "Buyer Tools",
+  "slug": "buyer-tools",
+  "featureCount": 16,
+  "features": [
+    "Buyer Profile",
+    "Search",
+    "Filters",
+    "Wishlist",
+    "Favorites",
+    "Saved Searches",
+    "Shopping Lists",
+    "Cart",
+    "Checkout",
+    "Orders",
+    "Tracking",
+    "Reviews",
+    "Returns",
+    "Refunds",
+    "Recommendations",
+    "Buyer Protection"
+  ]
+}

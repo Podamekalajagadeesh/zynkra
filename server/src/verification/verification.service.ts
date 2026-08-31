@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import {
   VerificationRequest,
   VerificationStatus,
+  VerificationWorkflow,
 } from './entities/verification-request.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateVerificationRequestDto } from './dto/verification.dto';
@@ -35,18 +36,29 @@ export class VerificationService {
       throw new BadRequestException('You already have a pending verification request.');
     }
 
+    const workflow = (dto.workflow ?? VerificationWorkflow.PERSONAL) as VerificationWorkflow;
     const request = this.requestsRepository.create({
       user,
+      workflow,
       category: dto.category,
+      organizationName: dto.organizationName ?? null,
+      documentType: dto.documentType ?? null,
       justification: dto.justification,
       links: dto.links,
-    });
-    return this.requestsRepository.save(request);
+    } as Partial<VerificationRequest>);
+    return this.requestsRepository.save(request as VerificationRequest);
   }
 
   /** The applicant's most recent request, for status display. */
   async getMyRequest(userId: string): Promise<VerificationRequest | null> {
     return this.requestsRepository.findOne({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getMyHistory(userId: string): Promise<VerificationRequest[]> {
+    return this.requestsRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
     });

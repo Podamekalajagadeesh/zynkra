@@ -32,12 +32,14 @@ import { FileUploadDto } from './dto/file-upload.dto';
 import { UpdateFaceRecognitionDto } from './dto/update-face-recognition.dto';
 import { CreateLifeEventDto } from './dto/create-life-event.dto';
 import { UpdateLifeEventDto } from './dto/update-life-event.dto';
+import { AccountManagementService } from '../features/account-management/account-management.service';
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly pagesService: PagesService
+    private readonly pagesService: PagesService,
+    private readonly accountManagementService: AccountManagementService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -114,9 +116,33 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('deactivate')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deactivate(@Request() req): Promise<void> {
-    await this.usersService.deactivate(req.user.userId);
+  async deactivate(@Request() req, @Body() body?: { reason?: string }): Promise<{ userId: string; status: string; message: string }> {
+    const user = await this.usersService.deactivate(req.user.userId);
+    return {
+      userId: user.id,
+      status: user.status ?? 'deactivated',
+      message: 'Account deactivated successfully.',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('reactivate')
+  async reactivate(@Request() req): Promise<{ userId: string; status: string; message: string }> {
+    const user = await this.usersService.reactivate(req.user.userId);
+    return {
+      userId: user.id,
+      status: user.status ?? 'active',
+      message: 'Account reactivated successfully.',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/account-switch')
+  async switchCurrentAccount(@Request() req, @Body() body: { accountId: string }) {
+    if (!body?.accountId) {
+      throw new BadRequestException('Account ID is required.');
+    }
+    return this.accountManagementService.switchAccount(body.accountId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -480,6 +506,125 @@ export class UsersController {
     @Body() updatePrivacyDto: UpdatePrivacyDto,
   ): Promise<User> {
     return this.usersService.updatePrivacy(req.user.userId, updatePrivacyDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/privacy')
+  async getPrivacy(@Request() req) {
+    return this.usersService.getPrivacy(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/account-dashboard')
+  async getAccountDashboard(@Request() req) {
+    return this.accountManagementService.getAccountDashboard(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/security-center')
+  async getSecurityCenter(@Request() req) {
+    return this.accountManagementService.getSecurityCenter(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/account-history')
+  async getAccountHistory(@Request() req) {
+    return this.accountManagementService.getAccountHistory(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/security-log')
+  async exportSecurityLog(@Request() req) {
+    return this.accountManagementService.exportSecurityLog(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/linked-accounts')
+  async linkAccount(@Request() req, @Body() body: { provider: string; externalUserId: string; metadata?: Record<string, any> }) {
+    return this.accountManagementService.linkAccount(req.user.userId, body.provider, body.externalUserId, body.metadata ?? {});
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('me/linked-accounts/:provider')
+  @HttpCode(HttpStatus.OK)
+  async unlinkAccount(@Request() req, @Param('provider') provider: string) {
+    return this.accountManagementService.unlinkAccount(req.user.userId, provider);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/account-recovery')
+  async startAccountRecovery(@Request() req, @Body() body: { method?: 'email' | 'trusted_contact' | 'passkey' }) {
+    return this.accountManagementService.startAccountRecovery(req.user.userId, body?.method ?? 'email');
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/account-recovery/complete')
+  async completeAccountRecovery(@Request() req, @Body() body: { approved?: boolean }) {
+    return this.accountManagementService.completeAccountRecovery(req.user.userId, body?.approved ?? true);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/verification-appeal')
+  async submitVerificationAppeal(@Request() req, @Body() body: { reason: string; links?: string[] }) {
+    return this.accountManagementService.submitVerificationAppeal(req.user.userId, body.reason, body.links ?? []);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/verification-request')
+  async requestVerification(@Request() req, @Body() body: { type?: 'identity' | 'creator' | 'business' | 'organization'; reason: string; links?: string[] }) {
+    const type = body.type ?? 'identity';
+    const reason = body.reason ?? 'Verification requested';
+    const links = body.links ?? [];
+
+    if (type === 'creator') {
+      return this.accountManagementService.requestCreatorVerification(req.user.userId, reason, links);
+    }
+
+    if (type === 'business') {
+      return this.accountManagementService.requestBusinessVerification(req.user.userId, reason, links);
+    }
+
+    if (type === 'organization') {
+      return this.accountManagementService.requestOrganizationVerification(req.user.userId, reason, links);
+    }
+
+    return this.accountManagementService.requestIdentityVerification(req.user.userId, reason, links);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/verification-status')
+  async getVerificationStatus(@Request() req) {
+    return this.accountManagementService.getVerificationStatus(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/verification-history')
+  async getVerificationHistory(@Request() req) {
+    return this.accountManagementService.getVerificationHistory(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/security-alerts')
+  async getSecurityAlerts(@Request() req) {
+    return (await this.accountManagementService.getSecurityCenter(req.user.userId)).securityAlerts;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/security-alerts/:id/resolve')
+  async resolveSecurityAlert(@Request() req, @Param('id') alertId: string, @Body() body: { resolved?: boolean }) {
+    return this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, body?.resolved ?? true);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/login-approvals')
+  async getLoginApprovals(@Request() req) {
+    return (await this.accountManagementService.getSecurityCenter(req.user.userId)).pendingApprovals;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/login-approvals/:id/review')
+  async reviewLoginApproval(@Request() req, @Param('id') approvalId: string, @Body() body: { approved?: boolean; note?: string }) {
+    return this.accountManagementService.reviewLoginApproval(req.user.userId, approvalId, body?.approved ?? true, body?.note);
   }
 
   @UseGuards(JwtAuthGuard)

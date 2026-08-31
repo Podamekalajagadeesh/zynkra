@@ -1,0 +1,36 @@
+{
+  "id": "06. PHOTOS & ALBUMS",
+  "name": "PHOTOS & ALBUMS",
+  "slug": "photos-albums",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "06.1 Photo Uploads",
+      "name": "Photo Uploads",
+      "slug": "photo-uploads",
+      "featureCount": 16,
+      "file": "server/src/features/registry/photos-albums/photo-uploads.json"
+    },
+    {
+      "id": "06.2 Albums",
+      "name": "Albums",
+      "slug": "albums",
+      "featureCount": 16,
+      "file": "server/src/features/registry/photos-albums/albums.json"
+    },
+    {
+      "id": "06.3 Photo Interaction",
+      "name": "Photo Interaction",
+      "slug": "photo-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/photos-albums/photo-interaction.json"
+    },
+    {
+      "id": "06.4 Photo Discovery",
+      "name": "Photo Discovery",
+      "slug": "photo-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/photos-albums/photo-discovery.json"
+    }
+  ]
+}

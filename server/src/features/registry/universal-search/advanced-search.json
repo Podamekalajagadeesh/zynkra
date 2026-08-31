@@ -1,0 +1,24 @@
+{
+  "id": "13.4 Advanced Search",
+  "name": "Advanced Search",
+  "slug": "advanced-search",
+  "featureCount": 16,
+  "features": [
+    "Natural Language",
+    "Semantic Search",
+    "Boolean Search",
+    "Date Range",
+    "Location Radius",
+    "Language Filter",
+    "Content Type",
+    "Creator Filter",
+    "Community Filter",
+    "Popularity Filter",
+    "Engagement Filter",
+    "Relevance Filter",
+    "AI Search",
+    "Voice Search",
+    "Image Search",
+    "Search Summaries"
+  ]
+}

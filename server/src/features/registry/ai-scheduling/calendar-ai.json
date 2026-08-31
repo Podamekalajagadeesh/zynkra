@@ -1,0 +1,24 @@
+{
+  "id": "47.1 Calendar AI",
+  "name": "Calendar AI",
+  "slug": "calendar-ai",
+  "featureCount": 16,
+  "features": [
+    "Calendar Management",
+    "Event Creation",
+    "Event Editing",
+    "Event Deletion",
+    "Schedule Search",
+    "Availability Search",
+    "Conflict Detection",
+    "Reminder Creation",
+    "Recurring Events",
+    "Calendar Sharing",
+    "Calendar Sync",
+    "Time Zone Handling",
+    "Travel Time",
+    "Buffer Time",
+    "Schedule Optimization",
+    "Calendar Summary"
+  ]
+}

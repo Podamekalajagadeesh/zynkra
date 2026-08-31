@@ -1,0 +1,24 @@
+{
+  "id": "54.3 Catalogs",
+  "name": "Catalogs",
+  "slug": "catalogs",
+  "featureCount": 16,
+  "features": [
+    "Product Catalog",
+    "Service Catalog",
+    "Categories",
+    "Collections",
+    "Bundles",
+    "Variants",
+    "Pricing",
+    "Discounts",
+    "Inventory",
+    "Images",
+    "Videos",
+    "Descriptions",
+    "Tags",
+    "Search",
+    "Sharing",
+    "Catalog Analytics"
+  ]
+}

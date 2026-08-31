@@ -1,0 +1,24 @@
+{
+  "id": "32.4 Paid Content",
+  "name": "Paid Content",
+  "slug": "paid-content",
+  "featureCount": 16,
+  "features": [
+    "Paid Posts",
+    "Paid Videos",
+    "Paid Stories",
+    "Paid Articles",
+    "Paid Audio",
+    "Paid Courses",
+    "Paid Events",
+    "Paywall",
+    "Preview Content",
+    "Pricing",
+    "Discounts",
+    "Coupons",
+    "Access Management",
+    "Purchases",
+    "Refunds",
+    "Paid Content Analytics"
+  ]
+}

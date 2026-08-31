@@ -1,0 +1,24 @@
+{
+  "id": "31.2 Content Analytics",
+  "name": "Content Analytics",
+  "slug": "content-analytics",
+  "featureCount": 16,
+  "features": [
+    "Views",
+    "Reach",
+    "Likes",
+    "Comments",
+    "Shares",
+    "Saves",
+    "Watch Time",
+    "Completion Rate",
+    "Retention",
+    "Engagement Rate",
+    "Clicks",
+    "Follows",
+    "Unfollows",
+    "Content Ranking",
+    "Best Content",
+    "Content Reports"
+  ]
+}

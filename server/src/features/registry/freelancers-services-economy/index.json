@@ -1,0 +1,36 @@
+{
+  "id": "58. FREELANCERS & SERVICES ECONOMY",
+  "name": "FREELANCERS & SERVICES ECONOMY",
+  "slug": "freelancers-services-economy",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "58.1 Freelancer Profiles",
+      "name": "Freelancer Profiles",
+      "slug": "freelancer-profiles",
+      "featureCount": 16,
+      "file": "server/src/features/registry/freelancers-services-economy/freelancer-profiles.json"
+    },
+    {
+      "id": "58.2 Projects",
+      "name": "Projects",
+      "slug": "projects",
+      "featureCount": 16,
+      "file": "server/src/features/registry/freelancers-services-economy/projects.json"
+    },
+    {
+      "id": "58.3 Proposals",
+      "name": "Proposals",
+      "slug": "proposals",
+      "featureCount": 16,
+      "file": "server/src/features/registry/freelancers-services-economy/proposals.json"
+    },
+    {
+      "id": "58.4 Contracts",
+      "name": "Contracts",
+      "slug": "contracts",
+      "featureCount": 16,
+      "file": "server/src/features/registry/freelancers-services-economy/contracts.json"
+    }
+  ]
+}

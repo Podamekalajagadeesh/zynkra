@@ -1,0 +1,23 @@
+{
+  "id": "56.3 Reminders",
+  "name": "Reminders",
+  "slug": "reminders",
+  "featureCount": 15,
+  "features": [
+    "Push Reminder",
+    "Email Reminder",
+    "In-App Reminder",
+    "Custom Reminder",
+    "Multiple Reminders",
+    "Confirmation",
+    "Follow-Up",
+    "Cancellation Alert",
+    "Reschedule Alert",
+    "No-Show Alert",
+    "Preparation Reminder",
+    "Location Reminder",
+    "Payment Reminder",
+    "Review Reminder",
+    "Reminder Preferences"
+  ]
+}

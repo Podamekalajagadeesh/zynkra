@@ -22,6 +22,7 @@ jest.mock('crypto', () => {
 });
 import { NotificationsService } from '../notifications/notifications.service';
 import { LoginSession } from './entities/login-session.entity';
+import { BrainwaveDevice } from './entities/brainwave-device.entity';
 import { User } from '../users/entities/user.entity';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
@@ -158,6 +159,15 @@ describe('AuthService', () => {
             findOne: jest.fn(),
             delete: jest.fn(),
             update: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(BrainwaveDevice),
+          useValue: {
+            create: jest.fn(),
+            save: jest.fn(),
+            find: jest.fn(),
+            delete: jest.fn(),
           },
         },
         {

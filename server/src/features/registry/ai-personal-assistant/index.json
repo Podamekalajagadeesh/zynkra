@@ -1,0 +1,36 @@
+{
+  "id": "36. AI PERSONAL ASSISTANT",
+  "name": "AI PERSONAL ASSISTANT",
+  "slug": "ai-personal-assistant",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "36.1 Assistant Core",
+      "name": "Assistant Core",
+      "slug": "assistant-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-personal-assistant/assistant-core.json"
+    },
+    {
+      "id": "36.2 Task Assistance",
+      "name": "Task Assistance",
+      "slug": "task-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-personal-assistant/task-assistance.json"
+    },
+    {
+      "id": "36.3 Personalization",
+      "name": "Personalization",
+      "slug": "personalization",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-personal-assistant/personalization.json"
+    },
+    {
+      "id": "36.4 Agent Actions",
+      "name": "Agent Actions",
+      "slug": "agent-actions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-personal-assistant/agent-actions.json"
+    }
+  ]
+}

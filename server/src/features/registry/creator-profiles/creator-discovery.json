@@ -1,0 +1,24 @@
+{
+  "id": "29.4 Creator Discovery",
+  "name": "Creator Discovery",
+  "slug": "creator-discovery",
+  "featureCount": 16,
+  "features": [
+    "Creator Search",
+    "Suggested Creators",
+    "Trending Creators",
+    "Local Creators",
+    "Topic Creators",
+    "Similar Creators",
+    "Rising Creators",
+    "Verified Creators",
+    "Creator Categories",
+    "Creator Rankings",
+    "Creator Recommendations",
+    "Creator Lists",
+    "Creator Collections",
+    "Creator Events",
+    "Creator Communities",
+    "Creator Alerts"
+  ]
+}

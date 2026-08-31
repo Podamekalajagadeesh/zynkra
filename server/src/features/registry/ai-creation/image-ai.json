@@ -1,0 +1,24 @@
+{
+  "id": "40.3 Image AI",
+  "name": "Image AI",
+  "slug": "image-ai",
+  "featureCount": 16,
+  "features": [
+    "Image Generation",
+    "Image Editing",
+    "Background Removal",
+    "Object Removal",
+    "Image Enhancement",
+    "Upscaling",
+    "Style Transfer",
+    "Color Correction",
+    "Lighting",
+    "Image Expansion",
+    "Smart Crop",
+    "AI Filters",
+    "AI Effects",
+    "Thumbnail Creation",
+    "Cover Creation",
+    "Image Variations"
+  ]
+}

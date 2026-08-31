@@ -1,0 +1,24 @@
+{
+  "id": "40.4 Video AI",
+  "name": "Video AI",
+  "slug": "video-ai",
+  "featureCount": 16,
+  "features": [
+    "Auto Editing",
+    "Auto Cutting",
+    "Highlight Detection",
+    "Scene Detection",
+    "Caption Generation",
+    "Subtitle Generation",
+    "Translation",
+    "Dubbing",
+    "Voice Cleanup",
+    "Background Removal",
+    "Smart Reframing",
+    "Thumbnail Generation",
+    "Short Generation",
+    "Reel Generation",
+    "Clip Generation",
+    "Video Enhancement"
+  ]
+}

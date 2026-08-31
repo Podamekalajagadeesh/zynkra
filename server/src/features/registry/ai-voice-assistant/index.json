@@ -1,0 +1,36 @@
+{
+  "id": "48. AI VOICE ASSISTANT",
+  "name": "AI VOICE ASSISTANT",
+  "slug": "ai-voice-assistant",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "48.1 Voice Commands",
+      "name": "Voice Commands",
+      "slug": "voice-commands",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-voice-assistant/voice-commands.json"
+    },
+    {
+      "id": "48.2 Voice Search",
+      "name": "Voice Search",
+      "slug": "voice-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-voice-assistant/voice-search.json"
+    },
+    {
+      "id": "48.3 Voice Chat",
+      "name": "Voice Chat",
+      "slug": "voice-chat",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-voice-assistant/voice-chat.json"
+    },
+    {
+      "id": "48.4 Voice Actions",
+      "name": "Voice Actions",
+      "slug": "voice-actions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-voice-assistant/voice-actions.json"
+    }
+  ]
+}

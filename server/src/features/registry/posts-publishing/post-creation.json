@@ -1,0 +1,24 @@
+{
+  "id": "05.1 Post Creation",
+  "name": "Post Creation",
+  "slug": "post-creation",
+  "featureCount": 16,
+  "features": [
+    "Text Posts",
+    "Image Posts",
+    "Video Posts",
+    "Carousel Posts",
+    "Poll Posts",
+    "Question Posts",
+    "Link Posts",
+    "Location Posts",
+    "Mention Posts",
+    "Hashtag Posts",
+    "Music Posts",
+    "Collaborative Posts",
+    "Scheduled Posts",
+    "Draft Posts",
+    "Audience Selection",
+    "Post Preview"
+  ]
+}

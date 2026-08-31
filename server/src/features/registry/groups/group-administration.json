@@ -1,0 +1,24 @@
+{
+  "id": "20.4 Group Administration",
+  "name": "Group Administration",
+  "slug": "group-administration",
+  "featureCount": 16,
+  "features": [
+    "Group Dashboard",
+    "Moderation",
+    "Rules",
+    "Reports",
+    "Content Review",
+    "Member Management",
+    "Role Management",
+    "Analytics",
+    "Notifications",
+    "Group Branding",
+    "Group Settings",
+    "Privacy",
+    "Security",
+    "Monetization",
+    "Membership Fees",
+    "Audit Logs"
+  ]
+}

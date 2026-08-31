@@ -1,0 +1,24 @@
+{
+  "id": "07.1 Story Creation",
+  "name": "Story Creation",
+  "slug": "story-creation",
+  "featureCount": 16,
+  "features": [
+    "Photo Stories",
+    "Video Stories",
+    "Text Stories",
+    "Music Stories",
+    "Poll Stories",
+    "Question Stories",
+    "Quiz Stories",
+    "Link Stories",
+    "Location Stories",
+    "Mention Stories",
+    "Sticker Stories",
+    "Collaborative Stories",
+    "AI Stories",
+    "Story Templates",
+    "Story Drafts",
+    "Story Scheduling"
+  ]
+}

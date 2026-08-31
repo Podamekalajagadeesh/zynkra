@@ -1,0 +1,36 @@
+{
+  "id": "51. BUSINESS PAGES",
+  "name": "BUSINESS PAGES",
+  "slug": "business-pages",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "51.1 Business Profiles",
+      "name": "Business Profiles",
+      "slug": "business-profiles",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-pages/business-profiles.json"
+    },
+    {
+      "id": "51.2 Business Content",
+      "name": "Business Content",
+      "slug": "business-content",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-pages/business-content.json"
+    },
+    {
+      "id": "51.3 Business Discovery",
+      "name": "Business Discovery",
+      "slug": "business-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-pages/business-discovery.json"
+    },
+    {
+      "id": "51.4 Business Management",
+      "name": "Business Management",
+      "slug": "business-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-pages/business-management.json"
+    }
+  ]
+}

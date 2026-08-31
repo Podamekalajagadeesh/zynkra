@@ -1,0 +1,24 @@
+{
+  "id": "49.1 Comment Summaries",
+  "name": "Comment Summaries",
+  "slug": "comment-summaries",
+  "featureCount": 16,
+  "features": [
+    "Comment Summary",
+    "Thread Summary",
+    "Top Opinions",
+    "Main Questions",
+    "Main Complaints",
+    "Main Praise",
+    "Main Topics",
+    "Sentiment Summary",
+    "Creator Summary",
+    "Community Summary",
+    "Live Comment Summary",
+    "Video Comment Summary",
+    "Post Comment Summary",
+    "Summary History",
+    "Summary Sharing",
+    "Summary Settings"
+  ]
+}

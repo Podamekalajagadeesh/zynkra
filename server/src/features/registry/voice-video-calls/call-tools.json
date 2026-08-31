@@ -1,0 +1,24 @@
+{
+  "id": "17.4 Call Tools",
+  "name": "Call Tools",
+  "slug": "call-tools",
+  "featureCount": 16,
+  "features": [
+    "Screen Sharing",
+    "Device Switching",
+    "Noise Suppression",
+    "Echo Cancellation",
+    "Live Captions",
+    "Live Translation",
+    "Call Notes",
+    "AI Summary",
+    "AI Action Items",
+    "Call Transcription",
+    "Recording",
+    "Cloud Storage",
+    "Meeting Links",
+    "Calendar Integration",
+    "Call Scheduling",
+    "Call Analytics"
+  ]
+}

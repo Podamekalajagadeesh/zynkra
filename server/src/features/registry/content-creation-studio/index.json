@@ -1,0 +1,36 @@
+{
+  "id": "12. CONTENT CREATION STUDIO",
+  "name": "CONTENT CREATION STUDIO",
+  "slug": "content-creation-studio",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "12.1 Media Tools",
+      "name": "Media Tools",
+      "slug": "media-tools",
+      "featureCount": 16,
+      "file": "server/src/features/registry/content-creation-studio/media-tools.json"
+    },
+    {
+      "id": "12.2 Templates",
+      "name": "Templates",
+      "slug": "templates",
+      "featureCount": 16,
+      "file": "server/src/features/registry/content-creation-studio/templates.json"
+    },
+    {
+      "id": "12.3 Effects",
+      "name": "Effects",
+      "slug": "effects",
+      "featureCount": 16,
+      "file": "server/src/features/registry/content-creation-studio/effects.json"
+    },
+    {
+      "id": "12.4 Publishing Studio",
+      "name": "Publishing Studio",
+      "slug": "publishing-studio",
+      "featureCount": 16,
+      "file": "server/src/features/registry/content-creation-studio/publishing-studio.json"
+    }
+  ]
+}

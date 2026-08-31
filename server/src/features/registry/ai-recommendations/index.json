@@ -1,0 +1,36 @@
+{
+  "id": "43. AI RECOMMENDATIONS",
+  "name": "AI RECOMMENDATIONS",
+  "slug": "ai-recommendations",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "43.1 People Recommendations",
+      "name": "People Recommendations",
+      "slug": "people-recommendations",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-recommendations/people-recommendations.json"
+    },
+    {
+      "id": "43.2 Content Recommendations",
+      "name": "Content Recommendations",
+      "slug": "content-recommendations",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-recommendations/content-recommendations.json"
+    },
+    {
+      "id": "43.3 Community Recommendations",
+      "name": "Community Recommendations",
+      "slug": "community-recommendations",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-recommendations/community-recommendations.json"
+    },
+    {
+      "id": "43.4 Commerce Recommendations",
+      "name": "Commerce Recommendations",
+      "slug": "commerce-recommendations",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-recommendations/commerce-recommendations.json"
+    }
+  ]
+}

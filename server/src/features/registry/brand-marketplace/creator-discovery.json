@@ -1,0 +1,24 @@
+{
+  "id": "34.2 Creator Discovery",
+  "name": "Creator Discovery",
+  "slug": "creator-discovery",
+  "featureCount": 16,
+  "features": [
+    "Creator Search",
+    "Creator Categories",
+    "Creator Skills",
+    "Creator Audience",
+    "Creator Reach",
+    "Creator Engagement",
+    "Creator Location",
+    "Creator Interests",
+    "Creator Rates",
+    "Creator Availability",
+    "Creator Reviews",
+    "Creator Portfolio",
+    "Creator Verification",
+    "Creator Recommendations",
+    "Creator Lists",
+    "Creator Analytics"
+  ]
+}

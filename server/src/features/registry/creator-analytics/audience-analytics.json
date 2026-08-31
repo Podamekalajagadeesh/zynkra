@@ -1,0 +1,24 @@
+{
+  "id": "31.1 Audience Analytics",
+  "name": "Audience Analytics",
+  "slug": "audience-analytics",
+  "featureCount": 16,
+  "features": [
+    "Followers",
+    "Growth",
+    "Demographics",
+    "Locations",
+    "Languages",
+    "Interests",
+    "Active Times",
+    "Returning Audience",
+    "New Audience",
+    "Audience Retention",
+    "Audience Quality",
+    "Audience Sources",
+    "Audience Overlap",
+    "Audience Trends",
+    "Audience Segments",
+    "Audience Reports"
+  ]
+}

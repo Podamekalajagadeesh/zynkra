@@ -1,0 +1,24 @@
+{
+  "id": "56.2 Scheduling",
+  "name": "Scheduling",
+  "slug": "scheduling",
+  "featureCount": 16,
+  "features": [
+    "Availability",
+    "Working Hours",
+    "Time Slots",
+    "Recurring Appointments",
+    "Buffer Time",
+    "Breaks",
+    "Holidays",
+    "Provider Schedules",
+    "Multi-Provider",
+    "Multi-Location",
+    "Calendar Sync",
+    "Conflict Detection",
+    "Waitlist",
+    "Rescheduling",
+    "Schedule Optimization",
+    "Scheduling Rules"
+  ]
+}

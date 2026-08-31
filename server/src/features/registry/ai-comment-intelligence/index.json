@@ -1,0 +1,36 @@
+{
+  "id": "49. AI COMMENT INTELLIGENCE",
+  "name": "AI COMMENT INTELLIGENCE",
+  "slug": "ai-comment-intelligence",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "49.1 Comment Summaries",
+      "name": "Comment Summaries",
+      "slug": "comment-summaries",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-comment-intelligence/comment-summaries.json"
+    },
+    {
+      "id": "49.2 Sentiment",
+      "name": "Sentiment",
+      "slug": "sentiment",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-comment-intelligence/sentiment.json"
+    },
+    {
+      "id": "49.3 Question Detection",
+      "name": "Question Detection",
+      "slug": "question-detection",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-comment-intelligence/question-detection.json"
+    },
+    {
+      "id": "49.4 Reply Assistance",
+      "name": "Reply Assistance",
+      "slug": "reply-assistance",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-comment-intelligence/reply-assistance.json"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "09. LONG VIDEO & LIVE",
+  "name": "LONG VIDEO & LIVE",
+  "slug": "long-video-live",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "09.1 Video Publishing",
+      "name": "Video Publishing",
+      "slug": "video-publishing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/long-video-live/video-publishing.json"
+    },
+    {
+      "id": "09.2 Live Streaming",
+      "name": "Live Streaming",
+      "slug": "live-streaming",
+      "featureCount": 16,
+      "file": "server/src/features/registry/long-video-live/live-streaming.json"
+    },
+    {
+      "id": "09.3 Live Interaction",
+      "name": "Live Interaction",
+      "slug": "live-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/long-video-live/live-interaction.json"
+    },
+    {
+      "id": "09.4 Video Discovery",
+      "name": "Video Discovery",
+      "slug": "video-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/long-video-live/video-discovery.json"
+    }
+  ]
+}

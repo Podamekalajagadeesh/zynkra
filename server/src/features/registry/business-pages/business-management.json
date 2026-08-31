@@ -1,0 +1,24 @@
+{
+  "id": "51.4 Business Management",
+  "name": "Business Management",
+  "slug": "business-management",
+  "featureCount": 16,
+  "features": [
+    "Business Dashboard",
+    "Team",
+    "Roles",
+    "Permissions",
+    "Content",
+    "Customers",
+    "Products",
+    "Services",
+    "Bookings",
+    "Appointments",
+    "Orders",
+    "Payments",
+    "Analytics",
+    "Marketing",
+    "Settings",
+    "Audit Logs"
+  ]
+}

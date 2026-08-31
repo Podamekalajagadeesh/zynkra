@@ -1,0 +1,36 @@
+{
+  "id": "55. BOOKING",
+  "name": "BOOKING",
+  "slug": "booking",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "55.1 Booking Core",
+      "name": "Booking Core",
+      "slug": "booking-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/booking/booking-core.json"
+    },
+    {
+      "id": "55.2 Availability",
+      "name": "Availability",
+      "slug": "availability",
+      "featureCount": 16,
+      "file": "server/src/features/registry/booking/availability.json"
+    },
+    {
+      "id": "55.3 Reservations",
+      "name": "Reservations",
+      "slug": "reservations",
+      "featureCount": 16,
+      "file": "server/src/features/registry/booking/reservations.json"
+    },
+    {
+      "id": "55.4 Booking Management",
+      "name": "Booking Management",
+      "slug": "booking-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/booking/booking-management.json"
+    }
+  ]
+}

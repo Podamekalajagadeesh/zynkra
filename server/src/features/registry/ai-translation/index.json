@@ -1,0 +1,36 @@
+{
+  "id": "41. AI TRANSLATION",
+  "name": "AI TRANSLATION",
+  "slug": "ai-translation",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "41.1 Text Translation",
+      "name": "Text Translation",
+      "slug": "text-translation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-translation/text-translation.json"
+    },
+    {
+      "id": "41.2 Live Translation",
+      "name": "Live Translation",
+      "slug": "live-translation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-translation/live-translation.json"
+    },
+    {
+      "id": "41.3 Video Translation",
+      "name": "Video Translation",
+      "slug": "video-translation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-translation/video-translation.json"
+    },
+    {
+      "id": "41.4 Voice Translation",
+      "name": "Voice Translation",
+      "slug": "voice-translation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-translation/voice-translation.json"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "31. CREATOR ANALYTICS",
+  "name": "CREATOR ANALYTICS",
+  "slug": "creator-analytics",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "31.1 Audience Analytics",
+      "name": "Audience Analytics",
+      "slug": "audience-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-analytics/audience-analytics.json"
+    },
+    {
+      "id": "31.2 Content Analytics",
+      "name": "Content Analytics",
+      "slug": "content-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-analytics/content-analytics.json"
+    },
+    {
+      "id": "31.3 Growth Analytics",
+      "name": "Growth Analytics",
+      "slug": "growth-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-analytics/growth-analytics.json"
+    },
+    {
+      "id": "31.4 Revenue Analytics",
+      "name": "Revenue Analytics",
+      "slug": "revenue-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-analytics/revenue-analytics.json"
+    }
+  ]
+}

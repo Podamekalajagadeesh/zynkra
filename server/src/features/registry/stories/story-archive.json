@@ -1,0 +1,24 @@
+{
+  "id": "07.4 Story Archive",
+  "name": "Story Archive",
+  "slug": "story-archive",
+  "featureCount": 16,
+  "features": [
+    "Story Archive",
+    "Story Highlights",
+    "Highlight Covers",
+    "Highlight Editing",
+    "Memories",
+    "On This Day",
+    "Story Downloads",
+    "Story Sharing",
+    "Story Reposting",
+    "Story Analytics",
+    "Story Viewer History",
+    "Story Search",
+    "Story Filtering",
+    "Story Organization",
+    "Story Privacy",
+    "Story Export"
+  ]
+}

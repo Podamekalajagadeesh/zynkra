@@ -1,0 +1,23 @@
+{
+  "id": "19.3 Notification Preferences",
+  "name": "Notification Preferences",
+  "slug": "notification-preferences",
+  "featureCount": 15,
+  "features": [
+    "Push Settings",
+    "Email Settings",
+    "In-App Settings",
+    "Sound",
+    "Vibration",
+    "Badge Counts",
+    "Notification Categories",
+    "Quiet Hours",
+    "Frequency",
+    "Priority",
+    "Preview Settings",
+    "Privacy",
+    "Per-Account Settings",
+    "Per-Community Settings",
+    "Reset Preferences"
+  ]
+}

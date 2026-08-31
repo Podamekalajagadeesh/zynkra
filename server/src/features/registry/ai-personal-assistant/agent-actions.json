@@ -1,0 +1,24 @@
+{
+  "id": "36.4 Agent Actions",
+  "name": "Agent Actions",
+  "slug": "agent-actions",
+  "featureCount": 16,
+  "features": [
+    "Search",
+    "Send Message",
+    "Draft Message",
+    "Schedule Message",
+    "Create Post",
+    "Schedule Post",
+    "Book Appointment",
+    "Search Products",
+    "Compare Products",
+    "Join Community",
+    "Find Events",
+    "Create Reminder",
+    "Summarize Content",
+    "Translate Content",
+    "Execute Approved Actions",
+    "Action History"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "32.3 Tips",
+  "name": "Tips",
+  "slug": "tips",
+  "featureCount": 16,
+  "features": [
+    "Send Tips",
+    "Receive Tips",
+    "Tip Amounts",
+    "Custom Tips",
+    "Tip Messages",
+    "Tip History",
+    "Tip Notifications",
+    "Tip Leaderboards",
+    "Creator Tip Settings",
+    "Tip Privacy",
+    "Tip Limits",
+    "Tip Refunds",
+    "Tip Analytics",
+    "Tip Payouts",
+    "Tip Currency",
+    "Tip Controls"
+  ]
+}

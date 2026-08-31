@@ -1,0 +1,24 @@
+{
+  "id": "46.4 Purchase Assistance",
+  "name": "Purchase Assistance",
+  "slug": "purchase-assistance",
+  "featureCount": 16,
+  "features": [
+    "Cart Creation",
+    "Checkout Assistance",
+    "Payment Assistance",
+    "Shipping Selection",
+    "Delivery Tracking",
+    "Order Tracking",
+    "Return Assistance",
+    "Refund Assistance",
+    "Warranty Assistance",
+    "Seller Communication",
+    "Review Assistance",
+    "Reorder",
+    "Subscription Purchase",
+    "Price Tracking",
+    "Purchase History",
+    "Purchase Recommendations"
+  ]
+}

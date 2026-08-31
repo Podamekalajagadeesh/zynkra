@@ -1,0 +1,24 @@
+{
+  "id": "55.3 Reservations",
+  "name": "Reservations",
+  "slug": "reservations",
+  "featureCount": 16,
+  "features": [
+    "Instant Booking",
+    "Request to Book",
+    "Approval Booking",
+    "Waitlist",
+    "Capacity",
+    "Group Reservations",
+    "Seat Selection",
+    "Table Selection",
+    "Room Selection",
+    "Ticket Generation",
+    "Digital Tickets",
+    "QR Tickets",
+    "Ticket Transfer",
+    "Cancellation",
+    "Refunds",
+    "Reservation History"
+  ]
+}

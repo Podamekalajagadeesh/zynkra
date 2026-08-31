@@ -1,0 +1,24 @@
+{
+  "id": "42.1 Memory Core",
+  "name": "Memory Core",
+  "slug": "memory-core",
+  "featureCount": 16,
+  "features": [
+    "Memory Storage",
+    "Memory Retrieval",
+    "Memory Search",
+    "Memory Classification",
+    "Memory Importance",
+    "Memory Expiration",
+    "Memory Editing",
+    "Memory Deletion",
+    "Memory Export",
+    "Memory Privacy",
+    "Memory Permissions",
+    "Memory History",
+    "Memory Controls",
+    "Memory Dashboard",
+    "Memory Analytics",
+    "Memory Reset"
+  ]
+}

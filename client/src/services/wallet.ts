@@ -103,10 +103,13 @@ class WalletService {
   private async connectWalletConnect(): Promise<{ walletInfo: WalletInfo; accessToken: string }> {
     try {
       const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-      if (!projectId) {
-        throw new Error('WalletConnect Project ID is not configured.');
+      const isPlaceholder = !projectId || projectId === 'dev-placeholder' || projectId === 'your-walletconnect-project-id';
+      if (isPlaceholder) {
+        throw new Error(
+          'WalletConnect is not configured. Add a valid VITE_WALLETCONNECT_PROJECT_ID to client/.env.local (see client/.env.example).'
+        );
       }
-      
+
       this.wcProvider = await EthereumProvider.init({
         projectId,
         chains: [1],

@@ -1,0 +1,24 @@
+{
+  "id": "41.4 Voice Translation",
+  "name": "Voice Translation",
+  "slug": "voice-translation",
+  "featureCount": 16,
+  "features": [
+    "Voice Transcription",
+    "Voice Translation",
+    "Real-Time Voice Translation",
+    "Call Translation",
+    "Voice Message Translation",
+    "Speaker Identification",
+    "Language Detection",
+    "Voice Preservation",
+    "AI Dubbing",
+    "Voice Output",
+    "Translation Controls",
+    "Translation History",
+    "Translation Quality",
+    "Language Preferences",
+    "Voice Privacy",
+    "Translation Feedback"
+  ]
+}

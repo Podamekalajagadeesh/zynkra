@@ -27,12 +27,27 @@ export class ActivityService {
     return {
       showOnlineStatus: user.showOnlineStatus,
       showLastSeenTimestamp: user.showLastSeenTimestamp,
+      readReceipts: user.readReceipts,
+      mentions: user.mentions,
+      activityVisibility: user.activityVisibility,
+      contactDiscovery: user.contactDiscovery,
+      personalization: user.personalization,
+      adPersonalization: user.adPersonalization,
     };
   }
 
   async updateActivitySettings(
     userId: string,
-    settings: { showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean },
+    settings: {
+      showOnlineStatus?: boolean;
+      showLastSeenTimestamp?: boolean;
+      readReceipts?: boolean;
+      mentions?: 'everyone' | 'followers' | 'no_one';
+      activityVisibility?: 'public' | 'friends' | 'private';
+      contactDiscovery?: boolean;
+      personalization?: boolean;
+      adPersonalization?: boolean;
+    },
   ) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found.');
@@ -41,6 +56,24 @@ export class ActivityService {
     }
     if (settings.showLastSeenTimestamp !== undefined) {
       user.showLastSeenTimestamp = settings.showLastSeenTimestamp;
+    }
+    if (settings.readReceipts !== undefined) {
+      user.readReceipts = settings.readReceipts;
+    }
+    if (settings.mentions) {
+      user.mentions = settings.mentions;
+    }
+    if (settings.activityVisibility) {
+      user.activityVisibility = settings.activityVisibility;
+    }
+    if (settings.contactDiscovery !== undefined) {
+      user.contactDiscovery = settings.contactDiscovery;
+    }
+    if (settings.personalization !== undefined) {
+      user.personalization = settings.personalization;
+    }
+    if (settings.adPersonalization !== undefined) {
+      user.adPersonalization = settings.adPersonalization;
     }
     await this.usersRepository.save(user);
     return this.getActivitySettings(userId);

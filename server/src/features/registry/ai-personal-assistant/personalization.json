@@ -1,0 +1,24 @@
+{
+  "id": "36.3 Personalization",
+  "name": "Personalization",
+  "slug": "personalization",
+  "featureCount": 16,
+  "features": [
+    "Preference Learning",
+    "Interest Learning",
+    "Communication Style",
+    "Content Preferences",
+    "Creator Preferences",
+    "Shopping Preferences",
+    "Community Preferences",
+    "Language Preferences",
+    "Schedule Preferences",
+    "Notification Preferences",
+    "Privacy Preferences",
+    "Memory Preferences",
+    "Recommendation Preferences",
+    "AI Behavior Controls",
+    "Personal AI Profile",
+    "Personalization Reset"
+  ]
+}

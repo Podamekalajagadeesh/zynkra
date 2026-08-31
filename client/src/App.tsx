@@ -83,6 +83,8 @@ const NotificationsPage = lazy(() => import('./pages/notifications').then((modul
 const PasskeyManagementPage = lazy(() =>
   import('./pages/passkey-management').then((module) => ({ default: module.PasskeyManagementPage })),
 );
+const AccountDashboardPage = lazy(() => import('./pages/account-dashboard').then((module) => ({ default: module.default })));
+const RecoveryCodesPage = lazy(() => import('./pages/recovery-codes').then((module) => ({ default: module.default })));
 const SecurityCheckupPage = lazy(() =>
   import('./pages/security-checkup').then((module) => ({ default: module.SecurityCheckupPage })),
 );
@@ -96,6 +98,7 @@ const Streaming = lazy(() => import('./Streaming').then((module) => ({ default: 
 const EditProfilePage = lazy(() => import('./pages/edit-profile').then((module) => ({ default: module.EditProfilePage })));
 const FollowRequestsPage = lazy(() => import('./pages/follow-requests').then((module) => ({ default: module.FollowRequestsPage })));
 const SettingsPage = lazy(() => import('./pages/settings').then((module) => ({ default: module.SettingsPage })));
+const AccountStatusPage = lazy(() => import('./pages/account-status').then((module) => ({ default: module.default })));
 const CloseFriendsSettingsPage = lazy(() => import('./pages/close-friends-settings').then((module) => ({ default: module.CloseFriendsSettings })));
 const CustomAudiencesSettingsPage = lazy(() => import('./pages/custom-audiences-settings').then((module) => ({ default: module.CustomAudiencesSettings })));
 const TwoFactorAuthPage = lazy(() => import('./pages/two-factor-auth').then((module) => ({ default: module.TwoFactorAuthPage })));
@@ -145,6 +148,7 @@ const AffiliateDashboardPage = lazy(() => import('./pages/affiliates/AffiliateDa
 const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/BrandCollabsDashboardPage').then((module) => ({ default: module.BrandCollabsDashboardPage })));
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
 const RequestVerificationPage = lazy(() => import('./pages/request-verification'));
+const VerificationAndTrustPage = lazy(() => import('./pages/verification-and-trust').then((module) => ({ default: module.default })));
 const CollectionsPage = lazy(() => import('./pages/collections').then((module) => ({ default: module.default })));
 const ThreadsPage = lazy(() => import('./pages/threads').then((module) => ({ default: module.default })));
 const DraftsPage = lazy(() => import('./pages/drafts').then((module) => ({ default: module.default })));
@@ -1120,6 +1124,22 @@ function App() {
                       }
                     />
                     <Route
+                      path="/account-dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <AccountDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/recovery-codes"
+                      element={
+                        <ProtectedRoute>
+                          <RecoveryCodesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/security-checkup"
                       element={
                         <ProtectedRoute>
@@ -1188,6 +1208,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SettingsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/account-status"
+                      element={
+                        <ProtectedRoute>
+                          <AccountStatusPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1316,6 +1344,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <RequestVerificationPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/verification-and-trust"
+                      element={
+                        <ProtectedRoute>
+                          <VerificationAndTrustPage />
                         </ProtectedRoute>
                       }
                     />

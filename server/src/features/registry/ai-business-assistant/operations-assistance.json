@@ -1,0 +1,24 @@
+{
+  "id": "45.4 Operations Assistance",
+  "name": "Operations Assistance",
+  "slug": "operations-assistance",
+  "featureCount": 16,
+  "features": [
+    "Task Management",
+    "Scheduling",
+    "Inventory Insights",
+    "Booking Management",
+    "Customer Support",
+    "Team Coordination",
+    "Workflow Automation",
+    "Alerts",
+    "Reports",
+    "Data Analysis",
+    "Sales Forecasting",
+    "Demand Forecasting",
+    "Resource Planning",
+    "Appointment Optimization",
+    "Operations Recommendations",
+    "Operations History"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "29.1 Creator Identity",
+  "name": "Creator Identity",
+  "slug": "creator-identity",
+  "featureCount": 16,
+  "features": [
+    "Creator Profile",
+    "Creator Bio",
+    "Creator Category",
+    "Creator Skills",
+    "Creator Interests",
+    "Creator Links",
+    "Creator Verification",
+    "Creator Badge",
+    "Creator Portfolio",
+    "Creator Highlights",
+    "Creator Contact",
+    "Creator Business Info",
+    "Creator Location",
+    "Creator Languages",
+    "Creator Availability",
+    "Creator Settings"
+  ]
+}

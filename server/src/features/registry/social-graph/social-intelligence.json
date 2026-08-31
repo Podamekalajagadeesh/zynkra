@@ -1,0 +1,24 @@
+{
+  "id": "03.4 Social Intelligence",
+  "name": "Social Intelligence",
+  "slug": "social-intelligence",
+  "featureCount": 16,
+  "features": [
+    "Relationship Strength",
+    "Interest Graph",
+    "Social Graph",
+    "Community Graph",
+    "Creator Graph",
+    "Business Graph",
+    "Interaction Graph",
+    "Content Graph",
+    "Event Graph",
+    "Local Graph",
+    "Professional Graph",
+    "Recommendation Graph",
+    "Trust Graph",
+    "Influence Graph",
+    "Activity Graph",
+    "Social Insights"
+  ]
+}

@@ -54,9 +54,15 @@ describe('SignUpPage', () => {
     expect(screen.getByRole('button', { name: /sign up with google/i })).toBeInTheDocument();
   });
 
-  it('renders the passkey registration button', () => {
+  it('renders guest and anonymous sign-up options', () => {
     renderSignUpPage();
-    expect(screen.getByRole('button', { name: /register with passkey/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue as guest/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue anonymously/i })).toBeInTheDocument();
+  });
+
+  it('does not offer passkey registration before authentication', () => {
+    renderSignUpPage();
+    expect(screen.queryByRole('button', { name: /register with passkey/i })).not.toBeInTheDocument();
   });
 
   it('renders a link to the login page', () => {

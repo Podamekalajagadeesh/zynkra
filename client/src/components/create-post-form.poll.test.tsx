@@ -43,8 +43,6 @@ function renderForm() {
 // --- Tests ---
 
 describe('CreatePostForm poll creation', () => {
-  const user = userEvent.setup();
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -55,6 +53,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('shows poll form when Add Poll is clicked', async () => {
+    const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole('button', { name: /add poll/i }));
 
@@ -65,6 +64,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('hides poll form when Remove Poll is clicked', async () => {
+    const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole('button', { name: /add poll/i }));
     expect(screen.getByPlaceholderText('Poll Question')).toBeInTheDocument();
@@ -75,6 +75,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('adds a new option when Add Option is clicked', async () => {
+    const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole('button', { name: /add poll/i }));
 
@@ -87,6 +88,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('sends poll data on submit', async () => {
+    const user = userEvent.setup();
     renderForm();
 
     // Add content
@@ -115,6 +117,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('sends null poll when not added', async () => {
+    const user = userEvent.setup();
     renderForm();
 
     const textarea = screen.getByPlaceholderText(/what's on your mind/i);
@@ -132,6 +135,7 @@ describe('CreatePostForm poll creation', () => {
   });
 
   it('updates question input when typing', async () => {
+    const user = userEvent.setup();
     renderForm();
     await user.click(screen.getByRole('button', { name: /add poll/i }));
 

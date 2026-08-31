@@ -1,0 +1,24 @@
+{
+  "id": "06.1 Photo Uploads",
+  "name": "Photo Uploads",
+  "slug": "photo-uploads",
+  "featureCount": 16,
+  "features": [
+    "Photo Upload",
+    "Multiple Photos",
+    "High Resolution",
+    "Compression",
+    "Crop",
+    "Rotate",
+    "Resize",
+    "Filters",
+    "Adjustments",
+    "AI Enhancement",
+    "Background Removal",
+    "Object Removal",
+    "Face Detection",
+    "Metadata",
+    "Location",
+    "Photo Privacy"
+  ]
+}

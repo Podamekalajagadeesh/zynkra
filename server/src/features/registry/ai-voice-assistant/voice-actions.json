@@ -1,0 +1,24 @@
+{
+  "id": "48.4 Voice Actions",
+  "name": "Voice Actions",
+  "slug": "voice-actions",
+  "featureCount": 16,
+  "features": [
+    "Send Message",
+    "Create Post",
+    "Edit Post",
+    "Search",
+    "Follow",
+    "Unfollow",
+    "Like",
+    "Save",
+    "Share",
+    "Schedule",
+    "Book",
+    "Call",
+    "Join Community",
+    "Create Reminder",
+    "Start Navigation",
+    "Execute Approved Actions"
+  ]
+}

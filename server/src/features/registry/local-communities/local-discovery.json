@@ -1,0 +1,24 @@
+{
+  "id": "23.1 Local Discovery",
+  "name": "Local Discovery",
+  "slug": "local-discovery",
+  "featureCount": 16,
+  "features": [
+    "Nearby People",
+    "Nearby Posts",
+    "Nearby Businesses",
+    "Nearby Events",
+    "Nearby Communities",
+    "Nearby Creators",
+    "Nearby Services",
+    "Nearby Products",
+    "Local Deals",
+    "Local News",
+    "Local Trends",
+    "Local Recommendations",
+    "Map Search",
+    "Distance Filters",
+    "Location Filters",
+    "Local Alerts"
+  ]
+}

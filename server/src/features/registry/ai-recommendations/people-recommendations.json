@@ -1,0 +1,24 @@
+{
+  "id": "43.1 People Recommendations",
+  "name": "People Recommendations",
+  "slug": "people-recommendations",
+  "featureCount": 16,
+  "features": [
+    "Friend Suggestions",
+    "Follow Suggestions",
+    "Creator Suggestions",
+    "Professional Suggestions",
+    "Local Suggestions",
+    "Interest Matching",
+    "Mutual Matching",
+    "Community Matching",
+    "Event Matching",
+    "Collaboration Matching",
+    "Relationship Recommendations",
+    "Similar People",
+    "New People",
+    "Trending People",
+    "Personalized People",
+    "Recommendation Controls"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "12.2 Templates",
+  "name": "Templates",
+  "slug": "templates",
+  "featureCount": 16,
+  "features": [
+    "Post Templates",
+    "Story Templates",
+    "Reel Templates",
+    "Video Templates",
+    "Thumbnail Templates",
+    "Advertisement Templates",
+    "Business Templates",
+    "Creator Templates",
+    "Event Templates",
+    "Poll Templates",
+    "Quote Templates",
+    "Article Templates",
+    "Brand Templates",
+    "Community Templates",
+    "Custom Templates",
+    "Template Sharing"
+  ]
+}

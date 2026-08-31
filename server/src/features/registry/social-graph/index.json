@@ -1,0 +1,36 @@
+{
+  "id": "03. SOCIAL GRAPH",
+  "name": "SOCIAL GRAPH",
+  "slug": "social-graph",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "03.1 Connections",
+      "name": "Connections",
+      "slug": "connections",
+      "featureCount": 16,
+      "file": "server/src/features/registry/social-graph/connections.json"
+    },
+    {
+      "id": "03.2 Relationships",
+      "name": "Relationships",
+      "slug": "relationships",
+      "featureCount": 16,
+      "file": "server/src/features/registry/social-graph/relationships.json"
+    },
+    {
+      "id": "03.3 Following Systems",
+      "name": "Following Systems",
+      "slug": "following-systems",
+      "featureCount": 16,
+      "file": "server/src/features/registry/social-graph/following-systems.json"
+    },
+    {
+      "id": "03.4 Social Intelligence",
+      "name": "Social Intelligence",
+      "slug": "social-intelligence",
+      "featureCount": 16,
+      "file": "server/src/features/registry/social-graph/social-intelligence.json"
+    }
+  ]
+}

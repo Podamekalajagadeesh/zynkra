@@ -1,0 +1,24 @@
+{
+  "id": "27.1 Moderation Tools",
+  "name": "Moderation Tools",
+  "slug": "moderation-tools",
+  "featureCount": 16,
+  "features": [
+    "Report Content",
+    "Report User",
+    "Remove Content",
+    "Hide Content",
+    "Approve Content",
+    "Lock Discussion",
+    "Delete Comment",
+    "Mute User",
+    "Ban User",
+    "Warn User",
+    "Restrict User",
+    "Moderator Queue",
+    "Bulk Moderation",
+    "Automated Moderation",
+    "AI Moderation",
+    "Moderation Logs"
+  ]
+}

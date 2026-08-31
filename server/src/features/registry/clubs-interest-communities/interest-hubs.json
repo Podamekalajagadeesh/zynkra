@@ -1,0 +1,24 @@
+{
+  "id": "22.2 Interest Hubs",
+  "name": "Interest Hubs",
+  "slug": "interest-hubs",
+  "featureCount": 16,
+  "features": [
+    "Interest Pages",
+    "Topic Feeds",
+    "Topic Discussions",
+    "Topic Creators",
+    "Topic Communities",
+    "Topic Events",
+    "Topic Articles",
+    "Topic Videos",
+    "Topic Polls",
+    "Topic Search",
+    "Topic Following",
+    "Topic Recommendations",
+    "Topic Notifications",
+    "Topic Trends",
+    "Topic Moderation",
+    "Topic Analytics"
+  ]
+}

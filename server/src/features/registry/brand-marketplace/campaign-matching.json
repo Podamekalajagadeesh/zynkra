@@ -1,0 +1,24 @@
+{
+  "id": "34.3 Campaign Matching",
+  "name": "Campaign Matching",
+  "slug": "campaign-matching",
+  "featureCount": 16,
+  "features": [
+    "AI Matching",
+    "Audience Matching",
+    "Interest Matching",
+    "Location Matching",
+    "Budget Matching",
+    "Engagement Matching",
+    "Content Matching",
+    "Brand Safety Matching",
+    "Creator Fit Score",
+    "Campaign Recommendations",
+    "Deal Recommendations",
+    "Campaign Invitations",
+    "Campaign Applications",
+    "Shortlisting",
+    "Matching Analytics",
+    "Match History"
+  ]
+}

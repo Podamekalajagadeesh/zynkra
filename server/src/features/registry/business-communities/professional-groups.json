@@ -1,0 +1,24 @@
+{
+  "id": "25.2 Professional Groups",
+  "name": "Professional Groups",
+  "slug": "professional-groups",
+  "featureCount": 16,
+  "features": [
+    "Career Groups",
+    "Skill Groups",
+    "Industry Groups",
+    "Networking Groups",
+    "Mentorship Groups",
+    "Job Groups",
+    "Freelance Groups",
+    "Founder Groups",
+    "Executive Groups",
+    "Student Groups",
+    "Professional Events",
+    "Discussions",
+    "Resources",
+    "Polls",
+    "Moderation",
+    "Analytics"
+  ]
+}

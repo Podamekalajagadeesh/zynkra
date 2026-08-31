@@ -9,11 +9,25 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsEnum } from 'class-validator';
-import { VerificationCategory } from '../entities/verification-request.entity';
+import { VerificationCategory, VerificationWorkflow } from '../entities/verification-request.entity';
 
 export class CreateVerificationRequestDto {
+  @IsOptional()
+  @IsEnum(VerificationWorkflow)
+  workflow?: VerificationWorkflow | 'personal' | 'business' | 'organization';
+
   @IsEnum(VerificationCategory)
   category: VerificationCategory;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  organizationName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  documentType?: string;
 
   @IsString()
   @MinLength(20)

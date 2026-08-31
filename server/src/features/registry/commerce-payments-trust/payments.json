@@ -1,0 +1,24 @@
+{
+  "id": "60.2 Payments",
+  "name": "Payments",
+  "slug": "payments",
+  "featureCount": 16,
+  "features": [
+    "Card Payments",
+    "UPI Payments",
+    "Wallet Payments",
+    "Bank Transfer",
+    "Deposits",
+    "Partial Payments",
+    "Recurring Payments",
+    "Payment Verification",
+    "Refunds",
+    "Partial Refunds",
+    "Invoices",
+    "Receipts",
+    "Taxes",
+    "Payment History",
+    "Payouts",
+    "Payment Security"
+  ]
+}

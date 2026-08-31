@@ -57,6 +57,26 @@ const authHandlers = [
     });
   }),
 
+  http.get('*/auth/check-email', ({ request }) => {
+    const url = new URL(request.url);
+    const email = url.searchParams.get('email') ?? '';
+    return HttpResponse.json({ available: !email.includes('taken') && email.length > 0 });
+  }),
+
+  http.get('*/auth/check-username', ({ request }) => {
+    const url = new URL(request.url);
+    const username = url.searchParams.get('username') ?? '';
+    return HttpResponse.json({ available: !username.includes('taken') && username.length > 0 });
+  }),
+
+  http.post('*/auth/guest', () => {
+    return HttpResponse.json({ access_token: 'mock-guest-token' });
+  }),
+
+  http.post('*/auth/anonymous', () => {
+    return HttpResponse.json({ access_token: 'mock-anonymous-token' });
+  }),
+
   http.post('*/auth/resend-verification', () => {
     return HttpResponse.json({
       message: 'If a user with that email exists, a verification email has been sent.',

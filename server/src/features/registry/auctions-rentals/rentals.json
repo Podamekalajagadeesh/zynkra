@@ -1,0 +1,24 @@
+{
+  "id": "59.3 Rentals",
+  "name": "Rentals",
+  "slug": "rentals",
+  "featureCount": 16,
+  "features": [
+    "Rental Listings",
+    "Rental Search",
+    "Availability",
+    "Pricing",
+    "Deposits",
+    "Booking",
+    "Rental Terms",
+    "Location",
+    "Pickup",
+    "Delivery",
+    "Insurance",
+    "Reviews",
+    "Seller Verification",
+    "Renter Verification",
+    "Rental History",
+    "Rental Analytics"
+  ]
+}

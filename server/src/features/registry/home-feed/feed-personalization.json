@@ -1,0 +1,24 @@
+{
+  "id": "04.4 Feed Personalization",
+  "name": "Feed Personalization",
+  "slug": "feed-personalization",
+  "featureCount": 16,
+  "features": [
+    "Interest Learning",
+    "Behavior Learning",
+    "Relationship Signals",
+    "Content Quality",
+    "Watch Time",
+    "Engagement Signals",
+    "Negative Feedback",
+    "Session Context",
+    "Time Context",
+    "Location Context",
+    "Device Context",
+    "Trend Signals",
+    "Creator Signals",
+    "Community Signals",
+    "Personalization",
+    "Feed Transparency"
+  ]
+}

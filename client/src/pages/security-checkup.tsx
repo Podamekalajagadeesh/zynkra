@@ -129,6 +129,31 @@ export function SecurityCheckupPage() {
     }
   };
 
+  const handleRegisterBrainwave = async () => {
+    setRegisteringBrainwave(true);
+    try {
+      await registerBrainwaveDevice();
+      setBrainwaveDevices(await getBrainwaveDevices());
+      toast.success('Device registered.');
+    } catch (error) {
+      console.error('Failed to register device', error);
+      toast.error('Failed to register device.');
+    } finally {
+      setRegisteringBrainwave(false);
+    }
+  };
+
+  const handleRemoveBrainwave = async (deviceId: string) => {
+    try {
+      await removeBrainwaveDevice(deviceId);
+      setBrainwaveDevices((devices) => devices.filter((device) => device.id !== deviceId));
+      toast.success('Device removed.');
+    } catch (error) {
+      console.error('Failed to remove device', error);
+      toast.error('Failed to remove device.');
+    }
+  };
+
   const handleMarkAlertRead = async (notificationId: string) => {
     try {
       await markAsRead(notificationId);
@@ -393,6 +418,39 @@ export function SecurityCheckupPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-4 rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="font-semibold text-lg text-dark-900 dark:text-white">Registered Devices</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Review and remove devices registered for neural authentication.
+              </p>
+            </div>
+            <Button variant="secondary" onClick={handleRegisterBrainwave} disabled={registeringBrainwave} icon={<Plus size={16} />}>
+              {registeringBrainwave ? 'Registering...' : 'Register Device'}
+            </Button>
+          </div>
+          {brainwaveDevices.length === 0 ? (
+            <p className="text-sm text-dark-500 dark:text-dark-400">No registered devices.</p>
+          ) : (
+            <div className="space-y-3">
+              {brainwaveDevices.map((device) => (
+                <div key={device.id} className="flex flex-col gap-3 rounded-xl border border-dark-200 p-4 dark:border-dark-700 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-medium text-dark-900 dark:text-white">{device.deviceModel}</p>
+                    <p className="text-xs text-dark-500 dark:text-dark-400">
+                      Firmware: {device.firmware} · Registered {formatDateTime(device.registeredAt)}
+                    </p>
+                  </div>
+                  <Button variant="destructive" onClick={() => handleRemoveBrainwave(device.id)} icon={<Trash2 size={16} />}>
+                    Remove
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
         </section>

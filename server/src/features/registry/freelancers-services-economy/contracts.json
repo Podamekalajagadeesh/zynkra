@@ -1,0 +1,24 @@
+{
+  "id": "58.4 Contracts",
+  "name": "Contracts",
+  "slug": "contracts",
+  "featureCount": 16,
+  "features": [
+    "Contract Creation",
+    "Contract Templates",
+    "Digital Signing",
+    "Scope",
+    "Deliverables",
+    "Milestones",
+    "Payment Terms",
+    "Deadlines",
+    "Revisions",
+    "Approvals",
+    "Disputes",
+    "Contract Storage",
+    "Contract Search",
+    "Contract History",
+    "Contract Notifications",
+    "Contract Analytics"
+  ]
+}

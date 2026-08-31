@@ -4,6 +4,7 @@ import { getPasskeys, deletePasskey } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Skeleton } from '../components/ui/skeleton';
 import { KeyRound, Trash2 } from 'lucide-react';
+import WebAuthn from '../components/WebAuthn';
 
 interface Passkey {
   id: string;
@@ -40,6 +41,14 @@ export function PasskeyManagementPage() {
     }
   };
 
+  const handleRegistrationSuccess = async () => {
+    try {
+      setPasskeys(await getPasskeys());
+    } catch {
+      setError('Passkey was registered, but the list could not be refreshed.');
+    }
+  };
+
   return (
     <PageShell
       eyebrow="Security"
@@ -47,6 +56,17 @@ export function PasskeyManagementPage() {
       description="Review and remove WebAuthn credentials without leaving the app's visual language."
       compact
     >
+      <div className="mb-6 flex justify-end">
+        <WebAuthn
+          mode="register"
+          onSuccess={handleRegistrationSuccess}
+          onError={setError}
+          variant="outline"
+          className="sm:w-auto"
+        >
+          Add Passkey
+        </WebAuthn>
+      </div>
       {error && (
         <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
           {error}
@@ -65,7 +85,7 @@ export function PasskeyManagementPage() {
             <KeyRound size={28} />
           </div>
           <p className="section-title text-2xl">No passkeys yet</p>
-          <p className="section-subtitle max-w-sm">Register one from login or sign-up to make future sign-ins faster and safer.</p>
+          <p className="section-subtitle max-w-sm">Add a passkey to make future sign-ins faster and safer.</p>
         </div>
       ) : (
         <ul className="space-y-3">

@@ -1,0 +1,24 @@
+{
+  "id": "39.4 Answer Generation",
+  "name": "Answer Generation",
+  "slug": "answer-generation",
+  "featureCount": 16,
+  "features": [
+    "AI Answers",
+    "Summaries",
+    "Comparisons",
+    "Recommendations",
+    "Explanations",
+    "Related Results",
+    "Follow-Up Questions",
+    "Result Citations",
+    "Search Cards",
+    "Knowledge Panels",
+    "People Panels",
+    "Community Panels",
+    "Business Panels",
+    "Product Panels",
+    "Event Panels",
+    "Personalized Results"
+  ]
+}

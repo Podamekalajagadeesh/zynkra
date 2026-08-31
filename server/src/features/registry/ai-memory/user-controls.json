@@ -1,0 +1,24 @@
+{
+  "id": "42.4 User Controls",
+  "name": "User Controls",
+  "slug": "user-controls",
+  "featureCount": 16,
+  "features": [
+    "Memory On/Off",
+    "Memory Categories",
+    "Memory Review",
+    "Memory Edit",
+    "Memory Delete",
+    "Memory Export",
+    "Temporary Chat",
+    "Private Chat",
+    "Forget This",
+    "Forget All",
+    "Memory Permissions",
+    "Memory Notifications",
+    "Memory Transparency",
+    "Memory Audit",
+    "Memory Retention",
+    "Memory Settings"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "55.2 Availability",
+  "name": "Availability",
+  "slug": "availability",
+  "featureCount": 16,
+  "features": [
+    "Working Hours",
+    "Custom Hours",
+    "Breaks",
+    "Vacation Blocks",
+    "Holiday Blocks",
+    "Blocked Time",
+    "Buffers",
+    "Minimum Notice",
+    "Maximum Advance Booking",
+    "Recurring Availability",
+    "Seasonal Availability",
+    "Multi-Location Availability",
+    "Multi-Provider Availability",
+    "Conflict Detection",
+    "Real-Time Availability",
+    "AI Availability Optimization"
+  ]
+}

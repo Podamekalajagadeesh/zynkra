@@ -1,0 +1,24 @@
+{
+  "id": "13.2 People Search",
+  "name": "People Search",
+  "slug": "people-search",
+  "featureCount": 16,
+  "features": [
+    "Username Search",
+    "Name Search",
+    "Location Search",
+    "Interest Search",
+    "Skill Search",
+    "Creator Search",
+    "Business Search",
+    "Organization Search",
+    "Community Search",
+    "Verified Search",
+    "Nearby People",
+    "Mutual Search",
+    "Professional Search",
+    "Education Search",
+    "Advanced Filters",
+    "People Recommendations"
+  ]
+}

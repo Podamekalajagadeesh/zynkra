@@ -1,0 +1,24 @@
+{
+  "id": "23.4 Local Events",
+  "name": "Local Events",
+  "slug": "local-events",
+  "featureCount": 16,
+  "features": [
+    "Event Discovery",
+    "Event Creation",
+    "Event Registration",
+    "Event Chat",
+    "Event Pages",
+    "Event Tickets",
+    "Event Maps",
+    "Event Reminders",
+    "Event Check-In",
+    "Event Photos",
+    "Event Videos",
+    "Event Reviews",
+    "Event Hosts",
+    "Event Sharing",
+    "Event Recommendations",
+    "Event Analytics"
+  ]
+}

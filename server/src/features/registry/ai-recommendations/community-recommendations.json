@@ -1,0 +1,24 @@
+{
+  "id": "43.3 Community Recommendations",
+  "name": "Community Recommendations",
+  "slug": "community-recommendations",
+  "featureCount": 16,
+  "features": [
+    "Group Suggestions",
+    "Forum Suggestions",
+    "Club Suggestions",
+    "Local Community Suggestions",
+    "Learning Community Suggestions",
+    "Business Community Suggestions",
+    "Interest Matching",
+    "Friend-Based Matching",
+    "Creator-Based Matching",
+    "Location Matching",
+    "Topic Matching",
+    "Activity Matching",
+    "Trending Communities",
+    "New Communities",
+    "Personalized Communities",
+    "Community Recommendation Controls"
+  ]
+}

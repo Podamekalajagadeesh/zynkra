@@ -1,0 +1,24 @@
+{
+  "id": "02.2 Profile Customization",
+  "name": "Profile Customization",
+  "slug": "profile-customization",
+  "featureCount": 16,
+  "features": [
+    "Profile Themes",
+    "Backgrounds",
+    "Fonts",
+    "Profile Layouts",
+    "Featured Posts",
+    "Featured Videos",
+    "Featured Photos",
+    "Pinned Content",
+    "Profile Music",
+    "Profile Badges",
+    "Profile Sections",
+    "Profile Links",
+    "Profile Widgets",
+    "Profile Highlights",
+    "Profile Status",
+    "Custom Profile URL"
+  ]
+}

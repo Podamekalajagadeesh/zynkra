@@ -1,0 +1,24 @@
+{
+  "id": "50.1 Risk Detection",
+  "name": "Risk Detection",
+  "slug": "risk-detection",
+  "featureCount": 16,
+  "features": [
+    "Account Risk",
+    "Content Risk",
+    "Message Risk",
+    "Transaction Risk",
+    "Scam Risk",
+    "Spam Risk",
+    "Fraud Risk",
+    "Bot Risk",
+    "Impersonation Risk",
+    "Community Risk",
+    "Business Risk",
+    "Marketplace Risk",
+    "Payment Risk",
+    "Security Risk",
+    "Behavioral Risk",
+    "Risk Alerts"
+  ]
+}

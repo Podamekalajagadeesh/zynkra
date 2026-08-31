@@ -1,0 +1,24 @@
+{
+  "id": "28.1 Reputation Core",
+  "name": "Reputation Core",
+  "slug": "reputation-core",
+  "featureCount": 16,
+  "features": [
+    "Reputation Score",
+    "Contribution Score",
+    "Community Reputation",
+    "Creator Reputation",
+    "Seller Reputation",
+    "Buyer Reputation",
+    "Professional Reputation",
+    "Verified Reputation",
+    "Reputation History",
+    "Reputation Levels",
+    "Reputation Badges",
+    "Reputation Signals",
+    "Reputation Controls",
+    "Reputation Privacy",
+    "Reputation Appeals",
+    "Reputation Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "52.1 Customer Profiles",
+  "name": "Customer Profiles",
+  "slug": "customer-profiles",
+  "featureCount": 16,
+  "features": [
+    "Customer Profile",
+    "Contact Details",
+    "Social Profile",
+    "Purchase History",
+    "Booking History",
+    "Message History",
+    "Review History",
+    "Preferences",
+    "Interests",
+    "Tags",
+    "Notes",
+    "Segments",
+    "Customer Value",
+    "Customer Status",
+    "Customer Timeline",
+    "Customer Privacy"
+  ]
+}

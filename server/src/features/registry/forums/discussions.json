@@ -1,0 +1,24 @@
+{
+  "id": "21.2 Discussions",
+  "name": "Discussions",
+  "slug": "discussions",
+  "featureCount": 16,
+  "features": [
+    "Discussion Creation",
+    "Questions",
+    "Answers",
+    "Polls",
+    "Articles",
+    "Media",
+    "Links",
+    "Tags",
+    "Mentions",
+    "Reactions",
+    "Voting",
+    "Sharing",
+    "Saving",
+    "Following",
+    "Notifications",
+    "Discussion History"
+  ]
+}

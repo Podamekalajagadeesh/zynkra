@@ -1,0 +1,24 @@
+{
+  "id": "30.2 Publishing",
+  "name": "Publishing",
+  "slug": "publishing",
+  "featureCount": 16,
+  "features": [
+    "Schedule Post",
+    "Schedule Reel",
+    "Schedule Story",
+    "Schedule Video",
+    "Schedule Article",
+    "Schedule Live",
+    "Bulk Scheduling",
+    "Auto Publishing",
+    "Recurring Content",
+    "Draft Management",
+    "Publishing Queue",
+    "Publishing Preview",
+    "Publishing Approval",
+    "Content Versioning",
+    "Publishing Analytics",
+    "Publishing Settings"
+  ]
+}

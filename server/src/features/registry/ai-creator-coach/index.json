@@ -1,0 +1,36 @@
+{
+  "id": "44. AI CREATOR COACH",
+  "name": "AI CREATOR COACH",
+  "slug": "ai-creator-coach",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "44.1 Content Coaching",
+      "name": "Content Coaching",
+      "slug": "content-coaching",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creator-coach/content-coaching.json"
+    },
+    {
+      "id": "44.2 Growth Coaching",
+      "name": "Growth Coaching",
+      "slug": "growth-coaching",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creator-coach/growth-coaching.json"
+    },
+    {
+      "id": "44.3 Audience Insights",
+      "name": "Audience Insights",
+      "slug": "audience-insights",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creator-coach/audience-insights.json"
+    },
+    {
+      "id": "44.4 Monetization Coaching",
+      "name": "Monetization Coaching",
+      "slug": "monetization-coaching",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creator-coach/monetization-coaching.json"
+    }
+  ]
+}

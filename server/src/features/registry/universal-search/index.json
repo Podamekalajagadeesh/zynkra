@@ -1,0 +1,36 @@
+{
+  "id": "13. UNIVERSAL SEARCH",
+  "name": "UNIVERSAL SEARCH",
+  "slug": "universal-search",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "13.1 Search Core",
+      "name": "Search Core",
+      "slug": "search-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/universal-search/search-core.json"
+    },
+    {
+      "id": "13.2 People Search",
+      "name": "People Search",
+      "slug": "people-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/universal-search/people-search.json"
+    },
+    {
+      "id": "13.3 Content Search",
+      "name": "Content Search",
+      "slug": "content-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/universal-search/content-search.json"
+    },
+    {
+      "id": "13.4 Advanced Search",
+      "name": "Advanced Search",
+      "slug": "advanced-search",
+      "featureCount": 16,
+      "file": "server/src/features/registry/universal-search/advanced-search.json"
+    }
+  ]
+}

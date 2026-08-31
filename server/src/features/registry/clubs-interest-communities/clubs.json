@@ -1,0 +1,24 @@
+{
+  "id": "22.1 Clubs",
+  "name": "Clubs",
+  "slug": "clubs",
+  "featureCount": 16,
+  "features": [
+    "Create Club",
+    "Club Profile",
+    "Club Categories",
+    "Membership",
+    "Club Feed",
+    "Club Chat",
+    "Club Events",
+    "Club Polls",
+    "Club Files",
+    "Club Rules",
+    "Club Roles",
+    "Club Moderation",
+    "Club Discovery",
+    "Club Search",
+    "Club Verification",
+    "Club Analytics"
+  ]
+}

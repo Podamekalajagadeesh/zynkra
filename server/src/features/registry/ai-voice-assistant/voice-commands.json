@@ -1,0 +1,24 @@
+{
+  "id": "48.1 Voice Commands",
+  "name": "Voice Commands",
+  "slug": "voice-commands",
+  "featureCount": 16,
+  "features": [
+    "Open App",
+    "Search",
+    "Create Post",
+    "Send Message",
+    "Read Messages",
+    "Create Reminder",
+    "Schedule Event",
+    "Find People",
+    "Find Communities",
+    "Find Content",
+    "Find Products",
+    "Find Services",
+    "Book Appointment",
+    "Call User",
+    "Start Live",
+    "Voice Settings"
+  ]
+}

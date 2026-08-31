@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { usePresence } from '../../hooks/usePresence';
 import { PresenceDot } from '../PresenceDot';
 import { Skeleton } from '../ui/skeleton';
-import { getConversations } from '../../lib/api';
+import { getConversations, markConversationAsRead } from '../../lib/api';
 import { MessageSquare } from 'lucide-react';
 
 interface Participant {
@@ -21,6 +21,7 @@ export interface Conversation {
     content: string;
     createdAt: string;
   };
+  unreadCount?: number;
 }
 
 interface ConversationListProps {
@@ -64,6 +65,20 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
     return conv.participants.map((p) => p.displayName || p.username || p.email || 'Unknown').join(', ');
   };
 
+  const handleSelectConversation = async (conversation: Conversation) => {
+    onSelectConversation(conversation);
+    if (!conversation.unreadCount) return;
+
+    try {
+      await markConversationAsRead(conversation.id);
+      setConversations((current) => current.map((item) => (
+        item.id === conversation.id ? { ...item, unreadCount: 0 } : item
+      )));
+    } catch (error) {
+      console.error('Failed to mark conversation as read', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-white border-r border-dark-200">
@@ -97,7 +112,7 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
             {conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => onSelectConversation(conv)}
+                onClick={() => handleSelectConversation(conv)}
                 className={`w-full p-md rounded-lg text-left transition-colors ${
                   selectedId === conv.id
                     ? 'bg-primary-50 border border-primary-200'
@@ -112,6 +127,11 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
                   <p className="text-sm text-dark-500 truncate mt-xs">
                     {conv.lastMessage.content}
                   </p>
+                )}
+                {Boolean(conv.unreadCount) && (
+                  <span className="mt-1 inline-flex min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+                    {conv.unreadCount}
+                  </span>
                 )}
               </button>
             ))}

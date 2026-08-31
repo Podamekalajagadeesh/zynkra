@@ -1,0 +1,24 @@
+{
+  "id": "10.4 Reading Experience",
+  "name": "Reading Experience",
+  "slug": "reading-experience",
+  "featureCount": 16,
+  "features": [
+    "Reader Mode",
+    "Text Size",
+    "Font Controls",
+    "Reading Progress",
+    "Bookmarks",
+    "Highlights",
+    "Notes",
+    "Share Quotes",
+    "Text-to-Speech",
+    "Translation",
+    "Related Articles",
+    "Recommended Reading",
+    "Reading History",
+    "Saved Articles",
+    "Offline Reading",
+    "Reading Lists"
+  ]
+}

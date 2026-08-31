@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
 import { AuthLayout } from '../components/AuthLayout';
@@ -6,18 +6,32 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
-import { signUp, getCaptcha, API_BASE_URL } from '../lib/api';
+import {
+  signUp,
+  getCaptcha,
+  API_BASE_URL,
+  checkEmailAvailability,
+  checkUsernameAvailability,
+  createGuestUser,
+  createAnonymousUser,
+  getProfile,
+} from '../lib/api';
 import { api, setAuthToken } from '../lib/api';
 import axios from 'axios';
-
-const WebAuthn = lazy(() => import('../components/WebAuthn'));
+import { AuthContext } from '../contexts/AuthContextDef';
 
 export function SignUpPage() {
   const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
+  const addAccount = authContext?.addAccount ?? (async () => undefined);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [usernameMessage, setUsernameMessage] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
   const [isSignedUp, setIsSignedUp] = useState(false);
@@ -52,6 +66,96 @@ export function SignUpPage() {
   useEffect(() => {
     refreshCaptcha();
   }, [refreshCaptcha]);
+
+  useEffect(() => {
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername || normalizedUsername.length < 3) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setUsernameStatus('checking');
+      setUsernameMessage('Checking username...');
+      try {
+        const result = await checkUsernameAvailability(normalizedUsername);
+        const nextStatus = result.available ? 'available' : 'taken';
+        setUsernameStatus(nextStatus);
+        setUsernameMessage(nextStatus === 'available' ? 'Username available.' : 'Username is already taken.');
+      } catch {
+        setUsernameStatus('idle');
+        setUsernameMessage('');
+      }
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [username]);
+
+  useEffect(() => {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+      setEmailStatus('idle');
+      setEmailMessage('');
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setEmailStatus('checking');
+      setEmailMessage('Checking email...');
+      try {
+        const result = await checkEmailAvailability(normalizedEmail);
+        const nextStatus = result.available ? 'available' : 'taken';
+        setEmailStatus(nextStatus);
+        setEmailMessage(nextStatus === 'available' ? 'Email available.' : 'Email is already in use.');
+      } catch {
+        setEmailStatus('idle');
+        setEmailMessage('');
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [email]);
+
+  const handleGuestRegistration = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { access_token } = await createGuestUser();
+      setAuthToken(access_token);
+      const user = await getProfile();
+      await addAccount({ user, token: access_token });
+      addToast('Logged in as guest.', 'success');
+      navigate('/');
+    } catch (err) {
+      const message = axios.isAxiosError(err) && err.response
+        ? (err.response.data.message || 'Guest sign-up failed')
+        : 'Guest sign-up failed';
+      setIsLoading(false);
+      setError(message);
+      addToast(message, 'error');
+    }
+  };
+
+  const handleAnonymousRegistration = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { access_token } = await createAnonymousUser();
+      setAuthToken(access_token);
+      const user = await getProfile();
+      await addAccount({ user, token: access_token });
+      addToast('Signed in anonymously.', 'success');
+      navigate('/');
+    } catch (err) {
+      const message = axios.isAxiosError(err) && err.response
+        ? (err.response.data.message || 'Anonymous sign-up failed')
+        : 'Anonymous sign-up failed';
+      setIsLoading(false);
+      setError(message);
+      addToast(message, 'error');
+    }
+  };
 
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +290,11 @@ export function SignUpPage() {
             required
             placeholder="e.g. zynkra"
           />
+          {usernameMessage && (
+            <p className={`text-xs ${usernameStatus === 'available' ? 'text-green-600' : usernameStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}>
+              {usernameMessage}
+            </p>
+          )}
         </div>
         <div className="mb-4 space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -197,6 +306,11 @@ export function SignUpPage() {
             required
             placeholder="you@example.com"
           />
+          {emailMessage && (
+            <p className={`text-xs ${emailStatus === 'available' ? 'text-green-600' : emailStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}>
+              {emailMessage}
+            </p>
+          )}
         </div>
         <div className="mb-4 space-y-2">
           <Label htmlFor="password">Password</Label>
@@ -287,23 +401,22 @@ export function SignUpPage() {
         >
           Sign up with Google
         </Button>
-        <Suspense fallback={<Button className="w-full" variant="outline" disabled>Loading passkey...</Button>}>
-          <WebAuthn
-            mode="register"
-            onSuccess={() => {
-              addToast('Passkey registered successfully!', 'success');
-              navigate('/login?passkey=success');
-            }}
-            onError={(err) => {
-              setError(err);
-              addToast(err, 'error');
-            }}
-            className="w-full"
-            variant="outline"
-          >
-            Register with Passkey
-          </WebAuthn>
-        </Suspense>
+        <Button
+          onClick={handleGuestRegistration}
+          className="w-full"
+          variant="outline"
+          disabled={isLoading}
+        >
+          Continue as Guest
+        </Button>
+        <Button
+          onClick={handleAnonymousRegistration}
+          className="w-full"
+          variant="outline"
+          disabled={isLoading}
+        >
+          Continue Anonymously
+        </Button>
       </div>
 
       <p className="mt-8 text-center text-sm text-dark-500 dark:text-white/70">

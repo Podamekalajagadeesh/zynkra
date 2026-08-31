@@ -1,0 +1,24 @@
+{
+  "id": "03.3 Following Systems",
+  "name": "Following Systems",
+  "slug": "following-systems",
+  "featureCount": 16,
+  "features": [
+    "Follow Users",
+    "Follow Creators",
+    "Follow Businesses",
+    "Follow Communities",
+    "Follow Topics",
+    "Follow Hashtags",
+    "Follow Events",
+    "Follow Products",
+    "Follow Services",
+    "Follow Locations",
+    "Following Feed",
+    "Following Categories",
+    "Following Management",
+    "Following Search",
+    "Following Notifications",
+    "Following Analytics"
+  ]
+}

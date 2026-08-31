@@ -1,0 +1,24 @@
+{
+  "id": "02.4 Profile Discovery",
+  "name": "Profile Discovery",
+  "slug": "profile-discovery",
+  "featureCount": 16,
+  "features": [
+    "Profile Search",
+    "Suggested Profiles",
+    "Similar Profiles",
+    "People You May Know",
+    "Mutual Connections",
+    "Nearby Profiles",
+    "Interest Matching",
+    "Creator Discovery",
+    "Business Discovery",
+    "Community Discovery",
+    "Profile Recommendations",
+    "QR Discovery",
+    "Contact Discovery",
+    "Username Search",
+    "Profile Sharing",
+    "Profile History"
+  ]
+}

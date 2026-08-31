@@ -1,10 +1,12 @@
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import { mainnet, sepolia } from 'wagmi/chains';
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'dev-placeholder';
 
-if (!projectId) {
-  throw new Error('VITE_WALLETCONNECT_PROJECT_ID is not configured.');
+if (!import.meta.env.VITE_WALLETCONNECT_PROJECT_ID) {
+  console.warn(
+    '[Zynkra] VITE_WALLETCONNECT_PROJECT_ID is not configured. WalletConnect features will be unavailable until a valid project ID is added to client/.env.local.'
+  );
 }
 
 const metadata = {

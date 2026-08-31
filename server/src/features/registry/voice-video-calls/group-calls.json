@@ -1,0 +1,24 @@
+{
+  "id": "17.3 Group Calls",
+  "name": "Group Calls",
+  "slug": "group-calls",
+  "featureCount": 16,
+  "features": [
+    "Participant Management",
+    "Invite Participants",
+    "Remove Participants",
+    "Mute Participants",
+    "Co-hosts",
+    "Waiting Room",
+    "Raise Hand",
+    "Polls",
+    "Q&A",
+    "Chat",
+    "Screen Sharing",
+    "Whiteboard",
+    "Breakout Rooms",
+    "Recording",
+    "Call Moderation",
+    "Attendance"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "11.1 Audio Posts",
+  "name": "Audio Posts",
+  "slug": "audio-posts",
+  "featureCount": 16,
+  "features": [
+    "Audio Upload",
+    "Voice Posts",
+    "Podcasts",
+    "Audio Series",
+    "Audio Clips",
+    "Music Posts",
+    "Sound Posts",
+    "Audio Captions",
+    "Audio Covers",
+    "Audio Chapters",
+    "Audio Scheduling",
+    "Audio Drafts",
+    "Audio Privacy",
+    "Audio Sharing",
+    "Audio Downloads",
+    "Audio Analytics"
+  ]
+}

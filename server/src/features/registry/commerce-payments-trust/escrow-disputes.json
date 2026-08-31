@@ -1,0 +1,24 @@
+{
+  "id": "60.3 Escrow & Disputes",
+  "name": "Escrow & Disputes",
+  "slug": "escrow-disputes",
+  "featureCount": 16,
+  "features": [
+    "Escrow",
+    "Milestone Payments",
+    "Buyer Protection",
+    "Seller Protection",
+    "Dispute Creation",
+    "Evidence Upload",
+    "Dispute Tracking",
+    "Mediation",
+    "Resolution",
+    "Refund Authorization",
+    "Hold Funds",
+    "Release Funds",
+    "Fraud Signals",
+    "Transaction Risk",
+    "Appeals",
+    "Dispute History"
+  ]
+}

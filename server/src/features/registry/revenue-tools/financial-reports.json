@@ -1,0 +1,24 @@
+{
+  "id": "35.4 Financial Reports",
+  "name": "Financial Reports",
+  "slug": "financial-reports",
+  "featureCount": 16,
+  "features": [
+    "Revenue Reports",
+    "Expense Reports",
+    "Payout Reports",
+    "Tax Reports",
+    "Transaction Reports",
+    "Refund Reports",
+    "Commission Reports",
+    "Sponsorship Reports",
+    "Subscription Reports",
+    "Marketplace Reports",
+    "Booking Reports",
+    "Financial Statements",
+    "Export Reports",
+    "Custom Reports",
+    "Scheduled Reports",
+    "Financial Analytics"
+  ]
+}

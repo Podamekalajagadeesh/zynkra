@@ -1,0 +1,36 @@
+{
+  "id": "50. AI SAFETY & PERSONALIZATION",
+  "name": "AI SAFETY & PERSONALIZATION",
+  "slug": "ai-safety-personalization",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "50.1 Risk Detection",
+      "name": "Risk Detection",
+      "slug": "risk-detection",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-safety-personalization/risk-detection.json"
+    },
+    {
+      "id": "50.2 Context Understanding",
+      "name": "Context Understanding",
+      "slug": "context-understanding",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-safety-personalization/context-understanding.json"
+    },
+    {
+      "id": "50.3 Personalization",
+      "name": "Personalization",
+      "slug": "personalization",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-safety-personalization/personalization.json"
+    },
+    {
+      "id": "50.4 User Controls",
+      "name": "User Controls",
+      "slug": "user-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-safety-personalization/user-controls.json"
+    }
+  ]
+}

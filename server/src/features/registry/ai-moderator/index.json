@@ -1,0 +1,36 @@
+{
+  "id": "38. AI MODERATOR",
+  "name": "AI MODERATOR",
+  "slug": "ai-moderator",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "38.1 Safety Detection",
+      "name": "Safety Detection",
+      "slug": "safety-detection",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-moderator/safety-detection.json"
+    },
+    {
+      "id": "38.2 Spam & Scam Detection",
+      "name": "Spam & Scam Detection",
+      "slug": "spam-scam-detection",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-moderator/spam-scam-detection.json"
+    },
+    {
+      "id": "38.3 Community Moderation",
+      "name": "Community Moderation",
+      "slug": "community-moderation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-moderator/community-moderation.json"
+    },
+    {
+      "id": "38.4 Appeals Support",
+      "name": "Appeals Support",
+      "slug": "appeals-support",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-moderator/appeals-support.json"
+    }
+  ]
+}

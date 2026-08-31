@@ -1,0 +1,24 @@
+{
+  "id": "13.3 Content Search",
+  "name": "Content Search",
+  "slug": "content-search",
+  "featureCount": 16,
+  "features": [
+    "Post Search",
+    "Photo Search",
+    "Video Search",
+    "Reel Search",
+    "Story Search",
+    "Article Search",
+    "Audio Search",
+    "Comment Search",
+    "Hashtag Search",
+    "Topic Search",
+    "Creator Search",
+    "Date Search",
+    "Location Search",
+    "Language Search",
+    "Advanced Filters",
+    "Saved Searches"
+  ]
+}

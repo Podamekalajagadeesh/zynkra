@@ -1,0 +1,23 @@
+{
+  "id": "01.2 Identity & Verification",
+  "name": "Identity & Verification",
+  "slug": "identity-verification",
+  "featureCount": 15,
+  "features": [
+    "Email Verification",
+    "Identity Verification",
+    "Creator Verification",
+    "Business Verification",
+    "Organization Verification",
+    "Age Verification",
+    "Verification Badges",
+    "Verification Requests",
+    "Verification Status",
+    "Verification History",
+    "Document Verification",
+    "Verification Appeals",
+    "Trust Indicators",
+    "Identity Settings",
+    "Verification Controls"
+  ]
+}

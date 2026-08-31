@@ -1,0 +1,24 @@
+{
+  "id": "35.1 Payouts",
+  "name": "Payouts",
+  "slug": "payouts",
+  "featureCount": 16,
+  "features": [
+    "Creator Payouts",
+    "Business Payouts",
+    "Seller Payouts",
+    "Freelancer Payouts",
+    "Community Payouts",
+    "Scheduled Payouts",
+    "Instant Payouts",
+    "Payout Methods",
+    "Payout Verification",
+    "Payout History",
+    "Payout Notifications",
+    "Payout Limits",
+    "Payout Status",
+    "Payout Reports",
+    "Payout Security",
+    "Payout Settings"
+  ]
+}

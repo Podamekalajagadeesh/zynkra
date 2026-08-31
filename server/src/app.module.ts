@@ -104,6 +104,8 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { TaxDocumentsModule } from './tax-documents/tax-documents.module';
 import { OAuthModule } from './oauth/oauth.module';
 import { ZynkraGraphQLModule } from './graphql/graphql.module';
+import { AccountManagementModule } from './features/account-management/account-management.module';
+import { SecurityAuditModule } from './security-audit/security-audit.module';
 
 @Module({
   imports: [
@@ -263,6 +265,8 @@ import { ZynkraGraphQLModule } from './graphql/graphql.module';
     TaxDocumentsModule,
     OAuthModule,
     ZynkraGraphQLModule,
+    AccountManagementModule,
+    SecurityAuditModule,
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

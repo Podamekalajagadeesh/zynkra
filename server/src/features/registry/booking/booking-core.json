@@ -1,0 +1,24 @@
+{
+  "id": "55.1 Booking Core",
+  "name": "Booking Core",
+  "slug": "booking-core",
+  "featureCount": 16,
+  "features": [
+    "Create Booking",
+    "Confirm Booking",
+    "Cancel Booking",
+    "Reschedule Booking",
+    "Booking ID",
+    "Booking Status",
+    "Booking Notes",
+    "Booking History",
+    "Booking Receipt",
+    "Booking QR",
+    "Booking Sharing",
+    "Booking Search",
+    "Booking Filters",
+    "Booking Notifications",
+    "Booking Calendar",
+    "Booking Permissions"
+  ]
+}

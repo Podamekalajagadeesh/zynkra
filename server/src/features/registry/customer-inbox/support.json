@@ -1,0 +1,24 @@
+{
+  "id": "53.2 Support",
+  "name": "Support",
+  "slug": "support",
+  "featureCount": 16,
+  "features": [
+    "Support Tickets",
+    "Ticket Creation",
+    "Ticket Assignment",
+    "Ticket Status",
+    "Ticket Priority",
+    "Customer History",
+    "Attachments",
+    "Internal Notes",
+    "Replies",
+    "Templates",
+    "Escalation",
+    "Resolution",
+    "Satisfaction",
+    "Support Analytics",
+    "SLA Tracking",
+    "Support History"
+  ]
+}

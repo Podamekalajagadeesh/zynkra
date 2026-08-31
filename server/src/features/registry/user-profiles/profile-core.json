@@ -1,0 +1,24 @@
+{
+  "id": "02.1 Profile Core",
+  "name": "Profile Core",
+  "slug": "profile-core",
+  "featureCount": 16,
+  "features": [
+    "Username",
+    "Display Name",
+    "Avatar",
+    "Cover Photo",
+    "Bio",
+    "Pronouns",
+    "Location",
+    "Website",
+    "Links",
+    "Interests",
+    "Skills",
+    "Occupation",
+    "Education",
+    "Profile QR",
+    "Profile Preview",
+    "Profile Sharing"
+  ]
+}

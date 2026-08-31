@@ -1,0 +1,24 @@
+{
+  "id": "18.3 Shared Files",
+  "name": "Shared Files",
+  "slug": "shared-files",
+  "featureCount": 16,
+  "features": [
+    "File Upload",
+    "File Download",
+    "File Preview",
+    "File Search",
+    "File Folders",
+    "File Sharing",
+    "Permissions",
+    "Version History",
+    "Comments",
+    "Collaboration",
+    "File Locking",
+    "File Expiration",
+    "File Encryption",
+    "File Scanning",
+    "File Activity",
+    "File Recovery"
+  ]
+}

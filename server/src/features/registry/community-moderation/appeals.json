@@ -1,0 +1,24 @@
+{
+  "id": "27.4 Appeals",
+  "name": "Appeals",
+  "slug": "appeals",
+  "featureCount": 16,
+  "features": [
+    "Appeal Submission",
+    "Appeal Tracking",
+    "Evidence",
+    "Moderator Review",
+    "AI Review Assistance",
+    "Escalation",
+    "Appeal Decisions",
+    "Appeal Notifications",
+    "Appeal History",
+    "Reversal",
+    "Policy References",
+    "Transparency",
+    "Moderator Notes",
+    "User Notes",
+    "Appeal Analytics",
+    "Appeal Controls"
+  ]
+}

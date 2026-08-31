@@ -1,0 +1,36 @@
+{
+  "id": "14. DISCOVER & EXPLORE",
+  "name": "DISCOVER & EXPLORE",
+  "slug": "discover-explore",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "14.1 Explore",
+      "name": "Explore",
+      "slug": "explore",
+      "featureCount": 16,
+      "file": "server/src/features/registry/discover-explore/explore.json"
+    },
+    {
+      "id": "14.2 Trending",
+      "name": "Trending",
+      "slug": "trending",
+      "featureCount": 16,
+      "file": "server/src/features/registry/discover-explore/trending.json"
+    },
+    {
+      "id": "14.3 Topics",
+      "name": "Topics",
+      "slug": "topics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/discover-explore/topics.json"
+    },
+    {
+      "id": "14.4 Local Discovery",
+      "name": "Local Discovery",
+      "slug": "local-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/discover-explore/local-discovery.json"
+    }
+  ]
+}

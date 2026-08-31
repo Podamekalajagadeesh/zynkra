@@ -1,0 +1,24 @@
+{
+  "id": "33.4 Campaign Analytics",
+  "name": "Campaign Analytics",
+  "slug": "campaign-analytics",
+  "featureCount": 16,
+  "features": [
+    "Reach",
+    "Impressions",
+    "Views",
+    "Engagement",
+    "Clicks",
+    "Conversions",
+    "Sales",
+    "ROI",
+    "CPM",
+    "CPC",
+    "CPA",
+    "Creator Performance",
+    "Content Performance",
+    "Audience Performance",
+    "Campaign Comparison",
+    "Campaign Reports"
+  ]
+}

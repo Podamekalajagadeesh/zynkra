@@ -1,0 +1,24 @@
+{
+  "id": "26.3 Community Shops",
+  "name": "Community Shops",
+  "slug": "community-shops",
+  "featureCount": 16,
+  "features": [
+    "Product Listings",
+    "Digital Products",
+    "Merchandise",
+    "Service Listings",
+    "Community Deals",
+    "Checkout",
+    "Payments",
+    "Orders",
+    "Reviews",
+    "Inventory",
+    "Shipping",
+    "Discounts",
+    "Coupons",
+    "Seller Profiles",
+    "Shop Analytics",
+    "Shop Management"
+  ]
+}

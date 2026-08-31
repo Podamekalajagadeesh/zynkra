@@ -1,0 +1,24 @@
+{
+  "id": "12.3 Effects",
+  "name": "Effects",
+  "slug": "effects",
+  "featureCount": 16,
+  "features": [
+    "AR Effects",
+    "Face Effects",
+    "Background Effects",
+    "Visual Effects",
+    "AI Effects",
+    "Motion Effects",
+    "Text Effects",
+    "Audio Effects",
+    "Transition Effects",
+    "Lighting Effects",
+    "Color Effects",
+    "Blur Effects",
+    "Distortion",
+    "Stickers",
+    "Filters",
+    "Effect Marketplace"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "16.4 Channel Management",
+  "name": "Channel Management",
+  "slug": "channel-management",
+  "featureCount": 16,
+  "features": [
+    "Admins",
+    "Moderators",
+    "Permissions",
+    "Roles",
+    "Rules",
+    "Auto Moderation",
+    "Member Management",
+    "Subscriber Management",
+    "Analytics",
+    "Monetization",
+    "Ads",
+    "Memberships",
+    "Content Controls",
+    "Privacy Controls",
+    "Security",
+    "Audit Logs"
+  ]
+}

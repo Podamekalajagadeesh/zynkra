@@ -1,0 +1,24 @@
+{
+  "id": "45.2 Customer Assistance",
+  "name": "Customer Assistance",
+  "slug": "customer-assistance",
+  "featureCount": 16,
+  "features": [
+    "Customer Summaries",
+    "Customer Classification",
+    "Lead Scoring",
+    "Customer Intent",
+    "Sentiment",
+    "Customer Recommendations",
+    "Follow-Up Suggestions",
+    "Response Drafts",
+    "Support Answers",
+    "Complaint Detection",
+    "Churn Risk",
+    "Customer Value",
+    "Customer Segmentation",
+    "Customer History",
+    "Customer Alerts",
+    "Customer Insights"
+  ]
+}

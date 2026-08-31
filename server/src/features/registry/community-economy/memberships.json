@@ -1,0 +1,24 @@
+{
+  "id": "26.1 Memberships",
+  "name": "Memberships",
+  "slug": "memberships",
+  "featureCount": 16,
+  "features": [
+    "Free Membership",
+    "Paid Membership",
+    "Tiered Memberships",
+    "Recurring Memberships",
+    "Membership Benefits",
+    "Member Roles",
+    "Member Badges",
+    "Member Discounts",
+    "Membership Management",
+    "Membership Analytics",
+    "Member Communication",
+    "Member Content",
+    "Member Events",
+    "Member Rewards",
+    "Member Refunds",
+    "Membership Settings"
+  ]
+}

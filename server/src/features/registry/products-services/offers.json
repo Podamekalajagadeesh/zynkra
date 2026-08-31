@@ -1,0 +1,24 @@
+{
+  "id": "54.4 Offers",
+  "name": "Offers",
+  "slug": "offers",
+  "featureCount": 16,
+  "features": [
+    "Discounts",
+    "Coupons",
+    "Promo Codes",
+    "Flash Sales",
+    "Bundles",
+    "Membership Discounts",
+    "Creator Discounts",
+    "Community Discounts",
+    "Local Deals",
+    "Limited Offers",
+    "Personalized Offers",
+    "Referral Offers",
+    "Loyalty Offers",
+    "Offer Expiration",
+    "Offer Analytics",
+    "Offer Management"
+  ]
+}

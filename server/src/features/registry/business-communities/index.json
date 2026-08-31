@@ -1,0 +1,36 @@
+{
+  "id": "25. BUSINESS COMMUNITIES",
+  "name": "BUSINESS COMMUNITIES",
+  "slug": "business-communities",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "25.1 Business Hubs",
+      "name": "Business Hubs",
+      "slug": "business-hubs",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-communities/business-hubs.json"
+    },
+    {
+      "id": "25.2 Professional Groups",
+      "name": "Professional Groups",
+      "slug": "professional-groups",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-communities/professional-groups.json"
+    },
+    {
+      "id": "25.3 Industry Communities",
+      "name": "Industry Communities",
+      "slug": "industry-communities",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-communities/industry-communities.json"
+    },
+    {
+      "id": "25.4 Networking",
+      "name": "Networking",
+      "slug": "networking",
+      "featureCount": 16,
+      "file": "server/src/features/registry/business-communities/networking.json"
+    }
+  ]
+}

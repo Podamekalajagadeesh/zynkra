@@ -11,12 +11,19 @@ import { AuthService } from './auth.service';
 import { Authenticator } from './entities/authenticator.entity';
 import { EmailModule } from '../email/email.module';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { GitHubStrategy } from './strategies/github.strategy';
+import { DiscordStrategy } from './strategies/discord.strategy';
+import { TwitterStrategy } from './strategies/twitter.strategy';
+import { AppleStrategy } from './strategies/apple.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WebauthnService } from './webauthn.service';
+import { BiometricAuthService } from './biometric-auth.service';
 import { LoginSession } from './entities/login-session.entity';
 import { User } from '../users/entities/user.entity';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesModule } from '../invite-codes/invite-codes.module';
+import { BrainwaveDevice } from './entities/brainwave-device.entity';
 
 @Module({
   imports: [
@@ -25,7 +32,7 @@ import { InviteCodesModule } from '../invite-codes/invite-codes.module';
     EmailModule,
     forwardRef(() => NotificationsModule),
     InviteCodesModule,
-    TypeOrmModule.forFeature([Authenticator, LoginSession, User]),
+    TypeOrmModule.forFeature([Authenticator, LoginSession, User, BrainwaveDevice]),
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -42,8 +49,14 @@ import { InviteCodesModule } from '../invite-codes/invite-codes.module';
     CaptchaService,
     JwtStrategy,
     WebauthnService,
+    BiometricAuthService,
     GoogleStrategy,
+    FacebookStrategy,
+    GitHubStrategy,
+    DiscordStrategy,
+    TwitterStrategy,
+    AppleStrategy,
   ],
-  exports: [AuthService],
+  exports: [AuthService, WebauthnService, BiometricAuthService],
 })
 export class AuthModule {}

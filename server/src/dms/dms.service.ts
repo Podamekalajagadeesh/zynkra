@@ -304,11 +304,60 @@ export class DmsService {
     return this.messagesRepository.save(message);
   }
 
-  async getConversations(user: User): Promise<Conversation[]> {
-    return this.conversationsRepository.find({
+  async getConversations(user: User): Promise<Array<Conversation & { unreadCount: number; lastMessage?: Message }>> {
+    const conversations = await this.conversationsRepository.find({
       where: { participants: { id: user.id } },
-      relations: ['participants', 'messages', 'owner'],
+      relations: ['participants', 'messages', 'messages.sender', 'messages.readBy', 'owner'],
     });
+
+    return conversations.map((conversation) => {
+      const messages = (conversation.messages ?? [])
+        .filter((message) => !message.deletedAt && (!message.expiresAt || message.expiresAt > new Date()))
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      const unreadCount = messages.filter(
+        (message) => message.sender?.id !== user.id && !message.readBy?.some((receipt) => receipt.user?.id === user.id),
+      ).length;
+
+      return {
+        ...conversation,
+        messages: undefined,
+        lastMessage: messages.at(-1),
+        unreadCount,
+      };
+    });
+  }
+
+  async markConversationAsRead(
+    user: User,
+    conversationId: string,
+  ): Promise<{ conversationId: string; markedCount: number }> {
+    const conversation = await this.conversationsRepository.findOne({
+      where: { id: conversationId },
+      relations: ['participants'],
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+    if (!conversation.participants.some((participant) => participant.id === user.id)) {
+      throw new UnauthorizedException('You are not a participant of this conversation.');
+    }
+
+    const messages = await this.messagesRepository.find({
+      where: { conversation: { id: conversationId } },
+      relations: ['sender', 'readBy', 'readBy.user'],
+    });
+    const unreadMessages = messages.filter(
+      (message) => message.sender?.id !== user.id && !message.readBy?.some((receipt) => receipt.user?.id === user.id),
+    );
+
+    if (unreadMessages.length > 0) {
+      await this.messageReceiptsRepository.save(
+        unreadMessages.map((message) => this.messageReceiptsRepository.create({ user, message })),
+      );
+    }
+
+    return { conversationId, markedCount: unreadMessages.length };
   }
 
   async getMessages(

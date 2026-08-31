@@ -326,6 +326,30 @@ export class User {
   @Column({ default: true })
   showLastSeenTimestamp: boolean;
 
+  @Column({ default: true })
+  readReceipts: boolean;
+
+  @Column({ default: true })
+  contactDiscovery: boolean;
+
+  @Column({ default: true })
+  personalization: boolean;
+
+  @Column({ default: true })
+  adPersonalization: boolean;
+
+  @Column({ default: 'everyone' })
+  mentions: 'everyone' | 'followers' | 'no_one';
+
+  @Column({ default: 'friends' })
+  activityVisibility: 'public' | 'friends' | 'private';
+
+  @Column({ default: 'friends' })
+  storyVisibility: 'public' | 'friends' | 'followers' | 'only_me';
+
+  @Column({ default: 'everyone' })
+  searchVisibility: 'everyone' | 'friends' | 'no_one';
+
   @Column({ type: 'timestamp with time zone', nullable: true })
   lastSeenAt: Date | null;
 
@@ -662,6 +686,12 @@ export class User {
 
   @Column({ default: false })
   isFaceRecognitionEnabled: boolean;
+
+  @Column({ default: false })
+  isGuest: boolean;
+
+  @Column({ default: false })
+  isAnonymous: boolean;
 
   @Column({ default: false })
   isRegionEligibleForFaceRecognition: boolean;

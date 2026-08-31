@@ -1,0 +1,24 @@
+{
+  "id": "48.3 Voice Chat",
+  "name": "Voice Chat",
+  "slug": "voice-chat",
+  "featureCount": 16,
+  "features": [
+    "Voice Conversation",
+    "Context",
+    "Memory",
+    "Multilingual",
+    "Voice Selection",
+    "Speech Speed",
+    "Interruptions",
+    "Background Noise Handling",
+    "Voice Commands",
+    "Voice Responses",
+    "Conversation History",
+    "Voice Summaries",
+    "Voice Search",
+    "Voice Actions",
+    "Voice Privacy",
+    "Voice Settings"
+  ]
+}

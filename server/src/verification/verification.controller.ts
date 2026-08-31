@@ -31,6 +31,27 @@ export class VerificationController {
     return this.verificationService.getMyRequest(req.user.userId);
   }
 
+  @Get('me/history')
+  async myHistory(@Request() req) {
+    return this.verificationService.getMyHistory(req.user.userId);
+  }
+
+  @Post('business')
+  async applyBusiness(@Request() req, @Body() dto: CreateVerificationRequestDto) {
+    return this.verificationService.apply(req.user.userId, {
+      ...dto,
+      workflow: 'business' as const,
+    });
+  }
+
+  @Post('organization')
+  async applyOrganization(@Request() req, @Body() dto: CreateVerificationRequestDto) {
+    return this.verificationService.apply(req.user.userId, {
+      ...dto,
+      workflow: 'organization' as const,
+    });
+  }
+
   @UseGuards(AdminGuard)
   @Get('pending')
   async pending(@Query('take') take?: string, @Query('skip') skip?: string) {

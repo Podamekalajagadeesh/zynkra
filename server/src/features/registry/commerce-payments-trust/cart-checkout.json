@@ -1,0 +1,24 @@
+{
+  "id": "60.1 Cart & Checkout",
+  "name": "Cart & Checkout",
+  "slug": "cart-checkout",
+  "featureCount": 16,
+  "features": [
+    "Cart",
+    "Multiple Sellers",
+    "Saved Cart",
+    "Product Variants",
+    "Quantity",
+    "Coupons",
+    "Discounts",
+    "Taxes",
+    "Shipping",
+    "Delivery Options",
+    "Address Management",
+    "Checkout",
+    "Order Confirmation",
+    "Payment Selection",
+    "Checkout Security",
+    "Purchase History"
+  ]
+}

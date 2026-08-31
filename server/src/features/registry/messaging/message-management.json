@@ -1,0 +1,24 @@
+{
+  "id": "15.3 Message Management",
+  "name": "Message Management",
+  "slug": "message-management",
+  "featureCount": 16,
+  "features": [
+    "Archive Chats",
+    "Mute Chats",
+    "Pin Chats",
+    "Mark Read",
+    "Mark Unread",
+    "Search Messages",
+    "Message Folders",
+    "Message Labels",
+    "Saved Messages",
+    "Forward Messages",
+    "Reply",
+    "Quote",
+    "Translate",
+    "Schedule",
+    "Delete for Everyone",
+    "Message History"
+  ]
+}

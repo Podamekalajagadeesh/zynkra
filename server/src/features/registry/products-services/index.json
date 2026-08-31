@@ -1,0 +1,36 @@
+{
+  "id": "54. PRODUCTS & SERVICES",
+  "name": "PRODUCTS & SERVICES",
+  "slug": "products-services",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "54.1 Product Listings",
+      "name": "Product Listings",
+      "slug": "product-listings",
+      "featureCount": 16,
+      "file": "server/src/features/registry/products-services/product-listings.json"
+    },
+    {
+      "id": "54.2 Service Listings",
+      "name": "Service Listings",
+      "slug": "service-listings",
+      "featureCount": 16,
+      "file": "server/src/features/registry/products-services/service-listings.json"
+    },
+    {
+      "id": "54.3 Catalogs",
+      "name": "Catalogs",
+      "slug": "catalogs",
+      "featureCount": 16,
+      "file": "server/src/features/registry/products-services/catalogs.json"
+    },
+    {
+      "id": "54.4 Offers",
+      "name": "Offers",
+      "slug": "offers",
+      "featureCount": 16,
+      "file": "server/src/features/registry/products-services/offers.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "33.2 Campaigns",
+  "name": "Campaigns",
+  "slug": "campaigns",
+  "featureCount": 16,
+  "features": [
+    "Campaign Creation",
+    "Campaign Goals",
+    "Audience Targeting",
+    "Creator Selection",
+    "Budget",
+    "Deliverables",
+    "Deadlines",
+    "Campaign Tracking",
+    "Campaign Approval",
+    "Content Tracking",
+    "Engagement Tracking",
+    "Conversion Tracking",
+    "Revenue Tracking",
+    "Campaign Reports",
+    "Campaign Optimization",
+    "Campaign History"
+  ]
+}

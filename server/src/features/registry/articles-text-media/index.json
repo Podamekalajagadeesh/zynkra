@@ -1,0 +1,36 @@
+{
+  "id": "10. ARTICLES & TEXT MEDIA",
+  "name": "ARTICLES & TEXT MEDIA",
+  "slug": "articles-text-media",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "10.1 Articles",
+      "name": "Articles",
+      "slug": "articles",
+      "featureCount": 16,
+      "file": "server/src/features/registry/articles-text-media/articles.json"
+    },
+    {
+      "id": "10.2 Notes",
+      "name": "Notes",
+      "slug": "notes",
+      "featureCount": 16,
+      "file": "server/src/features/registry/articles-text-media/notes.json"
+    },
+    {
+      "id": "10.3 Threads",
+      "name": "Threads",
+      "slug": "threads",
+      "featureCount": 16,
+      "file": "server/src/features/registry/articles-text-media/threads.json"
+    },
+    {
+      "id": "10.4 Reading Experience",
+      "name": "Reading Experience",
+      "slug": "reading-experience",
+      "featureCount": 16,
+      "file": "server/src/features/registry/articles-text-media/reading-experience.json"
+    }
+  ]
+}

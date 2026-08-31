@@ -1,0 +1,24 @@
+{
+  "id": "59.4 Rental Management",
+  "name": "Rental Management",
+  "slug": "rental-management",
+  "featureCount": 16,
+  "features": [
+    "Calendar",
+    "Availability",
+    "Bookings",
+    "Deposits",
+    "Payments",
+    "Pickup",
+    "Return",
+    "Damage Reports",
+    "Insurance",
+    "Late Fees",
+    "Extensions",
+    "Cancellation",
+    "Refunds",
+    "Reviews",
+    "Customer Management",
+    "Rental Analytics"
+  ]
+}

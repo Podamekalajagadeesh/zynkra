@@ -1,0 +1,24 @@
+{
+  "id": "56.4 Appointment Management",
+  "name": "Appointment Management",
+  "slug": "appointment-management",
+  "featureCount": 16,
+  "features": [
+    "Appointment Dashboard",
+    "Customer Management",
+    "Provider Management",
+    "Calendar",
+    "Notes",
+    "Attachments",
+    "Payments",
+    "Reviews",
+    "Follow-Ups",
+    "History",
+    "Analytics",
+    "Reports",
+    "Notifications",
+    "Cancellations",
+    "Rescheduling",
+    "Settings"
+  ]
+}

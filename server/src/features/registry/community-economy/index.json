@@ -1,0 +1,36 @@
+{
+  "id": "26. COMMUNITY ECONOMY",
+  "name": "COMMUNITY ECONOMY",
+  "slug": "community-economy",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "26.1 Memberships",
+      "name": "Memberships",
+      "slug": "memberships",
+      "featureCount": 16,
+      "file": "server/src/features/registry/community-economy/memberships.json"
+    },
+    {
+      "id": "26.2 Rewards",
+      "name": "Rewards",
+      "slug": "rewards",
+      "featureCount": 16,
+      "file": "server/src/features/registry/community-economy/rewards.json"
+    },
+    {
+      "id": "26.3 Community Shops",
+      "name": "Community Shops",
+      "slug": "community-shops",
+      "featureCount": 16,
+      "file": "server/src/features/registry/community-economy/community-shops.json"
+    },
+    {
+      "id": "26.4 Community Monetization",
+      "name": "Community Monetization",
+      "slug": "community-monetization",
+      "featureCount": 16,
+      "file": "server/src/features/registry/community-economy/community-monetization.json"
+    }
+  ]
+}

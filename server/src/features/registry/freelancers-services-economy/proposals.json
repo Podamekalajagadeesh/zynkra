@@ -1,0 +1,24 @@
+{
+  "id": "58.3 Proposals",
+  "name": "Proposals",
+  "slug": "proposals",
+  "featureCount": 16,
+  "features": [
+    "Proposal Creation",
+    "Proposal Templates",
+    "Pricing",
+    "Milestones",
+    "Timeline",
+    "Attachments",
+    "Messaging",
+    "Negotiation",
+    "Proposal Status",
+    "Proposal Search",
+    "Proposal Editing",
+    "Proposal Withdrawal",
+    "Proposal Acceptance",
+    "Proposal Rejection",
+    "Proposal History",
+    "Proposal Analytics"
+  ]
+}

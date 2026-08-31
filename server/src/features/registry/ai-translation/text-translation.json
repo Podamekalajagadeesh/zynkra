@@ -1,0 +1,24 @@
+{
+  "id": "41.1 Text Translation",
+  "name": "Text Translation",
+  "slug": "text-translation",
+  "featureCount": 16,
+  "features": [
+    "Post Translation",
+    "Comment Translation",
+    "Message Translation",
+    "Article Translation",
+    "Profile Translation",
+    "Community Translation",
+    "Product Translation",
+    "Service Translation",
+    "Business Translation",
+    "Event Translation",
+    "AI Language Detection",
+    "Translation History",
+    "Saved Languages",
+    "Translation Preferences",
+    "Translation Quality",
+    "Translation Feedback"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "11.3 Audio Discovery",
+  "name": "Audio Discovery",
+  "slug": "audio-discovery",
+  "featureCount": 16,
+  "features": [
+    "Podcast Search",
+    "Sound Search",
+    "Music Search",
+    "Voice Search",
+    "Trending Audio",
+    "Recommended Audio",
+    "Creator Audio",
+    "Community Audio",
+    "Local Audio",
+    "Audio Categories",
+    "Audio Playlists",
+    "Saved Audio",
+    "Liked Audio",
+    "Audio History",
+    "Related Audio",
+    "Audio Recommendations"
+  ]
+}

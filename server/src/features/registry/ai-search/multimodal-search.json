@@ -1,0 +1,24 @@
+{
+  "id": "39.3 Multimodal Search",
+  "name": "Multimodal Search",
+  "slug": "multimodal-search",
+  "featureCount": 16,
+  "features": [
+    "Image Search",
+    "Video Search",
+    "Voice Search",
+    "Screenshot Search",
+    "Object Search",
+    "Face Search with privacy controls",
+    "Product Image Search",
+    "Location Image Search",
+    "Audio Search",
+    "Document Search",
+    "Mixed Query Search",
+    "Image + Text Search",
+    "Voice + Text Search",
+    "Video + Text Search",
+    "Visual Similarity",
+    "Multimodal Answers"
+  ]
+}

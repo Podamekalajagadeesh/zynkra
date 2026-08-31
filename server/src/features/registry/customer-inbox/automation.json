@@ -1,0 +1,24 @@
+{
+  "id": "53.3 Automation",
+  "name": "Automation",
+  "slug": "automation",
+  "featureCount": 16,
+  "features": [
+    "Auto Replies",
+    "AI Replies",
+    "Routing",
+    "Categorization",
+    "Priority Detection",
+    "FAQ Answers",
+    "Follow-Up",
+    "Reminders",
+    "Assignment",
+    "Escalation",
+    "Workflow Rules",
+    "Templates",
+    "Trigger Actions",
+    "Customer Segmentation",
+    "Automation Analytics",
+    "Automation History"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "53.4 Inbox Analytics",
+  "name": "Inbox Analytics",
+  "slug": "inbox-analytics",
+  "featureCount": 16,
+  "features": [
+    "Message Volume",
+    "Response Time",
+    "Resolution Time",
+    "Customer Satisfaction",
+    "Ticket Volume",
+    "Agent Performance",
+    "AI Performance",
+    "Channel Performance",
+    "Peak Times",
+    "Common Questions",
+    "Common Complaints",
+    "Sentiment",
+    "Conversion",
+    "Lead Performance",
+    "Support Reports",
+    "Inbox Trends"
+  ]
+}

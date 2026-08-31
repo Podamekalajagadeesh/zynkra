@@ -1,0 +1,24 @@
+{
+  "id": "12.4 Publishing Studio",
+  "name": "Publishing Studio",
+  "slug": "publishing-studio",
+  "featureCount": 16,
+  "features": [
+    "Content Calendar",
+    "Draft Manager",
+    "Scheduler",
+    "Bulk Publishing",
+    "Cross Posting",
+    "Preview",
+    "Approval Workflow",
+    "Team Collaboration",
+    "Asset Library",
+    "Content Organization",
+    "Publishing Queue",
+    "Version History",
+    "Publishing Analytics",
+    "Content Tags",
+    "Content Categories",
+    "Publishing Settings"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "07. STORIES",
+  "name": "STORIES",
+  "slug": "stories",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "07.1 Story Creation",
+      "name": "Story Creation",
+      "slug": "story-creation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/stories/story-creation.json"
+    },
+    {
+      "id": "07.2 Story Interaction",
+      "name": "Story Interaction",
+      "slug": "story-interaction",
+      "featureCount": 16,
+      "file": "server/src/features/registry/stories/story-interaction.json"
+    },
+    {
+      "id": "07.3 Story Discovery",
+      "name": "Story Discovery",
+      "slug": "story-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/stories/story-discovery.json"
+    },
+    {
+      "id": "07.4 Story Archive",
+      "name": "Story Archive",
+      "slug": "story-archive",
+      "featureCount": 16,
+      "file": "server/src/features/registry/stories/story-archive.json"
+    }
+  ]
+}

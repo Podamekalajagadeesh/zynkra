@@ -1,0 +1,24 @@
+{
+  "id": "11.2 Voice Notes",
+  "name": "Voice Notes",
+  "slug": "voice-notes",
+  "featureCount": 16,
+  "features": [
+    "Voice Messages",
+    "Voice Posts",
+    "Voice Replies",
+    "Voice Reactions",
+    "Voice Transcription",
+    "Voice Translation",
+    "Playback Speed",
+    "Waveform",
+    "Voice Search",
+    "Voice Sharing",
+    "Voice Downloads",
+    "Voice Privacy",
+    "Voice Effects",
+    "Voice Cleanup",
+    "Voice Enhancement",
+    "Voice History"
+  ]
+}

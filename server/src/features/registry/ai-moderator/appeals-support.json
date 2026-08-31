@@ -1,0 +1,24 @@
+{
+  "id": "38.4 Appeals Support",
+  "name": "Appeals Support",
+  "slug": "appeals-support",
+  "featureCount": 16,
+  "features": [
+    "Appeal Submission",
+    "Appeal Classification",
+    "Evidence Collection",
+    "AI Review",
+    "Human Review",
+    "Escalation",
+    "Appeal Status",
+    "Appeal Notifications",
+    "Decision Explanation",
+    "Policy Reference",
+    "Reversal",
+    "Restoration",
+    "Appeal History",
+    "Appeal Analytics",
+    "Moderator Notes",
+    "Transparency"
+  ]
+}

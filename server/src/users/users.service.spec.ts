@@ -315,6 +315,26 @@ describe('UsersService', () => {
     });
   });
 
+  describe('reactivate', () => {
+    it('restores a deactivated account', async () => {
+      const user = makeUser({ status: 'deactivated' as any });
+      usersRepo.findOne.mockResolvedValue(user);
+      usersRepo.save.mockResolvedValue({ ...user, status: 'active' });
+
+      const result = await service.reactivate(user.id);
+
+      expect(result.status).toBe('active');
+      expect(usersRepo.save).toHaveBeenCalledWith(expect.objectContaining({ status: 'active' }));
+    });
+
+    it('rejects active accounts', async () => {
+      usersRepo.findOne.mockResolvedValue(makeUser({ status: 'active' as any }));
+
+      await expect(service.reactivate('user-id')).rejects.toThrow('Account is not deactivated');
+      expect(usersRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
   // ─── Follow / Unfollow ────────────────────────────────────────────────
 
   describe('follow', () => {

@@ -1,0 +1,36 @@
+{
+  "id": "22. CLUBS & INTEREST COMMUNITIES",
+  "name": "CLUBS & INTEREST COMMUNITIES",
+  "slug": "clubs-interest-communities",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "22.1 Clubs",
+      "name": "Clubs",
+      "slug": "clubs",
+      "featureCount": 16,
+      "file": "server/src/features/registry/clubs-interest-communities/clubs.json"
+    },
+    {
+      "id": "22.2 Interest Hubs",
+      "name": "Interest Hubs",
+      "slug": "interest-hubs",
+      "featureCount": 16,
+      "file": "server/src/features/registry/clubs-interest-communities/interest-hubs.json"
+    },
+    {
+      "id": "22.3 Fan Communities",
+      "name": "Fan Communities",
+      "slug": "fan-communities",
+      "featureCount": 16,
+      "file": "server/src/features/registry/clubs-interest-communities/fan-communities.json"
+    },
+    {
+      "id": "22.4 Community Discovery",
+      "name": "Community Discovery",
+      "slug": "community-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/clubs-interest-communities/community-discovery.json"
+    }
+  ]
+}

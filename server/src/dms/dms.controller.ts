@@ -123,6 +123,15 @@ export class DmsController {
     return this.dmsService.getConversations(user);
   }
 
+  @Post('conversations/:conversationId/read')
+  async markConversationAsRead(
+    @Request() req,
+    @Param('conversationId') conversationId: string,
+  ) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.dmsService.markConversationAsRead(user, conversationId);
+  }
+
   @Get('conversations/:conversationId/messages')
   async getMessages(
     @Request() req,

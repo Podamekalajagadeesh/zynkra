@@ -1,0 +1,36 @@
+{
+  "id": "30. CREATOR STUDIO",
+  "name": "CREATOR STUDIO",
+  "slug": "creator-studio",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "30.1 Content Studio",
+      "name": "Content Studio",
+      "slug": "content-studio",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-studio/content-studio.json"
+    },
+    {
+      "id": "30.2 Publishing",
+      "name": "Publishing",
+      "slug": "publishing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-studio/publishing.json"
+    },
+    {
+      "id": "30.3 Asset Management",
+      "name": "Asset Management",
+      "slug": "asset-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-studio/asset-management.json"
+    },
+    {
+      "id": "30.4 Workflow Tools",
+      "name": "Workflow Tools",
+      "slug": "workflow-tools",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-studio/workflow-tools.json"
+    }
+  ]
+}

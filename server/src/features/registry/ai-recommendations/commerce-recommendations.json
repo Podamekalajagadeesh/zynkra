@@ -1,0 +1,24 @@
+{
+  "id": "43.4 Commerce Recommendations",
+  "name": "Commerce Recommendations",
+  "slug": "commerce-recommendations",
+  "featureCount": 16,
+  "features": [
+    "Product Recommendations",
+    "Service Recommendations",
+    "Business Recommendations",
+    "Freelancer Recommendations",
+    "Event Recommendations",
+    "Rental Recommendations",
+    "Seller Recommendations",
+    "Local Recommendations",
+    "Price Recommendations",
+    "Similar Products",
+    "Personalized Shopping",
+    "Gift Recommendations",
+    "Deal Recommendations",
+    "Review-Based Recommendations",
+    "AI Shopping Recommendations",
+    "Recommendation Controls"
+  ]
+}

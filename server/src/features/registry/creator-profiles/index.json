@@ -1,0 +1,36 @@
+{
+  "id": "29. CREATOR PROFILES",
+  "name": "CREATOR PROFILES",
+  "slug": "creator-profiles",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "29.1 Creator Identity",
+      "name": "Creator Identity",
+      "slug": "creator-identity",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-profiles/creator-identity.json"
+    },
+    {
+      "id": "29.2 Creator Pages",
+      "name": "Creator Pages",
+      "slug": "creator-pages",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-profiles/creator-pages.json"
+    },
+    {
+      "id": "29.3 Creator Features",
+      "name": "Creator Features",
+      "slug": "creator-features",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-profiles/creator-features.json"
+    },
+    {
+      "id": "29.4 Creator Discovery",
+      "name": "Creator Discovery",
+      "slug": "creator-discovery",
+      "featureCount": 16,
+      "file": "server/src/features/registry/creator-profiles/creator-discovery.json"
+    }
+  ]
+}

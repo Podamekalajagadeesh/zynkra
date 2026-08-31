@@ -23,6 +23,12 @@ export enum VerificationCategory {
   OTHER = 'other',
 }
 
+export enum VerificationWorkflow {
+  PERSONAL = 'personal',
+  BUSINESS = 'business',
+  ORGANIZATION = 'organization',
+}
+
 @Entity('verification_requests')
 export class VerificationRequest {
   @PrimaryGeneratedColumn('uuid')
@@ -31,8 +37,17 @@ export class VerificationRequest {
   @ManyToOne(() => User, { eager: true })
   user: User;
 
+  @Column({ type: 'enum', enum: VerificationWorkflow, default: VerificationWorkflow.PERSONAL })
+  workflow: VerificationWorkflow;
+
   @Column({ type: 'enum', enum: VerificationCategory })
   category: VerificationCategory;
+
+  @Column({ type: 'varchar', nullable: true })
+  organizationName: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  documentType: string | null;
 
   /** Applicant's case: who they are and why they qualify. */
   @Column({ type: 'text' })

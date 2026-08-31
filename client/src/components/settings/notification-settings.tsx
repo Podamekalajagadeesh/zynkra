@@ -119,6 +119,14 @@ export const NotificationSettings = () => {
           onCheckedChange={(value) => handleSettingChange('newFollowers', value)}
         />
       </div>
+      <div className="flex items-center justify-between">
+        <label htmlFor="messages-notification">Direct messages</label>
+        <Switch
+          id="messages-notification"
+          checked={user.notificationSettings?.messages ?? true}
+          onCheckedChange={(value) => handleSettingChange('messages', value)}
+        />
+      </div>
     </div>
   );
 };

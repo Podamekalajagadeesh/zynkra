@@ -1,0 +1,24 @@
+{
+  "id": "59.1 Auctions",
+  "name": "Auctions",
+  "slug": "auctions",
+  "featureCount": 16,
+  "features": [
+    "Auction Creation",
+    "Auction Listings",
+    "Starting Price",
+    "Reserve Price",
+    "Bid Increments",
+    "Bidding",
+    "Auto Bidding",
+    "Auction Timer",
+    "Bid History",
+    "Watchlist",
+    "Notifications",
+    "Auction Chat",
+    "Seller Verification",
+    "Buyer Verification",
+    "Winner Selection",
+    "Auction Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "51.3 Business Discovery",
+  "name": "Business Discovery",
+  "slug": "business-discovery",
+  "featureCount": 16,
+  "features": [
+    "Business Search",
+    "Local Business Search",
+    "Category Search",
+    "Map Search",
+    "Business Recommendations",
+    "Similar Businesses",
+    "Trending Businesses",
+    "New Businesses",
+    "Verified Businesses",
+    "Business Reviews",
+    "Business Products",
+    "Business Services",
+    "Business Events",
+    "Business Deals",
+    "Business Communities",
+    "Business Alerts"
+  ]
+}

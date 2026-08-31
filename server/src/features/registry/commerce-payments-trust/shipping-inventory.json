@@ -1,0 +1,24 @@
+{
+  "id": "60.4 Shipping & Inventory",
+  "name": "Shipping & Inventory",
+  "slug": "shipping-inventory",
+  "featureCount": 16,
+  "features": [
+    "Inventory",
+    "Stock Levels",
+    "Variants",
+    "Warehouses",
+    "Stock Alerts",
+    "Reservations",
+    "Order Fulfillment",
+    "Shipping Rates",
+    "Shipping Labels",
+    "Tracking",
+    "Delivery ETA",
+    "Pickup",
+    "Returns",
+    "Exchanges",
+    "Supplier Records",
+    "Demand Forecasting"
+  ]
+}

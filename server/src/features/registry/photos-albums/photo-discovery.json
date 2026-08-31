@@ -1,0 +1,24 @@
+{
+  "id": "06.4 Photo Discovery",
+  "name": "Photo Discovery",
+  "slug": "photo-discovery",
+  "featureCount": 16,
+  "features": [
+    "Photo Search",
+    "Visual Search",
+    "Similar Images",
+    "People Search",
+    "Location Search",
+    "Topic Search",
+    "Hashtag Search",
+    "Trending Photos",
+    "Recommended Photos",
+    "Local Photos",
+    "Popular Photos",
+    "Recent Photos",
+    "Saved Photos",
+    "Album Discovery",
+    "Creator Photos",
+    "Photo Recommendations"
+  ]
+}

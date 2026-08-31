@@ -1,8 +1,50 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { signUp, login, setAuthToken, getLoginSessions, forgotPassword, resetPassword, resendVerification } from './api';
+import {
+  signUp,
+  login,
+  setAuthToken,
+  getLoginSessions,
+  forgotPassword,
+  resetPassword,
+  resendVerification,
+  checkEmailAvailability,
+  checkUsernameAvailability,
+  createGuestUser,
+  createAnonymousUser,
+  reactivateAccount,
+  getPrivacySettings,
+} from './api';
 import { api } from './api';
+
+describe('reactivateAccount API helper', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('posts to the account reactivation endpoint', async () => {
+    server.use(
+      http.post('*/users/reactivate', () => HttpResponse.json({ id: 'user-1', status: 'active' })),
+    );
+
+    await expect(reactivateAccount()).resolves.toEqual({ id: 'user-1', status: 'active' });
+  });
+});
+
+describe('getPrivacySettings API helper', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('fetches the current account permission settings', async () => {
+    server.use(
+      http.get('*/users/me/privacy', () => HttpResponse.json({ postVisibility: 'public' })),
+    );
+
+    await expect(getPrivacySettings()).resolves.toEqual({ postVisibility: 'public' });
+  });
+});
 
 // ─── signUp ──────────────────────────────────────────────────────────────────
 
@@ -183,6 +225,52 @@ describe('login API helper', () => {
 });
 
 // ─── setAuthToken ────────────────────────────────────────────────────────────
+
+describe('registration helper checks', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('checks email availability', async () => {
+    server.use(
+      http.get('*/auth/check-email', () => {
+        return HttpResponse.json({ available: true });
+      })
+    );
+
+    await expect(checkEmailAvailability('new@example.com')).resolves.toEqual({ available: true });
+  });
+
+  it('checks username availability', async () => {
+    server.use(
+      http.get('*/auth/check-username', () => {
+        return HttpResponse.json({ available: false });
+      })
+    );
+
+    await expect(checkUsernameAvailability('takenname')).resolves.toEqual({ available: false });
+  });
+
+  it('creates a guest user session', async () => {
+    server.use(
+      http.post('*/auth/guest', () => {
+        return HttpResponse.json({ access_token: 'guest-token' });
+      })
+    );
+
+    await expect(createGuestUser()).resolves.toEqual({ access_token: 'guest-token' });
+  });
+
+  it('creates an anonymous user session', async () => {
+    server.use(
+      http.post('*/auth/anonymous', () => {
+        return HttpResponse.json({ access_token: 'anonymous-token' });
+      })
+    );
+
+    await expect(createAnonymousUser()).resolves.toEqual({ access_token: 'anonymous-token' });
+  });
+});
 
 describe('setAuthToken', () => {
   beforeEach(() => {

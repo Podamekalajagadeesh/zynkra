@@ -1,0 +1,36 @@
+{
+  "id": "53. CUSTOMER INBOX",
+  "name": "CUSTOMER INBOX",
+  "slug": "customer-inbox",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "53.1 Unified Inbox",
+      "name": "Unified Inbox",
+      "slug": "unified-inbox",
+      "featureCount": 16,
+      "file": "server/src/features/registry/customer-inbox/unified-inbox.json"
+    },
+    {
+      "id": "53.2 Support",
+      "name": "Support",
+      "slug": "support",
+      "featureCount": 16,
+      "file": "server/src/features/registry/customer-inbox/support.json"
+    },
+    {
+      "id": "53.3 Automation",
+      "name": "Automation",
+      "slug": "automation",
+      "featureCount": 16,
+      "file": "server/src/features/registry/customer-inbox/automation.json"
+    },
+    {
+      "id": "53.4 Inbox Analytics",
+      "name": "Inbox Analytics",
+      "slug": "inbox-analytics",
+      "featureCount": 16,
+      "file": "server/src/features/registry/customer-inbox/inbox-analytics.json"
+    }
+  ]
+}

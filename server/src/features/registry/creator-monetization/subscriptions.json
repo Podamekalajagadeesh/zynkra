@@ -1,0 +1,24 @@
+{
+  "id": "32.2 Subscriptions",
+  "name": "Subscriptions",
+  "slug": "subscriptions",
+  "featureCount": 16,
+  "features": [
+    "Creator Subscriptions",
+    "Premium Content",
+    "Subscriber Feeds",
+    "Subscriber Stories",
+    "Subscriber Chat",
+    "Subscriber Events",
+    "Subscriber Badges",
+    "Subscriber Discounts",
+    "Subscription Tiers",
+    "Subscription Pricing",
+    "Subscription Billing",
+    "Subscription Cancellation",
+    "Subscription Refunds",
+    "Subscription Analytics",
+    "Subscription Revenue",
+    "Subscription Settings"
+  ]
+}

@@ -1,4 +1,11 @@
 {
+  "name": "zynkra",
+  "private": true,
+  "scripts": {
+    "feature:audit": "node tools/feature-status-audit.js",
+    "feature:test": "node tools/feature-status-test.js",
+    "feature:test:quick": "node tools/feature-status-test.js --quick"
+  },
   "dependencies": {
     "playwright-core": "^1.62.1"
   }

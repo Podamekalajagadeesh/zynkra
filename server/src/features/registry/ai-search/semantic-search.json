@@ -1,0 +1,24 @@
+{
+  "id": "39.2 Semantic Search",
+  "name": "Semantic Search",
+  "slug": "semantic-search",
+  "featureCount": 16,
+  "features": [
+    "Semantic Posts",
+    "Semantic Videos",
+    "Semantic Photos",
+    "Semantic People",
+    "Semantic Communities",
+    "Semantic Products",
+    "Semantic Businesses",
+    "Semantic Services",
+    "Semantic Events",
+    "Semantic Messages",
+    "Similar Content",
+    "Related Content",
+    "Intent Matching",
+    "Context Matching",
+    "Relevance Ranking",
+    "Semantic Recommendations"
+  ]
+}

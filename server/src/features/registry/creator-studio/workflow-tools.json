@@ -1,0 +1,24 @@
+{
+  "id": "30.4 Workflow Tools",
+  "name": "Workflow Tools",
+  "slug": "workflow-tools",
+  "featureCount": 16,
+  "features": [
+    "Content Planning",
+    "Team Members",
+    "Roles",
+    "Approvals",
+    "Tasks",
+    "Assignments",
+    "Deadlines",
+    "Comments",
+    "Review",
+    "Revision",
+    "Publishing Workflow",
+    "Campaign Workflow",
+    "Automation",
+    "Notifications",
+    "Workflow Analytics",
+    "Workflow Settings"
+  ]
+}

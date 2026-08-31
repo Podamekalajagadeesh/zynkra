@@ -1,0 +1,24 @@
+{
+  "id": "06.2 Albums",
+  "name": "Albums",
+  "slug": "albums",
+  "featureCount": 16,
+  "features": [
+    "Create Album",
+    "Edit Album",
+    "Delete Album",
+    "Add Photos",
+    "Remove Photos",
+    "Reorder Photos",
+    "Album Privacy",
+    "Shared Albums",
+    "Collaborative Albums",
+    "Album Covers",
+    "Album Descriptions",
+    "Album Tags",
+    "Album Search",
+    "Album Sharing",
+    "Album Downloads",
+    "Album Archive"
+  ]
+}

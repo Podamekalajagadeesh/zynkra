@@ -1,0 +1,24 @@
+{
+  "id": "02.3 Social Identity",
+  "name": "Social Identity",
+  "slug": "social-identity",
+  "featureCount": 16,
+  "features": [
+    "Personal Identity",
+    "Creator Identity",
+    "Professional Identity",
+    "Business Identity",
+    "Organization Identity",
+    "Community Identity",
+    "Interest Identity",
+    "Skill Identity",
+    "Achievement Identity",
+    "Education Identity",
+    "Work Identity",
+    "Location Identity",
+    "Verification Identity",
+    "Reputation Identity",
+    "Social Identity",
+    "Digital Identity"
+  ]
+}

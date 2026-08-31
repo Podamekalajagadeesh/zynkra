@@ -1,0 +1,24 @@
+{
+  "id": "08.1 Reels",
+  "name": "Reels",
+  "slug": "reels",
+  "featureCount": 16,
+  "features": [
+    "Record Reel",
+    "Upload Reel",
+    "Multi-Clip Reel",
+    "Music",
+    "Effects",
+    "Filters",
+    "Captions",
+    "Stickers",
+    "Text",
+    "Speed Controls",
+    "Transitions",
+    "Green Screen",
+    "Remix",
+    "Collaboration",
+    "Scheduling",
+    "Drafts"
+  ]
+}

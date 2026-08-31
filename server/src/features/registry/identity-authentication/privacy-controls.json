@@ -1,0 +1,24 @@
+{
+  "id": "01.4 Privacy Controls",
+  "name": "Privacy Controls",
+  "slug": "privacy-controls",
+  "featureCount": 16,
+  "features": [
+    "Profile Privacy",
+    "Post Privacy",
+    "Story Privacy",
+    "Message Privacy",
+    "Search Visibility",
+    "Activity Visibility",
+    "Online Status",
+    "Read Receipts",
+    "Tag Controls",
+    "Mention Controls",
+    "Contact Discovery",
+    "Data Permissions",
+    "Personalization Controls",
+    "Ad Controls",
+    "Data Download",
+    "Data Deletion"
+  ]
+}

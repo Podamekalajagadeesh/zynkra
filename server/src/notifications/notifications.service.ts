@@ -57,8 +57,28 @@ export class NotificationsService {
   }
 
   // Alias for backward compatibility
-  async createNotification(user: User, type: NotificationType, data: any): Promise<Notification | null> {
-    return this.create(user, type, data);
+  async createNotification(
+    userOrPayload: User | { userId: string; title: string; message: string; type: string; metadata?: any },
+    type?: NotificationType,
+    data?: any,
+  ): Promise<Notification | null> {
+    if (typeof userOrPayload === 'object' && 'userId' in userOrPayload) {
+      const payload = userOrPayload;
+      const user = { id: payload.userId } as User;
+      const notificationType = (payload.type as NotificationType) || NotificationType.LOGIN_ALERT;
+      const payloadData = {
+        title: payload.title,
+        message: payload.message,
+        ...payload.metadata,
+      };
+      return this.create(user, notificationType, payloadData);
+    }
+
+    if (!type) {
+      throw new Error('Notification type required');
+    }
+
+    return this.create(userOrPayload as User, type, data ?? {});
   }
 
   async getNotifications(userId: string): Promise<Notification[]> {
@@ -177,6 +197,9 @@ export class NotificationsService {
         return notificationSettings.comments !== false;
       case NotificationType.FOLLOW:
         return notificationSettings.newFollowers !== false;
+      case 'dm_received' as NotificationType:
+      case 'message' as NotificationType:
+        return notificationSettings.messages !== false;
       default:
         return true;
     }

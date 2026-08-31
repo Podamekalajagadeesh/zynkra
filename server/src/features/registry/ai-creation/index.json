@@ -1,0 +1,36 @@
+{
+  "id": "40. AI CREATION",
+  "name": "AI CREATION",
+  "slug": "ai-creation",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "40.1 Caption AI",
+      "name": "Caption AI",
+      "slug": "caption-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creation/caption-ai.json"
+    },
+    {
+      "id": "40.2 Writing AI",
+      "name": "Writing AI",
+      "slug": "writing-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creation/writing-ai.json"
+    },
+    {
+      "id": "40.3 Image AI",
+      "name": "Image AI",
+      "slug": "image-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creation/image-ai.json"
+    },
+    {
+      "id": "40.4 Video AI",
+      "name": "Video AI",
+      "slug": "video-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-creation/video-ai.json"
+    }
+  ]
+}

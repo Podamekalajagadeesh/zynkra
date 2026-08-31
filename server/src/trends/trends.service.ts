@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Trend } from './entities/trend.entity';
 import { User } from '../users/entities/user.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -139,13 +139,17 @@ export class TrendsService {
   }
 
   async getTrendHistory(tag: string, days: number = 30): Promise<Trend | null> {
+    const normalizedTag = tag?.trim().toLowerCase();
+    if (!normalizedTag) return null;
+
+    const rangeInDays = Number.isFinite(days) && days > 0 ? days : 30;
     const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
+    cutoffDate.setDate(cutoffDate.getDate() - rangeInDays);
 
     return this.trendsRepository.findOne({
       where: {
-        tag: tag.toLowerCase(),
-        lastUpdated: LessThan(cutoffDate),
+        tag: normalizedTag,
+        lastUpdated: MoreThanOrEqual(cutoffDate),
       },
     });
   }

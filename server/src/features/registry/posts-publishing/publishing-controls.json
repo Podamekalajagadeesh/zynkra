@@ -1,0 +1,24 @@
+{
+  "id": "05.4 Publishing Controls",
+  "name": "Publishing Controls",
+  "slug": "publishing-controls",
+  "featureCount": 16,
+  "features": [
+    "Drafts",
+    "Scheduling",
+    "Auto Publishing",
+    "Cross Posting",
+    "Audience Selection",
+    "Location Targeting",
+    "Language Selection",
+    "Comment Controls",
+    "Sharing Controls",
+    "Remix Controls",
+    "Download Controls",
+    "Embed Controls",
+    "Collaboration Controls",
+    "Post Expiration",
+    "Archive",
+    "Publishing History"
+  ]
+}

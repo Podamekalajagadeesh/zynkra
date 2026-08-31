@@ -1,0 +1,24 @@
+{
+  "id": "47.3 Meeting AI",
+  "name": "Meeting AI",
+  "slug": "meeting-ai",
+  "featureCount": 16,
+  "features": [
+    "Meeting Scheduling",
+    "Participant Matching",
+    "Time Suggestions",
+    "Agenda Generation",
+    "Invite Generation",
+    "Reminder",
+    "Meeting Notes",
+    "Transcription",
+    "Summary",
+    "Action Items",
+    "Follow-Up Messages",
+    "Meeting Search",
+    "Meeting History",
+    "Attendance",
+    "Meeting Analytics",
+    "Meeting Preferences"
+  ]
+}

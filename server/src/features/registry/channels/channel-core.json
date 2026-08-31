@@ -1,0 +1,24 @@
+{
+  "id": "16.1 Channel Core",
+  "name": "Channel Core",
+  "slug": "channel-core",
+  "featureCount": 16,
+  "features": [
+    "Create Channel",
+    "Public Channel",
+    "Private Channel",
+    "Channel Profile",
+    "Channel Description",
+    "Channel Links",
+    "Channel Categories",
+    "Channel Search",
+    "Channel Discovery",
+    "Subscribers",
+    "Subscriber Requests",
+    "Channel Verification",
+    "Channel Badges",
+    "Channel Analytics",
+    "Channel Settings",
+    "Channel Privacy"
+  ]
+}

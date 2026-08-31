@@ -1,0 +1,488 @@
+{
+  "totalFeatureCount": 3836,
+  "systemCount": 60,
+  "moduleCount": 240,
+  "generatedAt": "2026-08-30T14:50:17.187Z",
+  "systems": [
+    {
+      "id": "01. IDENTITY & AUTHENTICATION",
+      "name": "IDENTITY & AUTHENTICATION",
+      "slug": "identity-authentication",
+      "featureCount": 62,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/identity-authentication/index.json"
+    },
+    {
+      "id": "02. USER PROFILES",
+      "name": "USER PROFILES",
+      "slug": "user-profiles",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/user-profiles/index.json"
+    },
+    {
+      "id": "03. SOCIAL GRAPH",
+      "name": "SOCIAL GRAPH",
+      "slug": "social-graph",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/social-graph/index.json"
+    },
+    {
+      "id": "04. HOME & FEED",
+      "name": "HOME & FEED",
+      "slug": "home-feed",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/home-feed/index.json"
+    },
+    {
+      "id": "05. POSTS & PUBLISHING",
+      "name": "POSTS & PUBLISHING",
+      "slug": "posts-publishing",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/posts-publishing/index.json"
+    },
+    {
+      "id": "06. PHOTOS & ALBUMS",
+      "name": "PHOTOS & ALBUMS",
+      "slug": "photos-albums",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/photos-albums/index.json"
+    },
+    {
+      "id": "07. STORIES",
+      "name": "STORIES",
+      "slug": "stories",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/stories/index.json"
+    },
+    {
+      "id": "08. SHORT VIDEO",
+      "name": "SHORT VIDEO",
+      "slug": "short-video",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/short-video/index.json"
+    },
+    {
+      "id": "09. LONG VIDEO & LIVE",
+      "name": "LONG VIDEO & LIVE",
+      "slug": "long-video-live",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/long-video-live/index.json"
+    },
+    {
+      "id": "10. ARTICLES & TEXT MEDIA",
+      "name": "ARTICLES & TEXT MEDIA",
+      "slug": "articles-text-media",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/articles-text-media/index.json"
+    },
+    {
+      "id": "11. AUDIO & VOICE CONTENT",
+      "name": "AUDIO & VOICE CONTENT",
+      "slug": "audio-voice-content",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/audio-voice-content/index.json"
+    },
+    {
+      "id": "12. CONTENT CREATION STUDIO",
+      "name": "CONTENT CREATION STUDIO",
+      "slug": "content-creation-studio",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/content-creation-studio/index.json"
+    },
+    {
+      "id": "13. UNIVERSAL SEARCH",
+      "name": "UNIVERSAL SEARCH",
+      "slug": "universal-search",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/universal-search/index.json"
+    },
+    {
+      "id": "14. DISCOVER & EXPLORE",
+      "name": "DISCOVER & EXPLORE",
+      "slug": "discover-explore",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/discover-explore/index.json"
+    },
+    {
+      "id": "15. MESSAGING",
+      "name": "MESSAGING",
+      "slug": "messaging",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/messaging/index.json"
+    },
+    {
+      "id": "16. CHANNELS",
+      "name": "CHANNELS",
+      "slug": "channels",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/channels/index.json"
+    },
+    {
+      "id": "17. VOICE & VIDEO CALLS",
+      "name": "VOICE & VIDEO CALLS",
+      "slug": "voice-video-calls",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/voice-video-calls/index.json"
+    },
+    {
+      "id": "18. COLLABORATION",
+      "name": "COLLABORATION",
+      "slug": "collaboration",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/collaboration/index.json"
+    },
+    {
+      "id": "19. NOTIFICATIONS",
+      "name": "NOTIFICATIONS",
+      "slug": "notifications",
+      "featureCount": 63,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/notifications/index.json"
+    },
+    {
+      "id": "20. GROUPS",
+      "name": "GROUPS",
+      "slug": "groups",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/groups/index.json"
+    },
+    {
+      "id": "21. FORUMS",
+      "name": "FORUMS",
+      "slug": "forums",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/forums/index.json"
+    },
+    {
+      "id": "22. CLUBS & INTEREST COMMUNITIES",
+      "name": "CLUBS & INTEREST COMMUNITIES",
+      "slug": "clubs-interest-communities",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/clubs-interest-communities/index.json"
+    },
+    {
+      "id": "23. LOCAL COMMUNITIES",
+      "name": "LOCAL COMMUNITIES",
+      "slug": "local-communities",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/local-communities/index.json"
+    },
+    {
+      "id": "24. LEARNING COMMUNITIES",
+      "name": "LEARNING COMMUNITIES",
+      "slug": "learning-communities",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/learning-communities/index.json"
+    },
+    {
+      "id": "25. BUSINESS COMMUNITIES",
+      "name": "BUSINESS COMMUNITIES",
+      "slug": "business-communities",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/business-communities/index.json"
+    },
+    {
+      "id": "26. COMMUNITY ECONOMY",
+      "name": "COMMUNITY ECONOMY",
+      "slug": "community-economy",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/community-economy/index.json"
+    },
+    {
+      "id": "27. COMMUNITY MODERATION",
+      "name": "COMMUNITY MODERATION",
+      "slug": "community-moderation",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/community-moderation/index.json"
+    },
+    {
+      "id": "28. REPUTATION & TRUST",
+      "name": "REPUTATION & TRUST",
+      "slug": "reputation-trust",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/reputation-trust/index.json"
+    },
+    {
+      "id": "29. CREATOR PROFILES",
+      "name": "CREATOR PROFILES",
+      "slug": "creator-profiles",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/creator-profiles/index.json"
+    },
+    {
+      "id": "30. CREATOR STUDIO",
+      "name": "CREATOR STUDIO",
+      "slug": "creator-studio",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/creator-studio/index.json"
+    },
+    {
+      "id": "31. CREATOR ANALYTICS",
+      "name": "CREATOR ANALYTICS",
+      "slug": "creator-analytics",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/creator-analytics/index.json"
+    },
+    {
+      "id": "32. CREATOR MONETIZATION",
+      "name": "CREATOR MONETIZATION",
+      "slug": "creator-monetization",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/creator-monetization/index.json"
+    },
+    {
+      "id": "33. SPONSORSHIPS",
+      "name": "SPONSORSHIPS",
+      "slug": "sponsorships",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/sponsorships/index.json"
+    },
+    {
+      "id": "34. BRAND MARKETPLACE",
+      "name": "BRAND MARKETPLACE",
+      "slug": "brand-marketplace",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/brand-marketplace/index.json"
+    },
+    {
+      "id": "35. REVENUE TOOLS",
+      "name": "REVENUE TOOLS",
+      "slug": "revenue-tools",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/revenue-tools/index.json"
+    },
+    {
+      "id": "36. AI PERSONAL ASSISTANT",
+      "name": "AI PERSONAL ASSISTANT",
+      "slug": "ai-personal-assistant",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-personal-assistant/index.json"
+    },
+    {
+      "id": "37. AI FEED RANKING",
+      "name": "AI FEED RANKING",
+      "slug": "ai-feed-ranking",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-feed-ranking/index.json"
+    },
+    {
+      "id": "38. AI MODERATOR",
+      "name": "AI MODERATOR",
+      "slug": "ai-moderator",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-moderator/index.json"
+    },
+    {
+      "id": "39. AI SEARCH",
+      "name": "AI SEARCH",
+      "slug": "ai-search",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-search/index.json"
+    },
+    {
+      "id": "40. AI CREATION",
+      "name": "AI CREATION",
+      "slug": "ai-creation",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-creation/index.json"
+    },
+    {
+      "id": "41. AI TRANSLATION",
+      "name": "AI TRANSLATION",
+      "slug": "ai-translation",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-translation/index.json"
+    },
+    {
+      "id": "42. AI MEMORY",
+      "name": "AI MEMORY",
+      "slug": "ai-memory",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-memory/index.json"
+    },
+    {
+      "id": "43. AI RECOMMENDATIONS",
+      "name": "AI RECOMMENDATIONS",
+      "slug": "ai-recommendations",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-recommendations/index.json"
+    },
+    {
+      "id": "44. AI CREATOR COACH",
+      "name": "AI CREATOR COACH",
+      "slug": "ai-creator-coach",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-creator-coach/index.json"
+    },
+    {
+      "id": "45. AI BUSINESS ASSISTANT",
+      "name": "AI BUSINESS ASSISTANT",
+      "slug": "ai-business-assistant",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-business-assistant/index.json"
+    },
+    {
+      "id": "46. AI SHOPPING ASSISTANT",
+      "name": "AI SHOPPING ASSISTANT",
+      "slug": "ai-shopping-assistant",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-shopping-assistant/index.json"
+    },
+    {
+      "id": "47. AI SCHEDULING",
+      "name": "AI SCHEDULING",
+      "slug": "ai-scheduling",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-scheduling/index.json"
+    },
+    {
+      "id": "48. AI VOICE ASSISTANT",
+      "name": "AI VOICE ASSISTANT",
+      "slug": "ai-voice-assistant",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-voice-assistant/index.json"
+    },
+    {
+      "id": "49. AI COMMENT INTELLIGENCE",
+      "name": "AI COMMENT INTELLIGENCE",
+      "slug": "ai-comment-intelligence",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-comment-intelligence/index.json"
+    },
+    {
+      "id": "50. AI SAFETY & PERSONALIZATION",
+      "name": "AI SAFETY & PERSONALIZATION",
+      "slug": "ai-safety-personalization",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/ai-safety-personalization/index.json"
+    },
+    {
+      "id": "51. BUSINESS PAGES",
+      "name": "BUSINESS PAGES",
+      "slug": "business-pages",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/business-pages/index.json"
+    },
+    {
+      "id": "52. CRM",
+      "name": "CRM",
+      "slug": "crm",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/crm/index.json"
+    },
+    {
+      "id": "53. CUSTOMER INBOX",
+      "name": "CUSTOMER INBOX",
+      "slug": "customer-inbox",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/customer-inbox/index.json"
+    },
+    {
+      "id": "54. PRODUCTS & SERVICES",
+      "name": "PRODUCTS & SERVICES",
+      "slug": "products-services",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/products-services/index.json"
+    },
+    {
+      "id": "55. BOOKING",
+      "name": "BOOKING",
+      "slug": "booking",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/booking/index.json"
+    },
+    {
+      "id": "56. APPOINTMENTS",
+      "name": "APPOINTMENTS",
+      "slug": "appointments",
+      "featureCount": 63,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/appointments/index.json"
+    },
+    {
+      "id": "57. MARKETPLACE",
+      "name": "MARKETPLACE",
+      "slug": "marketplace",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/marketplace/index.json"
+    },
+    {
+      "id": "58. FREELANCERS & SERVICES ECONOMY",
+      "name": "FREELANCERS & SERVICES ECONOMY",
+      "slug": "freelancers-services-economy",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/freelancers-services-economy/index.json"
+    },
+    {
+      "id": "59. AUCTIONS & RENTALS",
+      "name": "AUCTIONS & RENTALS",
+      "slug": "auctions-rentals",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/auctions-rentals/index.json"
+    },
+    {
+      "id": "60. COMMERCE, PAYMENTS & TRUST",
+      "name": "COMMERCE, PAYMENTS & TRUST",
+      "slug": "commerce-payments-trust",
+      "featureCount": 64,
+      "moduleCount": 4,
+      "file": "server/src/features/registry/commerce-payments-trust/index.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "03.2 Relationships",
+  "name": "Relationships",
+  "slug": "relationships",
+  "featureCount": 16,
+  "features": [
+    "Friends",
+    "Followers",
+    "Following",
+    "Family",
+    "Close Friends",
+    "Colleagues",
+    "Classmates",
+    "Favorites",
+    "Custom Lists",
+    "Relationship Labels",
+    "Relationship Privacy",
+    "Relationship Discovery",
+    "Mutual Interests",
+    "Shared Communities",
+    "Shared Events",
+    "Relationship History"
+  ]
+}

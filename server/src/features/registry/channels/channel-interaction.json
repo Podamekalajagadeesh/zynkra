@@ -1,0 +1,24 @@
+{
+  "id": "16.3 Channel Interaction",
+  "name": "Channel Interaction",
+  "slug": "channel-interaction",
+  "featureCount": 16,
+  "features": [
+    "Reactions",
+    "Comments",
+    "Replies",
+    "Shares",
+    "Reposts",
+    "Polls",
+    "Q&A",
+    "Mentions",
+    "Notifications",
+    "Subscriber Chat",
+    "Subscriber Requests",
+    "Paid Content",
+    "Memberships",
+    "Tips",
+    "Content Saving",
+    "Content Reporting"
+  ]
+}

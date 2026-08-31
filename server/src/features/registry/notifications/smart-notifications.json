@@ -1,0 +1,24 @@
+{
+  "id": "19.2 Smart Notifications",
+  "name": "Smart Notifications",
+  "slug": "smart-notifications",
+  "featureCount": 16,
+  "features": [
+    "AI Priority",
+    "Urgency Detection",
+    "Notification Batching",
+    "Digest",
+    "Quiet Hours",
+    "Focus Mode",
+    "Important People",
+    "Important Communities",
+    "Important Creators",
+    "Activity Summaries",
+    "Smart Reminders",
+    "Contextual Alerts",
+    "Location Alerts",
+    "Event Alerts",
+    "Personalized Alerts",
+    "Notification Recommendations"
+  ]
+}

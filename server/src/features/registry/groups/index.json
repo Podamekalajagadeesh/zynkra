@@ -1,0 +1,36 @@
+{
+  "id": "20. GROUPS",
+  "name": "GROUPS",
+  "slug": "groups",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "20.1 Group Core",
+      "name": "Group Core",
+      "slug": "group-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/groups/group-core.json"
+    },
+    {
+      "id": "20.2 Group Content",
+      "name": "Group Content",
+      "slug": "group-content",
+      "featureCount": 16,
+      "file": "server/src/features/registry/groups/group-content.json"
+    },
+    {
+      "id": "20.3 Group Membership",
+      "name": "Group Membership",
+      "slug": "group-membership",
+      "featureCount": 16,
+      "file": "server/src/features/registry/groups/group-membership.json"
+    },
+    {
+      "id": "20.4 Group Administration",
+      "name": "Group Administration",
+      "slug": "group-administration",
+      "featureCount": 16,
+      "file": "server/src/features/registry/groups/group-administration.json"
+    }
+  ]
+}

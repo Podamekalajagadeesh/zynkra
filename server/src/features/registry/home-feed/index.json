@@ -1,0 +1,36 @@
+{
+  "id": "04. HOME & FEED",
+  "name": "HOME & FEED",
+  "slug": "home-feed",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "04.1 Feed Core",
+      "name": "Feed Core",
+      "slug": "feed-core",
+      "featureCount": 16,
+      "file": "server/src/features/registry/home-feed/feed-core.json"
+    },
+    {
+      "id": "04.2 Feed Modes",
+      "name": "Feed Modes",
+      "slug": "feed-modes",
+      "featureCount": 16,
+      "file": "server/src/features/registry/home-feed/feed-modes.json"
+    },
+    {
+      "id": "04.3 Feed Controls",
+      "name": "Feed Controls",
+      "slug": "feed-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/home-feed/feed-controls.json"
+    },
+    {
+      "id": "04.4 Feed Personalization",
+      "name": "Feed Personalization",
+      "slug": "feed-personalization",
+      "featureCount": 16,
+      "file": "server/src/features/registry/home-feed/feed-personalization.json"
+    }
+  ]
+}

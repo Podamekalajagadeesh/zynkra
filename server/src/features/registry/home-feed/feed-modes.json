@@ -1,0 +1,24 @@
+{
+  "id": "04.2 Feed Modes",
+  "name": "Feed Modes",
+  "slug": "feed-modes",
+  "featureCount": 16,
+  "features": [
+    "For You Feed",
+    "Following Feed",
+    "Friends Feed",
+    "Local Feed",
+    "Trending Feed",
+    "Video Feed",
+    "Creator Feed",
+    "Community Feed",
+    "Topic Feed",
+    "News Feed",
+    "Learning Feed",
+    "Business Feed",
+    "Shopping Feed",
+    "Events Feed",
+    "Custom Feed",
+    "Chronological Feed"
+  ]
+}

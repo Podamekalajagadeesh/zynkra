@@ -1,0 +1,24 @@
+{
+  "id": "26.2 Rewards",
+  "name": "Rewards",
+  "slug": "rewards",
+  "featureCount": 16,
+  "features": [
+    "Points",
+    "Badges",
+    "Levels",
+    "Achievements",
+    "Leaderboards",
+    "Community Rewards",
+    "Creator Rewards",
+    "Contribution Rewards",
+    "Referral Rewards",
+    "Event Rewards",
+    "Participation Rewards",
+    "Streaks",
+    "Challenges",
+    "Reward History",
+    "Reward Rules",
+    "Reward Analytics"
+  ]
+}

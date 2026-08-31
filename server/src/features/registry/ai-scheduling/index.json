@@ -1,0 +1,36 @@
+{
+  "id": "47. AI SCHEDULING",
+  "name": "AI SCHEDULING",
+  "slug": "ai-scheduling",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "47.1 Calendar AI",
+      "name": "Calendar AI",
+      "slug": "calendar-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-scheduling/calendar-ai.json"
+    },
+    {
+      "id": "47.2 Appointment AI",
+      "name": "Appointment AI",
+      "slug": "appointment-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-scheduling/appointment-ai.json"
+    },
+    {
+      "id": "47.3 Meeting AI",
+      "name": "Meeting AI",
+      "slug": "meeting-ai",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-scheduling/meeting-ai.json"
+    },
+    {
+      "id": "47.4 Schedule Optimization",
+      "name": "Schedule Optimization",
+      "slug": "schedule-optimization",
+      "featureCount": 16,
+      "file": "server/src/features/registry/ai-scheduling/schedule-optimization.json"
+    }
+  ]
+}

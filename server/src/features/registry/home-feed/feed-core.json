@@ -1,0 +1,24 @@
+{
+  "id": "04.1 Feed Core",
+  "name": "Feed Core",
+  "slug": "feed-core",
+  "featureCount": 16,
+  "features": [
+    "Home Feed",
+    "For You",
+    "Following",
+    "Friends Feed",
+    "Feed Pagination",
+    "Infinite Scroll",
+    "Content Refresh",
+    "Feed Loading",
+    "Feed Error Recovery",
+    "Post Ranking",
+    "Freshness Ranking",
+    "Diversity Controls",
+    "Quality Signals",
+    "Hide Post",
+    "Not Interested",
+    "Feed Reset"
+  ]
+}

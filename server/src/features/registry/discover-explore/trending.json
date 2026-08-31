@@ -1,0 +1,24 @@
+{
+  "id": "14.2 Trending",
+  "name": "Trending",
+  "slug": "trending",
+  "featureCount": 16,
+  "features": [
+    "Trending Topics",
+    "Trending Hashtags",
+    "Trending Videos",
+    "Trending Creators",
+    "Trending Communities",
+    "Trending Posts",
+    "Trending Sounds",
+    "Trending Events",
+    "Trending Businesses",
+    "Local Trends",
+    "Regional Trends",
+    "Global Trends",
+    "Time-Based Trends",
+    "Emerging Trends",
+    "Trend Alerts",
+    "Trend Analytics"
+  ]
+}

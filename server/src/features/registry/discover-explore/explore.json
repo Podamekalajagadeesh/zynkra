@@ -1,0 +1,24 @@
+{
+  "id": "14.1 Explore",
+  "name": "Explore",
+  "slug": "explore",
+  "featureCount": 16,
+  "features": [
+    "Explore Home",
+    "Trending",
+    "Recommended",
+    "Topics",
+    "Creators",
+    "Communities",
+    "Videos",
+    "Photos",
+    "Articles",
+    "Events",
+    "Businesses",
+    "Products",
+    "Services",
+    "Local",
+    "Personalized Explore",
+    "Explore Settings"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "49.4 Reply Assistance",
+  "name": "Reply Assistance",
+  "slug": "reply-assistance",
+  "featureCount": 16,
+  "features": [
+    "Reply Suggestions",
+    "Tone Selection",
+    "Short Reply",
+    "Detailed Reply",
+    "Friendly Reply",
+    "Professional Reply",
+    "Funny Reply",
+    "Translation",
+    "Contextual Reply",
+    "Creator Reply",
+    "Business Reply",
+    "Community Reply",
+    "Comment Templates",
+    "Reply Scheduling",
+    "Reply History",
+    "Reply Controls"
+  ]
+}

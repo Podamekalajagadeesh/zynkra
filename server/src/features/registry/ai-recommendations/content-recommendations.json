@@ -1,0 +1,24 @@
+{
+  "id": "43.2 Content Recommendations",
+  "name": "Content Recommendations",
+  "slug": "content-recommendations",
+  "featureCount": 16,
+  "features": [
+    "Post Recommendations",
+    "Video Recommendations",
+    "Reel Recommendations",
+    "Story Recommendations",
+    "Article Recommendations",
+    "Audio Recommendations",
+    "Topic Recommendations",
+    "Hashtag Recommendations",
+    "Creator Recommendations",
+    "Community Recommendations",
+    "Event Recommendations",
+    "Local Recommendations",
+    "Trending Recommendations",
+    "Personalized Recommendations",
+    "Similar Content",
+    "Recommendation Controls"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "01. IDENTITY & AUTHENTICATION",
+  "name": "IDENTITY & AUTHENTICATION",
+  "slug": "identity-authentication",
+  "featureCount": 62,
+  "modules": [
+    {
+      "id": "01.1 Account Security",
+      "name": "Account Security",
+      "slug": "account-security",
+      "featureCount": 15,
+      "file": "server/src/features/registry/identity-authentication/account-security.json"
+    },
+    {
+      "id": "01.2 Identity & Verification",
+      "name": "Identity & Verification",
+      "slug": "identity-verification",
+      "featureCount": 15,
+      "file": "server/src/features/registry/identity-authentication/identity-verification.json"
+    },
+    {
+      "id": "01.3 Account Management",
+      "name": "Account Management",
+      "slug": "account-management",
+      "featureCount": 16,
+      "file": "server/src/features/registry/identity-authentication/account-management.json"
+    },
+    {
+      "id": "01.4 Privacy Controls",
+      "name": "Privacy Controls",
+      "slug": "privacy-controls",
+      "featureCount": 16,
+      "file": "server/src/features/registry/identity-authentication/privacy-controls.json"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "37.4 Feed Controls",
+  "name": "Feed Controls",
+  "slug": "feed-controls",
+  "featureCount": 16,
+  "features": [
+    "Algorithm Choice",
+    "Chronological Mode",
+    "Interest Controls",
+    "Topic Controls",
+    "Creator Controls",
+    "Community Controls",
+    "Language Controls",
+    "Location Controls",
+    "Content Controls",
+    "Sensitive Content Controls",
+    "Recommendation Controls",
+    "Personalization Controls",
+    "Explain Ranking",
+    "Reset Algorithm",
+    "Feedback",
+    "Feed Transparency"
+  ]
+}

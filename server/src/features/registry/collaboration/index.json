@@ -1,0 +1,36 @@
+{
+  "id": "18. COLLABORATION",
+  "name": "COLLABORATION",
+  "slug": "collaboration",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "18.1 Screen Sharing",
+      "name": "Screen Sharing",
+      "slug": "screen-sharing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/collaboration/screen-sharing.json"
+    },
+    {
+      "id": "18.2 Whiteboards",
+      "name": "Whiteboards",
+      "slug": "whiteboards",
+      "featureCount": 16,
+      "file": "server/src/features/registry/collaboration/whiteboards.json"
+    },
+    {
+      "id": "18.3 Shared Files",
+      "name": "Shared Files",
+      "slug": "shared-files",
+      "featureCount": 16,
+      "file": "server/src/features/registry/collaboration/shared-files.json"
+    },
+    {
+      "id": "18.4 Collaborative Sessions",
+      "name": "Collaborative Sessions",
+      "slug": "collaborative-sessions",
+      "featureCount": 16,
+      "file": "server/src/features/registry/collaboration/collaborative-sessions.json"
+    }
+  ]
+}

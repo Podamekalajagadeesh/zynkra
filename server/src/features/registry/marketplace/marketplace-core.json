@@ -1,0 +1,24 @@
+{
+  "id": "57.1 Marketplace Core",
+  "name": "Marketplace Core",
+  "slug": "marketplace-core",
+  "featureCount": 16,
+  "features": [
+    "Marketplace Home",
+    "Categories",
+    "Listings",
+    "Search",
+    "Filters",
+    "Sorting",
+    "Seller Profiles",
+    "Buyer Profiles",
+    "Saved Items",
+    "Watchlists",
+    "Offers",
+    "Messaging",
+    "Reviews",
+    "Favorites",
+    "Recommendations",
+    "Marketplace Alerts"
+  ]
+}

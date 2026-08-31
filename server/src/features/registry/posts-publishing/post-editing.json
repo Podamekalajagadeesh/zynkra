@@ -1,0 +1,24 @@
+{
+  "id": "05.2 Post Editing",
+  "name": "Post Editing",
+  "slug": "post-editing",
+  "featureCount": 16,
+  "features": [
+    "Edit Post",
+    "Delete Post",
+    "Restore Post",
+    "Add Media",
+    "Remove Media",
+    "Reorder Media",
+    "Edit Caption",
+    "Edit Location",
+    "Edit Tags",
+    "Edit Mentions",
+    "Edit Hashtags",
+    "Add Music",
+    "Change Audience",
+    "Disable Comments",
+    "Disable Sharing",
+    "Edit History"
+  ]
+}

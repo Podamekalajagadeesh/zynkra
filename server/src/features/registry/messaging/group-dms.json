@@ -1,0 +1,24 @@
+{
+  "id": "15.2 Group DMs",
+  "name": "Group DMs",
+  "slug": "group-dms",
+  "featureCount": 16,
+  "features": [
+    "Create Group Chat",
+    "Invite Members",
+    "Remove Members",
+    "Admin Roles",
+    "Group Name",
+    "Group Avatar",
+    "Group Description",
+    "Group Search",
+    "Group Media",
+    "Group Files",
+    "Group Polls",
+    "Group Calls",
+    "Pinned Messages",
+    "Threads",
+    "Mute Group",
+    "Leave Group"
+  ]
+}

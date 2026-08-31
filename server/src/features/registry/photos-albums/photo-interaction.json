@@ -1,0 +1,24 @@
+{
+  "id": "06.3 Photo Interaction",
+  "name": "Photo Interaction",
+  "slug": "photo-interaction",
+  "featureCount": 16,
+  "features": [
+    "Likes",
+    "Comments",
+    "Shares",
+    "Saves",
+    "Reactions",
+    "Tags",
+    "Mentions",
+    "Stories Sharing",
+    "Messaging Sharing",
+    "Download Controls",
+    "Report",
+    "Hide",
+    "Pin",
+    "Feature",
+    "Remix",
+    "Related Photos"
+  ]
+}

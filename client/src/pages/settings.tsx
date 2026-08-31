@@ -1003,6 +1003,28 @@ export function SettingsPage() {
         <NotificationSettings />
 
         <SettingItem
+          icon={<ShieldCheck size={20} />}
+          title="Verification & Trust"
+          description="Review your verification status, trust indicators, linked accounts, and document review progress."
+          action={
+            <Link to="/verification-and-trust">
+              <Button variant="secondary">Open Trust</Button>
+            </Link>
+          }
+        />
+
+        <SettingItem
+          icon={<ShieldCheck size={20} />}
+          title="Account Status & Security"
+          description="Manage temporary deactivation, reactivation, and account lifecycle state."
+          action={
+            <Link to="/account-status">
+              <Button variant="secondary">Open Status</Button>
+            </Link>
+          }
+        />
+
+        <SettingItem
           icon={<Trash2 size={20} />}
           title="Deactivate Account"
           description="Deactivating your account will disable your profile and remove your content from the platform."

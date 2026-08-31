@@ -1,0 +1,24 @@
+{
+  "id": "48.2 Voice Search",
+  "name": "Voice Search",
+  "slug": "voice-search",
+  "featureCount": 16,
+  "features": [
+    "People Search",
+    "Content Search",
+    "Product Search",
+    "Business Search",
+    "Community Search",
+    "Event Search",
+    "Local Search",
+    "Message Search",
+    "Topic Search",
+    "Creator Search",
+    "Service Search",
+    "Marketplace Search",
+    "Natural Language Search",
+    "Follow-Up Queries",
+    "Voice Results",
+    "Voice Summaries"
+  ]
+}

@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -83,7 +84,23 @@ export class SearchService {
     return { users, posts, hashtags, places, groups, events, products };
   }
 
-  async reverseImageSearch() {
+  async followUpSearch(previousQuery: string, followUpQuery: string) {
+    const previous = previousQuery?.trim();
+    const followUp = followUpQuery?.trim();
+    if (!previous || !followUp) {
+      throw new BadRequestException('Previous and follow-up search queries are required');
+    }
+
+    const query = `${previous} ${followUp}`;
+    return {
+      ...(await this.search(query)),
+      previousQuery: previous,
+      followUpQuery: followUp,
+      query,
+    };
+  }
+
+  async reverseImageSearch(_image?: Express.Multer.File) {
     return this.postsRepository
       .createQueryBuilder('post')
       .where('post.visibility = :visibility', { visibility: 'public' })
@@ -93,5 +110,49 @@ export class SearchService {
       .orderBy('post."createdAt"', 'DESC')
       .limit(MAX_RESULTS)
       .getMany();
+  }
+
+  async imageTextSearch(query: string, image?: Express.Multer.File) {
+    const textResults = query?.trim() ? await this.search(query.trim()) : {
+      users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [],
+    };
+
+    return {
+      ...textResults,
+      imageSearchResults: await this.reverseImageSearch(image),
+      query: query?.trim() ?? '',
+      imageProvided: Boolean(image),
+    };
+  }
+
+  async webConnectedSearch(query: string) {
+    const normalizedQuery = query?.trim();
+    if (!normalizedQuery) {
+      throw new BadRequestException('Search query is required');
+    }
+
+    try {
+      const response = await axios.get('https://api.duckduckgo.com/', {
+        params: { q: normalizedQuery, format: 'json', no_html: 1, skip_disambig: 1 },
+        timeout: 5000,
+      });
+      const data = response.data ?? {};
+      const relatedTopics = (data.RelatedTopics ?? [])
+        .filter((topic: any) => topic.Text && topic.FirstURL)
+        .slice(0, MAX_RESULTS)
+        .map((topic: any) => ({ title: topic.Text, url: topic.FirstURL }));
+
+      return {
+        query: normalizedQuery,
+        results: [
+          ...(data.AbstractText && data.AbstractURL
+            ? [{ title: data.Heading || normalizedQuery, snippet: data.AbstractText, url: data.AbstractURL }]
+            : []),
+          ...relatedTopics,
+        ].slice(0, MAX_RESULTS),
+      };
+    } catch {
+      throw new ServiceUnavailableException('Web search is temporarily unavailable');
+    }
   }
 }

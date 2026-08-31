@@ -1,0 +1,24 @@
+{
+  "id": "09.1 Video Publishing",
+  "name": "Video Publishing",
+  "slug": "video-publishing",
+  "featureCount": 16,
+  "features": [
+    "Long Videos",
+    "Video Upload",
+    "Video Chapters",
+    "Thumbnails",
+    "Titles",
+    "Descriptions",
+    "Captions",
+    "Subtitles",
+    "Playlists",
+    "Premieres",
+    "Scheduling",
+    "Video Privacy",
+    "Age Controls",
+    "Comments",
+    "Sharing",
+    "Embedding"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "40.1 Caption AI",
+  "name": "Caption AI",
+  "slug": "caption-ai",
+  "featureCount": 16,
+  "features": [
+    "Caption Generation",
+    "Caption Rewriting",
+    "Tone Selection",
+    "Length Selection",
+    "Language Selection",
+    "Emoji Suggestions",
+    "Hashtag Suggestions",
+    "CTA Suggestions",
+    "Hook Generation",
+    "Caption Variations",
+    "Brand Voice",
+    "Creator Voice",
+    "Accessibility Captions",
+    "Translation",
+    "Caption Optimization",
+    "Caption History"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "14.3 Topics",
+  "name": "Topics",
+  "slug": "topics",
+  "featureCount": 16,
+  "features": [
+    "Topic Pages",
+    "Follow Topics",
+    "Topic Feed",
+    "Topic Search",
+    "Topic Recommendations",
+    "Topic Trends",
+    "Topic Communities",
+    "Topic Creators",
+    "Topic Articles",
+    "Topic Videos",
+    "Topic Discussions",
+    "Topic Events",
+    "Topic Notifications",
+    "Topic Personalization",
+    "Topic Moderation",
+    "Topic Analytics"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "50.3 Personalization",
+  "name": "Personalization",
+  "slug": "personalization",
+  "featureCount": 16,
+  "features": [
+    "Feed Personalization",
+    "Search Personalization",
+    "Recommendations",
+    "Notification Personalization",
+    "Creator Personalization",
+    "Community Personalization",
+    "Shopping Personalization",
+    "Event Personalization",
+    "AI Personalization",
+    "UI Personalization",
+    "Language Personalization",
+    "Accessibility Personalization",
+    "Privacy Personalization",
+    "Content Personalization",
+    "Discovery Personalization",
+    "Personalization Reset"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "08.2 Shorts",
+  "name": "Shorts",
+  "slug": "shorts",
+  "featureCount": 16,
+  "features": [
+    "Short Videos",
+    "Vertical Player",
+    "Auto Play",
+    "Swipe Navigation",
+    "Like",
+    "Comment",
+    "Share",
+    "Save",
+    "Remix",
+    "Duet",
+    "Reaction",
+    "Follow Creator",
+    "Sound Discovery",
+    "Hashtag Discovery",
+    "Creator Discovery",
+    "Video Recommendations"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "38.3 Community Moderation",
+  "name": "Community Moderation",
+  "slug": "community-moderation",
+  "featureCount": 16,
+  "features": [
+    "Rule Detection",
+    "Comment Moderation",
+    "Post Moderation",
+    "Message Moderation",
+    "Image Moderation",
+    "Video Moderation",
+    "Live Moderation",
+    "Forum Moderation",
+    "Group Moderation",
+    "Channel Moderation",
+    "Marketplace Moderation",
+    "Business Moderation",
+    "Event Moderation",
+    "Automated Actions",
+    "Moderator Recommendations",
+    "Moderation Logs"
+  ]
+}

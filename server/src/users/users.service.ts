@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Not, Repository } from 'typeorm';
-import { webcrypto } from 'crypto';
+import { webcrypto, randomBytes } from 'crypto';
 import { User, ProfilePrivacy } from './entities/user.entity';
 import { FollowRequest, FollowRequestStatus } from './entities/follow-request.entity';
 import { Poke } from './entities/poke.entity';
@@ -168,6 +168,46 @@ export class UsersService {
       user.messagePrivacy = updatePrivacyDto.messagePrivacy;
     }
 
+    if (updatePrivacyDto.showOnlineStatus !== undefined) {
+      user.showOnlineStatus = updatePrivacyDto.showOnlineStatus;
+    }
+
+    if (updatePrivacyDto.showLastSeenTimestamp !== undefined) {
+      user.showLastSeenTimestamp = updatePrivacyDto.showLastSeenTimestamp;
+    }
+
+    if (updatePrivacyDto.readReceipts !== undefined) {
+      user.readReceipts = updatePrivacyDto.readReceipts;
+    }
+
+    if (updatePrivacyDto.contactDiscovery !== undefined) {
+      user.contactDiscovery = updatePrivacyDto.contactDiscovery;
+    }
+
+    if (updatePrivacyDto.personalization !== undefined) {
+      user.personalization = updatePrivacyDto.personalization;
+    }
+
+    if (updatePrivacyDto.adPersonalization !== undefined) {
+      user.adPersonalization = updatePrivacyDto.adPersonalization;
+    }
+
+    if (updatePrivacyDto.mentions) {
+      user.mentions = updatePrivacyDto.mentions;
+    }
+
+    if (updatePrivacyDto.activityVisibility) {
+      user.activityVisibility = updatePrivacyDto.activityVisibility;
+    }
+
+    if (updatePrivacyDto.storyVisibility) {
+      user.storyVisibility = updatePrivacyDto.storyVisibility;
+    }
+
+    if (updatePrivacyDto.searchVisibility) {
+      user.searchVisibility = updatePrivacyDto.searchVisibility;
+    }
+
     if (updatePrivacyDto.screenshotProtection) {
       user.screenshotProtection = {
         ...user.screenshotProtection,
@@ -176,6 +216,33 @@ export class UsersService {
     }
 
     return this.usersRepository.save(user);
+  }
+
+  async getPrivacy(userId: string): Promise<Pick<User, 'postVisibility' | 'friendRequestPrivacy' | 'emailSearchPrivacy' | 'commentPrivacy' | 'tagPrivacy' | 'messagePrivacy' | 'screenshotProtection' | 'showOnlineStatus' | 'showLastSeenTimestamp' | 'readReceipts' | 'mentions' | 'activityVisibility' | 'storyVisibility' | 'searchVisibility' | 'contactDiscovery' | 'personalization' | 'adPersonalization'>> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      postVisibility: user.postVisibility,
+      friendRequestPrivacy: user.friendRequestPrivacy,
+      emailSearchPrivacy: user.emailSearchPrivacy,
+      commentPrivacy: user.commentPrivacy,
+      tagPrivacy: user.tagPrivacy,
+      messagePrivacy: user.messagePrivacy,
+      screenshotProtection: user.screenshotProtection,
+      showOnlineStatus: user.showOnlineStatus,
+      showLastSeenTimestamp: user.showLastSeenTimestamp,
+      readReceipts: user.readReceipts,
+      mentions: user.mentions,
+      activityVisibility: user.activityVisibility,
+      storyVisibility: user.storyVisibility,
+      searchVisibility: user.searchVisibility,
+      contactDiscovery: user.contactDiscovery,
+      personalization: user.personalization,
+      adPersonalization: user.adPersonalization,
+    };
   }
 
   async findOneById(
@@ -254,6 +321,28 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async createGuestUser(): Promise<User> {
+    const username = `guest_${randomBytes(4).toString('hex')}`;
+    const user = this.usersRepository.create({
+      username,
+      isGuest: true,
+      emailVerified: true,
+      // Other fields will take their default values or be null
+    });
+    return this.usersRepository.save(user);
+  }
+
+  async createAnonymousUser(): Promise<User> {
+    const username = `anonymous_${randomBytes(4).toString('hex')}`;
+    const user = this.usersRepository.create({
+      username,
+      isGuest: true,
+      emailVerified: true,
+      // Other fields will take their default values or be null
+    });
+    return this.usersRepository.save(user);
+  }
+
   async save(user: User): Promise<User> {
     return this.usersRepository.save(user);
   }
@@ -298,6 +387,18 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     user.status = 'deactivated' as any;
+    return this.usersRepository.save(user);
+  }
+
+  async reactivate(userId: string): Promise<User> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if ((user.status as string) !== 'deactivated') {
+      throw new BadRequestException('Account is not deactivated');
+    }
+    user.status = 'active' as any;
     return this.usersRepository.save(user);
   }
 

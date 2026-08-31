@@ -1,0 +1,36 @@
+{
+  "id": "24. LEARNING COMMUNITIES",
+  "name": "LEARNING COMMUNITIES",
+  "slug": "learning-communities",
+  "featureCount": 64,
+  "modules": [
+    {
+      "id": "24.1 Learning Hubs",
+      "name": "Learning Hubs",
+      "slug": "learning-hubs",
+      "featureCount": 16,
+      "file": "server/src/features/registry/learning-communities/learning-hubs.json"
+    },
+    {
+      "id": "24.2 Courses",
+      "name": "Courses",
+      "slug": "courses",
+      "featureCount": 16,
+      "file": "server/src/features/registry/learning-communities/courses.json"
+    },
+    {
+      "id": "24.3 Study Groups",
+      "name": "Study Groups",
+      "slug": "study-groups",
+      "featureCount": 16,
+      "file": "server/src/features/registry/learning-communities/study-groups.json"
+    },
+    {
+      "id": "24.4 Knowledge Sharing",
+      "name": "Knowledge Sharing",
+      "slug": "knowledge-sharing",
+      "featureCount": 16,
+      "file": "server/src/features/registry/learning-communities/knowledge-sharing.json"
+    }
+  ]
+}

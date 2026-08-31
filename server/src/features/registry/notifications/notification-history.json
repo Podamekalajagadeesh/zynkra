@@ -1,0 +1,24 @@
+{
+  "id": "19.4 Notification History",
+  "name": "Notification History",
+  "slug": "notification-history",
+  "featureCount": 16,
+  "features": [
+    "Notification Center",
+    "Search",
+    "Filters",
+    "Read/Unread",
+    "Archive",
+    "Delete",
+    "Group Notifications",
+    "Notification Details",
+    "Related Content",
+    "Related Profile",
+    "Related Message",
+    "Related Event",
+    "Security History",
+    "System History",
+    "Notification Export",
+    "Notification Analytics"
+  ]
+}

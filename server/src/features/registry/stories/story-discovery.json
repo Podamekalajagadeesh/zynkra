@@ -1,0 +1,24 @@
+{
+  "id": "07.3 Story Discovery",
+  "name": "Story Discovery",
+  "slug": "story-discovery",
+  "featureCount": 16,
+  "features": [
+    "Story Tray",
+    "Close Friends Stories",
+    "Suggested Stories",
+    "Trending Stories",
+    "Local Stories",
+    "Creator Stories",
+    "Community Stories",
+    "Business Stories",
+    "Event Stories",
+    "Topic Stories",
+    "Story Search",
+    "Story Recommendations",
+    "Story Notifications",
+    "Story Highlights",
+    "Story Archive",
+    "Story Memories"
+  ]
+}

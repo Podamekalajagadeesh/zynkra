@@ -1,0 +1,3302 @@
+{
+  "numTotalTestSuites": 112,
+  "numPassedTestSuites": 112,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 271,
+  "numPassedTests": 271,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "startTime": 1786687305470,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation renders Add Poll button",
+          "status": "passed",
+          "title": "renders Add Poll button",
+          "duration": 495,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation shows poll form when Add Poll is clicked",
+          "status": "passed",
+          "title": "shows poll form when Add Poll is clicked",
+          "duration": 404,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation hides poll form when Remove Poll is clicked",
+          "status": "passed",
+          "title": "hides poll form when Remove Poll is clicked",
+          "duration": 428,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation adds a new option when Add Option is clicked",
+          "status": "passed",
+          "title": "adds a new option when Add Option is clicked",
+          "duration": 405,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation sends poll data on submit",
+          "status": "passed",
+          "title": "sends poll data on submit",
+          "duration": 1279,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation sends null poll when not added",
+          "status": "passed",
+          "title": "sends null poll when not added",
+          "duration": 444,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm poll creation"
+          ],
+          "fullName": " CreatePostForm poll creation updates question input when typing",
+          "status": "passed",
+          "title": "updates question input when typing",
+          "duration": 472,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687310773,
+      "endTime": 1786687314700,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/create-post-form.poll.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts renders the form with textarea",
+          "status": "passed",
+          "title": "renders the form with textarea",
+          "duration": 214,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts allows typing text content",
+          "status": "passed",
+          "title": "allows typing text content",
+          "duration": 701,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts disables submit button when content is empty",
+          "status": "passed",
+          "title": "disables submit button when content is empty",
+          "duration": 56,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts enables submit button when content is typed",
+          "status": "passed",
+          "title": "enables submit button when content is typed",
+          "duration": 182,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts creates a text post on submit",
+          "status": "passed",
+          "title": "creates a text post on submit",
+          "duration": 391,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts handles API error gracefully",
+          "status": "passed",
+          "title": "handles API error gracefully",
+          "duration": 464,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts submits with trimmed content",
+          "status": "passed",
+          "title": "submits with trimmed content",
+          "duration": 589,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePostForm - text posts"
+          ],
+          "fullName": " CreatePostForm - text posts renders visibility selector",
+          "status": "passed",
+          "title": "renders visibility selector",
+          "duration": 37,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687313761,
+      "endTime": 1786687316395,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/create-post-form.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost renders the create post form with textarea",
+          "status": "passed",
+          "title": "renders the create post form with textarea",
+          "duration": 138,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost renders all action buttons",
+          "status": "passed",
+          "title": "renders all action buttons",
+          "duration": 54,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost allows typing content in textarea",
+          "status": "passed",
+          "title": "allows typing content in textarea",
+          "duration": 499,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost allows typing activity",
+          "status": "passed",
+          "title": "allows typing activity",
+          "duration": 358,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost shows validation warning when submitting empty text post",
+          "status": "passed",
+          "title": "shows validation warning when submitting empty text post",
+          "duration": 113,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost submits a text post with content",
+          "status": "passed",
+          "title": "submits a text post with content",
+          "duration": 393,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost calls navigate after successful post creation",
+          "status": "passed",
+          "title": "calls navigate after successful post creation",
+          "duration": 604,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost opens sticker modal when GIF button clicked",
+          "status": "passed",
+          "title": "opens sticker modal when GIF button clicked",
+          "duration": 115,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost opens tag friends modal when Tag People clicked",
+          "status": "passed",
+          "title": "opens tag friends modal when Tag People clicked",
+          "duration": 82,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost opens AI generator when AI Generate clicked",
+          "status": "passed",
+          "title": "opens AI generator when AI Generate clicked",
+          "duration": 96,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost opens podcast recorder when Podcast clicked",
+          "status": "passed",
+          "title": "opens podcast recorder when Podcast clicked",
+          "duration": 97,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost closes dialog when X button clicked",
+          "status": "passed",
+          "title": "closes dialog when X button clicked",
+          "duration": 111,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreatePost"
+          ],
+          "fullName": " CreatePost handles API error gracefully",
+          "status": "passed",
+          "title": "handles API error gracefully",
+          "duration": 422,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687310538,
+      "endTime": 1786687313622,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/CreatePost.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows shows loading state initially",
+          "status": "passed",
+          "title": "shows loading state initially",
+          "duration": 87,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows renders mutual follows after loading",
+          "status": "passed",
+          "title": "renders mutual follows after loading",
+          "duration": 68,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows renders nothing when no mutual follows",
+          "status": "passed",
+          "title": "renders nothing when no mutual follows",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows displays +X more when more than 5 mutuals",
+          "status": "passed",
+          "title": "displays +X more when more than 5 mutuals",
+          "duration": 52,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows renders links to user profiles",
+          "status": "passed",
+          "title": "renders links to user profiles",
+          "duration": 114,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "MutualFollows"
+          ],
+          "fullName": " MutualFollows handles API error gracefully",
+          "status": "passed",
+          "title": "handles API error gracefully",
+          "duration": 29,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687319693,
+      "endTime": 1786687320065,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/MutualFollows.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders the editor title",
+          "status": "passed",
+          "title": "renders the editor title",
+          "duration": 159,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders filter presets",
+          "status": "passed",
+          "title": "renders filter presets",
+          "duration": 65,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders adjustment sliders",
+          "status": "passed",
+          "title": "renders adjustment sliders",
+          "duration": 43,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders AI tools section",
+          "status": "passed",
+          "title": "renders AI tools section",
+          "duration": 40,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor calls onClose when close button clicked",
+          "status": "passed",
+          "title": "calls onClose when close button clicked",
+          "duration": 50,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders save button",
+          "status": "passed",
+          "title": "renders save button",
+          "duration": 32,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders reset button",
+          "status": "passed",
+          "title": "renders reset button",
+          "duration": 34,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor renders the preview image with correct src",
+          "status": "passed",
+          "title": "renders the preview image with correct src",
+          "duration": 33,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PhotoEditor"
+          ],
+          "fullName": " PhotoEditor shows current adjustment values",
+          "status": "passed",
+          "title": "shows current adjustment values",
+          "duration": 50,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687314983,
+      "endTime": 1786687315491,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/PhotoEditor.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "Poll component"
+          ],
+          "fullName": " Poll component renders the poll question",
+          "status": "passed",
+          "title": "renders the poll question",
+          "duration": 64,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Poll component"
+          ],
+          "fullName": " Poll component renders all options as buttons",
+          "status": "passed",
+          "title": "renders all options as buttons",
+          "duration": 136,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Poll component"
+          ],
+          "fullName": " Poll component renders a single option",
+          "status": "passed",
+          "title": "renders a single option",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Poll component"
+          ],
+          "fullName": " Poll component renders empty options without crashing",
+          "status": "passed",
+          "title": "renders empty options without crashing",
+          "duration": 10,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687319358,
+      "endTime": 1786687319584,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/poll.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting renders the poll question",
+          "status": "passed",
+          "title": "renders the poll question",
+          "duration": 157,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting renders options as buttons when user has not voted",
+          "status": "passed",
+          "title": "renders options as buttons when user has not voted",
+          "duration": 253,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting shows percentage bars when user has voted",
+          "status": "passed",
+          "title": "shows percentage bars when user has voted",
+          "duration": 139,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting shows 0% when totalVotes is 0",
+          "status": "passed",
+          "title": "shows 0% when totalVotes is 0",
+          "duration": 38,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting calls voteOnPoll when clicking an option button",
+          "status": "passed",
+          "title": "calls voteOnPoll when clicking an option button",
+          "duration": 159,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting shows success toast after voting",
+          "status": "passed",
+          "title": "shows success toast after voting",
+          "duration": 178,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting shows error toast when vote fails",
+          "status": "passed",
+          "title": "shows error toast when vote fails",
+          "duration": 138,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "PostCard poll rendering and voting"
+          ],
+          "fullName": " PostCard poll rendering and voting does not render poll section when post has no poll",
+          "status": "passed",
+          "title": "does not render poll section when post has no poll",
+          "duration": 69,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687311213,
+      "endTime": 1786687312344,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/post-card.poll.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders nothing when isOpen is false",
+          "status": "passed",
+          "title": "renders nothing when isOpen is false",
+          "duration": 40,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders the modal when isOpen is true",
+          "status": "passed",
+          "title": "renders the modal when isOpen is true",
+          "duration": 95,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal shows display name in title",
+          "status": "passed",
+          "title": "shows display name in title",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal shows fallback title when no displayName",
+          "status": "passed",
+          "title": "shows fallback title when no displayName",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal displays the profile URL",
+          "status": "passed",
+          "title": "displays the profile URL",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders close button",
+          "status": "passed",
+          "title": "renders close button",
+          "duration": 93,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal calls onClose when close button is clicked",
+          "status": "passed",
+          "title": "calls onClose when close button is clicked",
+          "duration": 264,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal calls onClose when backdrop is clicked",
+          "status": "passed",
+          "title": "calls onClose when backdrop is clicked",
+          "duration": 87,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders copy link button",
+          "status": "passed",
+          "title": "renders copy link button",
+          "duration": 24,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders download button after QR code generates",
+          "status": "passed",
+          "title": "renders download button after QR code generates",
+          "duration": 55,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfileQrModal"
+          ],
+          "fullName": " ProfileQrModal renders QR image after generation",
+          "status": "passed",
+          "title": "renders QR image after generation",
+          "duration": 22,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687310356,
+      "endTime": 1786687311068,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/ProfileQrModal.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext starts with empty accounts and not logged in",
+          "status": "passed",
+          "title": "starts with empty accounts and not logged in",
+          "duration": 92,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext addAccount adds a new account and makes it active",
+          "status": "passed",
+          "title": "addAccount adds a new account and makes it active",
+          "duration": 36,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext addAccount persists to localStorage",
+          "status": "passed",
+          "title": "addAccount persists to localStorage",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext switchAccount changes the active account",
+          "status": "passed",
+          "title": "switchAccount changes the active account",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext logout removes the active account and switches to next",
+          "status": "passed",
+          "title": "logout removes the active account and switches to next",
+          "duration": 151,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext logout clears all accounts and marks as logged out",
+          "status": "passed",
+          "title": "logout clears all accounts and marks as logged out",
+          "duration": 43,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext addAccount updates existing account with same ID",
+          "status": "passed",
+          "title": "addAccount updates existing account with same ID",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "AuthContext"
+          ],
+          "fullName": " AuthContext setUser updates the active account user data",
+          "status": "passed",
+          "title": "setUser updates the active account user data",
+          "duration": 25,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687317057,
+      "endTime": 1786687317468,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/contexts/AuthContext.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "signUp API helper"
+          ],
+          "fullName": " signUp API helper sends POST to /auth/signup and returns the response",
+          "status": "passed",
+          "title": "sends POST to /auth/signup and returns the response",
+          "duration": 137,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "signUp API helper"
+          ],
+          "fullName": " signUp API helper throws on 409 conflict (duplicate email)",
+          "status": "passed",
+          "title": "throws on 409 conflict (duplicate email)",
+          "duration": 67,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "signUp API helper"
+          ],
+          "fullName": " signUp API helper throws on 400 validation error",
+          "status": "passed",
+          "title": "throws on 400 validation error",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "signUp API helper"
+          ],
+          "fullName": " signUp API helper sends correct request body",
+          "status": "passed",
+          "title": "sends correct request body",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "signUp API helper"
+          ],
+          "fullName": " signUp API helper sends correct Content-Type header",
+          "status": "passed",
+          "title": "sends correct Content-Type header",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper sends POST to /auth/signin and returns access_token",
+          "status": "passed",
+          "title": "sends POST to /auth/signin and returns access_token",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper sends correct request body with email",
+          "status": "passed",
+          "title": "sends correct request body with email",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper sends correct request body with username",
+          "status": "passed",
+          "title": "sends correct request body with username",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper throws on 401 invalid credentials",
+          "status": "passed",
+          "title": "throws on 401 invalid credentials",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper throws on 401 unverified email",
+          "status": "passed",
+          "title": "throws on 401 unverified email",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "login API helper"
+          ],
+          "fullName": " login API helper returns 2FA response when 2FA is enabled",
+          "status": "passed",
+          "title": "returns 2FA response when 2FA is enabled",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "setAuthToken"
+          ],
+          "fullName": " setAuthToken stores the token in sessionStorage by default (not remembered) and sets the header",
+          "status": "passed",
+          "title": "stores the token in sessionStorage by default (not remembered) and sets the header",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "setAuthToken"
+          ],
+          "fullName": " setAuthToken stores the token in localStorage when remembered",
+          "status": "passed",
+          "title": "stores the token in localStorage when remembered",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "setAuthToken"
+          ],
+          "fullName": " setAuthToken removes the token from both stores when called with null",
+          "status": "passed",
+          "title": "removes the token from both stores when called with null",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getLoginSessions"
+          ],
+          "fullName": " getLoginSessions fetches login sessions",
+          "status": "passed",
+          "title": "fetches login sessions",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "forgotPassword API helper"
+          ],
+          "fullName": " forgotPassword API helper sends POST to /auth/forgot-password and returns success message",
+          "status": "passed",
+          "title": "sends POST to /auth/forgot-password and returns success message",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "forgotPassword API helper"
+          ],
+          "fullName": " forgotPassword API helper sends correct request body",
+          "status": "passed",
+          "title": "sends correct request body",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "forgotPassword API helper"
+          ],
+          "fullName": " forgotPassword API helper throws on 400 invalid email",
+          "status": "passed",
+          "title": "throws on 400 invalid email",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "resetPassword API helper"
+          ],
+          "fullName": " resetPassword API helper sends POST to /auth/reset-password and returns success",
+          "status": "passed",
+          "title": "sends POST to /auth/reset-password and returns success",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "resetPassword API helper"
+          ],
+          "fullName": " resetPassword API helper sends correct request body",
+          "status": "passed",
+          "title": "sends correct request body",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "resetPassword API helper"
+          ],
+          "fullName": " resetPassword API helper throws on 401 expired token",
+          "status": "passed",
+          "title": "throws on 401 expired token",
+          "duration": 133,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "resetPassword API helper"
+          ],
+          "fullName": " resetPassword API helper throws on 400 short password",
+          "status": "passed",
+          "title": "throws on 400 short password",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "resendVerification API helper"
+          ],
+          "fullName": " resendVerification API helper sends POST to /auth/resend-verification",
+          "status": "passed",
+          "title": "sends POST to /auth/resend-verification",
+          "duration": 12,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687315368,
+      "endTime": 1786687315962,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "getArticleFeed API helper"
+          ],
+          "fullName": " getArticleFeed API helper fetches paginated articles",
+          "status": "passed",
+          "title": "fetches paginated articles",
+          "duration": 165,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getArticleFeed API helper"
+          ],
+          "fullName": " getArticleFeed API helper fetches articles with tag filter",
+          "status": "passed",
+          "title": "fetches articles with tag filter",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getArticleFeed API helper"
+          ],
+          "fullName": " getArticleFeed API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 46,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getArticleBySlug API helper"
+          ],
+          "fullName": " getArticleBySlug API helper fetches article by slug",
+          "status": "passed",
+          "title": "fetches article by slug",
+          "duration": 26,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getArticleBySlug API helper"
+          ],
+          "fullName": " getArticleBySlug API helper throws on 404",
+          "status": "passed",
+          "title": "throws on 404",
+          "duration": 26,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687320094,
+      "endTime": 1786687320391,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/article.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "auth-storage"
+          ],
+          "fullName": " auth-storage defaults to NOT remembered when the flag is unset",
+          "status": "passed",
+          "title": "defaults to NOT remembered when the flag is unset",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "auth-storage"
+          ],
+          "fullName": " auth-storage stores remembered tokens in localStorage and clears sessionStorage",
+          "status": "passed",
+          "title": "stores remembered tokens in localStorage and clears sessionStorage",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "auth-storage"
+          ],
+          "fullName": " auth-storage stores unremembered tokens in sessionStorage and clears localStorage",
+          "status": "passed",
+          "title": "stores unremembered tokens in sessionStorage and clears localStorage",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "auth-storage"
+          ],
+          "fullName": " auth-storage clears both stores when set to null",
+          "status": "passed",
+          "title": "clears both stores when set to null",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "auth-storage"
+          ],
+          "fullName": " auth-storage falls back to the inactive store when the active store is empty",
+          "status": "passed",
+          "title": "falls back to the inactive store when the active store is empty",
+          "duration": 0,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687322415,
+      "endTime": 1786687322420,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/auth-storage.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "blockUser API helper"
+          ],
+          "fullName": " blockUser API helper sends POST to /users/:id/block",
+          "status": "passed",
+          "title": "sends POST to /users/:id/block",
+          "duration": 138,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "blockUser API helper"
+          ],
+          "fullName": " blockUser API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 69,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "unblockUser API helper"
+          ],
+          "fullName": " unblockUser API helper sends DELETE to /users/:id/block",
+          "status": "passed",
+          "title": "sends DELETE to /users/:id/block",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "unblockUser API helper"
+          ],
+          "fullName": " unblockUser API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getBlockedUsers API helper"
+          ],
+          "fullName": " getBlockedUsers API helper fetches blocked users list",
+          "status": "passed",
+          "title": "fetches blocked users list",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getBlockedUsers API helper"
+          ],
+          "fullName": " getBlockedUsers API helper returns empty array when no blocked users",
+          "status": "passed",
+          "title": "returns empty array when no blocked users",
+          "duration": 15,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687320053,
+      "endTime": 1786687320331,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/block.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "addBookmark API helper"
+          ],
+          "fullName": " addBookmark API helper sends POST to /bookmarks",
+          "status": "passed",
+          "title": "sends POST to /bookmarks",
+          "duration": 151,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "addBookmark API helper"
+          ],
+          "fullName": " addBookmark API helper sends POST without collectionId",
+          "status": "passed",
+          "title": "sends POST without collectionId",
+          "duration": 45,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "removeBookmark API helper"
+          ],
+          "fullName": " removeBookmark API helper sends DELETE to /bookmarks/:postId",
+          "status": "passed",
+          "title": "sends DELETE to /bookmarks/:postId",
+          "duration": 33,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getBookmarks API helper"
+          ],
+          "fullName": " getBookmarks API helper fetches bookmarks list",
+          "status": "passed",
+          "title": "fetches bookmarks list",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createCollection API helper"
+          ],
+          "fullName": " createCollection API helper sends POST to /collections",
+          "status": "passed",
+          "title": "sends POST to /collections",
+          "duration": 23,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getCollections API helper"
+          ],
+          "fullName": " getCollections API helper fetches collections list",
+          "status": "passed",
+          "title": "fetches collections list",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateCollection API helper"
+          ],
+          "fullName": " updateCollection API helper sends PATCH to /collections/:id",
+          "status": "passed",
+          "title": "sends PATCH to /collections/:id",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "deleteCollection API helper"
+          ],
+          "fullName": " deleteCollection API helper sends DELETE to /collections/:id",
+          "status": "passed",
+          "title": "sends DELETE to /collections/:id",
+          "duration": 15,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687320244,
+      "endTime": 1786687320562,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/bookmark.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "getCloseFriends API helper"
+          ],
+          "fullName": " getCloseFriends API helper fetches the close friends list",
+          "status": "passed",
+          "title": "fetches the close friends list",
+          "duration": 100,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getCloseFriends API helper"
+          ],
+          "fullName": " getCloseFriends API helper returns empty array when no close friends",
+          "status": "passed",
+          "title": "returns empty array when no close friends",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getCloseFriends API helper"
+          ],
+          "fullName": " getCloseFriends API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 190,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateCloseFriends API helper"
+          ],
+          "fullName": " updateCloseFriends API helper sends PUT to /users/me/close-friends with IDs",
+          "status": "passed",
+          "title": "sends PUT to /users/me/close-friends with IDs",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateCloseFriends API helper"
+          ],
+          "fullName": " updateCloseFriends API helper sends empty array to remove all close friends",
+          "status": "passed",
+          "title": "sends empty array to remove all close friends",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateCloseFriends API helper"
+          ],
+          "fullName": " updateCloseFriends API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 13,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687318153,
+      "endTime": 1786687318520,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/close-friends.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "followUser API helper"
+          ],
+          "fullName": " followUser API helper sends POST to /users/:id/follow and returns response",
+          "status": "passed",
+          "title": "sends POST to /users/:id/follow and returns response",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "followUser API helper"
+          ],
+          "fullName": " followUser API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 41,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "unfollowUser API helper"
+          ],
+          "fullName": " unfollowUser API helper sends DELETE to /users/:id/follow and returns response",
+          "status": "passed",
+          "title": "sends DELETE to /users/:id/follow and returns response",
+          "duration": 25,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "follow request API helpers"
+          ],
+          "fullName": " follow request API helpers sendFollowRequest sends POST to /users/:id/follow-request",
+          "status": "passed",
+          "title": "sendFollowRequest sends POST to /users/:id/follow-request",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "follow request API helpers"
+          ],
+          "fullName": " follow request API helpers getFollowRequests fetches pending requests",
+          "status": "passed",
+          "title": "getFollowRequests fetches pending requests",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "follow request API helpers"
+          ],
+          "fullName": " follow request API helpers acceptFollowRequest sends POST",
+          "status": "passed",
+          "title": "acceptFollowRequest sends POST",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "follow request API helpers"
+          ],
+          "fullName": " follow request API helpers denyFollowRequest sends POST",
+          "status": "passed",
+          "title": "denyFollowRequest sends POST",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getFollowSuggestions API helper"
+          ],
+          "fullName": " getFollowSuggestions API helper fetches follow suggestions",
+          "status": "passed",
+          "title": "fetches follow suggestions",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getFollowers API helper"
+          ],
+          "fullName": " getFollowers API helper fetches followers list for a user",
+          "status": "passed",
+          "title": "fetches followers list for a user",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getFollowers API helper"
+          ],
+          "fullName": " getFollowers API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getUserFollowing API helper"
+          ],
+          "fullName": " getUserFollowing API helper fetches following list for a user",
+          "status": "passed",
+          "title": "fetches following list for a user",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getUserFollowing API helper"
+          ],
+          "fullName": " getUserFollowing API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMyFollowers API helper"
+          ],
+          "fullName": " getMyFollowers API helper fetches current user followers",
+          "status": "passed",
+          "title": "fetches current user followers",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMyFollowing API helper"
+          ],
+          "fullName": " getMyFollowing API helper fetches the current user following list",
+          "status": "passed",
+          "title": "fetches the current user following list",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMyFollowing API helper"
+          ],
+          "fullName": " getMyFollowing API helper returns empty array when not following anyone",
+          "status": "passed",
+          "title": "returns empty array when not following anyone",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMyFollowing API helper"
+          ],
+          "fullName": " getMyFollowing API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 132,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "removeFollower API helper"
+          ],
+          "fullName": " removeFollower API helper sends DELETE to /users/followers/:id and returns response",
+          "status": "passed",
+          "title": "sends DELETE to /users/followers/:id and returns response",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "removeFollower API helper"
+          ],
+          "fullName": " removeFollower API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMutualFollows API helper"
+          ],
+          "fullName": " getMutualFollows API helper fetches mutual follows between two users",
+          "status": "passed",
+          "title": "fetches mutual follows between two users",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getMutualFollows API helper"
+          ],
+          "fullName": " getMutualFollows API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "blockUser API helper"
+          ],
+          "fullName": " blockUser API helper sends POST to /users/:id/block and returns response",
+          "status": "passed",
+          "title": "sends POST to /users/:id/block and returns response",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "blockUser API helper"
+          ],
+          "fullName": " blockUser API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "unblockUser API helper"
+          ],
+          "fullName": " unblockUser API helper sends DELETE to /users/:id/block and returns response",
+          "status": "passed",
+          "title": "sends DELETE to /users/:id/block and returns response",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "unblockUser API helper"
+          ],
+          "fullName": " unblockUser API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "close friends API helpers"
+          ],
+          "fullName": " close friends API helpers fetches close friends list",
+          "status": "passed",
+          "title": "fetches close friends list",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "close friends API helpers"
+          ],
+          "fullName": " close friends API helpers updates close friends list",
+          "status": "passed",
+          "title": "updates close friends list",
+          "duration": 23,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "close friends API helpers"
+          ],
+          "fullName": " close friends API helpers throws on error when fetching close friends",
+          "status": "passed",
+          "title": "throws on error when fetching close friends",
+          "duration": 10,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687310945,
+      "endTime": 1786687311574,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/follow.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "Notes API"
+          ],
+          "fullName": " Notes API creates a note",
+          "status": "passed",
+          "title": "creates a note",
+          "duration": 67,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Notes API"
+          ],
+          "fullName": " Notes API fetches following notes",
+          "status": "passed",
+          "title": "fetches following notes",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Notes API"
+          ],
+          "fullName": " Notes API fetches a user note",
+          "status": "passed",
+          "title": "fetches a user note",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Notes API"
+          ],
+          "fullName": " Notes API deletes a note",
+          "status": "passed",
+          "title": "deletes a note",
+          "duration": 7,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687322329,
+      "endTime": 1786687322423,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/notes.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "voteOnPoll API helper"
+          ],
+          "fullName": " voteOnPoll API helper sends POST to /polls/:pollOptionId/vote",
+          "status": "passed",
+          "title": "sends POST to /polls/:pollOptionId/vote",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "voteOnPoll API helper"
+          ],
+          "fullName": " voteOnPoll API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 235,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "voteOnPoll API helper"
+          ],
+          "fullName": " voteOnPoll API helper throws when poll option not found",
+          "status": "passed",
+          "title": "throws when poll option not found",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createPost with poll"
+          ],
+          "fullName": " createPost with poll sends poll data in request body",
+          "status": "passed",
+          "title": "sends poll data in request body",
+          "duration": 24,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createPost with poll"
+          ],
+          "fullName": " createPost with poll sends undefined poll when null",
+          "status": "passed",
+          "title": "sends undefined poll when null",
+          "duration": 18,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createPost with poll"
+          ],
+          "fullName": " createPost with poll throws on error with poll data",
+          "status": "passed",
+          "title": "throws on error with poll data",
+          "duration": 14,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687315938,
+      "endTime": 1786687316359,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/poll.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "createPost API helper"
+          ],
+          "fullName": " createPost API helper sends POST to /posts and returns the post",
+          "status": "passed",
+          "title": "sends POST to /posts and returns the post",
+          "duration": 93,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createPost API helper"
+          ],
+          "fullName": " createPost API helper throws on 401 unauthorized",
+          "status": "passed",
+          "title": "throws on 401 unauthorized",
+          "duration": 168,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "createPost API helper"
+          ],
+          "fullName": " createPost API helper throws on 400 validation error",
+          "status": "passed",
+          "title": "throws on 400 validation error",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updatePost API helper"
+          ],
+          "fullName": " updatePost API helper sends PATCH to /posts/:id and returns the updated post",
+          "status": "passed",
+          "title": "sends PATCH to /posts/:id and returns the updated post",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "deletePost API helper"
+          ],
+          "fullName": " deletePost API helper sends DELETE to /posts/:id",
+          "status": "passed",
+          "title": "sends DELETE to /posts/:id",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "deletePost API helper"
+          ],
+          "fullName": " deletePost API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getPosts API helper"
+          ],
+          "fullName": " getPosts API helper fetches posts from feed",
+          "status": "passed",
+          "title": "fetches posts from feed",
+          "duration": 18,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getShortsFeed API helper"
+          ],
+          "fullName": " getShortsFeed API helper fetches shorts feed",
+          "status": "passed",
+          "title": "fetches shorts feed",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getShortsFeed API helper"
+          ],
+          "fullName": " getShortsFeed API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 65,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687315075,
+      "endTime": 1786687315516,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/post-create.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "getProfile API helper"
+          ],
+          "fullName": " getProfile API helper fetches the current user profile",
+          "status": "passed",
+          "title": "fetches the current user profile",
+          "duration": 122,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getProfile API helper"
+          ],
+          "fullName": " getProfile API helper attaches posts to the profile",
+          "status": "passed",
+          "title": "attaches posts to the profile",
+          "duration": 40,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getProfile API helper"
+          ],
+          "fullName": " getProfile API helper returns profile with empty posts when user has no ID",
+          "status": "passed",
+          "title": "returns profile with empty posts when user has no ID",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getProfile API helper"
+          ],
+          "fullName": " getProfile API helper throws on API error",
+          "status": "passed",
+          "title": "throws on API error",
+          "duration": 167,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getUserProfile API helper"
+          ],
+          "fullName": " getUserProfile API helper fetches a user profile by ID",
+          "status": "passed",
+          "title": "fetches a user profile by ID",
+          "duration": 32,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getUserProfile API helper"
+          ],
+          "fullName": " getUserProfile API helper sends pagination params",
+          "status": "passed",
+          "title": "sends pagination params",
+          "duration": 24,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getUserProfile API helper"
+          ],
+          "fullName": " getUserProfile API helper throws on 404 not found",
+          "status": "passed",
+          "title": "throws on 404 not found",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateProfile API helper"
+          ],
+          "fullName": " updateProfile API helper sends PATCH to /users/profile with FormData",
+          "status": "passed",
+          "title": "sends PATCH to /users/profile with FormData",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateProfile API helper"
+          ],
+          "fullName": " updateProfile API helper accepts FormData payloads for profile updates",
+          "status": "passed",
+          "title": "accepts FormData payloads for profile updates",
+          "duration": 23,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "updateProfile API helper"
+          ],
+          "fullName": " updateProfile API helper throws on API error",
+          "status": "passed",
+          "title": "throws on API error",
+          "duration": 16,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687315112,
+      "endTime": 1786687315595,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/profile.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "getReelById API helper"
+          ],
+          "fullName": " getReelById API helper fetches a reel by id",
+          "status": "passed",
+          "title": "fetches a reel by id",
+          "duration": 83,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "shareReel API helper"
+          ],
+          "fullName": " shareReel API helper sends POST to /reels/:id/share",
+          "status": "passed",
+          "title": "sends POST to /reels/:id/share",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "trackReelView API helper"
+          ],
+          "fullName": " trackReelView API helper sends POST to /reels/:id/view",
+          "status": "passed",
+          "title": "sends POST to /reels/:id/view",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getReelInsights API helper"
+          ],
+          "fullName": " getReelInsights API helper fetches reel insights",
+          "status": "passed",
+          "title": "fetches reel insights",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getReelEffects API helper"
+          ],
+          "fullName": " getReelEffects API helper fetches reel effects",
+          "status": "passed",
+          "title": "fetches reel effects",
+          "duration": 23,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getReelSuggestions API helper"
+          ],
+          "fullName": " getReelSuggestions API helper fetches reel suggestions",
+          "status": "passed",
+          "title": "fetches reel suggestions",
+          "duration": 9,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687321414,
+      "endTime": 1786687321574,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/reel.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "getStories API helper"
+          ],
+          "fullName": " getStories API helper fetches stories list",
+          "status": "passed",
+          "title": "fetches stories list",
+          "duration": 122,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getStories API helper"
+          ],
+          "fullName": " getStories API helper throws on error",
+          "status": "passed",
+          "title": "throws on error",
+          "duration": 216,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "addStoryReaction API helper"
+          ],
+          "fullName": " addStoryReaction API helper sends POST to /stories/:id/react",
+          "status": "passed",
+          "title": "sends POST to /stories/:id/react",
+          "duration": 35,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "addStoryReply API helper"
+          ],
+          "fullName": " addStoryReply API helper sends POST to /stories/:id/reply",
+          "status": "passed",
+          "title": "sends POST to /stories/:id/reply",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "trackStoryView API helper"
+          ],
+          "fullName": " trackStoryView API helper sends POST to /stories/:id/view",
+          "status": "passed",
+          "title": "sends POST to /stories/:id/view",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "getStoryViews API helper"
+          ],
+          "fullName": " getStoryViews API helper fetches story views",
+          "status": "passed",
+          "title": "fetches story views",
+          "duration": 16,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687318979,
+      "endTime": 1786687319414,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/lib/story.api.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage renders profile form fields",
+          "status": "passed",
+          "title": "renders profile form fields",
+          "duration": 413,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage renders verification section",
+          "status": "passed",
+          "title": "renders verification section",
+          "duration": 54,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage renders theme selector",
+          "status": "passed",
+          "title": "renders theme selector",
+          "duration": 49,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage pre-populates fields with user data",
+          "status": "passed",
+          "title": "pre-populates fields with user data",
+          "duration": 33,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage submits form data on save",
+          "status": "passed",
+          "title": "submits form data on save",
+          "duration": 63,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EditProfilePage"
+          ],
+          "fullName": " EditProfilePage handles form submission error gracefully",
+          "status": "passed",
+          "title": "handles form submission error gracefully",
+          "duration": 55,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687315172,
+      "endTime": 1786687315839,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/edit-profile.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "EmailVerificationPage"
+          ],
+          "fullName": " EmailVerificationPage renders without crashing with a token",
+          "status": "passed",
+          "title": "renders without crashing with a token",
+          "duration": 71,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EmailVerificationPage"
+          ],
+          "fullName": " EmailVerificationPage renders without crashing without a token",
+          "status": "passed",
+          "title": "renders without crashing without a token",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EmailVerificationPage"
+          ],
+          "fullName": " EmailVerificationPage shows error when no token is provided in URL",
+          "status": "passed",
+          "title": "shows error when no token is provided in URL",
+          "duration": 40,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "EmailVerificationPage"
+          ],
+          "fullName": " EmailVerificationPage shows \"Verifying your email...\" as initial title",
+          "status": "passed",
+          "title": "shows \"Verifying your email...\" as initial title",
+          "duration": 24,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687321689,
+      "endTime": 1786687321837,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/email-verification.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ForgotPasswordPage"
+          ],
+          "fullName": " ForgotPasswordPage renders email input and submit button",
+          "status": "passed",
+          "title": "renders email input and submit button",
+          "duration": 247,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ForgotPasswordPage"
+          ],
+          "fullName": " ForgotPasswordPage renders a link back to login",
+          "status": "passed",
+          "title": "renders a link back to login",
+          "duration": 51,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ForgotPasswordPage"
+          ],
+          "fullName": " ForgotPasswordPage shows success confirmation after submitting valid email",
+          "status": "passed",
+          "title": "shows success confirmation after submitting valid email",
+          "duration": 224,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ForgotPasswordPage"
+          ],
+          "fullName": " ForgotPasswordPage shows error on API failure",
+          "status": "passed",
+          "title": "shows error on API failure",
+          "duration": 125,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ForgotPasswordPage"
+          ],
+          "fullName": " ForgotPasswordPage shows loading state while submitting",
+          "status": "passed",
+          "title": "shows loading state while submitting",
+          "duration": 48,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687311036,
+      "endTime": 1786687311733,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/forgot-password.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage renders login form with identifier and password fields",
+          "status": "passed",
+          "title": "renders login form with identifier and password fields",
+          "duration": 370,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage renders forgot password link",
+          "status": "passed",
+          "title": "renders forgot password link",
+          "duration": 89,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage renders sign up link",
+          "status": "passed",
+          "title": "renders sign up link",
+          "duration": 64,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage renders tab navigation (Password, Recovery, Passkey, Wallet)",
+          "status": "passed",
+          "title": "renders tab navigation (Password, Recovery, Passkey, Wallet)",
+          "duration": 114,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows error when submitting with empty fields",
+          "status": "passed",
+          "title": "shows error when submitting with empty fields",
+          "duration": 79,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage calls login API and sets token on success",
+          "status": "passed",
+          "title": "calls login API and sets token on success",
+          "duration": 1205,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows error on invalid credentials",
+          "status": "passed",
+          "title": "shows error on invalid credentials",
+          "duration": 931,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows error on unverified email",
+          "status": "passed",
+          "title": "shows error on unverified email",
+          "duration": 766,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows generic error on network failure",
+          "status": "passed",
+          "title": "shows generic error on network failure",
+          "duration": 749,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows 2FA form when login returns twoFactorEnabled",
+          "status": "passed",
+          "title": "shows 2FA form when login returns twoFactorEnabled",
+          "duration": 764,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage renders a remember me checkbox and includes rememberMe in the signin payload",
+          "status": "passed",
+          "title": "renders a remember me checkbox and includes rememberMe in the signin payload",
+          "duration": 895,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage sends a magic link request from the password tab",
+          "status": "passed",
+          "title": "sends a magic link request from the password tab",
+          "duration": 675,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "LoginPage"
+          ],
+          "fullName": " LoginPage shows the Face ID / Fingerprint biometric button in the passkey tab",
+          "status": "passed",
+          "title": "shows the Face ID / Fingerprint biometric button in the passkey tab",
+          "duration": 140,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687311712,
+      "endTime": 1786687318555,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/login.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage shows loading skeleton while fetching profile",
+          "status": "passed",
+          "title": "shows loading skeleton while fetching profile",
+          "duration": 96,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage fetches own profile when no userId in params",
+          "status": "passed",
+          "title": "fetches own profile when no userId in params",
+          "duration": 88,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays user display name from own profile",
+          "status": "passed",
+          "title": "displays user display name from own profile",
+          "duration": 60,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays username with @ prefix",
+          "status": "passed",
+          "title": "displays username with @ prefix",
+          "duration": 35,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays verified badge when user is verified",
+          "status": "passed",
+          "title": "displays verified badge when user is verified",
+          "duration": 54,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays user bio",
+          "status": "passed",
+          "title": "displays user bio",
+          "duration": 35,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage fetches other user profile when userId is provided",
+          "status": "passed",
+          "title": "fetches other user profile when userId is provided",
+          "duration": 47,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays other user display name",
+          "status": "passed",
+          "title": "displays other user display name",
+          "duration": 34,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage fetches mutual follows for other user profile",
+          "status": "passed",
+          "title": "fetches mutual follows for other user profile",
+          "duration": 59,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays following count",
+          "status": "passed",
+          "title": "displays following count",
+          "duration": 64,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays followers count",
+          "status": "passed",
+          "title": "displays followers count",
+          "duration": 58,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage displays follower names in the follower list",
+          "status": "passed",
+          "title": "displays follower names in the follower list",
+          "duration": 34,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage shows the following list when the Following stat is clicked",
+          "status": "passed",
+          "title": "shows the following list when the Following stat is clicked",
+          "duration": 459,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ProfilePage"
+          ],
+          "fullName": " ProfilePage handles profile fetch error gracefully",
+          "status": "passed",
+          "title": "handles profile fetch error gracefully",
+          "duration": 21,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687310351,
+      "endTime": 1786687311496,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/profile.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage renders new password and confirm password fields",
+          "status": "passed",
+          "title": "renders new password and confirm password fields",
+          "duration": 207,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage shows error when passwords do not match",
+          "status": "passed",
+          "title": "shows error when passwords do not match",
+          "duration": 70,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage shows success and navigates to login after reset",
+          "status": "passed",
+          "title": "shows success and navigates to login after reset",
+          "duration": 165,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage shows error on invalid/expired token",
+          "status": "passed",
+          "title": "shows error on invalid/expired token",
+          "duration": 113,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage shows generic error on network failure",
+          "status": "passed",
+          "title": "shows generic error on network failure",
+          "duration": 132,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ResetPasswordPage"
+          ],
+          "fullName": " ResetPasswordPage shows loading state while submitting",
+          "status": "passed",
+          "title": "shows loading state while submitting",
+          "duration": 77,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687311083,
+      "endTime": 1786687311847,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/reset-password.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage renders the sign-up form with all fields",
+          "status": "passed",
+          "title": "renders the sign-up form with all fields",
+          "duration": 446,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage renders the Google sign-up button",
+          "status": "passed",
+          "title": "renders the Google sign-up button",
+          "duration": 98,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage renders the passkey registration button",
+          "status": "passed",
+          "title": "renders the passkey registration button",
+          "duration": 101,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage renders a link to the login page",
+          "status": "passed",
+          "title": "renders a link to the login page",
+          "duration": 56,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage shows error when submitting with empty fields",
+          "status": "passed",
+          "title": "shows error when submitting with empty fields",
+          "duration": 87,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage shows error when password is shorter than 8 characters",
+          "status": "passed",
+          "title": "shows error when password is shorter than 8 characters",
+          "duration": 856,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage shows success message and switches to \"check your email\" view on success",
+          "status": "passed",
+          "title": "shows success message and switches to \"check your email\" view on success",
+          "duration": 990,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage shows error message when API returns 409 conflict",
+          "status": "passed",
+          "title": "shows error message when API returns 409 conflict",
+          "duration": 1093,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "SignUpPage"
+          ],
+          "fullName": " SignUpPage shows generic error when network fails",
+          "status": "passed",
+          "title": "shows generic error when network fails",
+          "duration": 1057,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687311323,
+      "endTime": 1786687316145,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/sign-up.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "VerifyLinkPage"
+          ],
+          "fullName": " VerifyLinkPage shows an error when no token is in the URL",
+          "status": "passed",
+          "title": "shows an error when no token is in the URL",
+          "duration": 176,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "VerifyLinkPage"
+          ],
+          "fullName": " VerifyLinkPage verifies the magic link and signs the user in on success",
+          "status": "passed",
+          "title": "verifies the magic link and signs the user in on success",
+          "duration": 60,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "VerifyLinkPage"
+          ],
+          "fullName": " VerifyLinkPage shows an error state for an invalid or expired link",
+          "status": "passed",
+          "title": "shows an error state for an invalid or expired link",
+          "duration": 170,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687319552,
+      "endTime": 1786687319958,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/pages/verify-link.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "CreateNote"
+          ],
+          "fullName": " CreateNote renders the create note form",
+          "status": "passed",
+          "title": "renders the create note form",
+          "duration": 115,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreateNote"
+          ],
+          "fullName": " CreateNote calls onClose when Cancel clicked",
+          "status": "passed",
+          "title": "calls onClose when Cancel clicked",
+          "duration": 202,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreateNote"
+          ],
+          "fullName": " CreateNote creates a note on submit",
+          "status": "passed",
+          "title": "creates a note on submit",
+          "duration": 431,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "CreateNote"
+          ],
+          "fullName": " CreateNote does not submit empty content",
+          "status": "passed",
+          "title": "does not submit empty content",
+          "duration": 84,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687318635,
+      "endTime": 1786687319469,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/notes/CreateNote.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ViewNote"
+          ],
+          "fullName": " ViewNote renders the note content",
+          "status": "passed",
+          "title": "renders the note content",
+          "duration": 113,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ViewNote"
+          ],
+          "fullName": " ViewNote shows the user ID and timestamp",
+          "status": "passed",
+          "title": "shows the user ID and timestamp",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ViewNote"
+          ],
+          "fullName": " ViewNote calls onClose when X button clicked",
+          "status": "passed",
+          "title": "calls onClose when X button clicked",
+          "duration": 15,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687321502,
+      "endTime": 1786687321640,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/notes/ViewNote.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "ShortsPlayer"
+          ],
+          "fullName": " ShortsPlayer renders a video element for each short",
+          "status": "passed",
+          "title": "renders a video element for each short",
+          "duration": 48,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ShortsPlayer"
+          ],
+          "fullName": " ShortsPlayer sets correct video sources",
+          "status": "passed",
+          "title": "sets correct video sources",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ShortsPlayer"
+          ],
+          "fullName": " ShortsPlayer renders empty when no shorts",
+          "status": "passed",
+          "title": "renders empty when no shorts",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "ShortsPlayer"
+          ],
+          "fullName": " ShortsPlayer each video has loop attribute",
+          "status": "passed",
+          "title": "each video has loop attribute",
+          "duration": 13,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687322385,
+      "endTime": 1786687322462,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/shorts/ShortsPlayer.test.tsx"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "",
+            "Avatar component"
+          ],
+          "fullName": " Avatar component renders a circle with an initial when no children",
+          "status": "passed",
+          "title": "renders a circle with an initial when no children",
+          "duration": 40,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Avatar component"
+          ],
+          "fullName": " Avatar component renders children when provided",
+          "status": "passed",
+          "title": "renders children when provided",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Avatar component"
+          ],
+          "fullName": " Avatar component applies custom className and size",
+          "status": "passed",
+          "title": "applies custom className and size",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Avatar component"
+          ],
+          "fullName": " Avatar component renders with children inside aria-hidden container",
+          "status": "passed",
+          "title": "renders with children inside aria-hidden container",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "Avatar component"
+          ],
+          "fullName": " Avatar component renders AvatarImage correctly",
+          "status": "passed",
+          "title": "renders AvatarImage correctly",
+          "duration": 9,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1786687322157,
+      "endTime": 1786687322220,
+      "status": "passed",
+      "message": "",
+      "name": "D:/zynkra/client/src/components/ui/avatar.test.tsx"
+    }
+  ]
+}

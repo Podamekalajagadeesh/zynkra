@@ -1,0 +1,24 @@
+{
+  "id": "49.2 Sentiment",
+  "name": "Sentiment",
+  "slug": "sentiment",
+  "featureCount": 16,
+  "features": [
+    "Positive Detection",
+    "Negative Detection",
+    "Neutral Detection",
+    "Mixed Sentiment",
+    "Emotion Detection",
+    "Frustration Detection",
+    "Excitement Detection",
+    "Satisfaction Detection",
+    "Intent Detection",
+    "Question Detection",
+    "Complaint Detection",
+    "Praise Detection",
+    "Spam Signals",
+    "Toxicity Signals",
+    "Sentiment Trends",
+    "Sentiment Analytics"
+  ]
+}
