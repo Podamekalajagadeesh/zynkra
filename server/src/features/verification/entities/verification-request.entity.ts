@@ -27,7 +27,7 @@ export enum VerificationRequestStatus {
 
 @Entity('verification_requests')
 @Index(['userId', 'type'])
-@Index(['status', 'createdAt'])
+@Index(['status', 'submittedAt'])
 export class VerificationRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;

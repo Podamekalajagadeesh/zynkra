@@ -33,7 +33,18 @@ export const updatePrivacy = async (privacy: {
   return response.data;
 };
 
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+export const API_BASE_URL = (() => {
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '');
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin.replace(/\/+$/, '');
+  }
+
+  return 'http://localhost:3000';
+})();
 
 // Open Source Contribution Types
 export enum ContributionStatus {

@@ -5,7 +5,7 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
-import { BiometricAuthService } from './biometric-auth.service';
+import { BiometricAuthService, BiometricDevice } from './biometric-auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -37,56 +37,6 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req, @Res() res) {
-    return this.authService.socialLogin(req, res);
-  }
-
-  @Get('facebook')
-  @UseGuards(AuthGuard('facebook'))
-  async facebookAuth() {}
-
-  @Get('facebook/callback')
-  @UseGuards(AuthGuard('facebook'))
-  facebookAuthRedirect(@Req() req, @Res() res) {
-    return this.authService.socialLogin(req, res);
-  }
-
-  @Get('github')
-  @UseGuards(AuthGuard('github'))
-  async githubAuth() {}
-
-  @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
-  githubAuthRedirect(@Req() req, @Res() res) {
-    return this.authService.socialLogin(req, res);
-  }
-
-  @Get('discord')
-  @UseGuards(AuthGuard('discord'))
-  async discordAuth() {}
-
-  @Get('discord/callback')
-  @UseGuards(AuthGuard('discord'))
-  discordAuthRedirect(@Req() req, @Res() res) {
-    return this.authService.socialLogin(req, res);
-  }
-
-  @Get('twitter')
-  @UseGuards(AuthGuard('twitter'))
-  async twitterAuth() {}
-
-  @Get('twitter/callback')
-  @UseGuards(AuthGuard('twitter'))
-  twitterAuthRedirect(@Req() req, @Res() res) {
-    return this.authService.socialLogin(req, res);
-  }
-
-  @Get('apple')
-  @UseGuards(AuthGuard('apple'))
-  async appleAuth() {}
-
-  @Get('apple/callback')
-  @UseGuards(AuthGuard('apple'))
-  appleAuthRedirect(@Req() req, @Res() res) {
     return this.authService.socialLogin(req, res);
   }
 
@@ -122,7 +72,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('biometric/devices')
-  async getBiometricDevices(@Request() req) {
+  async getBiometricDevices(@Request() req): Promise<BiometricDevice[]> {
     return this.biometricAuthService.listBiometricDevices(req.user.userId);
   }
 
@@ -131,7 +81,7 @@ export class AuthController {
   async registerBiometricDevice(
     @Request() req,
     @Body() body: { deviceId: string; deviceName?: string; biometricType?: 'fingerprint' | 'face' | 'iris'; biometricData: string },
-  ) {
+  ): Promise<BiometricDevice> {
     const binary = typeof body.biometricData === 'string'
       ? Buffer.from(body.biometricData, 'base64')
       : Buffer.from(body.biometricData ?? []);

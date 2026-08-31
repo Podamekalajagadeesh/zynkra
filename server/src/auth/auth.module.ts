@@ -11,11 +11,6 @@ import { AuthService } from './auth.service';
 import { Authenticator } from './entities/authenticator.entity';
 import { EmailModule } from '../email/email.module';
 import { GoogleStrategy } from './strategies/google.strategy';
-import { FacebookStrategy } from './strategies/facebook.strategy';
-import { GitHubStrategy } from './strategies/github.strategy';
-import { DiscordStrategy } from './strategies/discord.strategy';
-import { TwitterStrategy } from './strategies/twitter.strategy';
-import { AppleStrategy } from './strategies/apple.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WebauthnService } from './webauthn.service';
 import { BiometricAuthService } from './biometric-auth.service';
@@ -51,11 +46,6 @@ import { BrainwaveDevice } from './entities/brainwave-device.entity';
     WebauthnService,
     BiometricAuthService,
     GoogleStrategy,
-    FacebookStrategy,
-    GitHubStrategy,
-    DiscordStrategy,
-    TwitterStrategy,
-    AppleStrategy,
   ],
   exports: [AuthService, WebauthnService, BiometricAuthService],
 })

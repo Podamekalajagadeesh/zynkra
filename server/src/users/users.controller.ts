@@ -15,6 +15,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';

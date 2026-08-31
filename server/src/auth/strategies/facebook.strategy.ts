@@ -1,20 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-facebook';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
+    const clientID = configService.get<string>('FACEBOOK_CLIENT_ID');
+    if (!clientID) {
+      new Logger(FacebookStrategy.name).warn(
+        'FACEBOOK_CLIENT_ID not set — Facebook sign-in is disabled.',
+      );
+    }
+
     super({
-      clientID: configService.get<string>('FACEBOOK_CLIENT_ID'),
-      clientSecret: configService.get<string>('FACEBOOK_CLIENT_SECRET'),
+      clientID: clientID || 'facebook-oauth-not-configured',
+      clientSecret: configService.get<string>('FACEBOOK_CLIENT_SECRET') || 'facebook-oauth-not-configured',
       callbackURL: configService.get<string>('FACEBOOK_CALLBACK_URL', '/auth/facebook/callback'),
       scope: ['email', 'public_profile'],
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: (err: any, user?: any, info?: any) => void,
+  ): Promise<any> {
     const { id, displayName, emails, photos } = profile;
 
     const user = {

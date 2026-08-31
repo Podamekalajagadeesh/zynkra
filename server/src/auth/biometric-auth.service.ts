@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 
-interface BiometricDevice {
+export interface BiometricDevice {
   id: string;
   userId: string;
   deviceId: string;
@@ -16,7 +16,7 @@ interface BiometricDevice {
   updatedAt: Date;
 }
 
-interface BiometricChallenge {
+export interface BiometricChallenge {
   id: string;
   userId: string;
   challenge: string;

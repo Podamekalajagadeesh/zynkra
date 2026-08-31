@@ -18,7 +18,7 @@ export enum VerificationAppealStatus {
 
 @Entity('verification_appeals')
 @Index(['userId', 'status'])
-@Index(['status', 'createdAt'])
+@Index(['status', 'submittedAt'])
 export class VerificationAppeal {
   @PrimaryGeneratedColumn('uuid')
   id: string;
