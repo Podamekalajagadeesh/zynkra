@@ -9,5 +9,7 @@ export class CreateStoryDto {
   arFilterName?: string;
   music?: { artist: string; song: string; url: string };
   audience?: StoryAudience;
+  customAudienceId?: string;
+  excludedUserIds?: string[];
   isBoosted?: boolean;
 }

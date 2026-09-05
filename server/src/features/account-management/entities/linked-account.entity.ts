@@ -58,6 +58,9 @@ export class LinkedAccount {
   @Column({ type: 'simple-json', nullable: true })
   metadata: Record<string, any> | null;
 
+  @Column({ type: 'text', nullable: true, select: false })
+  encryptedAccessToken: string | null;
+
   @CreateDateColumn()
   connectedAt: Date;
 

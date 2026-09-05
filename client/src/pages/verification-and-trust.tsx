@@ -3,6 +3,10 @@ import { Award, BadgeCheck, FileText, Link2, ShieldCheck, ShieldAlert } from 'lu
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
+import { VerificationBadges } from '../components/VerificationBadge';
+import { VerificationHistoryTimeline } from '../components/VerificationHistoryTimeline';
+import { VerificationAppealForm } from '../components/VerificationAppealForm';
+import { VerificationDocumentUpload } from '../components/VerificationDocumentUpload';
 
 export default function VerificationAndTrustPage() {
   const [verification, setVerification] = useState<any>(null);
@@ -16,13 +20,21 @@ export default function VerificationAndTrustPage() {
       try {
         const [verificationRes, trustRes, linkedRes, documentRes] = await Promise.all([
           api.get('/users/me/verification-status'),
-          api.get('/users/me/verification-status').catch(() => ({ data: { verified: false, badges: [], trustScore: 0 } })),
+          api.get('/users/me/trust-indicator').catch(() => ({
+            data: {
+              accountId: '',
+              verified: false,
+              badges: [],
+              trustScore: 0,
+              updatedAt: new Date().toISOString(),
+            },
+          })),
           api.get('/users/me/account-dashboard').then((res) => res.data.linkedAccounts ?? []),
           api.get('/users/me/verification-history').catch(() => ({ data: [] })),
         ]);
 
         setVerification(verificationRes.data);
-        setTrust(trustRes.data ?? { verified: false, badges: [], trustScore: 0 });
+        setTrust(trustRes.data ?? { accountId: '', verified: false, badges: [], trustScore: 0, updatedAt: new Date().toISOString() });
         setLinkedAccounts(linkedRes);
         setDocumentStatus(documentRes.data?.[0] ?? { status: 'not_started' });
       } catch {
@@ -162,6 +174,25 @@ export default function VerificationAndTrustPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Document Upload Section */}
+        <div>
+          <VerificationDocumentUpload />
+        </div>
+
+        {verification?.status === 'rejected' && verification?.id ? (
+          <div>
+            <VerificationAppealForm
+              requestId={verification.id}
+              rejectionReason={verification.reviewNote ?? undefined}
+            />
+          </div>
+        ) : null}
+
+        {/* Verification History Timeline */}
+        <div>
+          <VerificationHistoryTimeline />
         </div>
       </div>
     </PageShell>

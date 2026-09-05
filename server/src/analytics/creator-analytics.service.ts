@@ -8,6 +8,8 @@ import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
 import { User } from '../users/entities/user.entity';
 import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class CreatorAnalyticsService {
@@ -24,12 +26,14 @@ export class CreatorAnalyticsService {
     @InjectRepository(CourseLesson) private readonly lessonsRepo: Repository<CourseLesson>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(LedgerEntry) private readonly ledgerRepo: Repository<LedgerEntry>,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   /**
    * Get comprehensive creator analytics for a user.
    */
   async getCreatorDashboard(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) return null;
 
@@ -90,6 +94,7 @@ export class CreatorAnalyticsService {
    * Get newsletter analytics.
    */
   async getNewsletterAnalytics(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const newsletters = await this.newslettersRepo.find({ where: { authorId: userId } });
     const sent = newsletters.filter(n => n.status === 'sent');
 
@@ -112,6 +117,7 @@ export class CreatorAnalyticsService {
    * Get course analytics.
    */
   async getCourseAnalytics(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const courses = await this.coursesRepo.find({ where: { authorId: userId } });
 
     let totalEnrollments = 0;
@@ -147,6 +153,7 @@ export class CreatorAnalyticsService {
    * Get podcast analytics.
    */
   async getPodcastAnalytics(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const podcasts = await this.podcastsRepo.find({ where: { authorId: userId } });
     const published = podcasts.filter(p => p.status === 'published');
     const totalPlays = podcasts.reduce((sum, p) => sum + p.playCount, 0);
@@ -165,6 +172,7 @@ export class CreatorAnalyticsService {
    * trend to their per-day ledger credits from the last 30 days.
    */
   async forecastRevenue(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) return null;
 

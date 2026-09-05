@@ -3,6 +3,7 @@ import { BadgeCheck, Clock, XCircle } from 'lucide-react';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/useToast';
+import { VerificationAppealForm } from '../components/VerificationAppealForm';
 import { api } from '../lib/api';
 
 interface VerificationRequest {
@@ -12,6 +13,7 @@ interface VerificationRequest {
   links: string[];
   status: 'pending' | 'approved' | 'rejected';
   reviewNote: string | null;
+  rejectionReason?: string;
   createdAt: string;
 }
 
@@ -108,20 +110,43 @@ export default function RequestVerificationPage() {
     <PageShell title="Request Verification">
       <div className="max-w-lg mx-auto space-y-6">
         {existing?.status === 'rejected' && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
-            <div className="flex items-center gap-2 font-semibold text-red-700 dark:text-red-300">
-              <XCircle size={18} />
-              Previous request was not approved
+          <>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
+              <div className="flex items-center gap-2 font-semibold text-red-700 dark:text-red-300">
+                <XCircle size={18} />
+                Previous request was not approved
+              </div>
+              {existing.rejectionReason && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-300">
+                  <strong>Reason:</strong> {existing.rejectionReason}
+                </p>
+              )}
+              {existing.reviewNote && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-300">
+                  <strong>Review Note:</strong> {existing.reviewNote}
+                </p>
+              )}
             </div>
-            {existing.reviewNote && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-300">
-                {existing.reviewNote}
+
+            <VerificationAppealForm
+              requestId={existing.id}
+              rejectionReason={existing.rejectionReason || existing.reviewNote || undefined}
+              onSuccess={() => {
+                // Refresh verification status
+                api
+                  .get('/verification/me')
+                  .then((res) => setExisting(res.data || null))
+                  .catch(() => {});
+              }}
+            />
+
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                <strong>Tip:</strong> Provide additional evidence or context that addresses the
+                reason for rejection. This increases your chances of approval on appeal.
               </p>
-            )}
-            <p className="mt-1 text-sm text-red-600 dark:text-red-300">
-              You can submit a new request below.
-            </p>
-          </div>
+            </div>
+          </>
         )}
 
         <form onSubmit={handleSubmit} className="surface p-6 rounded-2xl space-y-4">

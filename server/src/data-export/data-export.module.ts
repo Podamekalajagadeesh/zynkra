@@ -47,5 +47,6 @@ import { Course, CourseEnrollment } from '../courses/course.entity';
   ],
   providers: [DataExportService, ExportService],
   controllers: [DataExportController, ExportController],
+  exports: [DataExportService, ExportService],
 })
 export class DataExportModule {}

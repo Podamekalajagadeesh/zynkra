@@ -32,6 +32,8 @@ export enum PostType {
 
 export enum PostVisibility {
   PUBLIC = 'public',
+  FRIENDS = 'friends',
+  ONLY_ME = 'only_me',
   PRIVATE = 'private',
   UNLISTED = 'unlisted',
   PROFILE_ONLY = 'profile_only',

@@ -11,6 +11,7 @@ import { StoriesService } from '../stories/stories.service';
 import { SnapMapGateway } from '../snapmap/snapmap.gateway';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { User } from '../users/entities/user.entity';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const u = new User();
@@ -63,7 +64,8 @@ describe('FeedService', () => {
         { provide: StoriesService, useValue: {} },
         { provide: SnapMapGateway, useValue: { userLocations: new Map() } },
         { provide: TrendsService, useValue: { getTrending: jest.fn().mockResolvedValue([]) } },
-        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts) } },
+        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn(), filterVisiblePostsForViewer: jest.fn().mockImplementation((_uid, posts) => posts) } },
+        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
@@ -81,13 +83,14 @@ describe('FeedService', () => {
     it('returns public posts in chronological order', async () => {
       const posts = [makePost({ id: 'p1' }), makePost({ id: 'p2' })];
       postsRepo.find.mockResolvedValue(posts);
-      visibilityService.filterVisiblePosts.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
 
       const result = await service.getChronologicalFeed(makeUser());
       expect(result).toHaveLength(2);
       expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { visibility: PostVisibility.PUBLIC } }),
+        expect.objectContaining({ relations: ['user', 'reactions', 'comments', 'tags'] }),
       );
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith('user-1', posts);
     });
   });
 

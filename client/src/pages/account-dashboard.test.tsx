@@ -71,5 +71,7 @@ describe('AccountDashboardPage', () => {
 
     expect(screen.getByText(/security center/i)).toBeInTheDocument();
     expect(screen.getByText(/identity verification/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start account recovery/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /request verification/i })).toBeInTheDocument();
   });
 });

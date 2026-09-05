@@ -1,5 +1,6 @@
 import { Palette, Lock } from 'lucide-react';
 import { Button } from '../ui/button';
+import { updateAccountPreferences } from '../../lib/api';
 import { useAppPreferences } from '../../contexts/PreferencesContext';
 import { useIsPremium } from '../../hooks/useIsPremium';
 import { APP_ICON_OPTIONS, AppIconPreference } from '../../lib/preferences';
@@ -18,6 +19,9 @@ export function AppIconSettings() {
     }
 
     setAppIcon(newIcon);
+    void updateAccountPreferences({ appIcon: newIcon }).catch(() => {
+      toast.error('Failed to save app icon preference.');
+    });
     toast.success(`App icon changed to ${iconOption?.label}.`);
   };
 

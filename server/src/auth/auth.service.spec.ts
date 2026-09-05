@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
+import { AccountManagementService } from '../features/account-management/account-management.service';
 
 // Mock crypto.createHash so hashRecoveryCode returns deterministic values.
 jest.mock('crypto', () => {
@@ -28,14 +29,16 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesService } from '../invite-codes/invite-codes.service';
+import { SecurityAuditService } from '../security-audit/security-audit.service';
+import { LoginApprovalService } from '../features/account-management/login-approval.service';
 
-// Mock bcrypt entirely — it's a native C++ addon and we don't want real hashing.
-jest.mock('bcrypt', () => ({
+// Mock bcryptjs to match the actual dependency used by AuthService.
+jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('$2b$10$hashedpassword'),
   compare: jest.fn(),
 }));
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // ---- Factory helpers ----
 
@@ -75,6 +78,8 @@ describe('AuthService', () => {
   let emailService: jest.Mocked<EmailService>;
   let notificationsService: jest.Mocked<NotificationsService>;
   let loginSessionRepo: jest.Mocked<Repository<LoginSession>>;
+  let securityAuditService: { logEvent: jest.Mock };
+  let loginApprovalService: { createLoginApprovalRequest: jest.Mock };
   let captchaServiceMock: { verify: jest.Mock; generate: jest.Mock };
 
   beforeEach(async () => {
@@ -140,6 +145,29 @@ describe('AuthService', () => {
           },
         },
         {
+          provide: AccountManagementService,
+          useValue: {
+            recordSecurityAlert: jest.fn().mockResolvedValue({ id: 'alert-1', type: 'suspicious_login' }),
+            createLoginApproval: jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' }),
+          },
+        },
+        {
+          provide: SecurityAuditService,
+          useValue: {
+            logEvent: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+            getUserAuditLog: jest.fn(),
+            getSecuritySummary: jest.fn(),
+            exportUserAuditLog: jest.fn(),
+            cleanupOldLogs: jest.fn(),
+          },
+        },
+        {
+          provide: LoginApprovalService,
+          useValue: {
+            createLoginApprovalRequest: jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' }),
+          },
+        },
+        {
           provide: getRepositoryToken(User),
           useValue: {
             create: jest.fn(),
@@ -193,6 +221,8 @@ describe('AuthService', () => {
     emailService = module.get(EmailService) as jest.Mocked<EmailService>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
     loginSessionRepo = module.get(getRepositoryToken(LoginSession)) as jest.Mocked<Repository<LoginSession>>;
+    securityAuditService = module.get(SecurityAuditService) as { logEvent: jest.Mock };
+    loginApprovalService = module.get(LoginApprovalService) as { createLoginApprovalRequest: jest.Mock };
   });
 
   // ─── signUp ───────────────────────────────────────────────────────────
@@ -322,23 +352,85 @@ describe('AuthService', () => {
   describe('signIn', () => {
     const dto: SignInDto = { email: 'test@example.com', password: 'password123' };
 
-    it('returns a JWT for valid credentials', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ emailVerified: true }));
+    it('returns a JWT for valid credentials and logs the login event', async () => {
+      const user = makeUser({ emailVerified: true });
+      usersService.findByEmail.mockResolvedValue(user);
       bcrypt.compare.mockResolvedValue(true);
       loginSessionRepo.create.mockReturnValue({ id: 'session-1' } as any);
       loginSessionRepo.save.mockResolvedValue({ id: 'session-1' } as any);
 
-      const result = await service.signIn(dto, { headers: { 'user-agent': 'test' } });
+      const result = await service.signIn(dto, { headers: { 'user-agent': 'test' }, ip: '127.0.0.1' });
 
       expect(result).toHaveProperty('access_token', 'jwt-token');
       expect(jwtService.sign).toHaveBeenCalled();
+      expect(securityAuditService.logEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: user.id,
+          eventType: 'login_success',
+          severity: 'low',
+          message: expect.stringContaining('signed in'),
+          ipAddress: '127.0.0.1',
+          userAgent: 'test',
+        }),
+      );
     });
 
-    it('throws UnauthorizedException for wrong password', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ emailVerified: true }));
+    it('throws UnauthorizedException for wrong password and logs the failed login', async () => {
+      const user = makeUser({ emailVerified: true });
+      usersService.findByEmail.mockResolvedValue(user);
       bcrypt.compare.mockResolvedValue(false);
 
-      await expect(service.signIn(dto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.signIn(dto, { headers: { 'user-agent': 'test' }, ip: '127.0.0.1' })).rejects.toThrow(UnauthorizedException);
+      expect(securityAuditService.logEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: user.id,
+          eventType: 'login_failed',
+          severity: 'high',
+          message: expect.stringMatching(/failed/i),
+        }),
+      );
+    });
+
+    it('requires approval and does not issue a token for a suspicious login', async () => {
+      const user = makeUser({ emailVerified: true });
+      usersService.findByEmail.mockResolvedValue(user);
+      bcrypt.compare.mockResolvedValue(true);
+      loginSessionRepo.create.mockReturnValue({
+        id: 'session-suspicious',
+        suspicious: true,
+        revokedAt: null,
+        approvedAt: null,
+        deviceName: 'New suspicious device',
+        userAgent: 'New suspicious device',
+        ipAddress: '198.51.100.25',
+      } as any);
+      loginSessionRepo.save.mockResolvedValue({
+        id: 'session-suspicious',
+        suspicious: true,
+        revokedAt: null,
+        approvedAt: null,
+        deviceName: 'New suspicious device',
+        userAgent: 'New suspicious device',
+        ipAddress: '198.51.100.25',
+      } as any);
+      loginSessionRepo.findOne.mockResolvedValue({
+        id: 'previous-session',
+        ipAddress: '203.0.113.9',
+        deviceName: 'Old device',
+        revokedAt: null,
+      } as any);
+
+      const result = await service.signIn(dto, {
+        headers: { 'user-agent': 'New suspicious device', 'x-forwarded-for': '198.51.100.25' },
+        ip: '198.51.100.25',
+      });
+
+      expect(result).toEqual(expect.objectContaining({
+        loginApprovalRequired: true,
+        message: expect.stringMatching(/approval/i),
+        sessionId: 'session-suspicious',
+      }));
+      expect(jwtService.sign).not.toHaveBeenCalled();
     });
 
     it('throws UnauthorizedException when email is not verified', async () => {
@@ -737,6 +829,83 @@ describe('AuthService', () => {
     });
   });
 
+  // ─── Suspicious login flow ───────────────────────────────────────────
+
+  it('creates a suspicious login alert and approval request when a login is flagged as suspicious', async () => {
+    const user = makeUser({ emailVerified: true });
+    const suspiciousSession = {
+      id: 'suspicious-session',
+      suspicious: true,
+      revokedAt: null,
+      approvedAt: null,
+      deviceName: 'New suspicious device',
+      userAgent: 'New suspicious device',
+      ipAddress: '198.51.100.25',
+    } as any;
+
+    usersService.findByEmail.mockResolvedValue(user);
+    bcrypt.compare.mockResolvedValue(true);
+    loginSessionRepo.create.mockReturnValue(suspiciousSession);
+    loginSessionRepo.save.mockResolvedValue(suspiciousSession);
+    loginSessionRepo.findOne.mockResolvedValue({ id: 'previous-session', ipAddress: '203.0.113.9', deviceName: 'Old device', revokedAt: null } as any);
+
+    const recordAlert = jest.fn().mockResolvedValue({ id: 'alert-1', type: 'suspicious_login' });
+    const createApproval = jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' });
+    const createLoginApprovalRequest = jest.fn().mockResolvedValue({ id: 'approval-db-1', status: 'pending' });
+
+    const serviceWithSecurity = new AuthService(
+      usersService as any,
+      {} as any,
+      jwtService as any,
+      configService as any,
+      emailService as any,
+      notificationsService as any,
+      loginSessionRepo as any,
+      captchaServiceMock as any,
+      { findByCode: jest.fn(), isUsable: jest.fn().mockReturnValue(false), consume: jest.fn() } as any,
+      { find: jest.fn(), save: jest.fn(), create: jest.fn(), delete: jest.fn() } as any,
+      {
+        recordSecurityAlert: recordAlert,
+        createLoginApproval: createApproval,
+      } as any,
+      {
+        logEvent: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+      } as any,
+      {
+        createLoginApprovalRequest,
+      } as any,
+    );
+
+    const result = await serviceWithSecurity.signIn({ email: 'test@example.com', password: 'password123' } as any, {
+      headers: { 'user-agent': 'New suspicious device', 'x-forwarded-for': '198.51.100.25' },
+      ip: '198.51.100.25',
+    });
+
+    expect(result).toEqual(expect.objectContaining({
+      loginApprovalRequired: true,
+      message: expect.stringMatching(/approval/i),
+      sessionId: 'suspicious-session',
+    }));
+    expect(recordAlert).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+      'suspicious_login',
+      expect.stringMatching(/suspicious/i),
+      'high',
+      expect.objectContaining({ ipAddress: '198.51.100.25' }),
+    );
+    expect(createApproval).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+      expect.objectContaining({ deviceName: 'New suspicious device' }),
+    );
+    expect(createLoginApprovalRequest).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440000',
+      'New suspicious device',
+      '198.51.100.25',
+      'New suspicious device',
+      undefined,
+    );
+  });
+
   // ─── Login sessions ──────────────────────────────────────────────────
 
   describe('login sessions', () => {
@@ -1018,7 +1187,7 @@ describe('AuthService', () => {
     });
 
     it('issues token on valid recovery code', async () => {
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       bcrypt.compare.mockResolvedValue(true);
 
       const user = makeUser({ recoveryCodeHashes: ['$2b$10$hash1', '$2b$10$hash2'] });
@@ -1033,7 +1202,7 @@ describe('AuthService', () => {
     });
 
     it('throws on invalid recovery code', async () => {
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       bcrypt.compare.mockResolvedValue(false);
 
       const user = makeUser({ recoveryCodeHashes: ['$2b$10$hash1'] });
@@ -1056,7 +1225,7 @@ describe('AuthService', () => {
     });
 
     it('works with username identifier', async () => {
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       bcrypt.compare.mockResolvedValue(true);
 
       const user = makeUser({ recoveryCodeHashes: ['$2b$10$hash1'] });

@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum SecurityEventType {
@@ -86,9 +86,9 @@ export enum SecurityEventSeverity {
 }
 
 @Entity('security_audit_logs')
-@Index(['userId', 'createdAt'])
-@Index(['eventType', 'createdAt'])
-@Index(['severity', 'createdAt'])
+@Index('IDX_b6f457bae5315954b9f151e33d', ['userId', 'createdAt'])
+@Index('IDX_45d7916af2cc29c38d56f282b1', ['eventType', 'createdAt'])
+@Index('IDX_31e35a162f069d11f7c031fba8', ['severity', 'createdAt'])
 export class SecurityAuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -97,6 +97,7 @@ export class SecurityAuditLog {
   userId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ name: 'event_type', type: 'enum', enum: SecurityEventType })

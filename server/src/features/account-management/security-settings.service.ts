@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { SecurityAuditService } from '../../security-audit/security-audit.service';
+import { SecurityEventSeverity, SecurityEventType } from '../../security-audit/entities/security-audit.entity';
 
 export interface SecuritySetting {
   accountId: string;
@@ -42,6 +44,46 @@ export class SecuritySettingsService {
   private readonly logger = new Logger(SecuritySettingsService.name);
   private readonly securitySettings = new Map<string, SecuritySetting>();
   private readonly securityLogs = new Map<string, SecurityAuditLog[]>();
+
+  constructor(private readonly securityAuditService?: SecurityAuditService) {}
+
+  private mapEventType(eventType: string): SecurityEventType {
+    const normalized = eventType.toLowerCase();
+
+    switch (normalized) {
+      case '2fa_enabled':
+      case 'totp_enabled':
+        return SecurityEventType.TOTP_ENABLED;
+      case '2fa_disabled':
+      case 'totp_disabled':
+        return SecurityEventType.TOTP_DISABLED;
+      case 'security_settings_updated':
+      case 'security_settings_change':
+        return SecurityEventType.PRIVACY_SETTINGS_CHANGED;
+      case 'trusted_ip_added':
+        return SecurityEventType.DEVICE_REGISTERED;
+      case 'trusted_ip_removed':
+        return SecurityEventType.DEVICE_REVOKED;
+      case 'biometric_enabled':
+        return SecurityEventType.PASSKEY_REGISTERED;
+      case 'login_approval_requested':
+        return SecurityEventType.SESSION_CREATED;
+      default:
+        return SecurityEventType.ADMIN_ACCOUNT_MODIFIED;
+    }
+  }
+
+  private mapSeverity(status: 'success' | 'failed' | 'warning'): SecurityEventSeverity {
+    switch (status) {
+      case 'failed':
+        return SecurityEventSeverity.HIGH;
+      case 'warning':
+        return SecurityEventSeverity.MEDIUM;
+      case 'success':
+      default:
+        return SecurityEventSeverity.LOW;
+    }
+  }
 
   /**
    * Get security settings for an account
@@ -201,10 +243,47 @@ export class SecuritySettingsService {
     return { success: true, trustedIps: settings.trustedIpAddresses };
   }
 
+  private mapAuditStatus(severity: SecurityEventSeverity): 'success' | 'failed' | 'warning' {
+    switch (severity) {
+      case SecurityEventSeverity.CRITICAL:
+      case SecurityEventSeverity.HIGH:
+        return 'failed';
+      case SecurityEventSeverity.MEDIUM:
+        return 'warning';
+      case SecurityEventSeverity.LOW:
+      default:
+        return 'success';
+    }
+  }
+
   /**
    * Get security audit log
    */
   async getSecurityAuditLog(accountId: string, limit = 100): Promise<SecurityAuditLog[]> {
+    if (this.securityAuditService) {
+      try {
+        const result = await this.securityAuditService.getUserAuditLog(accountId, {
+          take: limit,
+          skip: 0,
+        });
+
+        return (result.logs ?? []).map((log) => ({
+          eventId: log.id,
+          accountId: log.userId ?? accountId,
+          eventType: log.eventType,
+          timestamp: log.createdAt,
+          ipAddress: log.ipAddress ?? undefined,
+          userAgent: log.userAgent ?? undefined,
+          location: (log.metadata as Record<string, any> | undefined)?.location ?? undefined,
+          status: this.mapAuditStatus(log.severity),
+          description: log.message,
+          metadata: log.metadata ?? undefined,
+        }));
+      } catch (error) {
+        this.logger.warn(`Failed to load persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
     const logs = this.securityLogs.get(accountId) || [];
     return logs.slice(-limit).reverse();
   }
@@ -236,9 +315,22 @@ export class SecuritySettingsService {
     const logs = this.securityLogs.get(accountId)!;
     logs.push(log);
 
-    // Keep only last 1000 logs per account
     if (logs.length > 1000) {
       logs.shift();
+    }
+
+    try {
+      if (this.securityAuditService) {
+        await this.securityAuditService.logEvent({
+          userId: accountId,
+          eventType: this.mapEventType(eventType),
+          severity: this.mapSeverity(status),
+          message: description,
+          metadata,
+        });
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to persist security audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     this.logger.log(`Security audit: ${eventType} for account ${accountId} - ${description}`);
@@ -250,6 +342,25 @@ export class SecuritySettingsService {
    * Clear old logs (older than specified days)
    */
   async clearOldAuditLogs(accountId: string, olderThanDays: number): Promise<{ success: boolean; clearedCount: number }> {
+    if (this.securityAuditService) {
+      try {
+        const cleared = await this.securityAuditService.cleanupOldLogs(olderThanDays);
+        const logs = this.securityLogs.get(accountId) || [];
+        const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+        const filtered = logs.filter((log) => log.timestamp >= cutoffDate);
+        if (filtered.length === 0) {
+          this.securityLogs.delete(accountId);
+        } else {
+          this.securityLogs.set(accountId, filtered);
+        }
+
+        this.logger.log(`Cleared ${cleared} persisted audit logs for account ${accountId}`);
+        return { success: true, clearedCount: cleared };
+      } catch (error) {
+        this.logger.warn(`Failed to clear persisted audit logs for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
     const logs = this.securityLogs.get(accountId) || [];
     const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
 
@@ -273,6 +384,21 @@ export class SecuritySettingsService {
    * Export security audit log
    */
   async exportAuditLog(accountId: string): Promise<{ accountId: string; exportUrl: string; logCount: number; generatedAt: string }> {
+    if (this.securityAuditService) {
+      try {
+        const logs = await this.securityAuditService.exportUserAuditLog(accountId);
+        const exportUrl = `/exports/audit-log-${accountId}-${Date.now()}.json`;
+        return {
+          accountId,
+          exportUrl,
+          logCount: logs.length,
+          generatedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        this.logger.warn(`Failed to export persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
     const logs = this.securityLogs.get(accountId) || [];
 
     // In production, generate actual file and upload to storage

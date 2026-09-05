@@ -1,24 +1,37 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api, getAgeVerificationStatus, setBirthDate, updatePrivacy } from '../lib/api';
+import { api, requestAccountDeletion, confirmAccountDeletion, discoverContacts, getAgeVerificationStatus, setBirthDate, updatePrivacy } from '../lib/api';
+import { TagPrivacy } from '../lib/types';
 
 export default function DataPrivacyPage() {
   const [exportStatus, setExportStatus] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState(true);
+  const [profilePrivacy, setProfilePrivacy] = useState<'public' | 'private'>('public');
+  const [postVisibility, setPostVisibility] = useState<'public' | 'friends' | 'only_me'>('public');
+  const [storyVisibility, setStoryVisibility] = useState<'public' | 'friends' | 'followers' | 'only_me'>('friends');
+  const [searchVisibility, setSearchVisibility] = useState<'everyone' | 'friends' | 'no_one'>('everyone');
   const [readReceipts, setReadReceipts] = useState(true);
-  const [mentions, setMentions] = useState<'everyone' | 'friends' | 'no-one'>('everyone');
+  const [contactDiscovery, setContactDiscovery] = useState(true);
+  const [personalization, setPersonalization] = useState(true);
+  const [mentions, setMentions] = useState<'everyone' | 'followers' | 'no_one'>('everyone');
+  const [tagPrivacy, setTagPrivacy] = useState<TagPrivacy>(TagPrivacy.EVERYONE);
   const [activityVisibility, setActivityVisibility] = useState<'public' | 'friends' | 'private'>('friends');
   const [adPersonalization, setAdPersonalization] = useState(true);
   const [birthDate, setBirthDateValue] = useState('');
   const [ageStatus, setAgeStatus] = useState<any>(null);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [contactInput, setContactInput] = useState('');
+  const [discoveredContacts, setDiscoveredContacts] = useState<Array<{ id: string; username: string | null; displayName: string | null; avatar: string | null }>>([]);
+  const [discoveringContacts, setDiscoveringContacts] = useState(false);
+  const contactFileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -34,8 +47,15 @@ export default function DataPrivacyPage() {
         const profileResponse = await api.get('/users/me');
         const profile = profileResponse.data ?? {};
         setOnlineStatus(profile.showOnlineStatus !== false);
+        setProfilePrivacy(profile.profilePrivacy ?? 'public');
+        setPostVisibility(profile.postVisibility ?? 'public');
+        setStoryVisibility(profile.storyVisibility ?? 'friends');
+        setSearchVisibility(profile.searchVisibility ?? 'everyone');
         setReadReceipts(profile.readReceipts !== false);
+        setContactDiscovery(profile.contactDiscovery !== false);
+        setPersonalization(profile.personalization !== false);
         setMentions((profile.mentions as any) ?? 'everyone');
+        setTagPrivacy(profile.tagPrivacy ?? TagPrivacy.EVERYONE);
         setActivityVisibility((profile.activityVisibility as any) ?? 'friends');
         setAdPersonalization(profile.adPersonalization !== false);
         if (profile.birthDate) {
@@ -62,9 +82,16 @@ export default function DataPrivacyPage() {
     setSavingPrivacy(true);
     try {
       await updatePrivacy({
+        profilePrivacy,
+        postVisibility,
+        storyVisibility,
+        searchVisibility,
         showOnlineStatus: onlineStatus,
         readReceipts: readReceipts,
+        contactDiscovery,
+        personalization,
         mentions,
+        tagPrivacy,
         activityVisibility,
         adPersonalization,
       } as any);
@@ -74,6 +101,47 @@ export default function DataPrivacyPage() {
     } finally {
       setSavingPrivacy(false);
     }
+  };
+
+  const handleContactDiscovery = async () => {
+    const contacts = Array.from(new Set(
+      contactInput
+      .split(/[,;]+/)
+        .map((contact) => contact.trim().toLowerCase())
+        .map((contact) => contact.includes('@') ? contact : contact.replace(/[\s().-]/g, ''))
+        .filter(Boolean),
+    ));
+
+    if (contacts.length === 0) {
+      addToast('Enter at least one email address', 'error');
+      return;
+    }
+
+    setDiscoveringContacts(true);
+    try {
+      const matches = await discoverContacts(contacts);
+      setDiscoveredContacts(matches);
+      addToast(`${matches.length} contact${matches.length === 1 ? '' : 's'} found`, 'success');
+    } catch {
+      addToast('Contact discovery failed', 'error');
+    } finally {
+      setDiscoveringContacts(false);
+    }
+  };
+
+  const handleContactFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const text = await file.text();
+    const importedContacts = text
+      .split(/[\s,;]+/)
+      .map((contact) => contact.trim())
+      .filter(Boolean);
+    setContactInput((current) => Array.from(new Set([...current.split(/[,;]+/), ...importedContacts]
+      .map((contact) => contact.trim())
+      .filter(Boolean))).join(', '));
   };
 
   const handleSetBirthDate = async () => {
@@ -104,11 +172,17 @@ export default function DataPrivacyPage() {
   };
 
   const handleDeleteAccount = async () => {
+    if (deleteConfirmation.trim().toUpperCase() !== 'DELETE') {
+      addToast('Type DELETE to confirm permanent account deletion', 'error');
+      return;
+    }
     setDeleting(true);
     try {
-      await api.delete('/data-deletion');
-      addToast('Account deletion requested', 'success');
+      await requestAccountDeletion('privacy_concerns');
+      await confirmAccountDeletion(deleteConfirmation);
+      addToast('Account permanently deleted. You are being logged out.', 'success');
       setDeleteDialogOpen(false);
+      setDeleteConfirmation('');
       window.location.href = '/';
     } catch {
       addToast('Failed to request account deletion', 'error');
@@ -145,11 +219,26 @@ export default function DataPrivacyPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm">
-              <span className="font-medium">Mentions</span>
-              <select value={mentions} onChange={(e) => setMentions(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+              <span className="font-medium" id="mention-controls-label">Mention controls</span>
+              <select aria-label="Mention controls" value={mentions} onChange={(e) => setMentions(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
                 <option value="everyone">Everyone</option>
-                <option value="friends">Friends</option>
-                <option value="no-one">No one</option>
+                <option value="followers">Followers</option>
+                <option value="no_one">No one</option>
+              </select>
+            </label>
+
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Tag controls</span>
+              <select
+                aria-label="Tag controls"
+                value={tagPrivacy}
+                onChange={(e) => setTagPrivacy(e.target.value as TagPrivacy)}
+                className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900"
+              >
+                <option value={TagPrivacy.EVERYONE}>Everyone</option>
+                <option value={TagPrivacy.FRIENDS}>Friends</option>
+                <option value={TagPrivacy.FRIENDS_OF_FRIENDS}>Friends of friends</option>
+                <option value={TagPrivacy.NO_ONE}>No one</option>
               </select>
             </label>
 
@@ -163,10 +252,93 @@ export default function DataPrivacyPage() {
             </label>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Profile privacy</span>
+              <select value={profilePrivacy} onChange={(e) => setProfilePrivacy(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Post privacy</span>
+              <select value={postVisibility} onChange={(e) => setPostVisibility(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="public">Public</option>
+                <option value="friends">Friends</option>
+                <option value="only_me">Only me</option>
+              </select>
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Story privacy</span>
+              <select value={storyVisibility} onChange={(e) => setStoryVisibility(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="public">Public</option>
+                <option value="friends">Friends</option>
+                <option value="followers">Followers</option>
+                <option value="only_me">Only me</option>
+              </select>
+            </label>
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">Search visibility</span>
+              <select value={searchVisibility} onChange={(e) => setSearchVisibility(e.target.value as any)} className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900">
+                <option value="everyone">Everyone</option>
+                <option value="friends">Friends</option>
+                <option value="no_one">No one</option>
+              </select>
+            </label>
+          </div>
+
           <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
             <span className="text-sm font-medium">Personalized ads</span>
             <input type="checkbox" checked={adPersonalization} onChange={(e) => setAdPersonalization(e.target.checked)} className="h-4 w-4" />
           </label>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+              <span className="text-sm font-medium">Contact discovery</span>
+              <input type="checkbox" checked={contactDiscovery} onChange={(e) => setContactDiscovery(e.target.checked)} className="h-4 w-4" />
+            </label>
+            <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
+              <span className="text-sm font-medium">Personalization</span>
+              <input type="checkbox" checked={personalization} onChange={(e) => setPersonalization(e.target.checked)} className="h-4 w-4" />
+            </label>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-dark-200 bg-dark-50 p-4 dark:border-dark-700 dark:bg-dark-800/70">
+            <div>
+              <h3 className="font-semibold">Find people you know</h3>
+              <p className="text-sm text-gray-500">Enter email addresses or international phone numbers to find matching Zynkra profiles. Contacts are used only for this lookup.</p>
+            </div>
+            <textarea
+              aria-label="Contact email addresses or phone numbers"
+              value={contactInput}
+              onChange={(event) => setContactInput(event.target.value)}
+              placeholder="friend@example.com, +14155552671"
+              rows={3}
+              className="w-full rounded-xl border border-dark-200 bg-white px-3 py-2 dark:border-dark-700 dark:bg-dark-900"
+            />
+            <input ref={contactFileInputRef} type="file" accept=".csv,.txt,text/csv,text/plain" onChange={handleContactFile} className="hidden" />
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => contactFileInputRef.current?.click()} disabled={!contactDiscovery}>
+                Import CSV or text
+              </Button>
+              <Button onClick={handleContactDiscovery} disabled={discoveringContacts || !contactDiscovery}>
+                {discoveringContacts ? 'Searching...' : 'Find contacts'}
+              </Button>
+            </div>
+            {discoveredContacts.length > 0 && (
+              <div className="space-y-2" aria-label="Discovered contacts">
+                {discoveredContacts.map((contact) => (
+                  <div key={contact.id} className="flex items-center gap-3 rounded-lg border border-dark-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                    {contact.avatar ? <img src={contact.avatar} alt="" className="h-9 w-9 rounded-full object-cover" /> : <div className="h-9 w-9 rounded-full bg-dark-200 dark:bg-dark-700" />}
+                    <div>
+                      <p className="font-medium">{contact.displayName || contact.username || 'Zynkra user'}</p>
+                      {contact.username && <p className="text-sm text-gray-500">@{contact.username}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="flex justify-end">
             <Button onClick={handlePrivacySave} disabled={savingPrivacy}>
@@ -230,7 +402,7 @@ export default function DataPrivacyPage() {
           <div>
             <h2 className="text-lg font-bold">Request Account Deletion</h2>
             <p className="text-sm text-gray-500">
-              Permanently delete your account and all associated personal data. This action complies with GDPR/CCPA right to be forgotten requirements. Your data will be permanently removed within 30 days.
+              Permanently delete your account and all associated personal data. This action complies with GDPR/CCPA right to be forgotten requirements and takes effect after confirmation.
             </p>
           </div>
           <Button 
@@ -260,14 +432,22 @@ export default function DataPrivacyPage() {
           <DialogHeader>
             <DialogTitle>Confirm Account Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete your account? This action cannot be undone. All your personal data will be permanently removed within 30 days in compliance with GDPR and CCPA requirements.
+              Are you sure you want to delete your account? This action cannot be undone. After confirmation, your account and associated personal data will be permanently removed.
             </DialogDescription>
           </DialogHeader>
+          <input
+            value={deleteConfirmation}
+            onChange={(event) => setDeleteConfirmation(event.target.value)}
+            placeholder="Type DELETE"
+            aria-label="Type DELETE to confirm account deletion"
+            className="w-full rounded-xl border border-red-300 bg-white px-3 py-2 text-sm"
+            disabled={deleting}
+          />
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            <Button variant="secondary" onClick={() => { setDeleteDialogOpen(false); setDeleteConfirmation(''); }} disabled={deleting}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleting}>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleting || deleteConfirmation.trim().toUpperCase() !== 'DELETE'}>
               {deleting ? 'Processing...' : 'Confirm Deletion'}
             </Button>
           </DialogFooter>

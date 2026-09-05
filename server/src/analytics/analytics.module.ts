@@ -18,9 +18,11 @@ import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from '../new
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
 import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
+import { DataPermissionsModule } from '../common/data-permissions/data-permissions.module';
 
 @Module({
   imports: [
+    DataPermissionsModule,
     TypeOrmModule.forFeature([
       Post, User, Tip, Order, OrderItem, Product, Subscription, PageView, Follow,
       Article, Newsletter, NewsletterSubscriber, NewsletterSubscription,

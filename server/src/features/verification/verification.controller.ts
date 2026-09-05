@@ -12,6 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 import { VerificationService } from './verification.service';
 import { CreateVerificationRequestDto, ApproveVerificationRequestDto, RejectVerificationRequestDto, AppealVerificationDecisionDto } from './dto/create-verification-request.dto';
 import { VerificationRequestStatus } from './entities/verification-request.entity';
@@ -46,7 +47,7 @@ export class VerificationController {
   // ============ VERIFICATION APPROVAL (ADMIN ONLY) ============
 
   @Get('admin/requests/pending')
-  @UseGuards(JwtAuthGuard) // Should check admin role
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getPendingVerifications(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     const [requests, total] = await this.verificationService.getAllPendingVerifications(
       limit ? parseInt(limit) : 50,

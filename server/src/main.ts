@@ -11,6 +11,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { randomUUID } from 'crypto';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentationService } from './documentation/documentation.service';
 
 if (!(globalThis as any).crypto) {
   (globalThis as any).crypto = { randomUUID };
@@ -104,6 +105,7 @@ async function bootstrap() {
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, swaggerDocument);
+  app.get(DocumentationService).setOpenApiDocument(swaggerDocument);
 
   await app.listen(configService.get<number>('PORT', 3000));
 }

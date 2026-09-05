@@ -13,6 +13,7 @@ import { UserInterestsService } from '../user-interests/user-interests.service';
 import { SentimentService } from '../sentiment/sentiment.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { ProfileReviewService } from '../tags/profile-review.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const u = new User();
@@ -47,6 +48,7 @@ describe('CommentsService', () => {
   let visibilityService: jest.Mocked<VisibilityService>;
   let sentimentService: jest.Mocked<SentimentService>;
   let notificationsService: jest.Mocked<NotificationsService>;
+  let profileReviewService: jest.Mocked<ProfileReviewService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +63,7 @@ describe('CommentsService', () => {
         { provide: SentimentService, useValue: { analyzeSentiment: jest.fn().mockResolvedValue({ sentiment: 'neutral', score: 0, confidence: 0.5 }) } },
         { provide: VisibilityService, useValue: { isBlockedEither: jest.fn().mockResolvedValue(false), getBlockedIdSet: jest.fn().mockResolvedValue(new Set()) } },
         { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
+        { provide: ProfileReviewService, useValue: { createForPost: jest.fn() } },
       ],
     }).compile();
 
@@ -70,6 +73,7 @@ describe('CommentsService', () => {
     visibilityService = module.get(VisibilityService) as jest.Mocked<VisibilityService>;
     sentimentService = module.get(SentimentService) as jest.Mocked<SentimentService>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
+    profileReviewService = module.get(ProfileReviewService) as jest.Mocked<ProfileReviewService>;
   });
 
   // ─── create ───────────────────────────────────────────────────────────

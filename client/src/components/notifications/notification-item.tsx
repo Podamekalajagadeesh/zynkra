@@ -4,12 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { formatDateTime } from '../../lib/preferences';
 
 const getNotificationLink = (notification) => {
-  switch (notification.type) {
+  const senderUsername = notification?.sender?.username;
+
+  switch (notification?.type) {
     case 'like':
     case 'comment':
-      return `/post/${notification.post.id}`;
+      return notification?.post?.id ? `/post/${notification.post.id}` : '#';
     case 'follow':
-      return `/profile/${notification.sender.username}`;
+      return senderUsername ? `/profile/${senderUsername}` : '#';
     case 'login_alert':
       return '/security-checkup';
     default:
@@ -18,7 +20,7 @@ const getNotificationLink = (notification) => {
 };
 
 const getNotificationText = (notification) => {
-  switch (notification.type) {
+  switch (notification?.type) {
     case 'like':
       return <>liked your post</>;
     case 'comment':
@@ -39,6 +41,8 @@ const getNotificationText = (notification) => {
 
 export const NotificationItem = ({ notification }) => {
   const { markAsRead } = useNotifications();
+  const sender = notification?.sender ?? { username: 'System', profile: null };
+  const senderUsername = sender.username || 'System';
 
   const handleClick = () => {
     if (!notification.read) {
@@ -53,12 +57,12 @@ export const NotificationItem = ({ notification }) => {
       }`}>
         <div className="flex items-center">
           <Avatar className="h-10 w-10 mr-4">
-            <AvatarImage src={notification.sender.profile?.avatarUrl} alt={notification.sender.username} />
-            <AvatarFallback>{notification.sender.username.charAt(0)}</AvatarFallback>
+            <AvatarImage src={sender.profile?.avatarUrl || undefined} alt={senderUsername} />
+            <AvatarFallback>{senderUsername.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="text-sm">
             <p>
-              <span className="font-bold">{notification.sender.username}</span> {getNotificationText(notification)}
+              <span className="font-bold">{senderUsername}</span> {getNotificationText(notification)}
             </p>
             <p className="text-xs text-gray-500">
               {formatDateTime(notification.createdAt)}

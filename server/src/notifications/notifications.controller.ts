@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { MobilePushPlatform, MobilePushProvider } from './mobile-push-token.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -52,6 +52,11 @@ export class NotificationsController {
     @Body() body: { endpoint: string; keys: { p256dh: string; auth: string } },
   ) {
     return this.notificationsService.savePushSubscription(this.getUserEntity(req), body);
+  }
+
+  @Delete('push/subscribe')
+  removePushSubscription(@Req() req: Request, @Body() body: { endpoint: string }) {
+    return this.notificationsService.removePushSubscription(this.getUserId(req), body.endpoint);
   }
 
   @Post('push/mobile')

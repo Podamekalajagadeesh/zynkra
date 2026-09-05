@@ -2,15 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConnectedAccount, ConnectedAccountPlatform } from './entities/connected-account.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class ConnectedAccountsService {
   constructor(
     @InjectRepository(ConnectedAccount)
     private readonly repository: Repository<ConnectedAccount>,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   async listForUser(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.CONNECTED_SERVICES);
     const accounts = await this.repository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -22,6 +26,7 @@ export class ConnectedAccountsService {
     userId: string,
     data: { platform: string; apiKey?: string; apiSecret?: string; accessToken?: string },
   ) {
+    await this.dataPermissions.require(userId, DataPermission.CONNECTED_SERVICES);
     const account = this.repository.create({
       userId,
       platform: data.platform as ConnectedAccountPlatform,
@@ -37,6 +42,7 @@ export class ConnectedAccountsService {
   }
 
   async updateActive(userId: string, id: string, isActive: boolean) {
+    await this.dataPermissions.require(userId, DataPermission.CONNECTED_SERVICES);
     const account = await this.repository.findOne({ where: { id, userId } });
     if (!account) {
       throw new NotFoundException('Connected account not found');
@@ -46,6 +52,7 @@ export class ConnectedAccountsService {
   }
 
   async remove(userId: string, id: string): Promise<void> {
+    await this.dataPermissions.require(userId, DataPermission.CONNECTED_SERVICES);
     const result = await this.repository.delete({ id, userId });
     if (!result.affected) {
       throw new NotFoundException('Connected account not found');

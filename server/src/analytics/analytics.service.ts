@@ -11,6 +11,8 @@ import { Product } from '../marketplace/entities/product.entity';
 import { PageView } from './entities/page-view.entity';
 import { Follow } from '../users/entities/follow.entity';
 import { Subscription, SubscriptionStatus } from '../subscriptions/entities/subscription.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class AnalyticsService {
@@ -33,9 +35,11 @@ export class AnalyticsService {
     private readonly followsRepository: Repository<Follow>,
     @InjectRepository(Subscription)
     private readonly subscriptionsRepository: Repository<Subscription>,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   async getAnalytics(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const user = await this.usersRepository.findOne({ where: { id: userId }, relations: ['followers', 'following'] });
     const posts = await this.postsRepository.find({ where: { user: { id: userId } }, relations: ['comments'] });
     
@@ -333,6 +337,7 @@ export class AnalyticsService {
   }
 
   async getSustainabilityData(userId: string) {
+    await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');

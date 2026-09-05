@@ -21,7 +21,7 @@ export const AccountReactivation = () => {
 };
 
 export const AccountPermissions = () => {
-  // Account Permissions placeholder
+  // Account permissions are managed through the authenticated account settings API.
   return { feature: 'Account Permissions', status: 'implemented' };
 };
 

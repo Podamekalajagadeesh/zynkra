@@ -15,6 +15,7 @@ import { StoriesModule } from '../stories/stories.module';
 import { SnapMapModule } from '../snapmap/snapmap.module';
 import { TrendsModule } from '../trends/trends.module';
 import { TranslationModule } from '../translation/translation.module';
+import { DataPermissionsModule } from '../common/data-permissions/data-permissions.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TranslationModule } from '../translation/translation.module';
     SnapMapModule,
     TrendsModule,
     TranslationModule,
+    DataPermissionsModule,
   ],
   providers: [FeedService, SmartFeedService],
   controllers: [FeedController, SmartFeedController],

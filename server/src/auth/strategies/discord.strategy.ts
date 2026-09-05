@@ -7,8 +7,8 @@ import { ConfigService } from '@nestjs/config';
 export class DiscordStrategy extends PassportStrategy(Strategy, 'discord') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: configService.get<string>('DISCORD_CLIENT_ID'),
-      clientSecret: configService.get<string>('DISCORD_CLIENT_SECRET'),
+      clientID: configService.get<string>('DISCORD_CLIENT_ID') || 'discord-oauth-not-configured',
+      clientSecret: configService.get<string>('DISCORD_CLIENT_SECRET') || 'discord-oauth-not-configured',
       callbackURL: configService.get<string>('DISCORD_CALLBACK_URL', '/auth/discord/callback'),
       scope: ['identify', 'email'],
     });

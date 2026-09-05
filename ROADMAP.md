@@ -123,7 +123,9 @@ Goal: interoperate with Mastodon/Pixelfed for real.
 Goal: users truly own their data.
 - Real, complete data export (the `data-export` module exists — make it whole-account, media
   included, in a documented format).
-- Account import/migration path; account deletion that actually purges.
+- Account import/migration path is now transactional for portable profile/settings, posts/media,
+  comments, reactions, bookmarks, stories, and following relationships. Extend it to the remaining
+  sensitive/exported domains (messages, commerce, wallet, verification, and linked accounts).
 - **Exit:** a user can export their full account and re-import it into a fresh instance.
 
 ### Phase 6 — Promote Previews to real, one at a time (ongoing L)

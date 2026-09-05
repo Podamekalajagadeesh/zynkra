@@ -22,6 +22,19 @@ export interface NotificationItem {
   type: string;
   createdAt: string;
   metadata: Record<string, unknown> | null;
+  sender?: {
+    id?: string;
+    username?: string;
+    profile?: {
+      avatarUrl?: string | null;
+      [key: string]: unknown;
+    } | null;
+    [key: string]: unknown;
+  } | null;
+  post?: {
+    id?: string;
+    [key: string]: unknown;
+  } | null;
   [key: string]: unknown;
 }
 
@@ -99,7 +112,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           return;
         }
 
-        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BExwVSCqJYX3dvtWskD9vCDKbHfQdI9fA8AsR9uJfCVwHc4XjafU7u_3BCM7rWv4e0Qf7d3mS3f7T0t3KqA';
+        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo';
         const subscriptionOptions = {
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
           userVisibleOnly: true,

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, ProfilePrivacy } from '../../users/entities/user.entity';
+import { PostVisibility } from '../../posts/entities/post.entity';
 
 /**
  * Central place for viewer-dependent visibility rules (blocks + private accounts).
@@ -85,6 +86,44 @@ export class VisibilityService {
     if (viewerId && (await this.isBlockedEither(viewerId, authorId))) return false;
     const hidden = await this.getHiddenPrivateAuthorIds(viewerId, [authorId]);
     return !hidden.has(authorId);
+  }
+
+  /** True when a viewer may see a user's presence and activity signals. */
+  async canViewActivity(viewerId: string | null, target: Pick<User, 'id' | 'activityVisibility'>): Promise<boolean> {
+    if (viewerId === target.id) return true;
+    if (!viewerId || (await this.isBlockedEither(viewerId, target.id))) return false;
+    if (target.activityVisibility === 'private') return false;
+    if (target.activityVisibility === 'public') return true;
+
+    const [viewerFollowsTarget, targetFollowsViewer] = await Promise.all([
+      this.isFollowing(viewerId, target.id),
+      this.isFollowing(target.id, viewerId),
+    ]);
+    return viewerFollowsTarget && targetFollowsViewer;
+  }
+
+  /** Apply post-level visibility after loading candidate posts. */
+  async filterVisiblePostsForViewer<T extends { visibility?: PostVisibility; user?: { id?: string } }>(
+    viewerId: string | null,
+    posts: T[],
+  ): Promise<T[]> {
+    const visible: T[] = [];
+    for (const post of posts) {
+      const authorId = post.user?.id;
+      if (!authorId) continue;
+      if (viewerId && (await this.isBlockedEither(viewerId, authorId))) continue;
+      if (!(await this.canViewAuthor(viewerId, authorId))) continue;
+      if (viewerId === authorId || post.visibility === PostVisibility.PUBLIC) {
+        visible.push(post);
+        continue;
+      }
+      if (post.visibility === PostVisibility.FRIENDS || post.visibility === PostVisibility.PRIVATE) {
+        const followsAuthor = viewerId ? await this.isFollowing(viewerId, authorId) : false;
+        const followsViewer = viewerId ? await this.isFollowing(authorId, viewerId) : false;
+        if (followsAuthor && followsViewer) visible.push(post);
+      }
+    }
+    return visible;
   }
 
   /**

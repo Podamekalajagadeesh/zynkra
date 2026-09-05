@@ -19,8 +19,12 @@
 
 ## Base URL
 ```
-http://localhost:3000/api
+http://localhost:3000
 ```
+
+The server does not use a global `/api` prefix. Interactive documentation is
+available at `http://localhost:3000/docs`, and the machine-readable OpenAPI
+document is available at `http://localhost:3000/documentation/openapi.json`.
 
 ## Testing & QA
 

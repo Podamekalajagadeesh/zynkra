@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { OpenRouterService } from './openrouter.service';
+import { DataPermissionsModule } from './data-permissions/data-permissions.module';
 
 /**
  * Shared infrastructure module.
@@ -12,8 +13,8 @@ import { OpenRouterService } from './openrouter.service';
  */
 @Global()
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, DataPermissionsModule],
   providers: [OpenRouterService],
-  exports: [OpenRouterService],
+  exports: [OpenRouterService, DataPermissionsModule],
 })
 export class CommonModule {}

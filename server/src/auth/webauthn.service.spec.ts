@@ -101,4 +101,56 @@ describe('WebauthnService', () => {
       expect(args.userVerification).toBeUndefined();
     });
   });
+
+  it('derives the WebAuthn relying party and origin from the public app URL', async () => {
+    const repo = { find: jest.fn().mockResolvedValue([]) } as any;
+    const config = {
+      get: jest.fn((key: string, defaultValue?: any) => {
+        if (key === 'CLIENT_URL') return 'https://app.zynkra.com';
+        if (key === 'WEBAUTHN_RP_ID') return undefined;
+        if (key === 'WEBAUTHN_ORIGIN') return undefined;
+        return defaultValue;
+      }),
+    } as any;
+
+    const configuredService = new WebauthnService(repo, config);
+    await configuredService.getRegistrationOptions({ id: 'user-1', email: 'test@example.com' } as any);
+
+    const registrationArgs = (require('@simplewebauthn/server').generateRegistrationOptions as jest.Mock).mock.calls.at(-1)?.[0];
+    expect(registrationArgs.rpID).toBe('app.zynkra.com');
+    expect(registrationArgs.userName).toBe('test@example.com');
+  });
+
+  it('matches browser base64url credential IDs to the stored base64 credential IDs during passkey login', async () => {
+    const credentialBytes = Uint8Array.from([1, 2, 3, 255, 128]);
+    const storedCredentialId = Buffer.from(credentialBytes).toString('base64');
+    const browserCredentialId = Buffer.from(credentialBytes).toString('base64url');
+    const storedAuthenticator = {
+      id: 'auth-1',
+      credentialID: storedCredentialId,
+      credentialPublicKey: 'pubkey',
+      counter: 1,
+      transports: 'internal',
+      user,
+    } as unknown as Authenticator;
+
+    authenticatorsRepo.findOne.mockResolvedValue(storedAuthenticator);
+    authenticatorsRepo.find.mockResolvedValue([storedAuthenticator]);
+
+    const verification = jest.spyOn(require('@simplewebauthn/server'), 'verifyAuthenticationResponse').mockResolvedValue({
+      verified: true,
+      authenticationInfo: { credentialID: credentialBytes, newCounter: 2 },
+    } as any);
+
+    await expect(service.verifyAuthentication(user, { id: browserCredentialId }, 'challenge-123')).resolves.toEqual({
+      verified: true,
+      authenticationInfo: { credentialID: credentialBytes, newCounter: 2 },
+    });
+
+    expect(authenticatorsRepo.findOne).toHaveBeenCalledWith({
+      where: { user: { id: user.id }, credentialID: service['normalizeCredentialId'](browserCredentialId) },
+    });
+
+    verification.mockRestore();
+  });
 });

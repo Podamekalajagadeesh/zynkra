@@ -49,3 +49,29 @@ export class ReviewVerificationRequestDto {
   @MaxLength(1000)
   reviewNote?: string;
 }
+
+export class SubmitVerificationAppealDto {
+  @IsString()
+  @MinLength(20)
+  @MaxLength(3000)
+  appealReason: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @IsUrl({ require_tld: false }, { each: true })
+  documentUrls?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @IsUrl({ require_tld: false }, { each: true })
+  links?: string[];
+}
+
+export class ReviewVerificationAppealDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
+}

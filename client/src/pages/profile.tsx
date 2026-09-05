@@ -16,6 +16,7 @@ import { themes, Theme } from '../themes';
 import { PostList } from '../components/post-list';
 import { ProfileQrModal } from '../components/ProfileQrModal';
 import { useEnsName } from '../hooks/useEnsName';
+import { VerificationBadge } from '../components/VerificationBadge';
 import type { Post, UserProfile, ThemeDefinition } from '../lib/types';
 
 interface ExtendedUserProfile extends UserProfile {
@@ -342,7 +343,7 @@ setCurrentUser(updatedUser);
                   {user.displayName || user.email}
                 </h1>
                 {user.verified && (
-                  <BadgeCheck className="h-6 w-6 text-blue-500" aria-label="Verified account" />
+                  <VerificationBadge type="identity" size="md" />
                 )}
               </div>
               {user.pronouns && <p className="text-lg text-gray-500">({user.pronouns})</p>}

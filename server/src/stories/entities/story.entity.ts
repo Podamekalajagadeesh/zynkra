@@ -16,6 +16,7 @@ import { StoryView } from './story-view.entity';
 export enum StoryAudience {
   PUBLIC = 'public',
   CLOSE_FRIENDS = 'close_friends',
+  CUSTOM = 'custom',
 }
 
 @Entity('stories')
@@ -29,6 +30,12 @@ export class Story {
     default: StoryAudience.PUBLIC,
   })
   audience: StoryAudience;
+
+  @Column({ type: 'uuid', nullable: true })
+  customAudienceId: string | null;
+
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  excludedUserIds: string[];
 
   @Column({ type: 'varchar', length: 2048, nullable: true })
   mediaUrl: string;

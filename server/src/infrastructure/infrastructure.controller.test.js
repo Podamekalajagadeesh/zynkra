@@ -14,13 +14,25 @@ test('infrastructure controller exposes health and backup capabilities', async (
       {
         provide: InfrastructureService,
         useValue: {
-          getHealthSnapshot: () => ({
-            status: 'ok',
+          getHealthSnapshot: async () => ({
+            status: 'operational',
             services: {
-              redis: 'configured',
-              cdn: 'configured',
+              redis: { status: 'operational' },
+              cdn: { status: 'operational' },
             },
           }),
+          getStatusPage: async () => ({
+            status: 'operational',
+            services: { redis: { status: 'operational' } },
+            activeIncidents: [],
+            upcomingMaintenance: [],
+            history: [],
+          }),
+          getHistory: async () => [],
+          createIncident: async (body) => body,
+          updateIncident: async (_id, body) => body,
+          createMaintenance: async (body) => body,
+          updateMaintenance: async (_id, body) => body,
         },
       },
       {
@@ -33,11 +45,11 @@ test('infrastructure controller exposes health and backup capabilities', async (
   }).compile();
 
   const controller = moduleRef.get(InfrastructureController);
-  const snapshot = controller.getHealth();
+  const snapshot = await controller.getHealth();
   const backup = await controller.triggerBackup();
 
-  assert.equal(snapshot.status, 'ok');
-  assert.equal(snapshot.services.redis, 'configured');
+  assert.equal(snapshot.status, 'operational');
+  assert.equal(snapshot.services.redis.status, 'operational');
   assert.equal(backup.success, true);
   assert.match(backup.archivePath, /demo-backup\.zip$/);
 });

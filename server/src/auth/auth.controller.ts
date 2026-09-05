@@ -14,6 +14,8 @@ import { MagicLinkRequestDto } from './dto/magic-link-request.dto';
 import { MagicLinkVerifyDto } from './dto/magic-link-verify.dto';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AccountLinkingService } from '../features/account-management/account-linking.service';
+import { LinkedAccountProvider } from '../features/account-management/entities/linked-account.entity';
 
 // Strict limits for credential-guessing surfaces (per IP).
 const STRICT = { default: { ttl: 60_000, limit: 100 } };
@@ -28,6 +30,7 @@ export class AuthController {
     private readonly webauthnService: WebauthnService,
     private readonly biometricAuthService: BiometricAuthService,
     private readonly usersService: UsersService,
+    private readonly accountLinkingService: AccountLinkingService,
   ) {}
 
   @Get('google')
@@ -37,7 +40,77 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req, @Res() res) {
+    if (req.query.state) {
+      return this.completeLinkedAccount(req, res, LinkedAccountProvider.GOOGLE);
+    }
     return this.authService.socialLogin(req, res);
+  }
+
+  @Get('link/google')
+  @UseGuards(AuthGuard('google'))
+  startGoogleAccountLink() {}
+
+  @Get('link/google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.GOOGLE);
+  }
+
+  @Get('link/facebook')
+  @UseGuards(AuthGuard('facebook'))
+  startFacebookAccountLink() {}
+
+  @Get('facebook/callback')
+  @UseGuards(AuthGuard('facebook'))
+  facebookAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.FACEBOOK);
+  }
+
+  @Get('link/github')
+  @UseGuards(AuthGuard('github'))
+  startGitHubAccountLink() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  githubAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.GITHUB);
+  }
+
+  @Get('link/discord')
+  @UseGuards(AuthGuard('discord'))
+  startDiscordAccountLink() {}
+
+  @Get('discord/callback')
+  @UseGuards(AuthGuard('discord'))
+  discordAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.DISCORD);
+  }
+
+  @Get('link/twitter')
+  @UseGuards(AuthGuard('twitter'))
+  startTwitterAccountLink() {}
+
+  @Get('twitter/callback')
+  @UseGuards(AuthGuard('twitter'))
+  twitterAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.TWITTER);
+  }
+
+  @Get('link/apple')
+  @UseGuards(AuthGuard('apple'))
+  startAppleAccountLink() {}
+
+  @Get('apple/callback')
+  @UseGuards(AuthGuard('apple'))
+  appleAccountLinkCallback(@Req() req, @Res() res) {
+    return this.completeLinkedAccount(req, res, LinkedAccountProvider.APPLE);
+  }
+
+  private async completeLinkedAccount(req: any, res: any, provider: LinkedAccountProvider) {
+    const userId = this.accountLinkingService.verifyOAuthState(req.query.state, provider);
+    await this.accountLinkingService.linkOAuthAccount(userId, provider, req.user);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    return res.redirect(`${clientUrl}/settings?linked=${provider}`);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -234,6 +307,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   signIn(@Req() req, @Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto, req);
+  }
+
+  @Throttle(STRICT)
+  @Post('reactivate')
+  @HttpCode(HttpStatus.OK)
+  reactivate(@Req() req, @Body() signInDto: SignInDto) {
+    return this.authService.reactivateAndSignIn(signInDto, req);
   }
 
   @UseGuards(JwtAuthGuard)

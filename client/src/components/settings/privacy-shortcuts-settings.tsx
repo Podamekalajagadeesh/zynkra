@@ -23,6 +23,7 @@ export function PrivacyShortcutsSettings() {
   const [postVisibility, setPostVisibility] = useState<PostVisibility>(
     PostVisibility.PUBLIC,
   );
+  const [storyVisibility, setStoryVisibility] = useState<'public' | 'friends' | 'followers' | 'only_me'>('friends');
   const [friendRequestPrivacy, setFriendRequestPrivacy] = useState<FriendRequestPrivacy>(
     FriendRequestPrivacy.EVERYONE,
   );
@@ -34,6 +35,9 @@ export function PrivacyShortcutsSettings() {
   );
   const [tagPrivacy, setTagPrivacy] = useState<TagPrivacy>(
     TagPrivacy.EVERYONE,
+  );
+  const [mentionPrivacy, setMentionPrivacy] = useState<'everyone' | 'followers' | 'no_one'>(
+    'everyone',
   );
   const [messagePrivacy, setMessagePrivacy] = useState<MessagePrivacy>(
     MessagePrivacy.EVERYONE,
@@ -48,6 +52,7 @@ export function PrivacyShortcutsSettings() {
         const profile = await getProfile();
         setUser(profile);
         setPostVisibility(profile.postVisibility || PostVisibility.PUBLIC);
+        setStoryVisibility(profile.storyVisibility || 'friends');
         setFriendRequestPrivacy(
           profile.friendRequestPrivacy || FriendRequestPrivacy.EVERYONE,
         );
@@ -60,6 +65,7 @@ export function PrivacyShortcutsSettings() {
         setTagPrivacy(
           profile.tagPrivacy || TagPrivacy.EVERYONE,
         );
+        setMentionPrivacy(profile.mentions || 'everyone');
         setMessagePrivacy(
           profile.messagePrivacy || MessagePrivacy.EVERYONE,
         );
@@ -79,6 +85,17 @@ export function PrivacyShortcutsSettings() {
       toast.success('Post visibility updated');
     } catch (error) {
       toast.error('Failed to update post visibility');
+    }
+  };
+
+  const handleStoryVisibilityChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newVisibility = e.target.value as typeof storyVisibility;
+    setStoryVisibility(newVisibility);
+    try {
+      await updatePrivacy({ storyVisibility: newVisibility });
+      toast.success('Story visibility updated');
+    } catch (error) {
+      toast.error('Failed to update story visibility');
     }
   };
 
@@ -116,23 +133,40 @@ export function PrivacyShortcutsSettings() {
   };
 
   const handleTagPrivacyChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const previousPrivacy = tagPrivacy;
     const newPrivacy = e.target.value as TagPrivacy;
     setTagPrivacy(newPrivacy);
     try {
       await updatePrivacy({ tagPrivacy: newPrivacy });
       toast.success('Tag privacy updated');
     } catch (error) {
+      setTagPrivacy(previousPrivacy);
       toast.error('Failed to update tag privacy');
     }
   };
 
+  const handleMentionPrivacyChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const previousPrivacy = mentionPrivacy;
+    const newPrivacy = e.target.value as typeof mentionPrivacy;
+    setMentionPrivacy(newPrivacy);
+    try {
+      await updatePrivacy({ mentions: newPrivacy });
+      toast.success('Mention controls updated');
+    } catch (error) {
+      setMentionPrivacy(previousPrivacy);
+      toast.error('Failed to update mention controls');
+    }
+  };
+
   const handleMessagePrivacyChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const previousPrivacy = messagePrivacy;
     const newPrivacy = e.target.value as MessagePrivacy;
     setMessagePrivacy(newPrivacy);
     try {
       await updatePrivacy({ messagePrivacy: newPrivacy });
       toast.success('Message privacy updated');
     } catch (error) {
+      setMessagePrivacy(previousPrivacy);
       toast.error('Failed to update message privacy');
     }
   };
@@ -168,6 +202,39 @@ export function PrivacyShortcutsSettings() {
           <option value={PostVisibility.PUBLIC}>Public</option>
           <option value={PostVisibility.FRIENDS}>Friends</option>
           <option value={PostVisibility.ONLY_ME}>Only Me</option>
+        </select>
+      </div>
+      <div className="mt-4">
+        <label htmlFor="story-visibility" className="block text-sm font-medium text-gray-700">
+          Who can see your stories?
+        </label>
+        <select
+          id="story-visibility"
+          name="story-visibility"
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          value={storyVisibility}
+          onChange={handleStoryVisibilityChange}
+        >
+          <option value="public">Everyone</option>
+          <option value="friends">Friends</option>
+          <option value="followers">Followers</option>
+          <option value="only_me">Only me</option>
+        </select>
+      </div>
+      <div className="mt-4">
+        <label htmlFor="mention-privacy" className="block text-sm font-medium text-gray-700">
+          Who can mention you?
+        </label>
+        <select
+          id="mention-privacy"
+          name="mention-privacy"
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          value={mentionPrivacy}
+          onChange={handleMentionPrivacyChange}
+        >
+          <option value="everyone">Everyone</option>
+          <option value="followers">Followers</option>
+          <option value="no_one">No one</option>
         </select>
       </div>
       <div className="mt-4">

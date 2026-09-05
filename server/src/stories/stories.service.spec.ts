@@ -10,6 +10,7 @@ import { StoryReaction } from './entities/story-reaction.entity';
 import { StoryReply } from './entities/story-reply.entity';
 import { UsersService } from '../users/users.service';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
 function makeStory(overrides: any = {}) {
   return {
@@ -29,6 +30,7 @@ describe('StoriesService', () => {
   let storyViewRepo: jest.Mocked<Repository<StoryView>>;
   let usersService: jest.Mocked<UsersService>;
   let subRepo: jest.Mocked<Repository<Subscription>>;
+  let customAudienceRepo: jest.Mocked<Repository<CustomAudience>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +43,7 @@ describe('StoriesService', () => {
         { provide: getRepositoryToken(StoryReply), useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() } },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
         { provide: getRepositoryToken(Subscription), useValue: { findOne: jest.fn() } },
+        { provide: getRepositoryToken(CustomAudience), useValue: { findOne: jest.fn() } },
       ],
     }).compile();
 
@@ -49,6 +52,7 @@ describe('StoriesService', () => {
     storyViewRepo = module.get(getRepositoryToken(StoryView));
     usersService = module.get(UsersService);
     subRepo = module.get(getRepositoryToken(Subscription));
+    customAudienceRepo = module.get(getRepositoryToken(CustomAudience));
   });
 
   // ─── create ───────────────────────────────────────────────────────────
@@ -90,6 +94,116 @@ describe('StoriesService', () => {
 
       const result = await service.findOne('missing');
       expect(result).toBeNull();
+    });
+
+    it('hides an only-me story from another user', async () => {
+      storyRepo.findOne.mockResolvedValue(makeStory({
+        user: { id: 'owner-1', storyVisibility: 'only_me' },
+      }) as any);
+      usersService.findOneById.mockResolvedValue(makeUser({
+        id: 'viewer-1',
+        following: [{ id: 'owner-1' }],
+        followers: [],
+        closeFriendsWith: [],
+      }) as any);
+
+      const result = await service.findOne('story-1', 'viewer-1');
+
+      expect(result).toBeNull();
+    });
+
+    it('allows a follower to view a followers-only story', async () => {
+      const story = makeStory({
+        user: { id: 'owner-1', storyVisibility: 'followers' },
+      });
+      storyRepo.findOne.mockResolvedValue(story as any);
+      usersService.findOneById.mockResolvedValue(makeUser({
+        id: 'viewer-1',
+        following: [{ id: 'owner-1' }],
+        followers: [],
+        closeFriendsWith: [],
+      }) as any);
+
+      const result = await service.findOne('story-1', 'viewer-1');
+
+      expect(result).toBe(story);
+    });
+
+    it('allows only members of a custom audience to view a story', async () => {
+      const story = makeStory({
+        user: { id: 'owner-1' },
+        audience: 'custom',
+        customAudienceId: 'audience-1',
+      });
+      storyRepo.findOne.mockResolvedValue(story as any);
+      customAudienceRepo.findOne.mockResolvedValue({
+        id: 'audience-1', userId: 'owner-1', userIds: ['viewer-1'],
+      } as any);
+      usersService.findOneById.mockResolvedValue(makeUser({ id: 'viewer-1' }) as any);
+
+      await expect(service.findOne('story-1', 'viewer-1')).resolves.toBe(story);
+
+      usersService.findOneById.mockResolvedValue(makeUser({ id: 'viewer-2' }) as any);
+      await expect(service.findOne('story-1', 'viewer-2')).resolves.toBeNull();
+    });
+
+    it('hides an explicitly excluded viewer', async () => {
+      const story = makeStory({
+        user: { id: 'owner-1' },
+        excludedUserIds: ['viewer-1'],
+      });
+      storyRepo.findOne.mockResolvedValue(story as any);
+      usersService.findOneById.mockResolvedValue(makeUser({ id: 'viewer-1' }) as any);
+
+      await expect(service.findOne('story-1', 'viewer-1')).resolves.toBeNull();
+    });
+  });
+
+  describe('findActiveStoriesForUser privacy', () => {
+    it('filters stories according to the owner story visibility setting', async () => {
+      const viewer = makeUser({
+        following: [{ id: 'followers-owner' }, { id: 'friends-owner' }, { id: 'private-owner' }],
+        closeFriendsWith: [],
+        followers: [{ id: 'friends-owner' }],
+      });
+      usersService.findOneById.mockResolvedValue(viewer as any);
+      const queryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          makeStory({ user: { id: 'public-owner', storyVisibility: 'public' } }),
+          makeStory({ id: 'story-2', user: { id: 'followers-owner', storyVisibility: 'followers' } }),
+          makeStory({ id: 'story-3', user: { id: 'friends-owner', storyVisibility: 'friends' } }),
+          makeStory({ id: 'story-4', user: { id: 'private-owner', storyVisibility: 'only_me' } }),
+        ]),
+      };
+      storyRepo.createQueryBuilder.mockReturnValue(queryBuilder as any);
+
+      const result = await service.findActiveStoriesForUser(viewer.id);
+
+      expect(result.map((story) => story.id)).toEqual(['story-1', 'story-2', 'story-3']);
+    });
+
+    it('includes public stories from users the viewer does not follow', async () => {
+      usersService.findOneById.mockResolvedValue(makeUser({ following: [], followers: [], closeFriendsWith: [] }) as any);
+      const queryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          makeStory({ user: { id: 'public-owner', storyVisibility: 'public' } }),
+        ]),
+      };
+      storyRepo.createQueryBuilder.mockReturnValue(queryBuilder as any);
+
+      const result = await service.findActiveStoriesForUser('user-1');
+
+      expect(result.map((story) => story.user.id)).toEqual(['public-owner']);
     });
   });
 

@@ -16,6 +16,7 @@ import {
   UploadedFile,
   Put,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
@@ -28,12 +29,15 @@ import { Page } from '../pages/entities/page.entity';
 import { Poke } from './entities/poke.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
+import { ContactDiscoveryDto } from './dto/contact-discovery.dto';
 import { NotificationSettingsDto } from './dto/notification-settings.dto';
 import { FileUploadDto } from './dto/file-upload.dto';
 import { UpdateFaceRecognitionDto } from './dto/update-face-recognition.dto';
 import { CreateLifeEventDto } from './dto/create-life-event.dto';
 import { UpdateLifeEventDto } from './dto/update-life-event.dto';
 import { AccountManagementService } from '../features/account-management/account-management.service';
+import { CreateAccountProfileDto } from '../features/account-management/dto/account-profile.dto';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 @Controller('users')
 export class UsersController {
@@ -41,6 +45,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly pagesService: PagesService,
     private readonly accountManagementService: AccountManagementService,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -116,9 +121,15 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('me/age-verification-request')
+  requestAgeVerification(@Request() req, @Body() body: { birthDate: string }) {
+    return this.usersService.setBirthDate(req.user.userId, body.birthDate);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('deactivate')
   async deactivate(@Request() req, @Body() body?: { reason?: string }): Promise<{ userId: string; status: string; message: string }> {
-    const user = await this.usersService.deactivate(req.user.userId);
+    const user = await this.usersService.deactivate(req.user.userId, body?.reason);
     return {
       userId: user.id,
       status: user.status ?? 'deactivated',
@@ -139,11 +150,43 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/account-switch')
-  async switchCurrentAccount(@Request() req, @Body() body: { accountId: string }) {
+  async switchCurrentAccount(@Request() req, @Body() body: { accountId?: string; profileId?: string }) {
+    if (body?.profileId) {
+      return this.accountManagementService.switchAccountProfile(req.user.userId, body.profileId);
+    }
+
     if (!body?.accountId) {
-      throw new BadRequestException('Account ID is required.');
+      throw new BadRequestException('Account ID or profile ID is required.');
+    }
+    if (body.accountId !== req.user.userId) {
+      throw new ForbiddenException('Switch accounts by authenticating the target account.');
     }
     return this.accountManagementService.switchAccount(body.accountId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/account-profiles')
+  async listAccountProfiles(@Request() req) {
+    return this.accountManagementService.listAccountProfiles(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/account-profiles')
+  async createAccountProfile(
+    @Request() req,
+    @Body() body: CreateAccountProfileDto,
+  ) {
+    return this.accountManagementService.createAccountProfile(req.user.userId, body ?? {});
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/account-profiles/:profileId/primary')
+  async setPrimaryAccountProfile(@Request() req, @Param('profileId') profileId: string) {
+    const profile = await this.accountManagementService.setPrimaryAccountProfile(req.user.userId, profileId);
+    if (!profile) {
+      throw new NotFoundException('Account profile not found');
+    }
+    return profile;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -256,7 +299,8 @@ export class UsersController {
     @Param('username') username: string,
   ): Promise<User | null> {
     const requestingUserId = req.user ? req.user.userId : undefined;
-    return this.usersService.findByUsername(username, [], requestingUserId);
+    const user = await this.usersService.findByUsername(username, [], requestingUserId);
+    return this.filterActivityFields(user, requestingUserId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -361,8 +405,22 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { ...result } = user;
+    const result = this.filterActivityFields(user, currentUserId);
     return result;
+  }
+
+  private async filterActivityFields<T extends User | null | undefined>(
+    user: T,
+    viewerId?: string,
+  ): Promise<T> {
+    if (!user || (await this.visibilityService.canViewActivity(viewerId ?? null, user))) {
+      return user;
+    }
+
+    const { isOnline, lastSeenAt, ...safeUser } = user;
+    void isOnline;
+    void lastSeenAt;
+    return safeUser as T;
   }
 
   @UseGuards(OptionalJwtAuthGuard)
@@ -370,6 +428,15 @@ export class UsersController {
   async searchUsers(@Request() req, @Query('q') query: string): Promise<User[]> {
     const searchingUserId = req.user ? req.user.userId : undefined;
     return this.usersService.search(query, searchingUserId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('me/contact-discovery')
+  async discoverContacts(
+    @Request() req,
+    @Body() contactDiscoveryDto: ContactDiscoveryDto,
+  ) {
+    return this.usersService.discoverContacts(req.user.userId, contactDiscoveryDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -596,6 +663,24 @@ export class UsersController {
   @Get('me/verification-status')
   async getVerificationStatus(@Request() req) {
     return this.accountManagementService.getVerificationStatus(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/trust-indicator')
+  async getTrustIndicators(@Request() req) {
+    return this.accountManagementService.getTrustIndicators(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/trust-score')
+  async getTrustScore(@Request() req) {
+    const trust = await this.accountManagementService.getTrustIndicators(req.user.userId);
+    return {
+      accountId: req.user.userId,
+      trustScore: trust.trustScore ?? 0,
+      verified: trust.verified ?? false,
+      updatedAt: trust.updatedAt,
+    };
   }
 
   @UseGuards(JwtAuthGuard)

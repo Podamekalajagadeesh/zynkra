@@ -9,13 +9,13 @@ export class ActivityController {
   /** Bulk presence lookup: /activity/status?ids=a,b,c (privacy-respecting). */
   @UseGuards(JwtAuthGuard)
   @Get('status')
-  async getStatuses(@Query('ids') ids: string) {
+  async getStatuses(@Query('ids') ids: string, @Request() req) {
     const userIds = (ids ?? '')
       .split(',')
       .map((id) => id.trim())
       .filter(Boolean)
       .slice(0, 100);
-    return this.activityService.getUsersStatuses(userIds);
+    return this.activityService.getUsersStatuses(userIds, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -28,7 +28,11 @@ export class ActivityController {
   @Patch('settings')
   async updateSettings(
     @Request() req,
-    @Body() body: { showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean },
+    @Body() body: {
+      showOnlineStatus?: boolean;
+      showLastSeenTimestamp?: boolean;
+      activityVisibility?: 'public' | 'friends' | 'private';
+    },
   ) {
     return this.activityService.updateActivitySettings(req.user.userId, body);
   }

@@ -7,14 +7,27 @@ const { execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const net = require('net');
+
+function getAvailablePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      server.close(() => resolve(port));
+    });
+  });
+}
 
 async function main() {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zynkra-pg-'));
+  const port = await getAvailablePort();
   const pg = new EmbeddedPostgres({
     databaseDir: dataDir,
     user: 'postgres',
     password: 'postgres',
-    port: 55433,
+    port,
     persistent: false,
   });
 
@@ -26,7 +39,7 @@ async function main() {
   const env = {
     ...process.env,
     DB_HOST: 'localhost',
-    DB_PORT: '55433',
+    DB_PORT: String(port),
     DB_USERNAME: 'postgres',
     DB_PASSWORD: 'postgres',
     DB_DATABASE: 'zynkra_verify',

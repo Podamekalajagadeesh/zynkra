@@ -11,6 +11,8 @@ import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
 import { SnapMapGateway } from '../snapmap/snapmap.gateway';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 // import { AdsService } from '../ads/ads.service'; // AdsService commented out - broken imports
 
 @Injectable()
@@ -34,6 +36,7 @@ export class FeedService {
     private readonly snapMapGateway: SnapMapGateway,
     private readonly trendsService: TrendsService,
     private readonly visibilityService: VisibilityService,
+    private readonly dataPermissions: DataPermissionsService,
     // private readonly adsService: AdsService, // AdsService commented out - broken imports
   ) {}
 
@@ -67,10 +70,9 @@ export class FeedService {
 
     // Get all public posts with their places (locations) - exclude profile-only posts from local feed
     const postsWithPlaces = await this.postsRepository.find({
-      where: { visibility: PostVisibility.PUBLIC },
       relations: ['user', 'reactions', 'comments', 'tags', 'place'],
       order: { createdAt: 'DESC' },
-    }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts));
+    }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts));
 
     // Filter posts that are within the radius and calculate their distance from user
     const blockedKeywords = user.blockedKeywords || [];
@@ -116,11 +118,13 @@ export class FeedService {
   }
 
   async getForYouFeed(user: User): Promise<(Post & { isAd?: boolean })[]> {
+    if (user) {
+      await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
+    }
     const [publicPosts, userInterests, followingIds] = await Promise.all([
       this.postsRepository.find({
-        where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
-      }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts)),
+      }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
       user ? (this.userInterestsService?.getInterests?.(user) ?? Promise.resolve([])) : Promise.resolve([]),
       user ? (this.usersService?.findFollowingIds?.(user.id) ?? Promise.resolve([])) : Promise.resolve([]),
     ]);
@@ -244,24 +248,23 @@ export class FeedService {
 
   async getChronologicalFeed(user: User): Promise<Post[]> {
     const posts = await this.postsRepository.find({
-      where: { visibility: PostVisibility.PUBLIC },
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
-    return this.visibilityService.filterVisiblePosts(user?.id ?? null, posts);
+    return this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts);
   }
 
   async getRecommendedFeed(user: User, limit: number = 20): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[] })[]> {
     if (!user) {
       return this.getTrendingFeed(user, limit);
     }
+    await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
 
     const [publicPosts, userInterests, followingIds] = await Promise.all([
       this.postsRepository.find({
-        where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
-      }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts)),
+      }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
       this.userInterestsService.getInterests(user, 20),
       this.usersService.findFollowingIds(user.id),
     ]);
@@ -380,7 +383,10 @@ export class FeedService {
       return [];
     }
     const bookmarks = await this.bookmarksService.findAll(user);
-    return bookmarks.map(bookmark => bookmark.post);
+    return this.visibilityService.filterVisiblePostsForViewer(
+      user.id,
+      bookmarks.map(bookmark => bookmark.post),
+    );
   }
 
   async getFriendsFeed(user: User): Promise<Post[]> {
@@ -398,7 +404,6 @@ export class FeedService {
     const posts = await this.postsRepository.find({
       where: {
         user: { id: In(followingIds) },
-        visibility: PostVisibility.PUBLIC,
       },
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
@@ -406,7 +411,7 @@ export class FeedService {
 
     const visiblePosts = posts.filter((post) => post.user?.id && followingIds.includes(post.user.id));
     // Followed users can still be blocked (block after follow) — filter them out.
-    return this.visibilityService.filterVisiblePosts(user.id, visiblePosts);
+    return this.visibilityService.filterVisiblePostsForViewer(user.id, visiblePosts);
   }
 
   async getSubscriptionsFeed(user: User): Promise<Post[]> {
@@ -425,26 +430,22 @@ export class FeedService {
     const posts = await this.postsRepository.find({
       where: {
         user: { id: In(subscribedCreatorIds) },
-        visibility: PostVisibility.PUBLIC,
       },
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
-    return this.visibilityService.filterVisiblePosts(user.id, posts);
+    return this.visibilityService.filterVisiblePostsForViewer(user.id, posts);
   }
 
   async getStoryFeed(user: User): Promise<any[]> {
     if (!user) {
-      return this.storiesService.findActiveStories();
+      return [];
     }
-    const [followingIds, blockedUsers] = await Promise.all([
-        this.usersService.findFollowingIds(user.id),
-        this.usersService.getBlockedUsers(user.id),
-    ]);
+    const blockedUsers = await this.usersService.getBlockedUsers(user.id);
     const blockedUserIds = blockedUsers.map(u => u.id);
-    const filteredFollowingIds = followingIds.filter(id => !blockedUserIds.includes(id));
+    const stories = await this.storiesService.findActiveStoriesForUser(user.id);
 
-    return this.storiesService.findActiveStories(filteredFollowingIds);
+    return stories.filter((story) => !blockedUserIds.includes(story.user.id));
   }
 
   private calculatePostScore(post: Post, userInterests: any[], followingIds: string[] = []): { score: number; reasons: string[] } {
@@ -503,7 +504,7 @@ export class FeedService {
         where: { visibility: PostVisibility.PUBLIC },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
-      }).then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found)),
+      }).then((found) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found)),
       this.trendsService.getTrending(Math.max(limit, 10), 7),
     ]);
 
@@ -551,7 +552,7 @@ export class FeedService {
 
     const posts = await qb
       .getMany()
-      .then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found));
+      .then((found) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found));
 
     return { posts, hasMore: posts.length === 30 };
   }
@@ -599,7 +600,7 @@ export class FeedService {
       .skip(skip)
       .take(30)
       .getMany()
-      .then((found) => this.visibilityService.filterVisiblePosts(user?.id ?? null, found));
+      .then((found) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found));
 
     return { posts, hasMore: posts.length === 30 };
   }

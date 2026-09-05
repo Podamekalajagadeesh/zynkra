@@ -9,6 +9,7 @@ import { Card } from '../components/ui/card';
 import { useAuth } from '../hooks/useAuth';
 import {
   approveLoginSession,
+  getAccountDashboard,
   getLoginSessions,
   getPendingLoginSessions,
   revokeLoginSession,
@@ -17,6 +18,12 @@ import {
   getBrainwaveDevices,
   registerBrainwaveDevice,
   removeBrainwaveDevice,
+  getSecurityAlerts,
+  resolveSecurityAlert,
+  reopenSecurityAlert,
+  startAccountRecovery,
+  completeAccountRecovery,
+  type SecurityAlert,
 } from '../lib/api';
 import { formatDateTime } from '../lib/preferences';
 import { useNotifications } from '../providers/notifications-provider';
@@ -30,7 +37,9 @@ export function SecurityCheckupPage() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const [sessions, setSessions] = useState<LoginSession[]>([]);
   const [pendingSessions, setPendingSessions] = useState<LoginSession[]>([]);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [brainwaveDevices, setBrainwaveDevices] = useState<any[]>([]);
+  const [recoveryStatus, setRecoveryStatus] = useState<{ status?: string; method?: string; createdAt?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [workingSessionId, setWorkingSessionId] = useState<string | null>(null);
@@ -43,12 +52,22 @@ export function SecurityCheckupPage() {
     }
 
     try {
-      const [allSessions, pending] = await Promise.all([
+      const [allSessions, pending, alerts] = await Promise.all([
         getLoginSessions(),
         getPendingLoginSessions(),
+        getSecurityAlerts(),
       ]);
       setSessions(allSessions);
       setPendingSessions(pending);
+      setSecurityAlerts(alerts);
+
+      try {
+        const dashboard = await getAccountDashboard();
+        setRecoveryStatus(dashboard.recoveryStatus ?? null);
+      } catch {
+        setRecoveryStatus(null);
+      }
+
       // Brainwave devices are aspirational/best-effort — a missing endpoint must
       // never prevent sessions and pending approvals from loading.
       getBrainwaveDevices()
@@ -101,6 +120,28 @@ export function SecurityCheckupPage() {
       toast.error('Failed to approve session.');
     } finally {
       setWorkingSessionId(null);
+    }
+  };
+
+  const handleStartAccountRecovery = async () => {
+    try {
+      const result = await startAccountRecovery('email');
+      setRecoveryStatus(result);
+      toast.success('Account recovery request started.');
+    } catch (error) {
+      console.error('Failed to start account recovery', error);
+      toast.error('Failed to start account recovery.');
+    }
+  };
+
+  const handleCompleteAccountRecovery = async (approved: boolean) => {
+    try {
+      const result = await completeAccountRecovery(approved);
+      setRecoveryStatus(result);
+      toast.success(approved ? 'Account recovery approved.' : 'Account recovery rejected.');
+    } catch (error) {
+      console.error('Failed to complete account recovery', error);
+      toast.error('Failed to complete account recovery.');
     }
   };
 
@@ -165,6 +206,28 @@ export function SecurityCheckupPage() {
     }
   };
 
+  const handleResolveSecurityAlert = async (alertId: string) => {
+    try {
+      const updated = await resolveSecurityAlert(alertId);
+      setSecurityAlerts((alerts) => alerts.map((alert) => alert.id === updated.id ? updated : alert));
+      toast.success('Security alert resolved.');
+    } catch (error) {
+      console.error('Failed to resolve security alert', error);
+      toast.error('Failed to resolve security alert.');
+    }
+  };
+
+  const handleReopenSecurityAlert = async (alertId: string) => {
+    try {
+      const updated = await reopenSecurityAlert(alertId);
+      setSecurityAlerts((alerts) => alerts.map((alert) => alert.id === updated.id ? updated : alert));
+      toast.success('Security alert reopened.');
+    } catch (error) {
+      console.error('Failed to reopen security alert', error);
+      toast.error('Failed to reopen security alert.');
+    }
+  };
+
   return (
     <PageShell
       eyebrow="Security"
@@ -175,6 +238,9 @@ export function SecurityCheckupPage() {
           <Button variant="secondary" onClick={refreshAll} disabled={refreshing} icon={<RefreshCw size={16} />}>
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
+          <Link to="/security-logs">
+            <Button variant="secondary">Security Logs</Button>
+          </Link>
           <Button variant="primary" onClick={handleRevokeOtherSessions} icon={<ShieldAlert size={16} />}>
             Revoke Others
           </Button>
@@ -214,6 +280,22 @@ export function SecurityCheckupPage() {
             description="Registered brainwave authentication devices."
           />
         </div>
+
+        <section className="rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-lg text-dark-900 dark:text-white">Account recovery</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                {recoveryStatus ? `Current status: ${recoveryStatus.status} via ${recoveryStatus.method}` : 'No active account recovery request.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={handleStartAccountRecovery}>Start recovery</Button>
+              <Button variant="primary" onClick={() => handleCompleteAccountRecovery(true)}>Approve recovery</Button>
+              <Button variant="outline" onClick={() => handleCompleteAccountRecovery(false)}>Reject recovery</Button>
+            </div>
+          </div>
+        </section>
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="space-y-4 rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
@@ -277,6 +359,36 @@ export function SecurityCheckupPage() {
                           </Button>
                         )}
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-dark-200 bg-white/90 p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900/70">
+            <div>
+              <p className="font-semibold text-lg text-dark-900 dark:text-white">Persisted security alerts</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">Alerts remain available after a server restart until you resolve them.</p>
+            </div>
+            {securityAlerts.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-dark-200 p-4 text-sm text-dark-600 dark:border-dark-700 dark:text-dark-300">No suspicious login alerts recorded.</p>
+            ) : (
+              <div className="space-y-3">
+                {securityAlerts.map((alert) => (
+                  <div key={alert.id} className={`rounded-xl border p-4 ${alert.resolved ? 'border-dark-200 bg-dark-50 dark:border-dark-700 dark:bg-dark-900/40' : 'border-amber-300 bg-amber-50/70 dark:border-amber-800 dark:bg-amber-950/20'}`}>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium text-dark-900 dark:text-white">{alert.message}</p>
+                          <span className="rounded-full bg-dark-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-dark-700 dark:bg-dark-800 dark:text-dark-300">{alert.severity}</span>
+                          <span className="text-xs text-dark-500 dark:text-dark-400">{alert.resolved ? 'Resolved' : 'Needs review'}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-dark-500 dark:text-dark-400">{formatDateTime(alert.createdAt)}</p>
+                      </div>
+                      <Button variant={alert.resolved ? 'secondary' : 'primary'} onClick={() => alert.resolved ? handleReopenSecurityAlert(alert.id) : handleResolveSecurityAlert(alert.id)}>
+                        {alert.resolved ? 'Reopen' : 'Resolve'}
+                      </Button>
                     </div>
                   </div>
                 ))}

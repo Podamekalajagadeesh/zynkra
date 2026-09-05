@@ -18,4 +18,27 @@ export class StorageService {
     const result = await response.json();
     return result.Hash;
   }
+
+  async delete(fileReference: string): Promise<void> {
+    if (!fileReference) {
+      return;
+    }
+
+    if (fileReference.startsWith('/uploads/')) {
+      const response = await fetch(`http://localhost:5001/api/v0/unpin?arg=${encodeURIComponent(fileReference)}`, {
+        method: 'POST',
+      });
+      if (!response.ok && response.status !== 404) {
+        throw new Error(`Failed to remove stored file: ${response.status} ${response.statusText}`);
+      }
+      return;
+    }
+
+    const response = await fetch(`http://localhost:5001/api/v0/pin/rm?arg=${encodeURIComponent(fileReference)}`, {
+      method: 'POST',
+    });
+    if (!response.ok && response.status !== 404) {
+      throw new Error(`Failed to unpin stored file: ${response.status} ${response.statusText}`);
+    }
+  }
 }

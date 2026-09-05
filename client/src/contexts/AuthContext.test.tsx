@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
+import * as api from '../lib/api';
 import { AuthProvider, useAuth } from './AuthContext';
+
+vi.mock('../lib/api', async () => {
+  const actual = await vi.importActual<typeof import('../lib/api')>('../lib/api');
+  return {
+    ...actual,
+    getProfile: vi.fn(),
+    setAuthToken: vi.fn(),
+    uploadPublicKey: vi.fn(),
+    logoutFromServer: vi.fn().mockResolvedValue({}),
+    switchAccount: vi.fn().mockResolvedValue({ accountId: 'user-2', switched: true, message: 'Account switched successfully.' }),
+  };
+});
 
 // Mock encryption service (uses IndexedDB which is not available in jsdom)
 vi.mock('../services/encryption.service', () => ({
@@ -86,7 +99,7 @@ describe('AuthContext', () => {
     expect(stored.activeAccountId).toBe('user-1');
   });
 
-  it('switchAccount changes the active account', () => {
+  it('switchAccount changes the active account', async () => {
     render(
       <AuthProvider>
         <TestConsumer />
@@ -108,6 +121,7 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('active-user').textContent).toBe('bob');
     expect(screen.getByTestId('account-count').textContent).toBe('2');
+    expect(api.setAuthToken).toHaveBeenCalledWith('token-2');
   });
 
   it('logout removes the active account and switches to next', async () => {

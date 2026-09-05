@@ -13,17 +13,19 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PagesModule } from '../pages/pages.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { AccountManagementService } from '../features/account-management/account-management.service';
+import { LoginSession } from '../auth/entities/login-session.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Post, FollowRequest, Follow, LifeEvent, Poke]),
+    TypeOrmModule.forFeature([User, Post, FollowRequest, Follow, LifeEvent, Poke, LoginSession]),
     StorageModule,
     forwardRef(() => NotificationsModule),
     PagesModule,
     WebhooksModule,
   ],
   providers: [UsersService, AccountManagementService],
-  exports: [UsersService, TypeOrmModule],
+  exports: [UsersService, TypeOrmModule, AccountManagementService],
   controllers: [UsersController],
 })
 export class UsersModule {}

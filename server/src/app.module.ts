@@ -106,6 +106,8 @@ import { OAuthModule } from './oauth/oauth.module';
 import { ZynkraGraphQLModule } from './graphql/graphql.module';
 import { AccountManagementModule } from './features/account-management/account-management.module';
 import { SecurityAuditModule } from './security-audit/security-audit.module';
+import { LocalizationModule } from './localization/localization.module';
+import { DocumentationModule } from './documentation/documentation.module';
 
 @Module({
   imports: [
@@ -267,6 +269,8 @@ import { SecurityAuditModule } from './security-audit/security-audit.module';
     ZynkraGraphQLModule,
     AccountManagementModule,
     SecurityAuditModule,
+    LocalizationModule,
+    DocumentationModule,
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

@@ -29,6 +29,9 @@ import { useScreenTimeTracker } from './hooks/useScreenTimeTracker';
 import { DeviceModeRoute } from './components/DeviceModeRoute';
 
 const AdminPage = lazy(() => import('./pages/admin').then((module) => ({ default: module.AdminPage })));
+const PlatformStatusPage = lazy(() => import('./pages/platform-status').then((module) => ({ default: module.default })));
+const ChangelogPage = lazy(() => import('./pages/changelog').then((module) => ({ default: module.default })));
+const DocumentationPage = lazy(() => import('./pages/documentation').then((module) => ({ default: module.default })));
 
 const SignUpPage = lazy(() => import('./pages/sign-up').then((module) => ({ default: module.SignUpPage })));
 const LoginPage = lazy(() => import('./pages/login').then((module) => ({ default: module.LoginPage })));
@@ -84,10 +87,13 @@ const PasskeyManagementPage = lazy(() =>
   import('./pages/passkey-management').then((module) => ({ default: module.PasskeyManagementPage })),
 );
 const AccountDashboardPage = lazy(() => import('./pages/account-dashboard').then((module) => ({ default: module.default })));
+const AccountControlsPage = lazy(() => import('./pages/account-controls').then((module) => ({ default: module.default })));
+const AccountHistoryPage = lazy(() => import('./pages/account-history').then((module) => ({ default: module.default })));
 const RecoveryCodesPage = lazy(() => import('./pages/recovery-codes').then((module) => ({ default: module.default })));
 const SecurityCheckupPage = lazy(() =>
   import('./pages/security-checkup').then((module) => ({ default: module.SecurityCheckupPage })),
 );
+const SecurityLogsPage = lazy(() => import('./pages/security-logs').then((module) => ({ default: module.default })));
 const AuthCallbackPage = lazy(() => import('./pages/auth-callback').then((module) => ({ default: module.AuthCallbackPage })));
 const TermsPage = lazy(() => import('./pages/terms').then((module) => ({ default: module.TermsPage })));
 const PrivacyPage = lazy(() => import('./pages/privacy').then((module) => ({ default: module.PrivacyPage })));
@@ -103,6 +109,8 @@ const CloseFriendsSettingsPage = lazy(() => import('./pages/close-friends-settin
 const CustomAudiencesSettingsPage = lazy(() => import('./pages/custom-audiences-settings').then((module) => ({ default: module.CustomAudiencesSettings })));
 const TwoFactorAuthPage = lazy(() => import('./pages/two-factor-auth').then((module) => ({ default: module.TwoFactorAuthPage })));
 const ConnectedAccountsPage = lazy(() => import('./pages/ConnectedAccountsPage').then((module) => ({ default: module.default })));
+const IdentityLinkedAccountsPage = lazy(() => import('./pages/IdentityLinkedAccountsPage').then((module) => ({ default: module.default })));
+const AccountProfilesPage = lazy(() => import('./pages/account-profiles').then((module) => ({ default: module.default })));
 
 
 
@@ -149,6 +157,7 @@ const BrandCollabsDashboardPage = lazy(() => import('./pages/brand-collabs/Brand
 const SnoozePage = lazy(() => import('./pages/snooze').then((module) => ({ default: module.SnoozePage })));
 const RequestVerificationPage = lazy(() => import('./pages/request-verification'));
 const VerificationAndTrustPage = lazy(() => import('./pages/verification-and-trust').then((module) => ({ default: module.default })));
+const AdminVerificationPage = lazy(() => import('./pages/admin-verification').then((module) => ({ default: module.AdminVerificationPage })));
 const CollectionsPage = lazy(() => import('./pages/collections').then((module) => ({ default: module.default })));
 const ThreadsPage = lazy(() => import('./pages/threads').then((module) => ({ default: module.default })));
 const DraftsPage = lazy(() => import('./pages/drafts').then((module) => ({ default: module.default })));
@@ -253,6 +262,7 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
       { to: '/tax-documents', label: 'Tax Documents', icon: FileText },
       { to: '/oauth/apps', label: 'OAuth Apps', icon: KeyRound },
       { to: '/webhooks', label: 'Webhooks', icon: Webhook },
+      { to: '/documentation', label: 'Documentation', icon: BookOpen },
       { to: '/scheduler', label: 'Content Scheduler', icon: CalendarDays },
       { to: '/livestream/schedule', label: 'Schedule Stream', icon: Calendar },
       { to: '/nonprofit', label: 'Nonprofit Tools', icon: Building2 },
@@ -808,6 +818,8 @@ function App() {
                     <Route path="/terms" element={<TermsPage />} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy/shortcuts" element={<PrivacyShortcutsPage />} />
+                    <Route path="/status" element={<PlatformStatusPage />} />
+                    <Route path="/documentation" element={<DocumentationPage />} />
                     <Route path="/search" element={<SearchResultsPage />} />
                     <Route path="/devices" element={<DeviceModeRoute />} />
                     <Route path="/eink-reader" element={<ProtectedRoute><EInkReaderPage /></ProtectedRoute>} />
@@ -1132,6 +1144,22 @@ function App() {
                       }
                     />
                     <Route
+                      path="/account-controls"
+                      element={
+                        <ProtectedRoute>
+                          <AccountControlsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/account-history"
+                      element={
+                        <ProtectedRoute>
+                          <AccountHistoryPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/recovery-codes"
                       element={
                         <ProtectedRoute>
@@ -1144,6 +1172,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SecurityCheckupPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/security-logs"
+                      element={
+                        <ProtectedRoute>
+                          <SecurityLogsPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1252,6 +1288,22 @@ function App() {
                       }
                     />
                     <Route
+                      path="/settings/identity-accounts"
+                      element={
+                        <ProtectedRoute>
+                          <IdentityLinkedAccountsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings/account-profiles"
+                      element={
+                        <ProtectedRoute>
+                          <AccountProfilesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/livestream"
                       element={
                         <ProtectedRoute>
@@ -1356,6 +1408,14 @@ function App() {
                       }
                     />
                     <Route
+                      path="/admin/verification"
+                      element={
+                        <ProtectedRoute>
+                          <AdminVerificationPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/admin"
                       element={
                         <ProtectedRoute>
@@ -1364,6 +1424,7 @@ function App() {
                       }
                     />
                     <Route path="/timeline-review" element={<TimelineReviewPage />} />
+                    <Route path="/changelog" element={<ChangelogPage />} />
                     <Route path="/timeline-review/settings" element={<TimelineReviewSettingsPage />} />
                     <Route path="/token-gated" element={<ProtectedRoute><TokenGatedPage /></ProtectedRoute>} />
                     <Route path="/dao" element={<ProtectedRoute><DaoPage /></ProtectedRoute>} />
@@ -1413,10 +1474,22 @@ function ProfileDropdown({ isOpen }: { isOpen: boolean }) {
         ))}
         <div className="my-2 border-t border-dark-200 dark:border-dark-700" />
         <Link
+          to="/login?addAccount=true"
+          className="w-full text-left flex items-center gap-2 px-4 py-2 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/30 rounded-md"
+        >
+          Add another account
+        </Link>
+        <Link
           to="/settings"
           className="w-full text-left flex items-center gap-2 px-4 py-2 text-dark-700 dark:text-light-100 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-md"
         >
           Settings
+        </Link>
+        <Link
+          to="/settings/account-profiles"
+          className="w-full text-left flex items-center gap-2 px-4 py-2 text-dark-700 dark:text-light-100 hover:bg-dark-50 dark:hover:bg-dark-700 rounded-md"
+        >
+          Account profiles
         </Link>
         <Link
           to="/sessions"

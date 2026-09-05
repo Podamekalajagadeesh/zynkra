@@ -11,6 +11,11 @@ import { AuthService } from './auth.service';
 import { Authenticator } from './entities/authenticator.entity';
 import { EmailModule } from '../email/email.module';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { GitHubStrategy } from './strategies/github.strategy';
+import { DiscordStrategy } from './strategies/discord.strategy';
+import { TwitterStrategy } from './strategies/twitter.strategy';
+import { AppleStrategy } from './strategies/apple.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WebauthnService } from './webauthn.service';
 import { BiometricAuthService } from './biometric-auth.service';
@@ -19,6 +24,9 @@ import { User } from '../users/entities/user.entity';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesModule } from '../invite-codes/invite-codes.module';
 import { BrainwaveDevice } from './entities/brainwave-device.entity';
+import { BiometricDeviceEntity } from './entities/biometric-device.entity';
+import { SecurityAuditModule } from '../security-audit/security-audit.module';
+import { AccountManagementModule } from '../features/account-management/account-management.module';
 
 @Module({
   imports: [
@@ -27,7 +35,9 @@ import { BrainwaveDevice } from './entities/brainwave-device.entity';
     EmailModule,
     forwardRef(() => NotificationsModule),
     InviteCodesModule,
-    TypeOrmModule.forFeature([Authenticator, LoginSession, User, BrainwaveDevice]),
+    SecurityAuditModule,
+    AccountManagementModule,
+    TypeOrmModule.forFeature([Authenticator, LoginSession, User, BrainwaveDevice, BiometricDeviceEntity]),
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -46,7 +56,12 @@ import { BrainwaveDevice } from './entities/brainwave-device.entity';
     WebauthnService,
     BiometricAuthService,
     GoogleStrategy,
+    FacebookStrategy,
+    GitHubStrategy,
+    DiscordStrategy,
+    TwitterStrategy,
+    AppleStrategy,
   ],
-  exports: [AuthService, WebauthnService, BiometricAuthService],
+  exports: [AuthService, WebauthnService, BiometricAuthService, JwtModule],
 })
 export class AuthModule {}

@@ -105,6 +105,16 @@ export const MessageList = ({
   }, [conversationId, channelId, fetchMessages]);
 
   useEffect(() => {
+    if (!conversationId || channelId) return;
+
+    const refreshMessages = window.setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
+    return () => window.clearInterval(refreshMessages);
+  }, [conversationId, channelId, fetchMessages]);
+
+  useEffect(() => {
     getConversations().then(setConversations);
   }, []);
 

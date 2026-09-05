@@ -82,7 +82,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [filter, setFilter] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<Post['visibility']>('public');
+  const [visibility, setVisibility] = useState<Post['visibility']>();
   const [tokenGated, setTokenGated] = useState(false);
   const [subscriptionGated, setSubscriptionGated] = useState(false);
   const [contractAddress, setContractAddress] = useState('');
@@ -217,7 +217,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
       setContent('');
       setMediaFiles([]);
       setFilter('');
-      setVisibility('public');
+      setVisibility(undefined);
       setTokenGated(false);
       setContractAddress('');
       setRequiredTokenBalance('');
@@ -756,25 +756,16 @@ To transcribe your content in real-time.`;
                   <span>Public</span>
                 </div>
               </SelectItem>
-              <SelectItem value="private">
+              <SelectItem value="friends">
                 <div className="flex items-center">
                   <Lock className="mr-2 h-4 w-4" />
-                  <span>Private</span>
+                  <span>Friends</span>
                 </div>
               </SelectItem>
-              <SelectItem value="unlisted">
+              <SelectItem value="only_me">
                 <div className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
-                  <span>Unlisted</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="profile_only">
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <span>Profile Only</span>
+                  <span>Only Me</span>
                 </div>
               </SelectItem>
             </SelectContent>

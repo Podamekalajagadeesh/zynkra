@@ -132,6 +132,11 @@ export class NotificationsService {
     return this.pushSubscriptionRepository.save(entity);
   }
 
+  async removePushSubscription(userId: string, endpoint: string): Promise<{ success: boolean }> {
+    await this.pushSubscriptionRepository.delete({ endpoint, user: { id: userId } });
+    return { success: true };
+  }
+
   async saveMobilePushToken(
     user: User,
     token: string,
@@ -188,18 +193,27 @@ export class NotificationsService {
     const settings = (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ?? {};
     const notificationSettings = settings as Record<string, boolean>;
 
+    const customNotifications = (settings as Record<string, unknown>).customNotifications;
+    if (customNotifications && typeof customNotifications === 'object' &&
+      (customNotifications as Record<string, unknown>)[type] === false) {
+      return false;
+    }
+
     switch (type) {
       case NotificationType.LIKE:
         return notificationSettings.likes !== false;
       case NotificationType.COMMENT:
       case NotificationType.REPLY:
-      case NotificationType.MENTION:
         return notificationSettings.comments !== false;
+      case NotificationType.MENTION:
+        return notificationSettings.notifyMentions !== false;
       case NotificationType.FOLLOW:
         return notificationSettings.newFollowers !== false;
       case 'dm_received' as NotificationType:
       case 'message' as NotificationType:
         return notificationSettings.messages !== false;
+      case NotificationType.LOGIN_ALERT:
+        return notificationSettings.securityAlerts !== false;
       default:
         return true;
     }
@@ -232,6 +246,10 @@ export class NotificationsService {
   }
 
   async sendBrowserPush(user: User, notification: Notification) {
+    if (user.notificationSettings?.pushAlerts === false) {
+      return;
+    }
+
     const subscriptions = await this.pushSubscriptionRepository.find({ where: { user: { id: user.id } } });
 
     if (!subscriptions.length) {
@@ -261,6 +279,10 @@ export class NotificationsService {
   }
 
   async sendMobilePush(user: User, notification: Notification) {
+    if (user.notificationSettings?.pushAlerts === false) {
+      return;
+    }
+
     const tokens = await this.mobilePushTokenRepository.find({ where: { user: { id: user.id }, active: true } });
 
     if (!tokens.length) {

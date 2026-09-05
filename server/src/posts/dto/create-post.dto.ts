@@ -101,6 +101,11 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
+  taggedUserIds?: string[];
+
+  @IsOptional()
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductTagDto)
   productTags?: ProductTagDto[];

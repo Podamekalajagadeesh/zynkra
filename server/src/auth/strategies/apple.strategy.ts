@@ -7,10 +7,10 @@ import { ConfigService } from '@nestjs/config';
 export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: configService.get<string>('APPLE_CLIENT_ID'),
-      teamID: configService.get<string>('APPLE_TEAM_ID'),
-      keyID: configService.get<string>('APPLE_KEY_ID'),
-      key: configService.get<string>('APPLE_PRIVATE_KEY'),
+      clientID: configService.get<string>('APPLE_CLIENT_ID') || 'apple-oauth-not-configured',
+      teamID: configService.get<string>('APPLE_TEAM_ID') || 'apple-oauth-not-configured',
+      keyID: configService.get<string>('APPLE_KEY_ID') || 'apple-oauth-not-configured',
+      key: configService.get<string>('APPLE_PRIVATE_KEY') || 'apple-oauth-not-configured',
       callbackURL: configService.get<string>('APPLE_CALLBACK_URL', '/auth/apple/callback'),
       passReqToCallback: true,
     });

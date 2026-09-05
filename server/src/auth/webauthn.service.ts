@@ -19,6 +19,33 @@ export class WebauthnService {
     private readonly configService: ConfigService,
   ) {}
 
+  private getWebAuthnOrigin(): string {
+    return this.configService.get<string>('WEBAUTHN_ORIGIN')
+      || this.configService.get<string>('CLIENT_URL')
+      || 'http://localhost:5173';
+  }
+
+  private getWebAuthnRpId(): string {
+    const configuredRpId = this.configService.get<string>('WEBAUTHN_RP_ID');
+    if (configuredRpId) return configuredRpId;
+
+    const clientUrl = this.configService.get<string>('CLIENT_URL') || 'http://localhost:5173';
+    try {
+      return new URL(clientUrl).hostname;
+    } catch {
+      return 'localhost';
+    }
+  }
+
+  private normalizeCredentialId(value: string): string {
+    if (!value) return value;
+    let normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const remainder = normalized.length % 4;
+    if (remainder === 2) normalized += '==';
+    else if (remainder === 3) normalized += '=';
+    return normalized;
+  }
+
   async getRegistrationOptions(user: User) {
     const existingAuthenticators = await this.authenticatorsRepository.find({
       where: { user: { id: user.id } },
@@ -26,7 +53,7 @@ export class WebauthnService {
 
     return generateRegistrationOptions({
       rpName: 'Zynkra',
-      rpID: this.configService.get<string>('WEBAUTHN_RP_ID', 'localhost'),
+      rpID: this.getWebAuthnRpId(),
       userID: user.id,
       userName: user.email,
       excludeCredentials: existingAuthenticators.map((auth) => ({
@@ -45,8 +72,8 @@ export class WebauthnService {
     const verification = await verifyRegistrationResponse({
       response: body,
       expectedChallenge: challenge,
-      expectedOrigin: this.configService.get<string>('WEBAUTHN_ORIGIN', 'http://localhost:5173'),
-      expectedRPID: this.configService.get<string>('WEBAUTHN_RP_ID', 'localhost'),
+      expectedOrigin: this.getWebAuthnOrigin(),
+      expectedRPID: this.getWebAuthnRpId(),
     });
 
     if (!verification.verified) {
@@ -101,9 +128,22 @@ export class WebauthnService {
     body: any,
     challenge: string,
   ) {
-    const authenticator = await this.authenticatorsRepository.findOne({
-      where: { user: { id: user.id }, credentialID: body.id },
+    const rawCredentialId = typeof body?.id === 'string' ? body.id : '';
+    const normalizedCredentialId = this.normalizeCredentialId(rawCredentialId);
+
+    let authenticator = await this.authenticatorsRepository.findOne({
+      where: { user: { id: user.id }, credentialID: normalizedCredentialId },
     });
+
+    if (!authenticator) {
+      const storedAuthenticators = await this.authenticatorsRepository.find({
+        where: { user: { id: user.id } },
+      });
+      authenticator = storedAuthenticators.find((item) => {
+        const stored = this.normalizeCredentialId(item.credentialID);
+        return stored === normalizedCredentialId || item.credentialID === rawCredentialId;
+      });
+    }
 
     if (!authenticator) {
       throw new UnauthorizedException('Authenticator not found');
@@ -112,8 +152,8 @@ export class WebauthnService {
     const verification = await verifyAuthenticationResponse({
       response: body,
       expectedChallenge: challenge,
-      expectedOrigin: this.configService.get<string>('WEBAUTHN_ORIGIN', 'http://localhost:5173'),
-      expectedRPID: this.configService.get<string>('WEBAUTHN_RP_ID', 'localhost'),
+      expectedOrigin: this.getWebAuthnOrigin(),
+      expectedRPID: this.getWebAuthnRpId(),
       authenticator: {
         credentialID: Buffer.from(authenticator.credentialID, 'base64'),
         credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, 'base64'),

@@ -23,7 +23,7 @@ describe('InfrastructureService', () => {
     }
   });
 
-  it('reports a healthy status snapshot when infrastructure services are configured', () => {
+  it('reports a healthy status snapshot when infrastructure services are configured', async () => {
     const configService = {
       get: (key: string, defaultValue?: string) => {
         const values: Record<string, string> = {
@@ -36,11 +36,18 @@ describe('InfrastructureService', () => {
       },
     };
 
-    const service = new InfrastructureService(configService as any);
-    const snapshot = service.getHealthSnapshot();
+    const service = new InfrastructureService(configService as any, {
+      query: async () => [{ '?column?': 1 }],
+    } as any, {
+      create: (value: any) => value,
+      save: async (value: any) => value,
+    } as any, {} as any, {} as any);
+    const snapshot = await service.getHealthSnapshot();
 
-    expect(snapshot.status).toBe('ok');
-    expect(snapshot.services.redis).toBe('configured');
-    expect(snapshot.services.cdn).toBe('configured');
+    expect(snapshot.status).toBe('degraded');
+    expect(snapshot.services.api.status).toBe('operational');
+    expect(snapshot.services.database.status).toBe('operational');
+    expect(snapshot.services.redis.status).toBe('operational');
+    expect(snapshot.services.cdn.status).toBe('operational');
   });
 });

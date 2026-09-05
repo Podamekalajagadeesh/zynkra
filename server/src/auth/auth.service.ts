@@ -17,6 +17,20 @@ import { LoginSession } from './entities/login-session.entity';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesService } from '../invite-codes/invite-codes.service';
 import { BrainwaveDevice } from './entities/brainwave-device.entity';
+import { AccountManagementService } from '../features/account-management/account-management.service';
+import { LoginApprovalService } from '../features/account-management/login-approval.service';
+import { SecurityAuditService } from '../security-audit/security-audit.service';
+import { SecurityEventType, SecurityEventSeverity } from '../security-audit/entities/security-audit.entity';
+
+class LoginApprovalRequiredException extends UnauthorizedException {
+  readonly sessionId: string;
+
+  constructor(sessionId: string, message = 'This login requires approval before access is granted.') {
+    super(message);
+    this.sessionId = sessionId;
+    this.name = 'LoginApprovalRequiredException';
+  }
+}
 
 @Injectable()
 export class AuthService {
@@ -35,6 +49,9 @@ export class AuthService {
     private readonly inviteCodesService: InviteCodesService,
     @InjectRepository(BrainwaveDevice)
     private readonly brainwaveDevicesRepository: Repository<BrainwaveDevice>,
+    private readonly accountManagementService?: AccountManagementService,
+    private readonly securityAuditService?: SecurityAuditService,
+    private readonly loginApprovalService?: LoginApprovalService,
   ) {}
 
   private get clientUrl(): string {
@@ -190,6 +207,49 @@ export class AuthService {
     }
   }
 
+  private async handleSuspiciousLogin(user: User, session: LoginSession, req?: any): Promise<void> {
+    if (!session.suspicious) {
+      return;
+    }
+
+    try {
+      if (this.loginApprovalService) {
+        await this.loginApprovalService.createLoginApprovalRequest(
+          user.id,
+          session.deviceName ?? 'Unknown device',
+          session.ipAddress ?? this.getRequestIp(req) ?? undefined,
+          session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
+          undefined,
+        );
+      }
+
+      if (this.accountManagementService) {
+        await this.accountManagementService.recordSecurityAlert(
+          user.id,
+          'suspicious_login',
+          `Suspicious login detected on ${session.deviceName ?? 'an unrecognized device'}.`,
+          'high',
+          {
+            sessionId: session.id,
+            ipAddress: session.ipAddress ?? this.getRequestIp(req),
+            userAgent: session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
+            deviceName: session.deviceName,
+            suspicious: true,
+          },
+        );
+
+        await this.accountManagementService.createLoginApproval(user.id, {
+          deviceName: session.deviceName ?? 'Unknown device',
+          ipAddress: session.ipAddress ?? this.getRequestIp(req) ?? undefined,
+          userAgent: session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
+          location: undefined,
+        });
+      }
+    } catch (error) {
+      this.logger.warn(`Security alert flow failed for suspicious login for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   private hashRecoveryCode(code: string): string {
     return createHash('sha256').update(code).digest('hex');
   }
@@ -211,10 +271,74 @@ export class AuthService {
     ) as StringValue;
   }
 
+  private async recordSecurityEvent(
+    userId: string,
+    eventType: SecurityEventType,
+    severity: SecurityEventSeverity,
+    message: string,
+    metadata?: Record<string, any>,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<void> {
+    if (!this.securityAuditService) {
+      return;
+    }
+
+    try {
+      await this.securityAuditService.logEvent({
+        userId,
+        eventType,
+        severity,
+        message,
+        metadata,
+        ipAddress,
+        userAgent,
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to persist security audit log for ${userId}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   private async issueAccessToken(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
     const session = await this.createLoginSession(user, req, rememberMe);
     await this.notifyLoginAlert(user, session);
+    await this.handleSuspiciousLogin(user, session, req);
+
+    if (session.suspicious) {
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.LOGIN_FAILED,
+        SecurityEventSeverity.HIGH,
+        `Login approval required for ${user.email ?? user.username ?? user.id} from ${this.getRequestIp(req) ?? 'an unknown IP'}.`,
+        {
+          sessionId: session.id,
+          rememberMe,
+          suspicious: true,
+          approvalRequired: true,
+        },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
+
+      throw new LoginApprovalRequiredException(session.id);
+    }
+
     const payload = { sub: user.id, email: user.email, sid: session.id };
+
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.LOGIN_SUCCESS,
+      SecurityEventSeverity.LOW,
+      `User ${user.email ?? user.username ?? user.id} signed in successfully from ${this.getRequestIp(req) ?? 'an unknown IP'}.`,
+      {
+        sessionId: session.id,
+        rememberMe,
+        suspicious: session.suspicious,
+      },
+      this.getRequestIp(req) ?? undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+    );
+
     return {
       access_token: this.jwtService.sign(payload, {
         expiresIn: this.getTokenExpiry(rememberMe),
@@ -338,6 +462,14 @@ export class AuthService {
       this.logger.warn(`Failed to send verification code to ${user.email}`);
     }
 
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.LOGIN_SUCCESS,
+      SecurityEventSeverity.LOW,
+      `User ${user.email} created a new account and initiated email verification.`,
+      { username: user.username, method: 'email_signup' },
+    );
+
     return {
       message: 'Signup successful. A 6-digit verification code has been sent to your email.',
     };
@@ -392,6 +524,16 @@ export class AuthService {
     user.emailVerificationTokenExpires = null;
     await this.usersService.save(user);
 
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.EMAIL_VERIFIED,
+      SecurityEventSeverity.LOW,
+      `User ${user.email} verified their email address.`,
+      { verificationMethod: 'token' },
+      this.getRequestIp(req) ?? undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+    );
+
     return this.issueAccessToken(user, req);
   }
 
@@ -422,7 +564,10 @@ export class AuthService {
     return this.issueAccessToken(user, req);
   }
 
-  async signIn(signInDto: SignInDto, req?: any): Promise<{ access_token: string } | { twoFactorEnabled: true; tempToken: string }> {
+  async signIn(
+    signInDto: SignInDto,
+    req?: any,
+  ): Promise<{ access_token: string } | { twoFactorEnabled: true; tempToken: string } | { loginApprovalRequired: true; message: string; sessionId: string } | { reactivationRequired: true; message: string }> {
     const { email, username, password, rememberMe } = signInDto;
     const identifier = email || username;
 
@@ -434,12 +579,41 @@ export class AuthService {
       ? await this.usersService.findByEmail(email)
       : await this.usersService.findByUsername(username as string);
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!(await bcrypt.compare(password, user.password_hash))) {
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.LOGIN_FAILED,
+        SecurityEventSeverity.HIGH,
+        `Failed login attempt for ${user.email ?? user.username ?? user.id}.`,
+        { reason: 'invalid_password' },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
       throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!user.emailVerified) {
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.LOGIN_FAILED,
+        SecurityEventSeverity.MEDIUM,
+        `Login blocked for unverified account ${user.email ?? user.username ?? user.id}.`,
+        { reason: 'email_unverified' },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
       throw new UnauthorizedException('Please verify your email before logging in.');
+    }
+
+    if (user.status === 'deactivated') {
+      return {
+        reactivationRequired: true,
+        message: 'This account is deactivated. Reactivate it to continue.',
+      };
     }
 
     if (user.twoFactorEnabled && user.twoFactorSecret) {
@@ -447,10 +621,86 @@ export class AuthService {
         { sub: user.id, purpose: 'two-factor-login', rememberMe: rememberMe ?? false },
         { expiresIn: '10m' },
       );
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.TOTP_VERIFIED,
+        SecurityEventSeverity.LOW,
+        `2FA challenge initiated for ${user.email ?? user.username ?? user.id}.`,
+        { rememberMe: rememberMe ?? false },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
       return { twoFactorEnabled: true, tempToken };
     }
 
-    return this.issueAccessToken(user, req, rememberMe);
+    const session = await this.createLoginSession(user, req, rememberMe);
+    await this.notifyLoginAlert(user, session);
+    await this.handleSuspiciousLogin(user, session, req);
+
+    if (session.suspicious) {
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.LOGIN_FAILED,
+        SecurityEventSeverity.HIGH,
+        `Login approval required for ${user.email ?? user.username ?? user.id} from ${this.getRequestIp(req) ?? 'an unknown IP'}.`,
+        {
+          sessionId: session.id,
+          rememberMe,
+          suspicious: true,
+          approvalRequired: true,
+        },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
+
+      return {
+        loginApprovalRequired: true,
+        message: 'This login requires approval before access is granted.',
+        sessionId: session.id,
+      };
+    }
+
+    const payload = { sub: user.id, email: user.email, sid: session.id };
+
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.LOGIN_SUCCESS,
+      SecurityEventSeverity.LOW,
+      `User ${user.email ?? user.username ?? user.id} signed in successfully from ${this.getRequestIp(req) ?? 'an unknown IP'}.`,
+      {
+        sessionId: session.id,
+        rememberMe,
+        suspicious: session.suspicious,
+      },
+      this.getRequestIp(req) ?? undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+    );
+
+    return {
+      access_token: this.jwtService.sign(payload, {
+        expiresIn: this.getTokenExpiry(rememberMe),
+      }),
+    };
+  }
+
+  async reactivateAndSignIn(signInDto: SignInDto, req?: any) {
+    const identifier = signInDto.email || signInDto.username;
+    if (!identifier) {
+      throw new BadRequestException('Email or username is required.');
+    }
+
+    const user = signInDto.email
+      ? await this.usersService.findByEmail(signInDto.email)
+      : await this.usersService.findByUsername(signInDto.username as string);
+
+    if (!user || !(await bcrypt.compare(signInDto.password, user.password_hash))) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    if (!user.emailVerified) {
+      throw new UnauthorizedException('Please verify your email before reactivating your account.');
+    }
+    await this.usersService.reactivate(user.id);
+    return this.signIn(signInDto, req);
   }
 
   async validateUser(email: string): Promise<User> {
@@ -490,6 +740,14 @@ export class AuthService {
     user.passwordResetToken = null;
     user.passwordResetTokenExpires = null;
     await this.usersService.save(user);
+
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.PASSWORD_RESET_COMPLETED,
+      SecurityEventSeverity.HIGH,
+      `User ${user.email ?? user.username ?? user.id} reset their password.`,
+      { source: 'password_reset_token' },
+    );
 
     return { message: 'Password has been reset successfully.' };
   }
@@ -543,6 +801,14 @@ export class AuthService {
 
     user.twoFactorEnabled = true;
     await this.usersService.save(user);
+
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.TOTP_ENABLED,
+      SecurityEventSeverity.MEDIUM,
+      `User ${user.email ?? user.username ?? user.id} enabled 2FA.`,
+      { method: 'totp' },
+    );
 
     return { message: 'Two-factor authentication enabled.' };
   }
@@ -616,6 +882,15 @@ export class AuthService {
     user.twoFactorEnabled = false;
     user.twoFactorSecret = null;
     await this.usersService.save(user);
+
+    await this.recordSecurityEvent(
+      user.id,
+      SecurityEventType.TOTP_DISABLED,
+      SecurityEventSeverity.MEDIUM,
+      `User ${user.email ?? user.username ?? user.id} disabled 2FA.`,
+      { method: 'totp' },
+    );
+
     return { message: 'Two-factor authentication disabled.' };
   }
 

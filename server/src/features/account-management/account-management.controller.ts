@@ -31,6 +31,11 @@ import { CreateAccountSessionDto, RevokeSessionDto } from './dto/account-session
 import { RequestAccountDeletionDto, ConfirmAccountDeletionDto } from './dto/account-deletion.dto';
 import { RequestDataDownloadDto, RequestDataDeletionDto } from './dto/data-management.dto';
 import { UpdateSecuritySettingsDto } from './dto/security-settings.dto';
+import { UpdateAccountPermissionsDto } from './dto/account-permissions.dto';
+import { UpdateDataPermissionsDto } from './dto/data-permissions.dto';
+import { LinkedAccountProvider } from './entities/linked-account.entity';
+import { DataExportService } from '../../data-export/data-export.service';
+import { ExportData, ExportService } from '../../data-export/export.service';
 
 @Controller('account')
 @UseGuards(JwtAuthGuard)
@@ -42,6 +47,8 @@ export class AccountManagementController {
     private readonly identitySettingsService: IdentitySettingsService,
     private readonly trustIndicatorService: TrustIndicatorService,
     private readonly adPreferencesService: AdPreferencesService,
+    private readonly dataExportService: DataExportService,
+    private readonly exportService: ExportService,
     private readonly securitySettingsService: SecuritySettingsService,
   ) {}
 
@@ -62,6 +69,28 @@ export class AccountManagementController {
   @Put('preferences')
   async updateAccountPreferences(@Request() req, @Body() dto: UpdateAccountPreferencesDto) {
     return this.accountManagementService.updateAccountPreferences(req.user.userId, dto);
+  }
+
+  // ============ ACCOUNT PERMISSIONS ============
+
+  @Get('permissions')
+  async getAccountPermissions(@Request() req) {
+    return this.accountManagementService.getPermissions(req.user.userId);
+  }
+
+  @Put('permissions')
+  async updateAccountPermissions(@Request() req, @Body() dto: UpdateAccountPermissionsDto) {
+    return this.accountManagementService.updatePermissions(req.user.userId, dto.permissions);
+  }
+
+  @Get('data-permissions')
+  async getDataPermissions(@Request() req) {
+    return this.accountManagementService.getDataPermissions(req.user.userId);
+  }
+
+  @Put('data-permissions')
+  async updateDataPermissions(@Request() req, @Body() dto: UpdateDataPermissionsDto) {
+    return this.accountManagementService.updateDataPermissions(req.user.userId, dto.dataPermissions);
   }
 
   // ============ NOTIFICATION PREFERENCES ============
@@ -147,7 +176,7 @@ export class AccountManagementController {
 
   @Post('sessions/revoke-all-others')
   async revokeAllOtherSessions(@Request() req) {
-    return this.accountManagementService.revokeAllOtherSessions(req.user.userId);
+    return this.accountManagementService.revokeAllOtherSessions(req.user.userId, req.user.sessionId ?? undefined);
   }
 
   // ============ DATA MANAGEMENT ============
@@ -159,13 +188,30 @@ export class AccountManagementController {
 
   @Post('data/export')
   async exportAccountData(@Request() req, @Body() body: { dataTypes?: string[]; format?: string; includeSecurityLog?: boolean; includeLinkedAccounts?: boolean; includePrivacySettings?: boolean; includeHistory?: boolean }) {
-    return this.accountManagementService.exportAccountData(req.user.userId, {
-      includeSecurityLog: !!body.includeSecurityLog,
-      includeLinkedAccounts: !!body.includeLinkedAccounts,
-      includePrivacySettings: !!body.includePrivacySettings,
-      includeHistory: !!body.includeHistory,
-      format: (body.format === 'csv' ? 'csv' : 'json') as 'json' | 'csv',
-    });
+    if (body.format && body.format !== 'json') {
+      throw new BadRequestException('Account export currently supports JSON format only');
+    }
+    const accountId = req.user.userId || req.user.id;
+    const exportRequest = await this.dataExportService.create(req.user);
+    return {
+      accountId,
+      status: exportRequest.status,
+      format: 'json',
+      generatedAt: exportRequest.createdAt.toISOString(),
+      fileUrl: exportRequest.fileUrl,
+      includes: {
+        profile: true,
+        content: true,
+        socialGraph: true,
+        messages: true,
+        commerce: true,
+        settings: true,
+        securityLog: !!body.includeSecurityLog,
+        linkedAccounts: !!body.includeLinkedAccounts,
+        privacySettings: !!body.includePrivacySettings,
+        history: !!body.includeHistory,
+      },
+    };
   }
 
   @Post('data/delete')
@@ -174,8 +220,12 @@ export class AccountManagementController {
   }
 
   @Post('data/import')
-  async importAccountData(@Request() req, @Body() body: Record<string, any>) {
-    return this.accountManagementService.importAccountData(req.user.userId, body);
+  async importAccountData(@Request() req, @Body() body: ExportData) {
+    if (!body || typeof body !== 'object' || Array.isArray(body) || !body.user) {
+      throw new BadRequestException('Invalid export data: missing user object');
+    }
+
+    return this.exportService.importFromJson(req.user.userId, body);
   }
 
   // ============ ACCOUNT DELETION ============
@@ -207,11 +257,44 @@ export class AccountManagementController {
     return this.accountManagementService.exportSecurityLog(req.user.userId);
   }
 
+  @Get('security-alerts')
+  async getSecurityAlerts(@Request() req) {
+    const center = await this.accountManagementService.getSecurityCenter(req.user.userId);
+    return center.securityAlerts;
+  }
+
+  @Post('security-alerts/:alertId/resolve')
+  async resolveSecurityAlert(@Request() req, @Param('alertId') alertId: string) {
+    const alert = await this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, true);
+    if (!alert) {
+      throw new BadRequestException('Security alert not found');
+    }
+    return alert;
+  }
+
+  @Post('security-alerts/:alertId/reopen')
+  async reopenSecurityAlert(@Request() req, @Param('alertId') alertId: string) {
+    const alert = await this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, false);
+    if (!alert) {
+      throw new BadRequestException('Security alert not found');
+    }
+    return alert;
+  }
+
   // ============ LINKED ACCOUNTS ============
 
   @Get('linked-accounts')
   async getLinkedAccounts(@Request() req) {
     return this.accountLinkingService.getUserLinkedAccounts(req.user.userId);
+  }
+
+  @Post('linked-accounts/oauth/:provider')
+  async startLinkedAccountOAuth(@Request() req, @Param('provider') provider: LinkedAccountProvider) {
+    if (!Object.values(LinkedAccountProvider).includes(provider)) {
+      throw new BadRequestException('Unsupported linked-account provider');
+    }
+    const state = this.accountLinkingService.createOAuthState(req.user.userId, provider);
+    return { authorizationUrl: this.accountLinkingService.getOAuthStartUrl(provider, state) };
   }
 
   @Post('linked-accounts')

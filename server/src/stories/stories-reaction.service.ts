@@ -18,7 +18,7 @@ export class StoriesReactionService {
     storyId: string,
     reaction: string,
   ): Promise<StoryReaction> {
-    const story = await this.storiesService.findOne(storyId);
+    const story = await this.storiesService.findOne(storyId, userId);
     if (!story) {
       throw new NotFoundException('Story not found');
     }

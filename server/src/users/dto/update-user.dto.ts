@@ -17,6 +17,14 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^\+[1-9]\d{7,14}$/, {
+    message: 'phoneNumber must use international E.164 format, for example +14155552671.',
+  })
+  @Transform(({ value }) => value === '' ? undefined : String(value).replace(/[\s().-]/g, ''))
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
   @Length(3, 50)
   @Matches(/^[a-zA-Z0-9_.]+$/, {
     message: 'Username can only contain letters, numbers, underscores, and periods.',

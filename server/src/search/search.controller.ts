@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, UseGuards, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SearchService } from './search.service';
@@ -9,13 +9,13 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
-  async search(@Query('q') query: string) {
-    return this.searchService.search(query);
+  async search(@Query('q') query: string, @Req() req) {
+    return this.searchService.search(query, req.user.userId || req.user.id);
   }
 
   @Post('follow-up')
-  async followUpSearch(@Body() body: { previousQuery: string; followUpQuery: string }) {
-    return this.searchService.followUpSearch(body?.previousQuery, body?.followUpQuery);
+  async followUpSearch(@Body() body: { previousQuery: string; followUpQuery: string }, @Req() req) {
+    return this.searchService.followUpSearch(body?.previousQuery, body?.followUpQuery, req.user.userId || req.user.id);
   }
 
   @Get('web')

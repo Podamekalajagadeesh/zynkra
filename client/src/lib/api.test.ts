@@ -6,6 +6,8 @@ import {
   login,
   setAuthToken,
   getLoginSessions,
+  startAccountRecovery,
+  completeAccountRecovery,
   forgotPassword,
   resetPassword,
   resendVerification,
@@ -328,6 +330,44 @@ describe('getLoginSessions', () => {
 
     expect(sessions).toHaveLength(2);
     expect(sessions[0]).toHaveProperty('id', 's1');
+  });
+});
+
+// ─── account recovery ───────────────────────────────────────────────────────
+
+describe('account recovery API helpers', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('starts an account recovery request', async () => {
+    server.use(
+      http.post('*/users/me/account-recovery', async ({ request }) => {
+        const body = await request.json();
+        expect(body).toEqual({ method: 'email' });
+        return HttpResponse.json({ accountId: 'user-1', status: 'pending', method: 'email', createdAt: '2026-01-01T00:00:00.000Z' });
+      })
+    );
+
+    const result = await startAccountRecovery('email');
+
+    expect(result.status).toBe('pending');
+    expect(result.method).toBe('email');
+  });
+
+  it('completes an account recovery request', async () => {
+    server.use(
+      http.post('*/users/me/account-recovery/complete', async ({ request }) => {
+        const body = await request.json();
+        expect(body).toEqual({ approved: true });
+        return HttpResponse.json({ accountId: 'user-1', status: 'approved', method: 'email', createdAt: '2026-01-01T00:00:00.000Z' });
+      })
+    );
+
+    const result = await completeAccountRecovery(true);
+
+    expect(result.status).toBe('approved');
+    expect(result.method).toBe('email');
   });
 });
 

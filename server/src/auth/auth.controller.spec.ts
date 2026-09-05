@@ -13,6 +13,7 @@ import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
 import { BiometricAuthService } from './biometric-auth.service';
 import { UsersService } from '../users/users.service';
+import { AccountLinkingService } from '../features/account-management/account-linking.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -89,6 +90,20 @@ describe('AuthController', () => {
           provide: UsersService,
           useValue: {
             findOneById: jest.fn(),
+          },
+        },
+        {
+          provide: AccountLinkingService,
+          useValue: {
+            verifyOAuthState: jest.fn(),
+            linkOAuthAccount: jest.fn(),
+            createOAuthState: jest.fn(),
+            getOAuthStartUrl: jest.fn(),
+            getUserLinkedAccounts: jest.fn(),
+            linkAccount: jest.fn(),
+            getLinkedAccount: jest.fn(),
+            unlinkAccount: jest.fn(),
+            setPrimaryAccount: jest.fn(),
           },
         },
         {

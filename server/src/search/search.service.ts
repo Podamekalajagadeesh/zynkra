@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Tag } from '../tags/tag.entity';
@@ -9,6 +9,7 @@ import { Place } from '../places/entities/place.entity';
 import { Event } from '../events/entities/event.entity';
 import { Group } from '../groups/entities/group.entity';
 import { Product } from '../marketplace/entities/product.entity';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 const MAX_RESULTS = 20;
 
@@ -29,25 +30,40 @@ export class SearchService {
     private readonly eventsRepository: Repository<Event>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
-  async search(query: string) {
+  async search(query: string, viewerId?: string) {
     const q = `%${query}%`;
 
     const users = await this.usersRepository
       .createQueryBuilder('user')
-      .where('user.username ILIKE :q', { q })
-      .orWhere('user.displayName ILIKE :q', { q })
+      .where(new Brackets((nameQuery) => {
+        nameQuery
+          .where('user.username ILIKE :q', { q })
+          .orWhere('user.displayName ILIKE :q', { q });
+      }))
+      .andWhere(`(
+          user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
+          (user."searchVisibility" = 'friends' AND EXISTS (
+            SELECT 1 FROM follows f1
+            WHERE f1."followerId" = :viewerId AND f1."followingId" = user.id
+          ) AND EXISTS (
+            SELECT 1 FROM follows f2
+            WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
+          ))
+        )`, { viewerId: viewerId ?? null })
       .limit(MAX_RESULTS)
       .getMany();
 
-    const posts = await this.postsRepository
+    let posts = await this.postsRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .where('post.content ILIKE :q', { q })
       .orderBy('post."createdAt"', 'DESC')
       .limit(MAX_RESULTS)
       .getMany();
+    posts = await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
 
     const hashtags = await this.tagsRepository
       .createQueryBuilder('tag')
@@ -84,7 +100,7 @@ export class SearchService {
     return { users, posts, hashtags, places, groups, events, products };
   }
 
-  async followUpSearch(previousQuery: string, followUpQuery: string) {
+  async followUpSearch(previousQuery: string, followUpQuery: string, viewerId?: string) {
     const previous = previousQuery?.trim();
     const followUp = followUpQuery?.trim();
     if (!previous || !followUp) {
@@ -93,7 +109,7 @@ export class SearchService {
 
     const query = `${previous} ${followUp}`;
     return {
-      ...(await this.search(query)),
+      ...(await this.search(query, viewerId)),
       previousQuery: previous,
       followUpQuery: followUp,
       query,

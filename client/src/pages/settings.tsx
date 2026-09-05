@@ -13,11 +13,13 @@ import {
   generateRecoveryCodes,
   getLoginSessions,
   getProfile,
+  getAccountPreferences,
   getTrustedRecoveryContacts,
   revokeLoginSession,
   revokeOtherSessions,
   setTrustedRecoveryContacts,
   updatePrivacy,
+  updateAccountPreferences,
   LoginSession,
 } from '../lib/api';
 import { LANGUAGE_OPTIONS, REGION_OPTIONS, COLOR_BLIND_OPTIONS } from '../lib/preferences';
@@ -29,6 +31,7 @@ import AdPreferences from '../components/settings/ad-preferences';
 import { AppIconSettings } from '../components/settings/app-icon-settings';
 import { ActivityStatusSettings } from '../components/settings/ActivityStatusSettings';
 import { NeuralEthicalGuardrails } from '../components/ethical-ai-guardrails/NeuralEthicalGuardrails';
+import { AccountPermissionsSettings } from '../components/settings/account-permissions-settings';
 import { LANGUAGE_METADATA, translateTextKey } from '../lib/i18n';
 
 export function SettingsPage() {
@@ -36,6 +39,8 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const {
     theme,
+    appIcon,
+    setAppIcon: setAppIconState,
     language,
     region,
     keyboardNavigationEnabled,
@@ -52,22 +57,22 @@ export function SettingsPage() {
     voiceControlEnabled,
     largeTextMode,
     colorBlindMode,
-    setTheme,
-    setLanguage,
-    setRegion,
-    setKeyboardNavigationEnabled,
-    setAutoTranslate,
-    setFeedSort,
-    setScreenTimeEnabled,
-    setDailyScreenTimeLimit,
-    setContentWarningsEnabled,
+    setTheme: setThemeState,
+    setLanguage: setLanguageState,
+    setRegion: setRegionState,
+    setKeyboardNavigationEnabled: setKeyboardNavigationEnabledState,
+    setAutoTranslate: setAutoTranslateState,
+    setFeedSort: setFeedSortState,
+    setScreenTimeEnabled: setScreenTimeEnabledState,
+    setDailyScreenTimeLimit: setDailyScreenTimeLimitState,
+    setContentWarningsEnabled: setContentWarningsEnabledState,
     // Accessibility setters
-    setHighContrastMode,
-    setReducedMotion,
-    setScreenReaderOptimized,
-    setVoiceControlEnabled,
-    setLargeTextMode,
-    setColorBlindMode,
+    setHighContrastMode: setHighContrastModeState,
+    setReducedMotion: setReducedMotionState,
+    setScreenReaderOptimized: setScreenReaderOptimizedState,
+    setVoiceControlEnabled: setVoiceControlEnabledState,
+    setLargeTextMode: setLargeTextModeState,
+    setColorBlindMode: setColorBlindModeState,
   } = useAppPreferences();
   const [profilePrivacy, setProfilePrivacy] = useState<ProfilePrivacy | null>(null);
   const [tagReviewEnabled, setTagReviewEnabled] = useState(false);
@@ -81,6 +86,78 @@ export function SettingsPage() {
   const [trustedContacts, setTrustedContacts] = useState<string[]>([]);
   const [trustedContactsInput, setTrustedContactsInput] = useState('');
   const [savingTrustedContacts, setSavingTrustedContacts] = useState(false);
+  const [timezone, setTimezone] = useState('UTC');
+  const [defaultPrivacy, setDefaultPrivacy] = useState<'public' | 'friends' | 'private'>('friends');
+
+  const saveAccountPreference = async (change: Parameters<typeof updateAccountPreferences>[0]) => {
+    try {
+      await updateAccountPreferences(change);
+    } catch (error) {
+      console.error('Failed to update account preference', error);
+      toast.error('Failed to save account preference.');
+    }
+  };
+
+  const setTheme = (nextTheme: typeof theme) => {
+    setThemeState(nextTheme);
+    void saveAccountPreference({ theme: nextTheme });
+  };
+  const setLanguage = (nextLanguage: typeof language) => {
+    setLanguageState(nextLanguage);
+    void saveAccountPreference({ language: nextLanguage });
+  };
+  const setRegion = (nextRegion: typeof region) => {
+    setRegionState(nextRegion);
+    void saveAccountPreference({ customSettings: { region: nextRegion } });
+  };
+  const setKeyboardNavigationEnabled = (enabled: boolean) => {
+    setKeyboardNavigationEnabledState(enabled);
+    void saveAccountPreference({ keyboardNavigationEnabled: enabled });
+  };
+  const setAutoTranslate = (enabled: boolean) => {
+    setAutoTranslateState(enabled);
+    void saveAccountPreference({ autoTranslate: enabled });
+  };
+  const setFeedSort = (sort: typeof feedSort) => {
+    setFeedSortState(sort);
+    void saveAccountPreference({ feedSort: sort });
+  };
+  const setScreenTimeEnabled = (enabled: boolean) => {
+    setScreenTimeEnabledState(enabled);
+    void saveAccountPreference({ screenTimeEnabled: enabled });
+  };
+  const setDailyScreenTimeLimit = (limit: number) => {
+    setDailyScreenTimeLimitState(limit);
+    void saveAccountPreference({ dailyScreenTimeLimit: limit });
+  };
+  const setContentWarningsEnabled = (enabled: boolean) => {
+    setContentWarningsEnabledState(enabled);
+    void saveAccountPreference({ contentWarningsEnabled: enabled });
+  };
+  const setHighContrastMode = (enabled: boolean) => {
+    setHighContrastModeState(enabled);
+    void saveAccountPreference({ highContrastMode: enabled });
+  };
+  const setReducedMotion = (enabled: boolean) => {
+    setReducedMotionState(enabled);
+    void saveAccountPreference({ reducedMotion: enabled });
+  };
+  const setScreenReaderOptimized = (enabled: boolean) => {
+    setScreenReaderOptimizedState(enabled);
+    void saveAccountPreference({ screenReaderOptimized: enabled });
+  };
+  const setVoiceControlEnabled = (enabled: boolean) => {
+    setVoiceControlEnabledState(enabled);
+    void saveAccountPreference({ voiceControlEnabled: enabled });
+  };
+  const setLargeTextMode = (enabled: boolean) => {
+    setLargeTextModeState(enabled);
+    void saveAccountPreference({ largeTextMode: enabled });
+  };
+  const setColorBlindMode = (mode: typeof colorBlindMode) => {
+    setColorBlindModeState(mode);
+    void saveAccountPreference({ colorBlindMode: mode });
+  };
 
   useEffect(() => {
     const fetchSecurityData = async () => {
@@ -99,6 +176,35 @@ export function SettingsPage() {
         toast.error('Failed to load profile settings.');
       } finally {
         setLoading(false);
+      }
+
+      try {
+        const accountPreferences = await getAccountPreferences();
+        if (accountPreferences.theme !== 'system') setThemeState(accountPreferences.theme);
+        if (accountPreferences.appIcon) setAppIconState(accountPreferences.appIcon as typeof appIcon);
+        if (LANGUAGE_OPTIONS.some((option) => option.value === accountPreferences.language)) {
+          setLanguageState(accountPreferences.language as typeof language);
+        }
+        if (accountPreferences.timezone) setTimezone(accountPreferences.timezone);
+        if (accountPreferences.defaultPrivacy) setDefaultPrivacy(accountPreferences.defaultPrivacy);
+        if (typeof accountPreferences.customSettings?.region === 'string') {
+          setRegionState(accountPreferences.customSettings.region as typeof region);
+        }
+        setKeyboardNavigationEnabledState(accountPreferences.keyboardNavigationEnabled);
+        setAutoTranslateState(accountPreferences.autoTranslate);
+        setFeedSortState(accountPreferences.feedSort);
+        setScreenTimeEnabledState(accountPreferences.screenTimeEnabled);
+        setDailyScreenTimeLimitState(accountPreferences.dailyScreenTimeLimit);
+        setContentWarningsEnabledState(accountPreferences.contentWarningsEnabled);
+        setHighContrastModeState(accountPreferences.highContrastMode);
+        setReducedMotionState(accountPreferences.reducedMotion);
+        setScreenReaderOptimizedState(accountPreferences.screenReaderOptimized);
+        setVoiceControlEnabledState(accountPreferences.voiceControlEnabled);
+        setLargeTextModeState(accountPreferences.largeTextMode);
+        setColorBlindModeState(accountPreferences.colorBlindMode);
+      } catch (error) {
+        console.error('Failed to fetch account preferences', error);
+        toast.error('Failed to load account preferences.');
       }
 
       try {
@@ -256,6 +362,8 @@ export function SettingsPage() {
           <NeuralEthicalGuardrails />
         </div>
 
+        <AccountPermissionsSettings />
+
         {/* Neural Encryption Settings - Preview */}
         <div className="surface-soft rounded-2xl p-5">
           <div className="mb-4 flex items-start justify-between gap-4">
@@ -268,6 +376,42 @@ export function SettingsPage() {
                 All messages are encrypted in transit (TLS). Full end-to-end encryption is in progress —
                 see the roadmap for details.
               </p>
+
+            <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
+              <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
+                <Clock size={16} />
+                Time zone
+              </div>
+              <input
+                value={timezone}
+                onChange={(event) => setTimezone(event.target.value)}
+                onBlur={() => void saveAccountPreference({ timezone })}
+                placeholder="UTC"
+                className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
+              />
+              <p className="text-xs text-dark-500 dark:text-dark-400">Used for dates, times, and scheduled activity.</p>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
+              <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
+                <Shield size={16} />
+                Default post privacy
+              </div>
+              <select
+                value={defaultPrivacy}
+                onChange={(event) => {
+                  const nextPrivacy = event.target.value as typeof defaultPrivacy;
+                  setDefaultPrivacy(nextPrivacy);
+                  void saveAccountPreference({ defaultPrivacy: nextPrivacy });
+                }}
+                className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
+              >
+                <option value="public">Public</option>
+                <option value="friends">Friends</option>
+                <option value="private">Private</option>
+              </select>
+              <p className="text-xs text-dark-500 dark:text-dark-400">The default audience for new posts.</p>
+            </div>
             </div>
           </div>
 
@@ -301,7 +445,11 @@ export function SettingsPage() {
               </div>
               <select
                 value={language}
-                onChange={(event) => setLanguage(event.target.value as typeof language)}
+                onChange={(event) => {
+                  const nextLanguage = event.target.value as typeof language;
+                  setLanguage(nextLanguage);
+                  void saveAccountPreference({ language: nextLanguage });
+                }}
                 className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
               >
                 {LANGUAGE_OPTIONS.map((option) => (
@@ -322,7 +470,11 @@ export function SettingsPage() {
               </div>
               <select
                 value={region}
-                onChange={(event) => setRegion(event.target.value as typeof region)}
+                onChange={(event) => {
+                  const nextRegion = event.target.value as typeof region;
+                  setRegion(nextRegion);
+                  void saveAccountPreference({ customSettings: { region: nextRegion } });
+                }}
                 className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
               >
                 {REGION_OPTIONS.map((option) => (
@@ -345,7 +497,10 @@ export function SettingsPage() {
                 <Button
                   type="button"
                   variant={theme === 'light' ? 'primary' : 'secondary'}
-                  onClick={() => setTheme('light')}
+                  onClick={() => {
+                    setTheme('light');
+                    void saveAccountPreference({ theme: 'light' });
+                  }}
                   disabled={theme === 'light'}
                   className="justify-center"
                 >
@@ -355,7 +510,10 @@ export function SettingsPage() {
                 <Button
                   type="button"
                   variant={theme === 'dark' ? 'primary' : 'secondary'}
-                  onClick={() => setTheme('dark')}
+                  onClick={() => {
+                    setTheme('dark');
+                    void saveAccountPreference({ theme: 'dark' });
+                  }}
                   disabled={theme === 'dark'}
                   className="justify-center"
                 >
@@ -820,7 +978,7 @@ export function SettingsPage() {
           title="Connected Accounts"
           description="Manage your connected social media accounts."
           action={
-            <Link to="/connected-accounts">
+            <Link to="/settings/identity-accounts">
               <Button variant="secondary">Manage</Button>
             </Link>
           }
@@ -1015,11 +1173,11 @@ export function SettingsPage() {
 
         <SettingItem
           icon={<ShieldCheck size={20} />}
-          title="Account Status & Security"
-          description="Manage temporary deactivation, reactivation, and account lifecycle state."
+          title="Account Controls"
+          description="Manage account profiles, permissions, data export, and lifecycle state."
           action={
-            <Link to="/account-status">
-              <Button variant="secondary">Open Status</Button>
+            <Link to="/account-controls">
+              <Button variant="secondary">Open Controls</Button>
             </Link>
           }
         />

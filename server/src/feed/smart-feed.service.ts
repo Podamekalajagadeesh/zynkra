@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../posts/entities/post.entity';
 import { User } from '../users/entities/user.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 export interface FeedAlgorithm {
   name: string;
@@ -63,6 +65,7 @@ export class SmartFeedService {
   constructor(
     @InjectRepository(Post) private readonly postsRepo: Repository<Post>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   /**
@@ -105,6 +108,7 @@ export class SmartFeedService {
     nextCursor?: string;
     hasMore: boolean;
   }> {
+    await this.dataPermissions.require(userId, DataPermission.PERSONALIZATION);
     const algorithmName = options.algorithm || await this.getUserAlgorithm(userId);
     const algorithm = ALGORITHMS[algorithmName] || ALGORITHMS.relevance;
     const page = options.page || 1;

@@ -7,6 +7,7 @@ import {
   CommentPrivacy,
   TagPrivacy,
   MessagePrivacy,
+  ProfilePrivacy,
 } from '../entities/user.entity';
 import { Type } from 'class-transformer';
 
@@ -36,6 +37,10 @@ class ScreenshotProtectionDto {
 }
 
 export class UpdatePrivacyDto {
+  @IsEnum(ProfilePrivacy)
+  @IsOptional()
+  profilePrivacy?: ProfilePrivacy;
+
   @IsEnum(PostVisibility)
   @IsOptional()
   postVisibility?: PostVisibility;

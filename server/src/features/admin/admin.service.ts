@@ -81,12 +81,6 @@ export class AdminService {
     return '';
   }
 
-  // Sandbox Environments
-  async createSandboxEnvironment(name: string): Promise<string> {
-    console.log(`Creating sandbox environment: ${name}`);
-    return '';
-  }
-
   // Changelog
   async publishChangelog(version: string, changes: string[]): Promise<void> {
     console.log(`Publishing changelog for version ${version}`);

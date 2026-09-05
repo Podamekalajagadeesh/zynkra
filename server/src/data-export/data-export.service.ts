@@ -1,7 +1,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Repository } from 'typeorm';
 import { DataExport, DataExportStatus } from './entities/data-export.entity';
 import { ExportService } from './export.service';
 import { User } from '../users/entities/user.entity';
@@ -21,9 +22,7 @@ export class DataExportService {
     @InjectRepository(DataExport)
     private dataExportRepository: Repository<DataExport>,
     private readonly exportService: ExportService,
-  ) {
-    setInterval(() => this.processQueue(), 5000);
-  }
+  ) {}
 
   async create(user: User): Promise<DataExport> {
     const exportRequest = this.dataExportRepository.create({
@@ -32,8 +31,14 @@ export class DataExportService {
     });
 
     const savedRequest = await this.dataExportRepository.save(exportRequest);
-    this.exportQueue.push(savedRequest);
-    return savedRequest;
+    try {
+      await this.processExport(savedRequest);
+      return savedRequest;
+    } catch (error) {
+      savedRequest.status = DataExportStatus.FAILED;
+      await this.dataExportRepository.save(savedRequest);
+      throw error;
+    }
   }
 
   async getExport(user: User): Promise<DataExport | null> {
@@ -61,30 +66,33 @@ export class DataExportService {
       banned: true,
     });
 
-    // Schedule actual hard deletion after 30 days
-    setTimeout(async () => {
-      try {
-        // Delete all user data: posts, comments, messages, sessions, etc.
-        const postRepository = this.dataExportRepository.manager.getRepository(Post);
-        const commentRepository = this.dataExportRepository.manager.getRepository(Comment);
-        
-        // Delete user's posts
-        await postRepository.delete({ user: { id: user.id } });
-        // Delete user's comments
-        await commentRepository.delete({ user: { id: user.id } });
-        // Delete the user account itself
-        await userRepository.delete(user.id);
-        // Update deletion record status
-        await this.dataExportRepository.update(deletionRecord.id, { status: DataExportStatus.DELETION_COMPLETED });
-        
-        this.logger.log(`Successfully deleted all data for user ${user.id} (GDPR/CCPA compliance)`);
-      } catch (error) {
-        this.logger.error(`Failed to delete data for user ${user.id}`, error.stack);
-        await this.dataExportRepository.update(deletionRecord.id, { status: DataExportStatus.DELETION_FAILED });
-      }
-    }, deletionDelay);
-
     return { success: true, message: 'Account deletion scheduled. All data will be permanently removed within 30 days.' };
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async processScheduledDeletions(): Promise<void> {
+    const dueRequests = await this.dataExportRepository.find({
+      where: {
+        status: DataExportStatus.DELETION_PENDING,
+        scheduledDeletionAt: LessThanOrEqual(new Date()),
+      },
+      relations: ['user'],
+    });
+
+    for (const request of dueRequests) {
+      try {
+        await this.exportService.deleteAllUserData(request.user.id);
+        await this.dataExportRepository.update(request.id, {
+          status: DataExportStatus.DELETION_COMPLETED,
+        });
+        this.logger.log(`Completed scheduled deletion for user ${request.user.id}`);
+      } catch (error) {
+        this.logger.error(`Failed scheduled deletion for request ${request.id}`, error.stack);
+        await this.dataExportRepository.update(request.id, {
+          status: DataExportStatus.DELETION_FAILED,
+        });
+      }
+    }
   }
 
   private async processQueue() {
@@ -112,27 +120,40 @@ export class DataExportService {
     const userData = await this.exportService.exportUserData(exportRequest.user.id);
 
     const fileName = `${exportRequest.id}.json`;
-    const filePath = path.join(__dirname, '..', '..', 'uploads', fileName);
-    fs.writeFileSync(filePath, JSON.stringify(userData, null, 2));
+    const uploadDirectory = path.join(__dirname, '..', '..', 'uploads');
+    await fs.promises.mkdir(uploadDirectory, { recursive: true });
+    const filePath = path.join(uploadDirectory, fileName);
+    await fs.promises.writeFile(filePath, JSON.stringify(userData, null, 2), 'utf8');
 
     const zipFileName = `${exportRequest.id}.zip`;
-    const zipFilePath = path.join(__dirname, '..', '..', 'uploads', zipFileName);
+    const zipFilePath = path.join(uploadDirectory, zipFileName);
     const output = fs.createWriteStream(zipFilePath);
     const archive = (archiver as any).default('zip');
 
-    output.on('close', async () => {
-      exportRequest.status = DataExportStatus.COMPLETED;
-      exportRequest.fileUrl = `/uploads/${zipFileName}`;
-      await this.dataExportRepository.save(exportRequest);
-      fs.unlinkSync(filePath); // Clean up the original JSON file
+    await new Promise<void>((resolve, reject) => {
+      output.once('close', resolve);
+      output.once('error', reject);
+      archive.once('error', reject);
+      archive.pipe(output);
+      archive.file(filePath, { name: 'data.json' });
+      const mediaUrls = [
+        ...userData.posts.flatMap((post) => post.media?.map((media) => media.url) ?? []),
+        ...userData.stories.map((story) => story.mediaUrl),
+        ...userData.messages.map((message) => message.mediaUrl),
+        ...userData.podcasts.map((podcast) => podcast.audioUrl),
+      ];
+      for (const mediaUrl of mediaUrls) {
+        if (!mediaUrl || !mediaUrl.startsWith('/uploads/')) continue;
+        const mediaName = path.basename(mediaUrl.split('?')[0]);
+        const mediaPath = path.join(uploadDirectory, mediaName);
+        if (fs.existsSync(mediaPath)) archive.file(mediaPath, { name: `media/${mediaName}` });
+      }
+      void archive.finalize().catch(reject);
     });
 
-    archive.on('error', (err) => {
-      throw err;
-    });
-
-    archive.pipe(output);
-    archive.file(filePath, { name: 'data.json' });
-    await archive.finalize();
+    exportRequest.status = DataExportStatus.COMPLETED;
+    exportRequest.fileUrl = `/uploads/${zipFileName}`;
+    await this.dataExportRepository.save(exportRequest);
+    await fs.promises.unlink(filePath);
   }
 }

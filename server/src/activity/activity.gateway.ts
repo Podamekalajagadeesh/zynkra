@@ -9,7 +9,9 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/entities/user.entity';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 @WebSocketGateway({
   cors: {
@@ -19,14 +21,28 @@ import { User } from '../users/entities/user.entity';
 export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ActivityGateway.name);
-  private activeUsers: Map<string, string> = new Map(); // userId -> socketId
+  private activeUsers: Map<string, Set<string>> = new Map(); // userId -> socket IDs
 
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   async handleConnection(client: Socket) {
+    const token = client.handshake.auth?.token as string | undefined;
+    try {
+      const payload = token ? this.jwtService.verify<{ sub: string }>(token) : null;
+      if (!payload?.sub) {
+        client.disconnect(true);
+        return;
+      }
+      client.data.userId = payload.sub;
+    } catch {
+      client.disconnect(true);
+      return;
+    }
     this.logger.log(`Activity client connected: ${client.id}`);
   }
 
@@ -34,10 +50,16 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.logger.log(`Activity client disconnected: ${client.id}`);
     
     // Find user who disconnected
-    const userId = Array.from(this.activeUsers.entries())
-      .find(([, socketId]) => socketId === client.id)?.[0];
+    const userEntry = Array.from(this.activeUsers.entries())
+      .find(([, socketIds]) => socketIds.has(client.id));
+    const userId = userEntry?.[0];
     
     if (userId) {
+      const socketIds = userEntry[1];
+      socketIds.delete(client.id);
+
+      // A user remains online while at least one device is connected.
+      if (socketIds.size > 0) return;
       this.activeUsers.delete(userId);
       
       // Update user's last seen and set offline
@@ -54,9 +76,12 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage('user-online')
-  async handleUserOnline(client: Socket, payload: { userId: string }) {
-    const { userId } = payload;
-    this.activeUsers.set(userId, client.id);
+  async handleUserOnline(client: Socket) {
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return;
+    const socketIds = this.activeUsers.get(userId) ?? new Set<string>();
+    socketIds.add(client.id);
+    this.activeUsers.set(userId, socketIds);
     
     // Update user's online status
     const user = await this.usersRepository.findOne({ where: { id: userId } });
@@ -70,8 +95,9 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage('update-last-seen')
-  async handleUpdateLastSeen(client: Socket, payload: { userId: string }) {
-    const { userId } = payload;
+  async handleUpdateLastSeen(client: Socket) {
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return;
     
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (user && user.isOnline) {
@@ -83,9 +109,11 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('update-activity-settings')
   async handleUpdateActivitySettings(
     client: Socket,
-    payload: { userId: string; showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean }
+    payload: { showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean; activityVisibility?: 'public' | 'friends' | 'private' }
   ) {
-    const { userId, showOnlineStatus, showLastSeenTimestamp } = payload;
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return;
+    const { showOnlineStatus, showLastSeenTimestamp, activityVisibility } = payload;
     
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (user) {
@@ -95,6 +123,9 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (showLastSeenTimestamp !== undefined) {
         user.showLastSeenTimestamp = showLastSeenTimestamp;
       }
+      if (activityVisibility) {
+        user.activityVisibility = activityVisibility;
+      }
       await this.usersRepository.save(user);
       
       // Broadcast updated status
@@ -102,26 +133,19 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  private broadcastUserStatus(userId: string, user: User) {
-    // Only broadcast status if user allows it
-    const statusToBroadcast = {
-      userId,
-      isOnline: user.showOnlineStatus ? user.isOnline : undefined,
-      lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
-      showOnlineStatus: user.showOnlineStatus,
-      showLastSeenTimestamp: user.showLastSeenTimestamp,
-    };
-    
-    this.server.emit('user-status-updated', statusToBroadcast);
-  }
-
-  // Helper method to get online users for a specific set of user IDs
-  async getUsersStatuses(userIds: string[]) {
-    const users = await this.usersRepository.findByIds(userIds);
-    return users.map(user => ({
-      userId: user.id,
-      isOnline: user.showOnlineStatus ? user.isOnline : undefined,
-      lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
+  private async broadcastUserStatus(userId: string, user: User) {
+    const sockets = await this.server.fetchSockets();
+    await Promise.all(sockets.map(async (socket) => {
+      const viewerId = socket.data.userId as string | undefined;
+      if (!(await this.visibilityService.canViewActivity(viewerId ?? null, user))) return;
+      socket.emit('user-status-updated', {
+        userId,
+        isOnline: user.showOnlineStatus ? user.isOnline : undefined,
+        lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
+        showOnlineStatus: user.showOnlineStatus,
+        showLastSeenTimestamp: user.showLastSeenTimestamp,
+      });
     }));
   }
+
 }

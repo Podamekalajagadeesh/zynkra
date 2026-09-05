@@ -179,6 +179,9 @@ export class User {
   @Column({ unique: true, nullable: true })
   email: string | null;
 
+  @Column({ type: 'varchar', length: 32, nullable: true, unique: true })
+  phoneNumber: string | null;
+
   @Column({ nullable: true })
   password_hash: string | null;
 
@@ -318,6 +321,12 @@ export class User {
 
   @Column({ type: 'varchar', nullable: true })
   status: string | null;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  deactivatedAt: Date | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  deactivationReason: string | null;
 
   // Activity status controls
   @Column({ default: true })
@@ -510,6 +519,53 @@ export class User {
 
   @Column({ type: 'jsonb', nullable: true, default: () => "'[]'" })
   followedHashtags: { id: string; name: string }[];
+
+  @Column({ type: 'jsonb', nullable: true })
+  accountPreferences: {
+    theme?: 'light' | 'dark' | 'system';
+    appIcon?: 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
+    language?: string;
+    timezone?: string;
+    defaultPrivacy?: 'public' | 'friends' | 'private';
+    keyboardNavigationEnabled?: boolean;
+    autoTranslate?: boolean;
+    feedSort?: 'algorithmic' | 'chronological';
+    screenTimeEnabled?: boolean;
+    dailyScreenTimeLimit?: number;
+    contentWarningsEnabled?: boolean;
+    highContrastMode?: boolean;
+    reducedMotion?: boolean;
+    screenReaderOptimized?: boolean;
+    voiceControlEnabled?: boolean;
+    largeTextMode?: boolean;
+    colorBlindMode?: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
+    customSettings?: Record<string, any>;
+    updatedAt?: string;
+  } | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  accountPermissions: string[] | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  accountDataPermissions: string[] | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  activeAccountProfileId: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  accountSecuritySettings: {
+    twoFactorAuthentication?: boolean;
+    biometricAuthentication?: boolean;
+    passkeysEnabled?: boolean;
+    recoveryCodesEnabled?: boolean;
+    loginApprovalsEnabled?: boolean;
+    suspiciousLoginAlertsEnabled?: boolean;
+    deviceManagementEnabled?: boolean;
+    sessionManagementEnabled?: boolean;
+    accountRecoveryEnabled?: boolean;
+    securityCenterEnabled?: boolean;
+    updatedAt?: string;
+  } | null;
 
   @Column({ type: 'simple-array', nullable: true, default: () => "'[]'" })
   blockedKeywords: string[];

@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import {
   api,
   login,
+  reactivateAndLogin,
   setAuthToken,
   getProfile,
   API_BASE_URL,
@@ -42,6 +43,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
+  const [reactivationRequired, setReactivationRequired] = useState(false);
   const [token, setToken] = useState('');
   const [tempToken, setTempToken] = useState('');
   const [recoveryIdentifier, setRecoveryIdentifier] = useState('');
@@ -101,6 +103,20 @@ export function LoginPage() {
       };
       const response = await login(loginData);
 
+      if (response.reactivationRequired) {
+        setReactivationRequired(true);
+        setError(response.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (response.loginApprovalRequired) {
+        setError(response.message || 'This login requires approval before access is granted.');
+        addToast(response.message || 'Login approval required.', 'warning');
+        setIsLoading(false);
+        return;
+      }
+
       if (response.twoFactorEnabled) {
         setShow2FA(true);
         setTempToken(response.tempToken);
@@ -122,6 +138,38 @@ export function LoginPage() {
         setError('An unexpected error occurred');
         addToast('An unexpected error occurred', 'error');
       }
+    }
+  };
+
+  const handleReactivate = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const isEmail = identifier.includes('@');
+      const response = await reactivateAndLogin({
+        [isEmail ? 'email' : 'username']: identifier,
+        password,
+        rememberMe,
+      });
+      if (response.twoFactorEnabled) {
+        setTempToken(response.tempToken);
+        setShow2FA(true);
+        setReactivationRequired(false);
+        return;
+      }
+      setAuthToken(response.access_token);
+      const user = await getProfile();
+      await addAccount({ user, token: response.access_token });
+      addToast('Account reactivated successfully!', 'success');
+      navigate('/');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Account reactivation failed');
+      } else {
+        setError('Account reactivation failed');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -470,6 +518,18 @@ export function LoginPage() {
               >
                 {isLoading ? 'Logging in...' : 'Log In'}
               </Button>
+              {reactivationRequired && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleReactivate}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Reactivating...' : 'Reactivate account'}
+                </Button>
+              )}
               <div className="text-center">
                 <button
                   type="button"

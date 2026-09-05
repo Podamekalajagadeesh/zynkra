@@ -8,6 +8,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { PagesService } from '../pages/pages.service';
+import { AccountManagementService } from '../features/account-management/account-management.service';
 
 function makeMockUser(overrides = {}) {
   return {
@@ -101,6 +102,56 @@ describe('UsersController', () => {
             findPageSuggestions: jest.fn().mockResolvedValue([]),
           },
         },
+        {
+          provide: AccountManagementService,
+          useValue: {
+            switchAccount: jest.fn().mockResolvedValue({
+              accountId: 'u2',
+              switched: true,
+              message: 'Account switched successfully.',
+              settings: { accountId: 'u2', deactivated: false, switchingEnabled: true, permissions: [], personalizationSettings: {}, dataPermissions: [], updatedAt: '2026-01-01T00:00:00.000Z' },
+            }),
+            createAccountProfile: jest.fn().mockResolvedValue({
+              id: 'profile-1',
+              accountId: 'u1',
+              label: 'Work',
+              accountType: 'business',
+              isPrimary: false,
+              isActive: true,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            }),
+            listAccountProfiles: jest.fn().mockReturnValue([
+              {
+                id: 'profile-1',
+                accountId: 'u1',
+                label: 'Work',
+                accountType: 'business',
+                isPrimary: false,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: '2026-01-01T00:00:00.000Z',
+              },
+            ]),
+            setPrimaryAccountProfile: jest.fn().mockResolvedValue({
+              id: 'profile-1',
+              accountId: 'u1',
+              label: 'Work',
+              accountType: 'business',
+              isPrimary: true,
+              isActive: true,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            }),
+            getTrustIndicators: jest.fn().mockResolvedValue({
+              accountId: 'u1',
+              verified: true,
+              badges: ['identity_verified', 'security_hardened'],
+              trustScore: 92,
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -124,6 +175,34 @@ describe('UsersController', () => {
     it('throws NotFoundException when user not found', async () => {
       usersService.findOneById.mockResolvedValue(null);
       await expect(controller.getCurrentUser({ user: { userId: 'bad' } })).rejects.toThrow();
+    });
+  });
+
+  describe('GET /users/me/trust-indicator', () => {
+    it('returns the current user trust indicator snapshot', async () => {
+      const result = await controller.getTrustIndicators({ user: { userId: 'u1' } });
+
+      expect(result).toMatchObject({
+        accountId: 'u1',
+        verified: true,
+        badges: ['identity_verified', 'security_hardened'],
+        trustScore: 92,
+      });
+    });
+  });
+
+  describe('Multiple accounts', () => {
+    it('lists account profiles, switches to a different account, and marks a primary profile', async () => {
+      const profiles = await controller.listAccountProfiles({ user: { userId: 'u1' } });
+      expect(profiles).toHaveLength(1);
+      expect(profiles[0].label).toBe('Work');
+
+      await expect(
+        controller.switchCurrentAccount({ user: { userId: 'u1' } }, { accountId: 'u2' }),
+      ).rejects.toThrow('Switch accounts by authenticating the target account.');
+
+      const primary = await controller.setPrimaryAccountProfile({ user: { userId: 'u1' } }, 'profile-1');
+      expect(primary.isPrimary).toBe(true);
     });
   });
 

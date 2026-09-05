@@ -10,6 +10,7 @@ import { User } from '../../users/entities/user.entity';
 
 export enum VerificationStatus {
   PENDING = 'pending',
+  UNDER_REVIEW = 'under_review',
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }

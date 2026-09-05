@@ -31,6 +31,7 @@ import { TimelineReview } from '../timeline-review/entities/timeline-review.enti
 import { User } from '../users/entities/user.entity';
 import { HttpService } from '@nestjs/axios';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const user = new User();
@@ -105,8 +106,9 @@ describe('PostsService', () => {
         { provide: GroupsService, useValue: { getGroupById: jest.fn() } },
         { provide: TimelineReviewService, useValue: {} },
         { provide: ProfileReviewService, useValue: { createForPost: jest.fn() } },
-        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts), isBlockedEither: jest.fn().mockResolvedValue(false), canViewAuthor: jest.fn().mockResolvedValue(true) } },
+        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts), filterVisiblePostsForViewer: jest.fn().mockImplementation(async (_uid, posts) => posts), isBlockedEither: jest.fn().mockResolvedValue(false), isFollowing: jest.fn().mockResolvedValue(false), canViewAuthor: jest.fn().mockResolvedValue(true) } },
         { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
+        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 
@@ -216,6 +218,19 @@ describe('PostsService', () => {
       expect(result.content).toBe('Friends only');
     });
 
+    it('uses the account post privacy when visibility is omitted', async () => {
+      const user = makeUser({ postVisibility: 'private' as any });
+      usersService.findOneById.mockResolvedValue(user);
+      postsRepo.save.mockImplementation(async (post) => post as Post);
+
+      const result = await service.create(
+        { userId: user.id },
+        { content: 'Private by default' },
+      );
+
+      expect(result.visibility).toBe(PostVisibility.PRIVATE);
+    });
+
     it('creates a post with poll data', async () => {
       const user = makeUser();
       usersService.findOneById.mockResolvedValue(user);
@@ -295,6 +310,39 @@ describe('PostsService', () => {
       visibilityService.isBlockedEither.mockResolvedValue(true);
 
       await expect(service.findOne('post-id', 'viewer-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('allows only the owner to view an only-me post', async () => {
+      const post = makePost({
+        user: makeUser({ id: 'owner-id' }),
+        visibility: PostVisibility.ONLY_ME,
+      });
+      postsRepo.findOne.mockResolvedValue(post);
+
+      await expect(service.findOne('post-id', 'viewer-id')).rejects.toThrow(UnauthorizedException);
+      await expect(service.findOne('post-id', 'owner-id')).resolves.toBe(post);
+    });
+
+    it('allows an accepted follower to view a friends post', async () => {
+      const post = makePost({
+        user: makeUser({ id: 'owner-id' }),
+        visibility: PostVisibility.FRIENDS,
+      });
+      postsRepo.findOne.mockResolvedValue(post);
+      visibilityService.isFollowing.mockResolvedValue(true);
+
+      await expect(service.findOne('post-id', 'viewer-id')).resolves.toBe(post);
+    });
+
+    it('rejects a non-follower from viewing a friends post', async () => {
+      const post = makePost({
+        user: makeUser({ id: 'owner-id' }),
+        visibility: PostVisibility.FRIENDS,
+      });
+      postsRepo.findOne.mockResolvedValue(post);
+      visibilityService.isFollowing.mockResolvedValue(false);
+
+      await expect(service.findOne('post-id', 'viewer-id')).rejects.toThrow(UnauthorizedException);
     });
   });
 

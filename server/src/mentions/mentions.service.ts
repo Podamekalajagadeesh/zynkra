@@ -49,27 +49,8 @@ export class MentionsService {
           continue;
         }
 
-        // Check tag privacy settings
-        const privacy = user.tagPrivacy;
-        let canTag = true;
-        
-        // Default to everyone if no privacy set
-        if (privacy && privacy !== TagPrivacy.EVERYONE) {
-          // Check if users are friends
-          const areFriends = this.areUsersFriends(mentionedBy, user);
-          
-          if (privacy === TagPrivacy.FRIENDS) {
-            canTag = areFriends;
-          } else if (privacy === TagPrivacy.FRIENDS_OF_FRIENDS) {
-            canTag = areFriends || this.areFriendsOfFriends(mentionedBy, user);
-          } else if (privacy === TagPrivacy.NO_ONE) {
-            canTag = false;
-          }
-        }
-
-        if (!canTag) {
-          throw new UnauthorizedException(`You are not allowed to tag ${user.username}`);
-        }
+        // Mention controls govern @mentions in post and comment text.
+        this.assertCanMention(mentionedBy, user);
 
         mentionedUsers.push(user);
         // Analyze sentiment for the text containing this mention
@@ -106,6 +87,37 @@ export class MentionsService {
       }
     }
     return mentionedUsers;
+  }
+
+  assertCanTag(taggingUser: User, taggedUser: User): void {
+    if (taggingUser.id === taggedUser.id) {
+      return;
+    }
+
+    const privacy = taggedUser.tagPrivacy ?? TagPrivacy.EVERYONE;
+    const areFriends = this.areUsersFriends(taggingUser, taggedUser);
+    const allowed = privacy === TagPrivacy.EVERYONE
+      || (privacy === TagPrivacy.FRIENDS && areFriends)
+      || (privacy === TagPrivacy.FRIENDS_OF_FRIENDS && (areFriends || this.areFriendsOfFriends(taggingUser, taggedUser)));
+
+    if (!allowed) {
+      throw new UnauthorizedException(`You are not allowed to tag ${taggedUser.username}`);
+    }
+  }
+
+  assertCanMention(mentioningUser: User, mentionedUser: User): void {
+    if (mentioningUser.id === mentionedUser.id) {
+      return;
+    }
+
+    const privacy = mentionedUser.mentions ?? 'everyone';
+    const followsMentionedUser = mentioningUser.following?.some(
+      user => user.id === mentionedUser.id,
+    ) ?? false;
+
+    if (privacy === 'no_one' || (privacy === 'followers' && !followsMentionedUser)) {
+      throw new UnauthorizedException(`You are not allowed to mention ${mentionedUser.username}`);
+    }
   }
 
   private parseMentions(text: string): string[] {

@@ -119,10 +119,12 @@ export interface UserProfile {
   profilePrivacy?: 'public' | 'private';
   tagReviewEnabled?: boolean;
   postVisibility?: PostVisibility;
+  storyVisibility?: 'public' | 'friends' | 'followers' | 'only_me';
   friendRequestPrivacy?: FriendRequestPrivacy;
   emailSearchPrivacy?: EmailSearchPrivacy;
   commentPrivacy?: CommentPrivacy;
   tagPrivacy?: TagPrivacy;
+  mentions?: 'everyone' | 'followers' | 'no_one';
   messagePrivacy?: MessagePrivacy;
   followers?: UserFollowSummary[];
   blockedUsers?: UserFollowSummary[];
@@ -159,6 +161,12 @@ export interface UserProfile {
     comments?: boolean;
     newFollowers?: boolean;
     messages?: boolean;
+    emailDigest?: boolean;
+    pushAlerts?: boolean;
+    smsAlerts?: boolean;
+    securityAlerts?: boolean;
+    notifyMentions?: boolean;
+    customNotifications?: Record<string, boolean>;
   };
   followedHashtags?: { id: string; name: string }[];
   blockedKeywords?: string[];
@@ -950,6 +958,7 @@ export interface SellerProduct {
   id: string;
   name: string;
   imageUrls?: string[];
+  variants?: Array<{ id: string; name: string; sku?: string }>;
 }
 
 export interface OrderItem {

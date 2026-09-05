@@ -4,10 +4,14 @@ import { ActivityGateway } from './activity.gateway';
 import { ActivityController } from './activity.controller';
 import { ActivityService } from './activity.service';
 import { User } from '../users/entities/user.entity';
+import { VisibilityModule } from '../common/visibility/visibility.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    VisibilityModule,
+    AuthModule,
   ],
   controllers: [ActivityController],
   providers: [ActivityGateway, ActivityService],

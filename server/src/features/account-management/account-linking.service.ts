@@ -5,6 +5,8 @@ import { User } from '../../users/entities/user.entity';
 import { LinkedAccount, LinkedAccountProvider } from './entities/linked-account.entity';
 import { LinkAccountDto, UnlinkAccountDto, SetPrimaryAccountDto } from './dto/link-account.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AccountLinkingService {
@@ -16,9 +18,73 @@ export class AccountLinkingService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private notificationsService: NotificationsService,
+    private configService: ConfigService,
   ) {}
 
+  createOAuthState(userId: string, provider: LinkedAccountProvider): string {
+    const payload = Buffer.from(JSON.stringify({ userId, provider, expiresAt: Date.now() + 10 * 60 * 1000 })).toString('base64url');
+    const signature = crypto.createHmac('sha256', this.getEncryptionKey()).update(payload).digest('base64url');
+    return `${payload}.${signature}`;
+  }
+
+  verifyOAuthState(state: string, provider: LinkedAccountProvider): string {
+    const [payload, signature] = state.split('.');
+    if (!payload || !signature) {
+      throw new BadRequestException('Invalid account-linking state');
+    }
+
+    const expected = crypto.createHmac('sha256', this.getEncryptionKey()).update(payload).digest('base64url');
+    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+      throw new BadRequestException('Invalid account-linking state');
+    }
+
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      userId: string;
+      provider: LinkedAccountProvider;
+      expiresAt: number;
+    };
+    if (decoded.provider !== provider || decoded.expiresAt < Date.now()) {
+      throw new BadRequestException('Expired or mismatched account-linking state');
+    }
+    return decoded.userId;
+  }
+
+  getOAuthStartUrl(provider: LinkedAccountProvider, state: string): string {
+    const apiUrl = this.configService.get<string>('API_URL') || this.configService.get<string>('SERVER_URL', 'http://localhost:3000');
+    return `${apiUrl}/auth/link/${provider}?state=${encodeURIComponent(state)}`;
+  }
+
+  async linkOAuthAccount(userId: string, provider: LinkedAccountProvider, profile: any): Promise<LinkedAccount> {
+    return this.linkAccount(userId, {
+      provider,
+      externalUserId: String(profile.providerId),
+      accessToken: profile.accessToken,
+      displayName: profile.displayName,
+      email: profile.email,
+      profilePictureUrl: profile.profilePictureUrl || profile.picture,
+      isPrimary: false,
+    });
+  }
+
+  private getEncryptionKey(): Buffer {
+    const configuredKey = process.env.LINKED_ACCOUNT_ENCRYPTION_KEY || process.env.JWT_SECRET;
+    if (!configuredKey) {
+      throw new BadRequestException('Linked account encryption is not configured');
+    }
+    return crypto.createHash('sha256').update(configuredKey).digest();
+  }
+
+  private encryptAccessToken(accessToken: string): string {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', this.getEncryptionKey(), iv);
+    const encrypted = Buffer.concat([cipher.update(accessToken, 'utf8'), cipher.final()]);
+    return [iv.toString('base64url'), cipher.getAuthTag().toString('base64url'), encrypted.toString('base64url')].join('.');
+  }
+
   async linkAccount(userId: string, linkAccountDto: LinkAccountDto): Promise<LinkedAccount> {
+    if (!linkAccountDto.accessToken?.trim()) {
+      throw new BadRequestException('Provider access token is required');
+    }
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -63,6 +129,7 @@ export class AccountLinkingService {
       isPrimary: linkAccountDto.isPrimary || false,
       isVerified: true,
       metadata: linkAccountDto.metadata,
+      encryptedAccessToken: this.encryptAccessToken(linkAccountDto.accessToken),
       lastUsedAt: new Date(),
     });
 

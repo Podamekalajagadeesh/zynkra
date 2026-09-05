@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Bell, Briefcase, ChevronRight, Clock3, Database, Lock, Shield, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
-import { getAccountDashboard, getSecurityCenter, getVerificationStatus } from '../lib/api';
+import { api, getAccountDashboard, getSecurityCenter, getVerificationStatus, startAccountRecovery } from '../lib/api';
 
 interface AccountDashboardData {
   account: {
@@ -48,29 +49,83 @@ export default function AccountDashboardPage() {
   const [verification, setVerification] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [working, setWorking] = useState<'recovery' | 'verification' | null>(null);
+
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      const [dashboardData, centerData, verificationData] = await Promise.all([
+        getAccountDashboard(),
+        getSecurityCenter(),
+        getVerificationStatus(),
+      ]);
+
+      setDashboard(dashboardData);
+      setSecurityCenter(centerData);
+      setVerification(verificationData);
+      setError(null);
+    } catch (err) {
+      setError('Unable to load your account dashboard right now.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [dashboardData, centerData, verificationData] = await Promise.all([
-          getAccountDashboard(),
-          getSecurityCenter(),
-          getVerificationStatus(),
-        ]);
-
-        setDashboard(dashboardData);
-        setSecurityCenter(centerData);
-        setVerification(verificationData);
-      } catch (err) {
-        setError('Unable to load your account dashboard right now.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
+    loadDashboard();
   }, []);
+
+  const handleStartRecovery = async () => {
+    setWorking('recovery');
+    try {
+      const result = await startAccountRecovery('email');
+      const nextDashboard = dashboard ?? {
+        account: { accountId: '', deactivated: false, status: 'active', switchingEnabled: false },
+        preferences: {},
+        notifications: {},
+        linkedAccounts: [],
+        history: [],
+        privacy: {},
+        recoveryStatus: null,
+        appeals: [],
+        securityCenter: {},
+      };
+
+      setDashboard({
+        ...nextDashboard,
+        recoveryStatus: result,
+      });
+      toast.success('Account recovery started.');
+      await loadDashboard();
+    } catch (err) {
+      toast.error('Failed to start account recovery.');
+    } finally {
+      setWorking(null);
+    }
+  };
+
+  const handleRequestVerification = async () => {
+    setWorking('verification');
+    try {
+      const result = await api.post('/users/me/verification-request', {
+        type: 'identity',
+        reason: 'Identity verification requested from account dashboard.',
+        links: [],
+      });
+
+      setVerification((current: any) => ({
+        ...(current ?? {}),
+        status: result?.data?.status ?? 'pending',
+        verified: Boolean(result?.data?.status === 'approved'),
+      }));
+      toast.success('Verification request submitted.');
+      await loadDashboard();
+    } catch (err) {
+      toast.error('Failed to submit verification request.');
+    } finally {
+      setWorking(null);
+    }
+  };
 
   const stats = useMemo(() => {
     const account = dashboard?.account ?? {
@@ -144,9 +199,20 @@ export default function AccountDashboardPage() {
       title="Account Dashboard"
       description="Review your account controls, security posture, privacy defaults, and verification state."
       action={
-        <Link to="/settings">
-          <Button variant="secondary">Open settings</Button>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" onClick={handleStartRecovery} disabled={working === 'recovery'}>
+            {working === 'recovery' ? 'Starting recovery...' : 'Start account recovery'}
+          </Button>
+          <Button variant="secondary" onClick={handleRequestVerification} disabled={working === 'verification'}>
+            {working === 'verification' ? 'Submitting...' : 'Request verification'}
+          </Button>
+          <Link to="/settings">
+            <Button variant="secondary">Open settings</Button>
+          </Link>
+          <Link to="/account-controls">
+            <Button variant="secondary">Account controls</Button>
+          </Link>
+        </div>
       }
     >
       <div className="space-y-6">

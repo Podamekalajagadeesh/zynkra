@@ -114,12 +114,12 @@ These features improve retention and growth after the MVP launches. They build o
 - [ ] Image sharing in DMs
 - [ ] Message reactions (emoji)
 - [ ] Typing indicators
-- [ ] Read receipts (already on server, needs UI)
+- [x] Read receipts (privacy-controlled DM receipts with client status updates)
 
 ### Notifications
 - [ ] Email notifications (new follower, new tip, subscription renewal)
-- [ ] Notification preferences (toggle per event type)
-- [ ] Push notifications (web push via Service Worker)
+- [x] Notification preferences (toggle per event type)
+- [x] Push notifications (web push via Service Worker)
 
 ### Content Moderation
 - [ ] Automated spam detection
@@ -249,7 +249,7 @@ These features represent the full Zynkra vision. They are aspirational goals tha
 - [ ] Yield on creator earnings
 
 ### Platform
-- [ ] Multiple accounts (switch between creator/personal)
+- [x] Multiple accounts (switch between creator/personal)
 - [ ] API access (public API for creators/devs)
 - [ ] Webhook system (custom integrations)
 - [ ] White-label solutions (creator's own domain)

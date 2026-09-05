@@ -16,9 +16,10 @@ import { StoriesReactionService } from './stories-reaction.service';
 import { StoriesReplyService } from './stories-reply.service';
 import { StoryView } from './entities/story-view.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, StoryElement, StoryHighlight, StoryReaction, StoryReply, StoryView, Subscription]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Story, StoryElement, StoryHighlight, StoryReaction, StoryReply, StoryView, Subscription, CustomAudience]), UsersModule],
   controllers: [StoriesController, HighlightsController, StoriesReactionController, StoriesReplyController],
   providers: [StoriesService, HighlightsService, StoriesReactionService, StoriesReplyService],
   exports: [StoriesService],

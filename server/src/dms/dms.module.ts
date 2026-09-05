@@ -10,6 +10,7 @@ import { DmsController } from './dms.controller';
 import { UsersModule } from '../users/users.module';
 import { WebRtcGateway } from './webrtc.gateway';
 import { MessageMedia } from './entities/message-media.entity';
+import { DataPermissionsModule } from '../common/data-permissions/data-permissions.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MessageMedia } from './entities/message-media.entity';
       MessageMedia,
     ]),
     UsersModule,
+    DataPermissionsModule,
   ],
   providers: [DmsService, WebRtcGateway],
   controllers: [DmsController],

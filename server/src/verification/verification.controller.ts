@@ -14,7 +14,10 @@ import { VerificationService } from './verification.service';
 import {
   CreateVerificationRequestDto,
   ReviewVerificationRequestDto,
+  ReviewVerificationAppealDto,
+  SubmitVerificationAppealDto,
 } from './dto/verification.dto';
+import { VerificationAppealStatus } from './entities/verification-appeal.entity';
 
 @Controller('verification')
 @UseGuards(JwtAuthGuard)
@@ -74,5 +77,44 @@ export class VerificationController {
       dto.decision,
       dto.reviewNote,
     );
+  }
+
+  @Post('appeals')
+  async submitAppeal(@Request() req, @Body() body: { requestId: string; appealDto: SubmitVerificationAppealDto }) {
+    return this.verificationService.submitAppeal(req.user.userId, body.requestId, body.appealDto);
+  }
+
+  @Get('appeals')
+  async getUserAppeals(@Request() req) {
+    return this.verificationService.getUserAppeals(req.user.userId);
+  }
+
+  @Get('appeals/:appealId')
+  async getAppeal(@Request() req, @Param('appealId') appealId: string) {
+    return this.verificationService.getAppeal(appealId, req.user.userId);
+  }
+
+  @UseGuards(AdminGuard)
+  @Get('admin/appeals')
+  async listAppeals(@Query('status') status?: VerificationAppealStatus) {
+    return this.verificationService.listAppeals(status);
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('admin/appeals/:appealId/under-review')
+  async markAppealUnderReview(@Request() req, @Param('appealId') appealId: string) {
+    return this.verificationService.markAppealUnderReview(appealId, req.user.userId);
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('admin/appeals/:appealId/approve')
+  async approveAppeal(@Request() req, @Param('appealId') appealId: string, @Body() dto: ReviewVerificationAppealDto) {
+    return this.verificationService.reviewAppeal(appealId, req.user.userId, VerificationAppealStatus.APPROVED, dto.notes);
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('admin/appeals/:appealId/reject')
+  async rejectAppeal(@Request() req, @Param('appealId') appealId: string, @Body() dto: ReviewVerificationAppealDto) {
+    return this.verificationService.reviewAppeal(appealId, req.user.userId, VerificationAppealStatus.REJECTED, dto.notes);
   }
 }

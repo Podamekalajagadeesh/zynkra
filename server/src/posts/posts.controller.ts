@@ -113,14 +113,16 @@ export class PostsController {
 
   @Get(':id/similar')
   @UseGuards(OptionalJwtAuthGuard)
-  similar(@Param('id') id: string, @Query('limit') limit?: string) {
-    return this.postsService.findSimilarPosts(id, limit ? Math.min(+limit, 20) : 10);
+  similar(@Param('id') id: string, @Query('limit') limit?: string, @Request() req?) {
+    const viewerId = req?.user ? req.user.userId : undefined;
+    return this.postsService.findSimilarPosts(id, limit ? Math.min(+limit, 20) : 10, viewerId);
   }
 
   @Get(':id/oembed')
   @UseGuards(OptionalJwtAuthGuard)
-  oembed(@Param('id') id: string) {
-    return this.postsService.getOEmbed(id);
+  oembed(@Param('id') id: string, @Request() req?) {
+    const viewerId = req?.user ? req.user.userId : undefined;
+    return this.postsService.getOEmbed(id, viewerId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -170,8 +172,10 @@ export class PostsController {
   }
 
   @Get('/users/:userId/posts')
-  findPostsByUserId(@Param('userId') userId: string) {
-    return this.postsService.findPostsByUserId(userId);
+  @UseGuards(OptionalJwtAuthGuard)
+  findPostsByUserId(@Param('userId') userId: string, @Request() req) {
+    const viewerId = req.user ? req.user.userId : undefined;
+    return this.postsService.findPostsByUserId(userId, viewerId);
   }
 
   @UseGuards(JwtAuthGuard)

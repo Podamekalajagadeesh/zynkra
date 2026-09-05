@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args, ObjectType, Field, ID, Int, Context } from '@nestjs/graphql';
 import { PostsService } from '../../posts/posts.service';
 
 @ObjectType()
@@ -36,8 +36,9 @@ export class PostResolver {
   constructor(private readonly postsService: PostsService) {}
 
   @Query(() => GqlPost, { nullable: true })
-  async post(@Args('id', { type: () => ID }) id: string): Promise<GqlPost | null> {
-    const post = await this.postsService.findOne(id);
+  async post(@Args('id', { type: () => ID }) id: string, @Context() context: any): Promise<GqlPost | null> {
+    const viewerId = context?.req?.user?.userId ?? context?.req?.user?.id;
+    const post = await this.postsService.findOne(id, viewerId);
     if (!post) {
       return null;
     }

@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UnauthorizedException } from '@nestjs/common';
 import { LoginSession } from '../entities/login-session.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -13,6 +14,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
     @InjectRepository(LoginSession)
     private readonly loginSessionsRepository: Repository<LoginSession>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
     if (!jwtSecret) {
@@ -28,6 +31,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    const user = await this.usersRepository.findOne({ where: { id: payload.sub } });
+    if (!user || user.status === 'deactivated' || user.banned) {
+      throw new UnauthorizedException('Account is inactive.');
+    }
+
     if (!payload.sid) {
       return { userId: payload.sub, email: payload.email, sessionId: null };
     }

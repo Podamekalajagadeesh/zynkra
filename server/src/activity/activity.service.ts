@@ -2,22 +2,27 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 @Injectable()
 export class ActivityService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly visibilityService: VisibilityService,
   ) {}
 
   /** Presence for a set of users, honoring each user's privacy settings. */
-  async getUsersStatuses(userIds: string[]) {
+  async getUsersStatuses(userIds: string[], viewerId: string | null) {
     if (userIds.length === 0) return [];
     const users = await this.usersRepository.find({ where: { id: In(userIds) } });
-    return users.map((user) => ({
-      userId: user.id,
-      isOnline: user.showOnlineStatus ? user.isOnline : undefined,
-      lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
+    return Promise.all(users.map(async (user) => {
+      const canView = await this.visibilityService.canViewActivity(viewerId, user);
+      return {
+        userId: user.id,
+        isOnline: canView && user.showOnlineStatus ? user.isOnline : undefined,
+        lastSeenAt: canView && user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
+      };
     }));
   }
 

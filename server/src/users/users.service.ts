@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException, Optional } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Not, Repository } from 'typeorm';
+import { DataSource, In, IsNull, LessThan, Like, Not, Repository } from 'typeorm';
 import { webcrypto, randomBytes } from 'crypto';
 import { User, ProfilePrivacy } from './entities/user.entity';
 import { FollowRequest, FollowRequestStatus } from './entities/follow-request.entity';
@@ -13,13 +14,18 @@ import { NotificationSettingsDto } from './dto/notification-settings.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { StorageService } from '../storage/storage.service';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
+import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { LifeEvent } from './entities/life-event.entity';
 import { CreateLifeEventDto } from './dto/create-life-event.dto';
 import { UpdateLifeEventDto } from './dto/update-life-event.dto';
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
+import { ContactDiscoveryDto } from './dto/contact-discovery.dto';
 import { UpdateFaceRecognitionDto } from './dto/update-face-recognition.dto';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { LoginSession } from '../auth/entities/login-session.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class UsersService {
@@ -34,9 +40,14 @@ export class UsersService {
     private readonly pokeRepository: Repository<Poke>,
     @InjectRepository(LifeEvent)
     private readonly lifeEventRepository: Repository<LifeEvent>,
+    @InjectRepository(LoginSession)
+    private readonly loginSessionsRepository: Repository<LoginSession>,
     private readonly notificationsService: NotificationsService,
     private readonly storageService: StorageService,
     private readonly webhooksService: WebhooksService,
+    private readonly dataPermissions: DataPermissionsService,
+    @Optional()
+    private readonly dataSource?: DataSource,
   ) {}
 
   async updateFaceRecognition(
@@ -65,6 +76,7 @@ export class UsersService {
   }
 
   async updateAvatar(userId: string, file: any): Promise<User> {
+    await this.dataPermissions.require(userId, DataPermission.PROFILE);
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -99,6 +111,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
     avatar: any,
   ): Promise<User> {
+    await this.dataPermissions.require(userId, DataPermission.PROFILE);
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -142,6 +155,10 @@ export class UsersService {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (updatePrivacyDto.profilePrivacy) {
+      user.profilePrivacy = updatePrivacyDto.profilePrivacy;
     }
 
     if (updatePrivacyDto.postVisibility) {
@@ -381,13 +398,36 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async deactivate(userId: string): Promise<User> {
+  async deactivate(userId: string, reason?: string): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
     user.status = 'deactivated' as any;
+    user.deactivatedAt = new Date();
+    user.deactivationReason = reason?.trim() || null;
+    await this.loginSessionsRepository.update(
+      { user: { id: userId }, revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
     return this.usersRepository.save(user);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'purge-expired-deactivated-accounts' })
+  async purgeExpiredDeactivatedAccounts(): Promise<number> {
+    const expirationDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const expiredAccounts = await this.usersRepository.find({
+      where: {
+        status: 'deactivated',
+        deactivatedAt: LessThan(expirationDate),
+      },
+    });
+
+    for (const account of expiredAccounts) {
+      await this.usersRepository.remove(account);
+    }
+
+    return expiredAccounts.length;
   }
 
   async reactivate(userId: string): Promise<User> {
@@ -398,16 +438,105 @@ export class UsersService {
     if ((user.status as string) !== 'deactivated') {
       throw new BadRequestException('Account is not deactivated');
     }
+    if (user.deactivatedAt && user.deactivatedAt.getTime() + 90 * 24 * 60 * 60 * 1000 < Date.now()) {
+      throw new BadRequestException('The 90-day reactivation window has expired');
+    }
     user.status = 'active' as any;
+    user.deactivatedAt = null;
+    user.deactivationReason = null;
     return this.usersRepository.save(user);
   }
 
   async delete(userId: string): Promise<void> {
-    const user = await this.findOneById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!this.dataSource) {
+      const user = await this.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      await this.cleanupUserAsset(user.avatar);
+      await this.usersRepository.remove(user);
+      return;
     }
-    await this.usersRepository.remove(user);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await queryRunner.manager.findOne(User, { where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      await this.cleanupUserAsset(user.avatar);
+
+      await queryRunner.manager.update(LoginSession, { user: { id: userId } }, { revokedAt: new Date() });
+
+      const ownershipColumns = [
+        'userId', 'user_id', 'ownerId', 'owner_id', 'creatorId', 'creator_id',
+        'authorId', 'author_id', 'subscriberId', 'subscriber_id', 'buyerId',
+        'sellerId', 'organizerId', 'donorId', 'viewerId', 'localUserId',
+        'taggingUserId', 'taggedUserId', 'raterId', 'rateeId', 'developerId',
+        'providerId', 'accountId',
+      ];
+      const tables = await queryRunner.query(
+        `SELECT DISTINCT table_name, column_name
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND column_name = ANY($1::text[])
+           AND table_name <> 'users'`,
+        [ownershipColumns],
+      );
+
+      for (let pass = 0; pass < tables.length + 1; pass += 1) {
+        let deletedRows = 0;
+        for (const table of tables) {
+          try {
+            const result = await queryRunner.query(
+              `DELETE FROM "${table.table_name.replace(/"/g, '""')}" WHERE "${table.column_name.replace(/"/g, '""')}" = $1`,
+              [userId],
+            );
+            deletedRows += result.rowCount ?? 0;
+          } catch (error: any) {
+            if (error?.code !== '23503') {
+              throw error;
+            }
+          }
+        }
+        if (deletedRows === 0) {
+          break;
+        }
+      }
+
+      await queryRunner.manager.remove(user);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async cleanupUserAsset(assetReference?: string | null): Promise<void> {
+    if (!assetReference) {
+      return;
+    }
+
+    try {
+      if (assetReference.startsWith('/uploads/')) {
+        const uploadRoot = join(process.cwd(), 'uploads');
+        const assetPath = join(process.cwd(), assetReference);
+        if (assetPath.startsWith(uploadRoot)) {
+          await unlink(assetPath).catch(() => undefined);
+        }
+        return;
+      }
+
+      await this.storageService.delete(assetReference);
+    } catch {
+      // External asset cleanup is best effort; database deletion remains atomic.
+    }
   }
 
   async setBirthDate(userId: string, birthDate: string): Promise<User> {
@@ -620,7 +749,15 @@ export class UsersService {
         { username: Like(`%${query}%`) },
         { displayName: Like(`%${query}%`) },
       ],
+      relations: ['followers', 'following'],
       take: 10,
+    });
+
+    const visibleUsers = users.filter((user) => {
+      if (user.id === searchingUserId || !user.searchVisibility || user.searchVisibility === 'everyone') return true;
+      if (user.searchVisibility !== 'friends' || !searchingUserId) return false;
+      return user.followers?.some((follower) => follower.id === searchingUserId)
+        && user.following?.some((following) => following.id === searchingUserId);
     });
 
     if (query.includes('@')) {
@@ -645,10 +782,52 @@ export class UsersService {
         return false;
       });
 
-      users.push(...filteredEmailUsers);
+      visibleUsers.push(...filteredEmailUsers.filter((user) => {
+        if (user.id === searchingUserId || !user.searchVisibility || user.searchVisibility === 'everyone') return true;
+        if (user.searchVisibility !== 'friends' || !searchingUserId) return false;
+        return user.followers?.some((follower) => follower.id === searchingUserId)
+          && user.following?.some((following) => following.id === searchingUserId);
+      }));
     }
 
-    return users;
+    return visibleUsers;
+  }
+
+  async discoverContacts(
+    userId: string,
+    contactDiscoveryDto: ContactDiscoveryDto,
+  ): Promise<Array<Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>>> {
+    const normalizedContacts = Array.from(new Set(
+      contactDiscoveryDto.contacts
+        .map((contact) => {
+          const normalized = contact.trim().toLowerCase();
+          return normalized.includes('@')
+            ? normalized
+            : normalized.replace(/[\s().-]/g, '');
+        })
+        .filter((contact) => {
+          if (!contact) return false;
+          if (contact.includes('@')) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+          }
+          return /^\+?[1-9]\d{6,14}$/.test(contact);
+        }),
+    ));
+
+    if (normalizedContacts.length === 0) {
+      return [];
+    }
+
+    const users = await this.usersRepository.find({
+      where: [
+        { email: In(normalizedContacts), contactDiscovery: true },
+        { phoneNumber: In(normalizedContacts), contactDiscovery: true },
+      ],
+    });
+
+    return users
+      .filter((user) => user.id !== userId && user.status !== 'deactivated' && !user.banned)
+      .map(({ id, username, displayName, avatar }) => ({ id, username, displayName, avatar }));
   }
 
   async findOrCreatePlatformUser(): Promise<User> {
@@ -808,13 +987,7 @@ export class UsersService {
       where: { id: userId },
       relations: ['mutedUsers'],
     });
-    const userToMute = await this.usersRepository.findOneBy({
-      id: mutedUserId,
-    });
-
-    if (!user || !userToMute) {
-      throw new NotFoundException('User not found');
-    }
+    const userToMute = await this.usersRepository.findOneBy({ id: mutedUserId });
 
     if (user.id === mutedUserId) {
       throw new BadRequestException('You cannot mute yourself.');

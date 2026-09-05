@@ -11,6 +11,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../storage/storage.service';
 import { LifeEvent } from './entities/life-event.entity';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { LoginSession } from '../auth/entities/login-session.entity';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const user = new User();
@@ -46,6 +48,7 @@ describe('UsersService', () => {
   let pokeRepo: jest.Mocked<Repository<Poke>>;
   let lifeEventRepo: jest.Mocked<Repository<LifeEvent>>;
   let notificationsService: jest.Mocked<NotificationsService>;
+  let loginSessionsRepo: jest.Mocked<Repository<LoginSession>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -103,6 +106,12 @@ describe('UsersService', () => {
           },
         },
         {
+          provide: getRepositoryToken(LoginSession),
+          useValue: {
+            update: jest.fn(),
+          },
+        },
+        {
           provide: NotificationsService,
           useValue: {
             createNotification: jest.fn().mockResolvedValue(undefined),
@@ -120,6 +129,10 @@ describe('UsersService', () => {
             dispatchEvent: jest.fn().mockResolvedValue(undefined),
           },
         },
+        {
+          provide: DataPermissionsService,
+          useValue: { require: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -130,6 +143,7 @@ describe('UsersService', () => {
     pokeRepo = module.get(getRepositoryToken(Poke)) as jest.Mocked<Repository<Poke>>;
     lifeEventRepo = module.get(getRepositoryToken(LifeEvent)) as jest.Mocked<Repository<LifeEvent>>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
+    loginSessionsRepo = module.get(getRepositoryToken(LoginSession)) as jest.Mocked<Repository<LoginSession>>;
   });
 
   // ─── findOneById ──────────────────────────────────────────────────────
@@ -312,6 +326,50 @@ describe('UsersService', () => {
 
       const result = await service.deactivate(user.id);
       expect(result.status).toBe('deactivated');
+      expect(loginSessionsRepo.update).toHaveBeenCalledWith(
+        { user: { id: user.id }, revokedAt: expect.anything() },
+        { revokedAt: expect.any(Date) },
+      );
+    });
+
+    it('stores the reason and deactivation timestamp', async () => {
+      const user = makeUser();
+      usersRepo.findOne.mockResolvedValue(user);
+      usersRepo.save.mockImplementation(async (value) => value as any);
+
+      await service.deactivate(user.id, 'Taking a break');
+
+      expect(usersRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'deactivated',
+        deactivationReason: 'Taking a break',
+        deactivatedAt: expect.any(Date),
+      }));
+    });
+  });
+
+  describe('purgeExpiredDeactivatedAccounts', () => {
+    it('removes accounts whose reactivation window has expired', async () => {
+      const expiredAccount = makeUser({ status: 'deactivated' as any });
+      usersRepo.find.mockResolvedValue([expiredAccount]);
+      usersRepo.remove.mockResolvedValue(expiredAccount);
+
+      await expect(service.purgeExpiredDeactivatedAccounts()).resolves.toBe(1);
+
+      expect(usersRepo.find).toHaveBeenCalledWith({
+        where: {
+          status: 'deactivated',
+          deactivatedAt: expect.anything(),
+        },
+      });
+      expect(usersRepo.remove).toHaveBeenCalledWith(expiredAccount);
+    });
+
+    it('does nothing when no accounts have expired', async () => {
+      usersRepo.find.mockResolvedValue([]);
+
+      await expect(service.purgeExpiredDeactivatedAccounts()).resolves.toBe(0);
+
+      expect(usersRepo.remove).not.toHaveBeenCalled();
     });
   });
 
@@ -325,6 +383,17 @@ describe('UsersService', () => {
 
       expect(result.status).toBe('active');
       expect(usersRepo.save).toHaveBeenCalledWith(expect.objectContaining({ status: 'active' }));
+    });
+
+    it('rejects accounts outside the 90-day reactivation window', async () => {
+      const user = makeUser({
+        status: 'deactivated' as any,
+        deactivatedAt: new Date(Date.now() - 91 * 24 * 60 * 60 * 1000),
+      });
+      usersRepo.findOne.mockResolvedValue(user);
+
+      await expect(service.reactivate(user.id)).rejects.toThrow('90-day reactivation window has expired');
+      expect(usersRepo.save).not.toHaveBeenCalled();
     });
 
     it('rejects active accounts', async () => {
@@ -596,6 +665,69 @@ describe('UsersService', () => {
           ]),
         }),
       );
+    });
+
+    it('hides no-one users and allows mutual friends', async () => {
+      const viewer = makeUser({ id: 'viewer-id' });
+      const hidden = makeUser({ id: 'hidden-id', searchVisibility: 'no_one' });
+      const friend = makeUser({
+        id: 'friend-id',
+        searchVisibility: 'friends',
+        followers: [viewer],
+        following: [viewer],
+      });
+      usersRepo.find.mockResolvedValue([hidden, friend]);
+
+      await expect(service.search('test', viewer.id)).resolves.toEqual([friend]);
+    });
+
+    it('always allows a user to find their own profile', async () => {
+      const viewer = makeUser({ id: 'viewer-id', searchVisibility: 'no_one' });
+      usersRepo.find.mockResolvedValue([viewer]);
+
+      await expect(service.search('test', viewer.id)).resolves.toEqual([viewer]);
+    });
+  });
+
+  describe('discoverContacts', () => {
+    it('normalizes emails, excludes the requester, and returns public profile fields', async () => {
+      const requester = makeUser({ id: 'requester-id', email: 'me@example.com' });
+      const match = makeUser({ id: 'match-id', email: 'friend@example.com', username: 'friend' });
+      usersRepo.find.mockResolvedValue([requester, match]);
+
+      const result = await service.discoverContacts('requester-id', {
+        contacts: [' FRIEND@EXAMPLE.COM ', 'friend@example.com', 'me@example.com'],
+      });
+
+      expect(usersRepo.find).toHaveBeenCalledWith({
+        where: [
+          { email: expect.any(Object), contactDiscovery: true },
+          { phoneNumber: expect.any(Object), contactDiscovery: true },
+        ],
+      });
+      expect(result).toEqual([
+        {
+          id: 'match-id',
+          username: 'friend',
+          displayName: 'Test User',
+          avatar: '/uploads/avatars/test.jpg',
+        },
+      ]);
+      expect(result[0]).not.toHaveProperty('email');
+    });
+
+    it('filters banned and deactivated accounts', async () => {
+      usersRepo.find.mockResolvedValue([
+        makeUser({ id: 'banned-id', banned: true }),
+        makeUser({ id: 'deactivated-id', status: 'deactivated' }),
+      ]);
+
+      await expect(service.discoverContacts('requester-id', { contacts: ['friend@example.com'] })).resolves.toEqual([]);
+    });
+
+    it('does not query for an empty contact list', async () => {
+      await expect(service.discoverContacts('requester-id', { contacts: [] })).resolves.toEqual([]);
+      expect(usersRepo.find).not.toHaveBeenCalled();
     });
   });
 

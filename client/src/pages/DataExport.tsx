@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/useToast';
-import { Download, Trash2, Shield, AlertTriangle, CheckCircle, FileJson, Loader2 } from 'lucide-react';
-import { get, del } from '../lib/api';
+import { Download, Trash2, Shield, AlertTriangle, CheckCircle, FileJson, Loader2, Upload } from 'lucide-react';
+import { api, get, del } from '../lib/api';
 
 interface ExportInfo {
   dataTypes: string[];
@@ -17,6 +17,7 @@ const DataExportPage: React.FC = () => {
   const [info, setInfo] = useState<ExportInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteStep, setDeleteStep] = useState(0);
@@ -38,10 +39,8 @@ const DataExportPage: React.FC = () => {
   const handleDownload = async () => {
     setExporting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/data-export/download`, {
-        credentials: 'include',
-      });
-      const blob = await response.blob();
+      const response = await api.get('/data-export/download', { responseType: 'blob' });
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -55,6 +54,28 @@ const DataExportPage: React.FC = () => {
       addToast('Failed to export data', 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const payload = JSON.parse(await file.text());
+      const response = await api.post('/data-export/import', payload);
+      const result = response.data;
+      addToast(`Data imported: ${result.posts ?? 0} posts, ${result.articles ?? 0} articles, ${result.courses ?? 0} courses.`, 'success');
+      await loadInfo();
+    } catch (error: any) {
+      const message = error instanceof SyntaxError
+        ? 'The selected file is not valid JSON.'
+        : error?.response?.data?.message || 'Failed to import data.';
+      addToast(message, 'error');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -122,6 +143,30 @@ const DataExportPage: React.FC = () => {
           >
             Download My Data
           </Button>
+        </div>
+
+        <div className="surface p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Upload size={20} className="text-blue-500" />
+            Import Your Data
+          </h3>
+          <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
+            Restore content and settings from a Zynkra JSON export. Existing identity, payment, and verification data is not replaced.
+          </p>
+          <input
+            id="account-data-import"
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImport}
+            className="sr-only"
+          />
+          <label
+            htmlFor="account-data-import"
+            className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-cyan-500 px-4 py-2 font-medium text-white shadow-lg shadow-primary-500/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary-500/25 ${importing ? 'pointer-events-none opacity-50' : ''}`}
+          >
+            {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            {importing ? 'Importing...' : 'Choose Export File'}
+          </label>
         </div>
 
         {/* Deletion Section */}

@@ -29,12 +29,15 @@ import { TimelineReviewService } from '../timeline-review/timeline-review.servic
 import { ProfileReviewService } from '../tags/profile-review.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { User } from '../users/entities/user.entity';
 import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftDto } from './dto/update-draft.dto';
 import { SetCollaboratorsDto } from './dto/set-collaborators.dto';
 
 
 import { ReelEffect } from '../reels/entities/reel-effect.entity';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class PostsService {
@@ -77,6 +80,7 @@ export class PostsService {
     private readonly profileReviewService: ProfileReviewService,
     private readonly visibilityService: VisibilityService,
     private readonly webhooksService: WebhooksService,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   async create(
@@ -85,7 +89,8 @@ export class PostsService {
     reelEffectId?: string,
     groupId?: string,
   ): Promise<Post> {
-    const user = await this.usersService.findOneById(userPayload.userId);
+    await this.dataPermissions.require(userPayload.userId, DataPermission.POSTS);
+    const user = await this.usersService.findOneById(userPayload.userId, ['following']);
     if (!user) {
       throw new Error('User not found');
     }
@@ -104,6 +109,18 @@ export class PostsService {
 
     const tags = await this.tagsService.parseAndCreateTags(createPostDto.content);
 
+    const taggedUsers: User[] = [];
+    for (const taggedUserId of createPostDto.taggedUserIds ?? createPostDto.taggedUsers ?? []) {
+      const taggedUser = await this.usersService.findOneById(taggedUserId, ['following']);
+      if (!taggedUser) {
+        throw new NotFoundException(`Tagged user ${taggedUserId} not found`);
+      }
+      this.mentionsService.assertCanTag(user, taggedUser);
+      if (!taggedUser.tagReviewEnabled) {
+        taggedUsers.push(taggedUser);
+      }
+    }
+
     const post = new Post();
     // Handle E2EE encrypted content
     if (createPostDto.isEncrypted && createPostDto.encryptedContent) {
@@ -116,7 +133,7 @@ export class PostsService {
     }
     post.user = user;
     post.tags = tags;
-    post.visibility = createPostDto.visibility;
+    post.visibility = createPostDto.visibility ?? (user.postVisibility as unknown as PostVisibility) ?? PostVisibility.PUBLIC;
     post.tokenGated = createPostDto.tokenGated;
     post.contractAddress = createPostDto.contractAddress;
     post.requiredTokenBalance = createPostDto.requiredTokenBalance;
@@ -132,6 +149,7 @@ export class PostsService {
     post.eventTags = createPostDto.eventTags;
     post.musicTags = createPostDto.musicTags;
     post.autoTags = createPostDto.autoTags;
+    post.taggedUsers = taggedUsers;
     post.isSensitive = createPostDto.isSensitive;
     post.enableScreenshotProtection = createPostDto.enableScreenshotProtection;
     // post.profileId = createPostDto.profileId; // Assign profileId - property doesn't exist on Post entity
@@ -200,6 +218,13 @@ export class PostsService {
 
     const savedPost = await this.postsRepository.save(post);
 
+    for (const taggedUserId of createPostDto.taggedUserIds ?? createPostDto.taggedUsers ?? []) {
+      const taggedUser = await this.usersService.findOneById(taggedUserId, ['following']);
+      if (taggedUser?.tagReviewEnabled) {
+        await this.profileReviewService.createForPost(savedPost, taggedUser, user);
+      }
+    }
+
     if (post.quotedPost) {
       await this.postsRepository.increment({ id: post.quotedPost.id }, 'quoteCount', 1);
     }
@@ -230,6 +255,7 @@ export class PostsService {
   }
 
   async createDraft(userId: string, dto: CreateDraftDto): Promise<Post> {
+    await this.dataPermissions.require(userId, DataPermission.POSTS);
     const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -274,6 +300,7 @@ export class PostsService {
   }
 
   async updateDraft(userId: string, id: string, dto: UpdateDraftDto): Promise<Post> {
+    await this.dataPermissions.require(userId, DataPermission.POSTS);
     const draft = await this.findDraft(userId, id);
     if (dto.content !== undefined) {
       draft.content = dto.content;
@@ -315,6 +342,7 @@ export class PostsService {
   }
 
   async deleteDraft(userId: string, id: string): Promise<void> {
+    await this.dataPermissions.require(userId, DataPermission.POSTS);
     const draft = await this.findDraft(userId, id);
     await this.postsRepository.remove(draft);
   }
@@ -387,7 +415,7 @@ export class PostsService {
     };
   }
 
-  async findSimilarPosts(postId: string, limit = 10): Promise<Post[]> {
+  async findSimilarPosts(postId: string, limit = 10, viewerId?: string): Promise<Post[]> {
     const post = await this.postsRepository.findOne({
       where: { id: postId },
       relations: ['tags'],
@@ -398,12 +426,13 @@ export class PostsService {
 
     const tagIds = post.tags?.map((tag) => tag.id) ?? [];
     if (tagIds.length === 0) {
-      return this.postsRepository.find({
+      const posts = await this.postsRepository.find({
         where: { visibility: PostVisibility.PUBLIC, isDraft: false },
         relations: ['user'],
         order: { createdAt: 'DESC' },
         take: limit,
       });
+      return this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
     }
 
     // Posts sharing at least one tag; rank by number of shared tags.
@@ -429,13 +458,14 @@ export class PostsService {
       }
     }
 
-    return [...counts.values()]
+    const similarPosts = [...counts.values()]
       .sort((a, b) => b.overlap - a.overlap)
       .slice(0, limit)
       .map((entry) => entry.post);
+    return this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, similarPosts);
   }
 
-  async getOEmbed(postId: string) {
+  async getOEmbed(postId: string, viewerId?: string) {
     const post = await this.postsRepository.findOne({
       where: { id: postId },
       relations: ['user'],
@@ -443,6 +473,9 @@ export class PostsService {
     if (!post) {
       throw new NotFoundException('Post not found');
     }
+    await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, [post]).then((visible) => {
+      if (visible.length === 0) throw new NotFoundException('Post not found');
+    });
 
     const clientUrl = process.env.CLIENT_URL || 'http://127.0.0.1:5173';
     const embedUrl = `${clientUrl.replace(/\/+$/, '')}/embed/post/${post.id}`;
@@ -497,8 +530,16 @@ export class PostsService {
       throw new NotFoundException('Post not found.');
     }
 
-    if (post.visibility === PostVisibility.PRIVATE) {
-      if (!userId || (post.user.id !== userId && !post.user.followers.some(follower => follower.id === userId))) {
+    if ([PostVisibility.PRIVATE, PostVisibility.FRIENDS].includes(post.visibility)) {
+      const followsAuthor = userId ? await this.visibilityService.isFollowing(userId, post.user.id) : false;
+      const followsViewer = userId ? await this.visibilityService.isFollowing(post.user.id, userId) : false;
+      if (!userId || (post.user.id !== userId && !(followsAuthor && followsViewer))) {
+        throw new UnauthorizedException('This post is private.');
+      }
+    }
+
+    if ([PostVisibility.ONLY_ME, PostVisibility.PROFILE_ONLY].includes(post.visibility)) {
+      if (post.user.id !== userId) {
         throw new UnauthorizedException('This post is private.');
       }
     }
@@ -597,15 +638,23 @@ export class PostsService {
     skip = 0,
   ): Promise<Post[]> {
     let posts: Post[];
+    let followingIds: string[] = [];
     if (userId) {
       const user = await this.usersService.findOneById(userId, ['following']);
-      const followingIds = user ? user.following.map((followed) => followed.id) : [];
+      followingIds = user ? user.following.map((followed) => followed.id) : [];
 
       posts = await this.postsRepository.find({
         where: [
           {
             user: { id: In([...followingIds, userId]) },
-            visibility: In([PostVisibility.PUBLIC, PostVisibility.PRIVATE, PostVisibility.UNLISTED]),
+            visibility: In([
+              PostVisibility.PUBLIC,
+              PostVisibility.FRIENDS,
+              PostVisibility.ONLY_ME,
+              PostVisibility.PRIVATE,
+              PostVisibility.UNLISTED,
+              PostVisibility.PROFILE_ONLY,
+            ]),
           },
           {
             visibility: PostVisibility.PUBLIC,
@@ -654,7 +703,7 @@ export class PostsService {
       });
     }
 
-    return this.visibilityService.filterVisiblePosts(userId ?? null, posts);
+    return this.visibilityService.filterVisiblePostsForViewer(userId ?? null, posts);
   }
 
   async like(postId: string, userPayload: { userId: string }): Promise<Post> {
@@ -757,6 +806,7 @@ export class PostsService {
     content: string,
     userPayload: { userId: string },
   ): Promise<Post> {
+    await this.dataPermissions.require(userPayload.userId, DataPermission.POSTS);
     const post = await this.findOne(id, userPayload.userId);
     if (!post) {
       throw new Error('Post not found');
@@ -1000,11 +1050,12 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  async findPostsByUserId(userId: string): Promise<Post[]> {
-    return this.postsRepository.find({
+  async findPostsByUserId(userId: string, viewerId?: string): Promise<Post[]> {
+    const posts = await this.postsRepository.find({
       where: { user: { id: userId } },
       relations: ['user', 'reactions', 'reactions.user', 'comments', 'comments.user', 'tags'],
       order: { createdAt: 'DESC' },
     });
+    return this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
   }
 }

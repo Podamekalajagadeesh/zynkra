@@ -5,7 +5,7 @@ import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api, deactivateAccount, reactivateAccount, deleteAccountPermanently } from '../lib/api';
+import { api, deactivateAccount, reactivateAccount, requestAccountDeletion, confirmAccountDeletion } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
 export default function AccountStatusPage() {
@@ -17,6 +17,7 @@ export default function AccountStatusPage() {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deactivateReason, setDeactivateReason] = useState('');
   const [deactivatingAccount, setDeactivatingAccount] = useState(false);
   const [reactivatingAccount, setReactivatingAccount] = useState(false);
@@ -71,11 +72,17 @@ export default function AccountStatusPage() {
   };
 
   const handleDeletePermanently = async () => {
+    if (deleteConfirmation.trim().toUpperCase() !== 'DELETE') {
+      addToast('Type DELETE to confirm permanent account deletion.', 'error');
+      return;
+    }
     setDeletingAccount(true);
     try {
-      await deleteAccountPermanently();
+      await requestAccountDeletion();
+      await confirmAccountDeletion(deleteConfirmation);
       addToast('Account permanently deleted. You are being logged out.', 'success');
       setDeleteDialogOpen(false);
+      setDeleteConfirmation('');
       setTimeout(() => {
         logout();
         navigate('/');
@@ -307,11 +314,19 @@ export default function AccountStatusPage() {
           <p className="text-sm text-dark-600 dark:text-dark-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg">
             <strong>Warning:</strong> All your posts, comments, messages, and profile information will be permanently erased.
           </p>
+          <input
+            value={deleteConfirmation}
+            onChange={(event) => setDeleteConfirmation(event.target.value)}
+            placeholder="Type DELETE"
+            aria-label="Type DELETE to confirm account deletion"
+            className="w-full rounded-xl border border-red-300 bg-white px-3 py-2 text-sm dark:border-red-800 dark:bg-dark-900"
+            disabled={deletingAccount}
+          />
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)} disabled={deletingAccount}>
+            <Button variant="secondary" onClick={() => { setDeleteDialogOpen(false); setDeleteConfirmation(''); }} disabled={deletingAccount}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeletePermanently} disabled={deletingAccount}>
+            <Button variant="destructive" onClick={handleDeletePermanently} disabled={deletingAccount || deleteConfirmation.trim().toUpperCase() !== 'DELETE'}>
               {deletingAccount ? 'Deleting...' : 'Delete Permanently'}
             </Button>
           </DialogFooter>

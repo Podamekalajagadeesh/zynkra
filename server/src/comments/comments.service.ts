@@ -15,6 +15,7 @@ import { SentimentService } from '../sentiment/sentiment.service';
 import { SentimentType as ServiceSentimentType } from '../sentiment/sentiment.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { ProfileReviewService } from '../tags/profile-review.service';
 
 @Injectable()
 export class CommentsService {
@@ -29,6 +30,7 @@ export class CommentsService {
     private readonly sentimentService: SentimentService,
     private readonly visibilityService: VisibilityService,
     private readonly webhooksService: WebhooksService,
+    private readonly profileReviewService: ProfileReviewService,
   ) {}
 
   private canUserComment(commentingUser: User, postOwner: User): boolean {
@@ -127,12 +129,18 @@ export class CommentsService {
     
     const savedComment = await this.commentsRepository.save(comment);
 
-    await this.mentionsService.createMentions(
+    const mentionedUsers = await this.mentionsService.createMentions(
       savedComment.content,
       null,
       savedComment,
       user,
     );
+
+    for (const mentionedUser of mentionedUsers) {
+      if (mentionedUser.tagReviewEnabled) {
+        await this.profileReviewService.createForPost(post, mentionedUser, user);
+      }
+    }
 
     await this.reputationService.addReputation(
       ReputationEvent.COMMENT_CREATED,

@@ -17,6 +17,8 @@ import { MessageReceipt } from './entities/message-receipt.entity';
 import { SendMessageDto } from './dto/send-message.dto';
 import { ForwardMessageDto } from './dto/forward-message.dto';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 
 @Injectable()
 export class DmsService {
@@ -32,6 +34,7 @@ export class DmsService {
     @InjectRepository(MessageReceipt)
     private readonly messageReceiptsRepository: Repository<MessageReceipt>,
     private readonly visibilityService: VisibilityService,
+    private readonly dataPermissions: DataPermissionsService,
   ) {}
 
   async forwardMessage(
@@ -65,12 +68,10 @@ export class DmsService {
       );
     }
 
-    // Same block rule as sendMessage — forwarding is just another send path.
+    // Forwarding is another send path, so it must observe the same privacy rules.
     if (conversation.type === ConversationType.ONE_TO_ONE) {
       const other = conversation.participants.find((p) => p.id !== user.id);
-      if (other && (await this.visibilityService.isBlockedEither(user.id, other.id))) {
-        throw new UnauthorizedException('You cannot send messages in this conversation.');
-      }
+      if (other) await this.assertCanMessage(user, other);
     }
 
     const message = this.messagesRepository.create({
@@ -90,7 +91,7 @@ export class DmsService {
   async markMessageAsRead(
     user: User,
     messageId: string,
-  ): Promise<MessageReceipt> {
+  ): Promise<MessageReceipt | null> {
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: ['conversation', 'conversation.participants'],
@@ -107,6 +108,10 @@ export class DmsService {
       throw new UnauthorizedException(
         'You are not a participant of this conversation.',
       );
+    }
+
+    if (!user.readReceipts) {
+      return null;
     }
 
     const existingReceipt = await this.messageReceiptsRepository.findOne({
@@ -181,6 +186,7 @@ export class DmsService {
     recipientIds: string[],
     name?: string,
   ): Promise<Conversation> {
+    await this.dataPermissions.require(starter.id, DataPermission.MESSAGES);
     const recipients = await this.usersRepository.findBy({
       id: In(recipientIds),
     });
@@ -195,31 +201,7 @@ export class DmsService {
     for (const recipient of recipients) {
       if (recipient.id === starter.id) continue; // Skip self
 
-      // Blocks (either direction) trump privacy settings. Same message as the
-      // privacy denial so a block isn't distinguishable from "messages off".
-      if (await this.visibilityService.isBlockedEither(starter.id, recipient.id)) {
-        throw new UnauthorizedException(`You are not allowed to send messages to ${recipient.username}`);
-      }
-
-      const privacy = recipient.messagePrivacy;
-      // Default to everyone if no privacy set
-      if (!privacy || privacy === MessagePrivacy.EVERYONE) {
-        continue;
-      }
-
-      // Check if users are friends
-      const areFriends = this.areUsersFriends(starter, recipient);
-      if (privacy === MessagePrivacy.FRIENDS) {
-        if (!areFriends) {
-          throw new UnauthorizedException(`You are not allowed to send messages to ${recipient.username}`);
-        }
-        continue;
-      }
-
-      // If privacy is NO_ONE, only allow if it's the recipient themselves (already checked)
-      if (privacy === MessagePrivacy.NO_ONE) {
-        throw new UnauthorizedException(`You are not allowed to send messages to ${recipient.username}`);
-      }
+      await this.assertCanMessage(starter, recipient);
     }
 
     if (participants.length === 2 && !name) {
@@ -247,6 +229,7 @@ export class DmsService {
     conversationId: string,
     sendMessageDto: SendMessageDto,
   ): Promise<Message> {
+    await this.dataPermissions.require(sender.id, DataPermission.MESSAGES);
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
       relations: ['participants'],
@@ -268,9 +251,7 @@ export class DmsService {
     // Blocks after the conversation exists still stop new one-to-one messages.
     if (conversation.type === ConversationType.ONE_TO_ONE) {
       const other = conversation.participants.find((p) => p.id !== sender.id);
-      if (other && (await this.visibilityService.isBlockedEither(sender.id, other.id))) {
-        throw new UnauthorizedException('You cannot send messages in this conversation.');
-      }
+      if (other) await this.assertCanMessage(sender, other);
     }
 
     let replyTo: Message | undefined;
@@ -305,6 +286,7 @@ export class DmsService {
   }
 
   async getConversations(user: User): Promise<Array<Conversation & { unreadCount: number; lastMessage?: Message }>> {
+    await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const conversations = await this.conversationsRepository.find({
       where: { participants: { id: user.id } },
       relations: ['participants', 'messages', 'messages.sender', 'messages.readBy', 'owner'],
@@ -351,6 +333,10 @@ export class DmsService {
       (message) => message.sender?.id !== user.id && !message.readBy?.some((receipt) => receipt.user?.id === user.id),
     );
 
+    if (!user.readReceipts) {
+      return { conversationId, markedCount: 0 };
+    }
+
     if (unreadMessages.length > 0) {
       await this.messageReceiptsRepository.save(
         unreadMessages.map((message) => this.messageReceiptsRepository.create({ user, message })),
@@ -364,6 +350,7 @@ export class DmsService {
     user: User,
     conversationId: string,
   ): Promise<Message[]> {
+    await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
       relations: ['participants', 'modmailRecipient'],
@@ -418,6 +405,7 @@ export class DmsService {
     messageId: string,
     content: string,
   ): Promise<Message> {
+    await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: ['sender'],
@@ -436,6 +424,7 @@ export class DmsService {
   }
 
   async deleteMessage(user: User, messageId: string): Promise<void> {
+    await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: ['sender'],
@@ -452,11 +441,55 @@ export class DmsService {
     await this.messagesRepository.softDelete(messageId);
   }
 
-  private areUsersFriends(user1: User, user2: User): boolean {
-    // Check if they follow each other (mutual follow = friends)
-    const user1FollowsUser2 = user1.following?.some(f => f.id === user2.id);
-    const user2FollowsUser1 = user2.following?.some(f => f.id === user1.id);
-    return user1FollowsUser2 && user2FollowsUser1;
+  private async assertCanMessage(sender: User, recipient: User): Promise<void> {
+    if (await this.visibilityService.isBlockedEither(sender.id, recipient.id)) {
+      throw new UnauthorizedException('You cannot send messages in this conversation.');
+    }
+
+    const privacy = recipient.messagePrivacy || MessagePrivacy.EVERYONE;
+    if (privacy === MessagePrivacy.EVERYONE) return;
+
+    const [senderProfile, recipientProfile] = await Promise.all([
+      this.usersRepository.findOne({
+        where: { id: sender.id },
+        relations: ['following', 'following.following'],
+      }),
+      this.usersRepository.findOne({
+        where: { id: recipient.id },
+        relations: ['following', 'following.following'],
+      }),
+    ]);
+
+    const senderFollowing = senderProfile?.following ?? [];
+    const recipientFollowing = recipientProfile?.following ?? [];
+    const senderId = sender.id;
+    const recipientId = recipient.id;
+    const senderFriendIds = new Set(
+      senderFollowing
+        .filter((user) => user.following?.some((followed) => followed.id === senderId))
+        .map((user) => user.id),
+    );
+    const recipientFriendIds = new Set(
+      recipientFollowing
+        .filter((user) => user.following?.some((followed) => followed.id === recipientId))
+        .map((user) => user.id),
+    );
+    const areFriends = senderFriendIds.has(recipientId) && recipientFriendIds.has(senderId);
+
+    if (privacy === MessagePrivacy.FRIENDS && !areFriends) {
+      throw new UnauthorizedException('You cannot send messages in this conversation.');
+    }
+
+    if (privacy === MessagePrivacy.FRIENDS_OF_FRIENDS) {
+      const shareFriend = [...recipientFriendIds].some((friendId) => senderFriendIds.has(friendId));
+      if (!areFriends && !shareFriend) {
+        throw new UnauthorizedException('You cannot send messages in this conversation.');
+      }
+    }
+
+    if (privacy === MessagePrivacy.NO_ONE) {
+      throw new UnauthorizedException('You cannot send messages in this conversation.');
+    }
   }
 
   async setVanishMode(

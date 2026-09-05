@@ -357,76 +357,76 @@ const ShortsEditor = ({ postId }: { postId?: string }) => {
       // Translation mappings for demo purposes (in production, this would be real API translations)
       const translationMocks: Record<string, Record<string, string>> = {
         es: {
-          "This": "Esto", "is": "es", "an": "un", "automatically": "automáticamente", "generated": "generado", "caption": "subtítulo", "for": "para", "your": "tu", "video.": "video.", "It": "Utiliza", "uses": "reconocimiento", "advanced": "avanzado", "speech": "de voz", "recognition": "para transcribir", "to": "tu", "transcribe": "contenido", "your": "en", "content": "tiempo", "in": "real.", "real-time.": ""
+          "This": "Esto", "is": "es", "an": "un", "automatically": "automáticamente", "generated": "generado", "caption": "subtítulo", "for": "para", "your": "tu", "video.": "video.", "It": "Utiliza", "uses": "reconocimiento", "advanced": "avanzado", "speech": "de voz", "recognition": "para transcribir", "to": "tu", "transcribe": "contenido", "content": "tiempo", "in": "real.", "real-time.": ""
         },
         fr: {
-          "This": "Ceci", "is": "est", "an": "un", "automatically": "généré", "generated": "sous-titre", "caption": "pour", "for": "votre", "your": "vidéo.", "video.": "Il", "It": "utilise", "uses": "une", "advanced": "reconnaissance", "speech": "vocale", "recognition": "avancée", "to": "pour", "transcribe": "transcrire", "your": "votre", "content": "contenu", "in": "en", "real-time.": "temps réel."
+          "This": "Ceci", "is": "est", "an": "un", "automatically": "généré", "generated": "sous-titre", "caption": "pour", "for": "votre", "your": "vidéo.", "video.": "Il", "It": "utilise", "uses": "une", "advanced": "reconnaissance", "speech": "vocale", "recognition": "avancée", "to": "pour", "transcribe": "transcrire", "content": "contenu", "in": "en", "real-time.": "temps réel."
         },
         de: {
-          "This": "Dies", "is": "ist", "an": "ein", "automatically": "automatisch", "generated": "generierter", "caption": "Untertitel", "for": "für", "your": "Ihr", "video.": "Video.", "It": "Es", "uses": "verwendet", "advanced": "fortschrittliche", "speech": "Sprach", "recognition": "erkennung", "to": "um", "transcribe": "Ihren", "your": "Inhalt", "content": "Inhalt", "in": "in", "real-time.": "Echtzeit zu transkribieren."
+          "This": "Dies", "is": "ist", "an": "ein", "automatically": "automatisch", "generated": "generierter", "caption": "Untertitel", "for": "für", "your": "Ihr", "video.": "Video.", "It": "Es", "uses": "verwendet", "advanced": "fortschrittliche", "speech": "Sprach", "recognition": "erkennung", "to": "um", "transcribe": "Ihren", "content": "Inhalt", "in": "in", "real-time.": "Echtzeit zu transkribieren."
         },
         zh: {
-          "This": "这是", "is": "为您的视频", "an": "自动生成的字幕。", "automatically": "它使用先进的", "generated": "语音识别技术", "caption": "实时转写您的内容。", "for": "", "your": "", "video.": "", "It": "", "uses": "", "advanced": "", "speech": "", "recognition": "", "to": "", "transcribe": "", "your": "", "content": "", "in": "", "real-time.": ""
+          "This": "这是", "is": "为您的视频", "an": "自动生成的字幕。", "automatically": "它使用先进的", "generated": "语音识别技术", "caption": "实时转写您的内容。", "for": "", "your": "", "video.": "", "It": "", "uses": "", "advanced": "", "speech": "", "recognition": "", "to": "", "transcribe": "", "content": "", "in": "", "real-time.": ""
         },
         ja: {
-          "This": "これは", "is": "あなたの", "an": "ビデオの", "automatically": "自動生成", "generated": "された", "caption": "字幕です。", "for": "高度な", "your": "音声認識", "video.": "を使用して", "It": "リアルタイムで", "uses": "コンテンツを", "advanced": "書き起こし", "speech": "ます。", "recognition": "", "to": "", "transcribe": "", "your": "", "content": "", "in": "", "real-time.": ""
+          "This": "これは", "is": "あなたの", "an": "ビデオの", "automatically": "自動生成", "generated": "された", "caption": "字幕です。", "for": "高度な", "your": "音声認識", "video.": "を使用して", "It": "リアルタイムで", "uses": "コンテンツを", "advanced": "書き起こし", "speech": "ます。", "recognition": "", "to": "", "transcribe": "", "content": "", "in": "", "real-time.": ""
         },
         hi: {
-          "This": "यह", "is": "आपके", "an": "वीडियो", "automatically": "के लिए", "generated": "स्वचालित", "caption": "रूप से", "for": "उत्पन्न", "your": "किया", "video.": "गया", "It": "उपशीर्षक", "uses": "है।", "advanced": "यह", "speech": "उन्नत", "recognition": "वाक्", "to": "पहचान", "transcribe": "का", "your": "उपयोग", "content": "करता", "in": "है", "real-time.": "और आपकी सामग्री को वास्तविक समय में लिखता है।"
+          "This": "यह", "is": "आपके", "an": "वीडियो", "automatically": "के लिए", "generated": "स्वचालित", "caption": "रूप से", "for": "उत्पन्न", "your": "किया", "video.": "गया", "It": "उपशीर्षक", "uses": "है।", "advanced": "यह", "speech": "उन्नत", "recognition": "वाक्", "to": "पहचान", "transcribe": "का", "content": "करता", "in": "है", "real-time.": "और आपकी सामग्री को वास्तविक समय में लिखता है।"
         },
         bn: {
-          "This": "এটি", "is": "আপনার", "an": "ভিডিওর", "automatically": "জন্য", "generated": "স্বয়ংক্রিয়", "caption": "ভাবে", "for": "তৈরি", "your": "করা", "video.": "হয়েছে", "It": "এই", "uses": "সিস্টেম", "advanced": "উন্নত", "speech": "বাক্", "recognition": "সনাক্তকরণ", "to": "ব্যবহার", "transcribe": "করে", "your": "আপনার", "content": "সামগ্রী", "in": "কে", "real-time.": "বাস্তব সময়ে লিপিবদ্ধ করে।"
+          "This": "এটি", "is": "আপনার", "an": "ভিডিওর", "automatically": "জন্য", "generated": "স্বয়ংক্রিয়", "caption": "ভাবে", "for": "তৈরি", "your": "করা", "video.": "হয়েছে", "It": "এই", "uses": "সিস্টেম", "advanced": "উন্নত", "speech": "বাক্", "recognition": "সনাক্তকরণ", "to": "ব্যবহার", "transcribe": "করে", "content": "সামগ্রী", "in": "কে", "real-time.": "বাস্তব সময়ে লিপিবদ্ধ করে।"
         },
         te: {
-          "This": "ఇది", "is": "మీ", "an": "వీడియో", "automatically": "కోసం", "generated": "స్వయంచాలకంగా", "caption": "సృష్టించబడిన", "for": "శీర్షిక", "your": "మీ", "video.": "మీ", "It": "ఈ", "uses": "వ్యవస్థ", "advanced": "అధునాతన", "speech": "ప్రసంగ", "recognition": "గుర్తింపు", "to": "ఉపయోగించి", "transcribe": "మీ", "your": "కంటెంట్‌ను", "content": "రియల్", "in": "టైమ్‌లో", "real-time.": "లిపిబద్ధం చేస్తుంది.",
+          "This": "ఇది", "is": "మీ", "an": "వీడియో", "automatically": "కోసం", "generated": "స్వయంచాలకంగా", "caption": "సృష్టించబడిన", "for": "శీర్షిక", "your": "మీ", "video.": "మీ", "It": "ఈ", "uses": "వ్యవస్థ", "advanced": "అధునాతన", "speech": "ప్రసంగ", "recognition": "గుర్తింపు", "to": "ఉపయోగించి", "transcribe": "మీ", "content": "కంటెంట్‌ను", "in": "టైమ్‌లో", "real-time.": "లిపిబద్ధం చేస్తుంది.",
         },
         ta: {
-          "This": "இது", "is": "உங்கள்", "an": "வீடியோவிற்கு", "automatically": "தானாகவே", "generated": "உருவாக்கப்பட்ட", "caption": "வசனங்கள்", "for": "ஆகும்", "your": "இந்த", "video.": "அமைப்பு", "It": "மேம்பட்ட", "uses": "பேச்சு", "advanced": "அறிதல்", "speech": "தொழில்நுட்பத்தைப்", "recognition": "பயன்படுத்தி", "to": "உங்கள்", "transcribe": "உள்ளடக்கத்தை", "your": "நிகழ்நேரத்தில்", "content": "எழுத்துப்படுத்துகிறது.", "in": "", "real-time.": ""
+          "This": "இது", "is": "உங்கள்", "an": "வீடியோவிற்கு", "automatically": "தானாகவே", "generated": "உருவாக்கப்பட்ட", "caption": "வசனங்கள்", "for": "ஆகும்", "your": "இந்த", "video.": "அமைப்பு", "It": "மேம்பட்ட", "uses": "பேச்சு", "advanced": "அறிதல்", "speech": "தொழில்நுட்பத்தைப்", "recognition": "பயன்படுத்தி", "to": "உங்கள்", "transcribe": "உள்ளடக்கத்தை", "content": "எழுத்துப்படுத்துகிறது.", "in": "", "real-time.": ""
         },
         mr: {
-          "This": "हे", "is": "तुमच्या", "an": "व्हिडिओसाठी", "automatically": "स्वयंचलितपणे", "generated": "निर्माण केलेले", "caption": "उपशीर्षक", "for": "आहे", "your": "ही", "video.": "प्रणाली", "It": "प्रगत", "uses": "भाषण", "advanced": "ओळख", "speech": "तंत्रज्ञानाचा", "recognition": "वापर", "to": "करून", "transcribe": "तुमची", "your": "सामग्री", "content": "वास्तविक", "in": "वेळेत", "real-time.": "लिहिते."
+          "This": "हे", "is": "तुमच्या", "an": "व्हिडिओसाठी", "automatically": "स्वयंचलितपणे", "generated": "निर्माण केलेले", "caption": "उपशीर्षक", "for": "आहे", "your": "ही", "video.": "प्रणाली", "It": "प्रगत", "uses": "भाषण", "advanced": "ओळख", "speech": "तंत्रज्ञानाचा", "recognition": "वापर", "to": "करून", "transcribe": "तुमची", "content": "वास्तविक", "in": "वेळेत", "real-time.": "लिहिते."
         },
         gu: {
-          "This": "આ", "is": "તમારા", "an": "વિડિઓ", "automatically": "માટે", "generated": "સ્વચાલિત", "caption": "રીતે", "for": "બનાવાયેલ", "your": "સબટાઈટલ", "video.": "છે", "It": "આ", "uses": "સિસ્ટમ", "advanced": "અદ્યતન", "speech": "વાણી", "recognition": "ટેક્નોલોજી", "to": "નો", "transcribe": "ઉપયોગ", "your": "કરીને", "content": "તમારી", "in": "સામગ્રીને", "real-time.": "વાસ્તવિક સમયમાં લખે છે."
+          "This": "આ", "is": "તમારા", "an": "વિડિઓ", "automatically": "માટે", "generated": "સ્વચાલિત", "caption": "રીતે", "for": "બનાવાયેલ", "your": "સબટાઈટલ", "video.": "છે", "It": "આ", "uses": "સિસ્ટમ", "advanced": "અદ્યતન", "speech": "વાણી", "recognition": "ટેક્નોલોજી", "to": "નો", "transcribe": "ઉપયોગ", "content": "તમારી", "in": "સામગ્રીને", "real-time.": "વાસ્તવિક સમયમાં લખે છે."
         },
         kn: {
-          "This": "ಇದು", "is": "ನಿಮ್ಮ", "an": "ವೀಡಿಯೊ", "automatically": "ಗಾಗಿ", "generated": "ಸ್ವಯಂಚಾಲಿತವಾಗಿ", "caption": "ರಚಿಸಲಾದ", "for": "ಉಪಶೀರ್ಷಿಕೆ", "your": "ನಿಮ್ಮ", "video.": "ಆಗಿದೆ", "It": "ಈ", "uses": "ವ್ಯವಸ್ಥೆ", "advanced": "ಮುಂದುವರಿದ", "speech": "ಭಾಷಣ", "recognition": "ಗುರುತಿಸುವಿಕೆ", "to": "ಬಳಸಿಕೊಂಡು", "transcribe": "ನಿಮ್ಮ", "your": "ವಿಷಯವನ್ನು", "content": "ನೈಜ", "in": "ಸಮಯದಲ್ಲಿ", "real-time.": "ಪ್ರತಿಲೇಖನ ಮಾಡುತ್ತದೆ."
+          "This": "ಇದು", "is": "ನಿಮ್ಮ", "an": "ವೀಡಿಯೊ", "automatically": "ಗಾಗಿ", "generated": "ಸ್ವಯಂಚಾಲಿತವಾಗಿ", "caption": "ರಚಿಸಲಾದ", "for": "ಉಪಶೀರ್ಷಿಕೆ", "your": "ನಿಮ್ಮ", "video.": "ಆಗಿದೆ", "It": "ಈ", "uses": "ವ್ಯವಸ್ಥೆ", "advanced": "ಮುಂದುವರಿದ", "speech": "ಭಾಷಣ", "recognition": "ಗುರುತಿಸುವಿಕೆ", "to": "ಬಳಸಿಕೊಂಡು", "transcribe": "ನಿಮ್ಮ", "content": "ನೈಜ", "in": "ಸಮಯದಲ್ಲಿ", "real-time.": "ಪ್ರತಿಲೇಖನ ಮಾಡುತ್ತದೆ."
         },
         ml: {
-          "This": "ഇത്", "is": "നിങ്ങളുടെ", "an": "വീഡിയോയ്ക്ക്", "automatically": "വേണ്ടി", "generated": "സ്വയമേവ", "caption": "സൃഷ്ടിച്ച", "for": "സബ്ടൈറ്റിലുകൾ", "your": "ആണ്", "video.": "ഈ", "It": "സിസ്റ്റം", "uses": "അഡ്വാൻസ്ഡ്", "advanced": "സ്പീച്ച്", "speech": "റെക്കഗ്നിഷൻ", "recognition": "ടെക്നോളജി", "to": "ഉപയോഗിച്ച്", "transcribe": "നിങ്ങളുടെ", "your": "കഴിവുകളെ", "content": "തൽസമയത്ത്", "in": "എഴുതുന്നു", "real-time.": "."
+          "This": "ഇത്", "is": "നിങ്ങളുടെ", "an": "വീഡിയോയ്ക്ക്", "automatically": "വേണ്ടി", "generated": "സ്വയമേവ", "caption": "സൃഷ്ടിച്ച", "for": "സബ്ടൈറ്റിലുകൾ", "your": "ആണ്", "video.": "ഈ", "It": "സിസ്റ്റം", "uses": "അഡ്വാൻസ്ഡ്", "advanced": "സ്പീച്ച്", "speech": "റെക്കഗ്നിഷൻ", "recognition": "ടെക്നോളജി", "to": "ഉപയോഗിച്ച്", "transcribe": "നിങ്ങളുടെ", "content": "തൽസമയത്ത്", "in": "എഴുതുന്നു", "real-time.": "."
         },
         pa: {
-          "This": "ਇਹ", "is": "ਤੁਹਾਡੀ", "an": "ਵੀਡੀਓ", "automatically": "ਲਈ", "generated": "ਆਪਣੇ ਆਪ", "caption": "ਬਣਾਇਆ", "for": "ਸੁਰਖੀਆਂ", "your": "ਹਨ", "video.": "ਇਹ", "It": "ਸਿਸਟਮ", "uses": "ਉੱਨਤ", "advanced": "ਬੋਲਣ", "speech": "ਪਛਾਣ", "recognition": "ਤਕਨੀਕ", "to": "ਦੀ ਵਰਤੋਂ", "transcribe": "ਕਰਕੇ", "your": "ਤੁਹਾਡੀ", "content": "ਸਮੱਗਰੀ ਨੂੰ", "in": "ਅਸਲ", "real-time.": "ਸਮੇਂ ਵਿੱਚ ਲਿਖਦਾ ਹੈ।"
+          "This": "ਇਹ", "is": "ਤੁਹਾਡੀ", "an": "ਵੀਡੀਓ", "automatically": "ਲਈ", "generated": "ਆਪਣੇ ਆਪ", "caption": "ਬਣਾਇਆ", "for": "ਸੁਰਖੀਆਂ", "your": "ਹਨ", "video.": "ਇਹ", "It": "ਸਿਸਟਮ", "uses": "ਉੱਨਤ", "advanced": "ਬੋਲਣ", "speech": "ਪਛਾਣ", "recognition": "ਤਕਨੀਕ", "to": "ਦੀ ਵਰਤੋਂ", "transcribe": "ਕਰਕੇ", "content": "ਸਮੱਗਰੀ ਨੂੰ", "in": "ਅਸਲ", "real-time.": "ਸਮੇਂ ਵਿੱਚ ਲਿਖਦਾ ਹੈ।"
         },
         ur: {
-          "This": "یہ", "is": "آپ کی", "an": "ویڈیو", "automatically": "کے لیے", "generated": "خود بخود", "caption": "بنائے گئے", "for": "سب ٹائٹل", "your": "ہیں", "video.": "یہ", "It": "سسٹم", "uses": "جدید", "advanced": "اسپچ", "speech": "ریکگنیشن", "recognition": "ٹیکنالوجی", "to": "کا استعمال", "transcribe": "کر کے", "your": "آپ کے", "content": "مواد کو", "in": "حقیقی", "real-time.": "وقت میں لکھتا ہے۔"
+          "This": "یہ", "is": "آپ کی", "an": "ویڈیو", "automatically": "کے لیے", "generated": "خود بخود", "caption": "بنائے گئے", "for": "سب ٹائٹل", "your": "ہیں", "video.": "یہ", "It": "سسٹم", "uses": "جدید", "advanced": "اسپچ", "speech": "ریکگنیشن", "recognition": "ٹیکنالوجی", "to": "کا استعمال", "transcribe": "کر کے", "content": "مواد کو", "in": "حقیقی", "real-time.": "وقت میں لکھتا ہے۔"
         },
         or: {
-          "This": "ଏହା", "is": "ଆପଣଙ୍କର", "an": "ଭିଡିଓ", "automatically": "ପାଇଁ", "generated": "ସ୍ୱୟଂଚାଳିତ", "caption": "ଭାବରେ", "for": "ସୃଷ୍ଟି", "your": "ହୋଇଥିବା", "video.": "ସବଟାଇଟଲ", "It": "ଏହି", "uses": "ସିଷ୍ଟମ", "advanced": "ଉନ୍ନତ", "speech": "ବାକ୍ୟ", "recognition": "ଚିହ୍ନଟ", "to": "ପ୍ରଯୁକ୍ତିର", "transcribe": "ବ୍ୟବହାର", "your": "କରି", "content": "ଆପଣଙ୍କର", "in": "ସାମଗ୍ରୀକୁ", "real-time.": "ବାସ୍ତବ ସମୟରେ ଲେଖେ।"
+          "This": "ଏହା", "is": "ଆପଣଙ୍କର", "an": "ଭିଡିଓ", "automatically": "ପାଇଁ", "generated": "ସ୍ୱୟଂଚାଳିତ", "caption": "ଭାବରେ", "for": "ସୃଷ୍ଟି", "your": "ହୋଇଥିବା", "video.": "ସବଟାଇଟଲ", "It": "ଏହି", "uses": "ସିଷ୍ଟମ", "advanced": "ଉନ୍ନତ", "speech": "ବାକ୍ୟ", "recognition": "ଚିହ୍ନଟ", "to": "ପ୍ରଯୁକ୍ତିର", "transcribe": "ବ୍ୟବହାର", "content": "ଆପଣଙ୍କର", "in": "ସାମଗ୍ରୀକୁ", "real-time.": "ବାସ୍ତବ ସମୟରେ ଲେଖେ।"
         },
         as: {
-          "This": "এইটো", "is": "আপোনাৰ", "an": "ভিডিঅ'ৰ", "automatically": "বাবে", "generated": "স্বয়ংক্ৰিয়ভাৱে", "caption": "সৃষ্টি", "for": "কৰা", "your": "উপশীৰ্ষক", "video.": "হৈছে", "It": "এই", "uses": "চালনাটো", "advanced": "উন্নত", "speech": "বাক্য", "recognition": "শনাক্তকৰণ", "to": "প্ৰযুক্তি", "transcribe": "ব্যৱহাৰ", "your": "কৰি", "content": "আপোনাৰ", "in": "সামগ্ৰী", "real-time.": "বাস্তৱ সময়ত লিখে।"
+          "This": "এইটো", "is": "আপোনাৰ", "an": "ভিডিঅ'ৰ", "automatically": "বাবে", "generated": "স্বয়ংক্ৰিয়ভাৱে", "caption": "সৃষ্টি", "for": "কৰা", "your": "উপশীৰ্ষক", "video.": "হৈছে", "It": "এই", "uses": "চালনাটো", "advanced": "উন্নত", "speech": "বাক্য", "recognition": "শনাক্তকৰণ", "to": "প্ৰযুক্তি", "transcribe": "ব্যৱহাৰ", "content": "আপোনাৰ", "in": "সামগ্ৰী", "real-time.": "বাস্তৱ সময়ত লিখে।"
         },
         ne: {
-          "This": "यो", "is": "तपाईंको", "an": "भिडियो", "automatically": "लागि", "generated": "स्वचालित", "caption": "रूपमा", "for": "सिर्जना", "your": "गरिएको", "video.": "उपशीर्षक", "It": "यो", "uses": "प्रणालीले", "advanced": "उन्नत", "speech": "भाषण", "recognition": "पहिचान", "to": "प्रविधिको", "transcribe": "प्रयोग", "your": "गरी", "content": "तपाईंको", "in": "सामाग्रीलाई", "real-time.": "वास्तविक समयमा लेख्छ।"
+          "This": "यो", "is": "तपाईंको", "an": "भिडियो", "automatically": "लागि", "generated": "स्वचालित", "caption": "रूपमा", "for": "सिर्जना", "your": "गरिएको", "video.": "उपशीर्षक", "It": "यो", "uses": "प्रणालीले", "advanced": "उन्नत", "speech": "भाषण", "recognition": "पहिचान", "to": "प्रविधिको", "transcribe": "प्रयोग", "content": "तपाईंको", "in": "सामाग्रीलाई", "real-time.": "वास्तविक समयमा लेख्छ।"
         },
         sd: {
-          "This": "هي", "is": "توهان جي", "an": "وڊيو", "automatically": "لاءِ", "generated": "خود بخود", "caption": "ٺاهيل", "for": "سب ٽائيٽل", "your": "آهن", "video.": "هي", "It": "سسٽم", "uses": "ترقي يافته", "advanced": "ڳالهائڻ", "speech": "سڃاڻپ", "recognition": "ٽيڪنالاجي", "to": "جو استعمال", "transcribe": "ڪندي", "your": "توهان جي", "content": "مواد کي", "in": "اصل", "real-time.": "وقت ۾ لکي ٿو."
+          "This": "هي", "is": "توهان جي", "an": "وڊيو", "automatically": "لاءِ", "generated": "خود بخود", "caption": "ٺاهيل", "for": "سب ٽائيٽل", "your": "آهن", "video.": "هي", "It": "سسٽم", "uses": "ترقي يافته", "advanced": "ڳالهائڻ", "speech": "سڃاڻپ", "recognition": "ٽيڪنالوجي", "to": "جو استعمال", "transcribe": "ڪندي", "content": "مواد کي", "in": "اصل", "real-time.": "وقت ۾ لکي ٿو."
         },
         ks: {
           "This": "یہ", "is": "آپ کی", "an": "ویڈیو", "automatically": "کے لیے", "generated": "خود بخود", "caption": "بنایا گیا", "for": "سب ٹائٹل", "your": "ہے", "video.": "یہ", "It": "سسٹم", "uses": "جدید", "advanced": "اسپیچ", "speech": "ریکگنیشن", "recognition": "ٹیکنالوجی", "to": "کا استعمال", "transcribe": "کر کے", "your": "آپ کے", "content": "مواد کو", "in": "حقیقی", "real-time.": "وقت میں لکھتا ہے۔"
         },
         kok: {
-          "This": "हें", "is": "तुमच्या", "an": "व्हिडिओ", "automatically": "खातीर", "generated": "स्वयंक्रियेन", "caption": "तयार", "for": "केल्लें", "your": "उपशीर्षक", "video.": "आसा", "It": "ही", "uses": "वेवस्था", "advanced": "उच्च", "speech": "उच्चार", "recognition": "ओळख", "to": "तंत्रज्ञानाचो", "transcribe": "वापरून", "your": "तुमचें", "content": "सामग्री", "in": "खर्या", "real-time.": "वेळार लिहीता."
+          "This": "हें", "is": "तुमच्या", "an": "व्हिडिओ", "automatically": "खातीर", "generated": "स्वयंक्रियेन", "caption": "तयार", "for": "केल्लें", "your": "उपशीर्षक", "video.": "आसा", "It": "ही", "uses": "वेवस्था", "advanced": "उच्च", "speech": "उच्चार", "recognition": "ओळख", "to": "तंत्रज्ञानाचो", "transcribe": "वापरून", "content": "सामग्री", "in": "खर्या", "real-time.": "वेळार लिहीता."
         },
         mai: {
-          "This": "ई", "is": "अहरके", "an": "वीडियो", "automatically": "खातिर", "generated": "स्वचालित", "caption": "तरे", "for": "बनल", "your": "उपशीर्षक", "video.": "ह", "It": "ई", "uses": "सिस्टम", "advanced": "उन्नत", "speech": "बोलन", "recognition": "पहचान", "to": "के उपयोग", "transcribe": "से", "your": "अहरके", "content": "सामग्री", "in": "वास्तविक", "real-time.": "समय में लिखता है।"
+          "This": "ई", "is": "अहरके", "an": "वीडियो", "automatically": "खातिर", "generated": "स्वचालित", "caption": "तरे", "for": "बनल", "your": "उपशीर्षक", "video.": "ह", "It": "ई", "uses": "सिस्टम", "advanced": "उन्नत", "speech": "बोलन", "recognition": "पहचान", "to": "के उपयोग", "transcribe": "से", "content": "सामग्री", "in": "वास्तविक", "real-time.": "समय में लिखता है।"
         },
         mni: {
-          "This": "হসি", "is": "নংসু", "an": "ভিডিও", "automatically": "নাও", "generated": "স্বয়ং", "caption": "সির্জনা", "for": "হনা", "your": "উপশীর্ষক", "video.": "হে", "It": "ई", "uses": "सिस्टम", "advanced": "उन्नत", "speech": "মেল", "recognition": "শনাখত", "to": "করকে", "transcribe": "নংসু", "your": "সামগ্রী", "content": "লাইভ", "in": "টাইম", "real-time.": "মেং লিখতা হে।"
+          "This": "হসি", "is": "নংসু", "an": "ভিডিও", "automatically": "নাও", "generated": "স্বয়ং", "caption": "সির্জনা", "for": "হনা", "your": "উপশীর্ষক", "video.": "হে", "It": "ई", "uses": "सिस्टम", "advanced": "उन्नत", "speech": "মেল", "recognition": "শনাখত", "to": "করকে", "transcribe": "নংসু", "content": "লাইভ", "in": "টাইম", "real-time.": "মেং লিখতা হে।"
         },
         sat: {
-          "This": "इनका", "is": "तोहर", "an": "वीडियो", "automatically": "खातिर", "generated": "अपने आप", "caption": "बनल", "for": "सबटाइटल", "your": "हे", "video.": "ई", "It": "सिस्टम", "uses": "उन्नत", "advanced": "बोली", "speech": "पहचान", "recognition": "तकनीक", "to": "के इस्तेमाल", "transcribe": "से", "your": "तोहर", "content": "सामान", "in": "असल", "real-time.": "समय में लिखता है।"
+          "This": "इनका", "is": "तोहर", "an": "वीडियो", "automatically": "खातिर", "generated": "अपने आप", "caption": "बनल", "for": "सबटाइटल", "your": "हे", "video.": "ई", "It": "सिस्टम", "uses": "उन्नत", "advanced": "बोली", "speech": "पहचान", "recognition": "तकनीक", "to": "के इस्तेमाल", "transcribe": "से", "content": "सामान", "in": "असल", "real-time.": "समय में लिखता है।"
         }
       };
 

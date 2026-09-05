@@ -1,3 +1,20 @@
+import { Injectable, Optional } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SecurityAlertEntity } from './entities/security-alert.entity';
+import { LinkedAccount as LinkedAccountEntity } from './entities/linked-account.entity';
+import { AccountProfileEntity, AccountProfileType } from './entities/account-profile.entity';
+import { SecurityAuditService } from '../../security-audit/security-audit.service';
+import { User } from '../../users/entities/user.entity';
+import { AccountDeletionRequest } from './entities/account-deletion-request.entity';
+import { AccountHistoryEntity } from './entities/account-history.entity';
+import { AccountSessionEntity } from './entities/account-session.entity';
+import { AccountRecoveryRequest, AccountRecoveryRequestStatus } from './entities/account-recovery-request.entity';
+import { UsersService } from '../../users/users.service';
+import { LoginSession } from '../../auth/entities/login-session.entity';
+import { DataPermission } from './dto/data-permissions.dto';
+import { DEFAULT_DATA_PERMISSIONS } from '../../common/data-permissions/data-permissions.service';
+
 export interface AccountSettings {
   accountId: string;
   deactivated: boolean;
@@ -25,9 +42,23 @@ export interface AccountSecurityFeatureSettings {
 
 export interface AccountPreferences {
   theme: 'light' | 'dark' | 'system';
+  appIcon: 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
   language: string;
   timezone: string;
   defaultPrivacy: 'public' | 'friends' | 'private';
+  keyboardNavigationEnabled: boolean;
+  autoTranslate: boolean;
+  feedSort: 'algorithmic' | 'chronological';
+  screenTimeEnabled: boolean;
+  dailyScreenTimeLimit: number;
+  contentWarningsEnabled: boolean;
+  highContrastMode: boolean;
+  reducedMotion: boolean;
+  screenReaderOptimized: boolean;
+  voiceControlEnabled: boolean;
+  largeTextMode: boolean;
+  colorBlindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
+  customSettings: Record<string, any>;
   updatedAt: string;
 }
 
@@ -36,6 +67,12 @@ export interface NotificationPreferences {
   pushAlerts: boolean;
   smsAlerts: boolean;
   securityAlerts: boolean;
+  notifyNewFollower: boolean;
+  notifyMentions: boolean;
+  notifyMessages: boolean;
+  notifyComments: boolean;
+  notifyLikes: boolean;
+  customNotifications: Record<string, boolean>;
   updatedAt: string;
 }
 
@@ -122,6 +159,7 @@ export interface AccountProfile {
   accountType: 'personal' | 'creator' | 'business' | 'organization';
   isPrimary: boolean;
   isActive: boolean;
+  isCurrent?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -151,6 +189,7 @@ export interface AccountSession {
   status: 'active' | 'revoked';
 }
 
+@Injectable()
 export class AccountManagementService {
   private readonly accountSettings = new Map<string, AccountSettings>();
   private readonly accountPreferences = new Map<string, AccountPreferences>();
@@ -165,6 +204,7 @@ export class AccountManagementService {
   private readonly securityAlerts = new Map<string, SecurityAlert[]>();
   private readonly loginApprovals = new Map<string, LoginApprovalRequest[]>();
   private readonly accountProfiles = new Map<string, AccountProfile[]>();
+  private readonly activeAccountProfileByAccount = new Map<string, string>();
   private readonly identitySettingsMap = new Map<string, IdentitySettings>();
   private readonly trustIndicatorsMap = new Map<string, { verified: boolean; badges: string[]; trustScore: number; updatedAt: string; }>();
   private readonly accountSessions = new Map<string, AccountSession[]>();
@@ -183,11 +223,37 @@ export class AccountManagementService {
   }>();
 
   constructor(
-    private readonly usersService?: {
-      deactivate?: (userId: string) => Promise<any>;
-      reactivate?: (userId: string) => Promise<any>;
-      delete?: (userId: string) => Promise<any>;
-    },
+    @Optional()
+    private readonly usersService?: UsersService,
+    @Optional()
+    @InjectRepository(User)
+    private readonly usersRepository?: Repository<User>,
+    @Optional()
+    @InjectRepository(LinkedAccountEntity)
+    private readonly linkedAccountsRepository?: Repository<LinkedAccountEntity>,
+    @Optional()
+    @InjectRepository(SecurityAlertEntity)
+    private readonly securityAlertsRepository?: Repository<SecurityAlertEntity>,
+    @Optional()
+    @InjectRepository(AccountProfileEntity)
+    private readonly accountProfilesRepository?: Repository<AccountProfileEntity>,
+    @Optional()
+    private readonly securityAuditService?: SecurityAuditService,
+    @Optional()
+    @InjectRepository(AccountDeletionRequest)
+    private readonly accountDeletionRepository?: Repository<AccountDeletionRequest>,
+    @Optional()
+    @InjectRepository(AccountHistoryEntity)
+    private readonly accountHistoryRepository?: Repository<AccountHistoryEntity>,
+    @Optional()
+    @InjectRepository(AccountSessionEntity)
+    private readonly accountSessionsRepository?: Repository<AccountSessionEntity>,
+    @Optional()
+    @InjectRepository(LoginSession)
+    private readonly loginSessionsRepository?: Repository<LoginSession>,
+    @Optional()
+    @InjectRepository(AccountRecoveryRequest)
+    private readonly accountRecoveryRepository?: Repository<AccountRecoveryRequest>,
   ) {}
 
   private ensureSettings(accountId: string): AccountSettings {
@@ -205,12 +271,31 @@ export class AccountManagementService {
         theme: 'default',
         compactMode: false,
       },
-      dataPermissions: ['profile', 'posts', 'settings'],
+      dataPermissions: [...DEFAULT_DATA_PERMISSIONS],
       updatedAt: new Date().toISOString(),
     };
 
     this.accountSettings.set(accountId, initial);
     return initial;
+  }
+
+  private async getPersistedUser(accountId: string): Promise<User | null> {
+    if (!this.usersRepository) {
+      return null;
+    }
+
+    return this.usersRepository.findOne({ where: { id: accountId } });
+  }
+
+  private async getPersistedLinkedAccounts(accountId: string): Promise<LinkedAccountEntity[]> {
+    if (!this.linkedAccountsRepository) {
+      return [];
+    }
+
+    return this.linkedAccountsRepository.find({
+      where: { userId: accountId, isActive: true },
+      order: { connectedAt: 'DESC' },
+    });
   }
 
   private ensureHistory(accountId: string): AccountHistoryEntry[] {
@@ -251,9 +336,23 @@ export class AccountManagementService {
 
     const initial: AccountPreferences = {
       theme: 'system',
+      appIcon: 'default',
       language: 'en-US',
       timezone: 'UTC',
       defaultPrivacy: 'friends',
+      keyboardNavigationEnabled: false,
+      autoTranslate: true,
+      feedSort: 'algorithmic',
+      screenTimeEnabled: false,
+      dailyScreenTimeLimit: 120,
+      contentWarningsEnabled: true,
+      highContrastMode: false,
+      reducedMotion: false,
+      screenReaderOptimized: false,
+      voiceControlEnabled: false,
+      largeTextMode: false,
+      colorBlindMode: 'none',
+      customSettings: {},
       updatedAt: new Date().toISOString(),
     };
 
@@ -272,6 +371,12 @@ export class AccountManagementService {
       pushAlerts: true,
       smsAlerts: false,
       securityAlerts: true,
+      notifyNewFollower: true,
+      notifyMentions: true,
+      notifyMessages: true,
+      notifyComments: true,
+      notifyLikes: true,
+      customNotifications: {},
       updatedAt: new Date().toISOString(),
     };
 
@@ -313,19 +418,38 @@ export class AccountManagementService {
 
   private recordHistory(accountId: string, type: AccountHistoryEntry['type'], summary: string, metadata?: Record<string, any>) {
     const history = this.ensureHistory(accountId);
-    history.unshift({
+    const entry: AccountHistoryEntry = {
       id: `history-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
       type,
       summary,
       occurredAt: new Date().toISOString(),
       metadata,
-    });
+    };
+    history.unshift(entry);
+
+    if (this.accountHistoryRepository) {
+      const persisted = this.accountHistoryRepository.create({
+        ...entry,
+        userId: accountId,
+        createdAt: new Date(entry.occurredAt),
+      });
+      void this.accountHistoryRepository.save(persisted).catch(() => undefined);
+    }
   }
 
   async switchAccount(accountId: string): Promise<{ accountId: string; switched: boolean; message: string; settings: AccountSettings }> {
     const settings = this.ensureSettings(accountId);
     settings.switchingEnabled = true;
     settings.updatedAt = new Date().toISOString();
+
+    const profiles = this.accountProfiles.get(accountId) ?? [];
+    if (profiles.length > 0) {
+      const activeProfile = profiles.find((profile) => profile.isPrimary) ?? profiles[0];
+      if (activeProfile) {
+        this.activeAccountProfileByAccount.set(accountId, activeProfile.id);
+      }
+    }
+
     this.recordHistory(accountId, 'settings', 'Switched active account context', { accountId });
 
     return {
@@ -334,6 +458,21 @@ export class AccountManagementService {
       message: 'Account switched successfully.',
       settings,
     };
+  }
+
+  getActiveAccountProfile(accountId: string): AccountProfile | null {
+    const activeProfileId = this.activeAccountProfileByAccount.get(accountId);
+    if (!activeProfileId) {
+      const profiles = this.accountProfiles.get(accountId) ?? [];
+      const fallback = profiles.find((profile) => profile.isPrimary) ?? profiles[0] ?? null;
+      if (fallback) {
+        this.activeAccountProfileByAccount.set(accountId, fallback.id);
+      }
+      return fallback;
+    }
+
+    const profiles = this.accountProfiles.get(accountId) ?? [];
+    return profiles.find((profile) => profile.id === activeProfileId) ?? null;
   }
 
   async deactivateAccount(accountId: string, reason: string): Promise<{ userId: string; status: string; reason: string; message: string; settings: AccountSettings }> {
@@ -412,8 +551,37 @@ export class AccountManagementService {
     const settings = this.ensureSettings(accountId);
     settings.permissions = Array.from(new Set(permissions));
     settings.updatedAt = new Date().toISOString();
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { accountPermissions: settings.permissions });
+    }
     this.recordHistory(accountId, 'settings', 'Updated account permissions', { permissions: settings.permissions });
 
+    return {
+      accountId,
+      permissions: settings.permissions,
+      updatedAt: settings.updatedAt,
+    };
+  }
+
+  async getPermissions(accountId: string): Promise<{ accountId: string; permissions: string[]; updatedAt: string }> {
+    if (this.usersRepository) {
+      const user = await this.usersRepository.findOne({ where: { id: accountId } });
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const settings = this.ensureSettings(accountId);
+      if (user.accountPermissions !== null && user.accountPermissions !== undefined) {
+        settings.permissions = Array.from(new Set(user.accountPermissions));
+      }
+      return {
+        accountId,
+        permissions: settings.permissions,
+        updatedAt: settings.updatedAt,
+      };
+    }
+
+    const settings = this.ensureSettings(accountId);
     return {
       accountId,
       permissions: settings.permissions,
@@ -430,15 +598,56 @@ export class AccountManagementService {
     };
 
     this.accountPreferences.set(accountId, next);
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { accountPreferences: next });
+    }
     this.recordHistory(accountId, 'settings', 'Updated account preferences', { preferences: next });
     return next;
   }
 
   async getAccountPreferences(accountId: string): Promise<AccountPreferences> {
+    if (this.usersRepository) {
+      const user = await this.usersRepository.findOne({ where: { id: accountId } });
+      if (user?.accountPreferences) {
+        const preferences: AccountPreferences = {
+          ...this.ensureAccountPreferences(accountId),
+          ...user.accountPreferences,
+          customSettings: user.accountPreferences.customSettings ?? {},
+        };
+        this.accountPreferences.set(accountId, preferences);
+        return preferences;
+      }
+    }
     return this.ensureAccountPreferences(accountId);
   }
 
   async updateNotificationPreferences(accountId: string, preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
+    if (this.usersService) {
+      const user = await this.usersService.findOneById(accountId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const current = user.notificationSettings ?? {} as any;
+      const next = {
+        ...current,
+        emailNotifications: preferences.emailDigest ?? current.emailNotifications ?? true,
+        emailDigest: preferences.emailDigest ?? current.emailDigest ?? true,
+        pushAlerts: preferences.pushAlerts ?? current.pushAlerts ?? true,
+        smsAlerts: preferences.smsAlerts ?? current.smsAlerts ?? false,
+        securityAlerts: preferences.securityAlerts ?? current.securityAlerts ?? true,
+        newFollowers: preferences.notifyNewFollower ?? current.newFollowers ?? true,
+        notifyMentions: preferences.notifyMentions ?? current.notifyMentions ?? true,
+        messages: preferences.notifyMessages ?? current.messages ?? true,
+        comments: preferences.notifyComments ?? current.comments ?? true,
+        likes: preferences.notifyLikes ?? current.likes ?? true,
+        customNotifications: preferences.customNotifications ?? current.customNotifications ?? {},
+      };
+      await this.usersService.updateNotificationSettings(accountId, next);
+      const persisted = await this.usersService.findOneById(accountId);
+      return this.toNotificationPreferences(persisted?.notificationSettings ?? next);
+    }
+
     const current = this.ensureNotificationPreferences(accountId);
     const next: NotificationPreferences = {
       ...current,
@@ -452,7 +661,30 @@ export class AccountManagementService {
   }
 
   async getNotificationPreferences(accountId: string): Promise<NotificationPreferences> {
+    if (this.usersService) {
+      const user = await this.usersService.findOneById(accountId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      return this.toNotificationPreferences(user.notificationSettings ?? {} as any);
+    }
     return this.ensureNotificationPreferences(accountId);
+  }
+
+  private toNotificationPreferences(settings: Record<string, any>): NotificationPreferences {
+    return {
+      emailDigest: settings.emailDigest ?? settings.emailNotifications ?? true,
+      pushAlerts: settings.pushAlerts ?? true,
+      smsAlerts: settings.smsAlerts ?? false,
+      securityAlerts: settings.securityAlerts ?? true,
+      notifyNewFollower: settings.notifyNewFollower ?? settings.newFollowers ?? true,
+      notifyMentions: settings.notifyMentions ?? true,
+      notifyMessages: settings.notifyMessages ?? settings.messages ?? true,
+      notifyComments: settings.notifyComments ?? settings.comments ?? true,
+      notifyLikes: settings.notifyLikes ?? settings.likes ?? true,
+      customNotifications: settings.customNotifications ?? {},
+      updatedAt: new Date().toISOString(),
+    };
   }
 
   async registerTrustedDevice(accountId: string, deviceName: string, deviceId: string, metadata: Record<string, any> = {}): Promise<TrustedDevice> {
@@ -518,9 +750,16 @@ export class AccountManagementService {
   }
 
   async updateDataPermissions(accountId: string, dataTypes: string[]): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
+    const allowedDataPermissions = new Set<string>(Object.values(DataPermission));
+    if (dataTypes.some((dataType) => !allowedDataPermissions.has(dataType))) {
+      throw new Error('Invalid data permission category');
+    }
     const settings = this.ensureSettings(accountId);
     settings.dataPermissions = Array.from(new Set(dataTypes));
     settings.updatedAt = new Date().toISOString();
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { accountDataPermissions: settings.dataPermissions });
+    }
     this.recordHistory(accountId, 'settings', 'Updated data permissions', { dataTypes: settings.dataPermissions });
 
     return {
@@ -530,8 +769,41 @@ export class AccountManagementService {
     };
   }
 
+  async getDataPermissions(accountId: string): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
+    const settings = this.ensureSettings(accountId);
+    if (this.usersRepository) {
+      const user = await this.usersRepository.findOne({ where: { id: accountId } });
+      if (!user) {
+        throw new Error('User not found');
+      }
+      if (user.accountDataPermissions !== null && user.accountDataPermissions !== undefined) {
+        settings.dataPermissions = Array.from(new Set(user.accountDataPermissions));
+      }
+    }
+    return {
+      accountId,
+      dataPermissions: settings.dataPermissions,
+      updatedAt: settings.updatedAt,
+    };
+  }
+
   async getAccountSecuritySettings(accountId: string): Promise<AccountSecurityFeatureSettings> {
-    return this.ensureAccountSecuritySettings(accountId);
+    const settings = this.ensureAccountSecuritySettings(accountId);
+    if (this.usersRepository) {
+      const user = await this.usersRepository.findOne({ where: { id: accountId } });
+      if (user?.accountSecuritySettings) {
+        const persisted = user.accountSecuritySettings;
+        const merged = {
+          ...settings,
+          ...persisted,
+          accountId,
+          updatedAt: persisted.updatedAt ?? settings.updatedAt,
+        };
+        this.accountSecuritySettings.set(accountId, merged);
+        return merged;
+      }
+    }
+    return settings;
   }
 
   async updateAccountSecuritySettings(
@@ -547,6 +819,9 @@ export class AccountManagementService {
     };
 
     this.accountSecuritySettings.set(accountId, next);
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { accountSecuritySettings: next });
+    }
     this.recordHistory(accountId, 'security', 'Account security settings updated', { settings: next });
     return next;
   }
@@ -597,19 +872,53 @@ export class AccountManagementService {
   }
 
   async getAccountHistory(accountId: string): Promise<AccountHistoryEntry[]> {
-    return this.ensureHistory(accountId);
+    const memoryEntries = this.ensureHistory(accountId);
+    if (!this.accountHistoryRepository) {
+      return memoryEntries;
+    }
+
+    const persistedEntries = await this.accountHistoryRepository.find({
+      where: { userId: accountId },
+      order: { createdAt: 'DESC' },
+    });
+    const entriesById = new Map<string, AccountHistoryEntry>();
+
+    for (const entry of persistedEntries) {
+      entriesById.set(entry.id, {
+        id: entry.id,
+        type: entry.type as AccountHistoryEntry['type'],
+        summary: entry.summary,
+        occurredAt: entry.createdAt.toISOString(),
+        metadata: entry.metadata,
+      });
+    }
+    for (const entry of memoryEntries) {
+      entriesById.set(entry.id, entry);
+    }
+
+    return Array.from(entriesById.values()).sort((left, right) =>
+      right.occurredAt.localeCompare(left.occurredAt),
+    );
   }
 
   async startAccountRecovery(accountId: string, method: 'email' | 'trusted_contact' | 'passkey' = 'email'): Promise<{ accountId: string; status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string }> {
     const createdAt = new Date().toISOString();
-    const result = { accountId, status: 'pending' as const, method, createdAt };
-    this.recoveryQueue.set(accountId, result);
+    const result = this.accountRecoveryRepository
+      ? await this.accountRecoveryRepository.save(this.accountRecoveryRepository.create({ accountId, method, status: 'pending' }))
+      : null;
+    const recovery = { accountId, status: 'pending' as const, method, createdAt: result?.createdAt.toISOString() ?? createdAt };
+    this.recoveryQueue.set(accountId, recovery);
     this.recordHistory(accountId, 'recovery', 'Account recovery started', { method });
-    return result;
+    return recovery;
   }
 
   async completeAccountRecovery(accountId: string, approved = true): Promise<{ accountId: string; status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string }> {
-    const existing = this.recoveryQueue.get(accountId) ?? {
+    const persisted = this.accountRecoveryRepository
+      ? await this.accountRecoveryRepository.findOne({ where: { accountId }, order: { createdAt: 'DESC' } })
+      : null;
+    const existing = persisted
+      ? { accountId, status: persisted.status, method: persisted.method, createdAt: persisted.createdAt.toISOString() }
+      : this.recoveryQueue.get(accountId) ?? {
       accountId,
       status: 'pending' as const,
       method: 'email',
@@ -620,6 +929,11 @@ export class AccountManagementService {
       accountId,
       status: (approved ? 'approved' : 'rejected') as 'pending' | 'approved' | 'rejected',
     };
+    if (persisted && this.accountRecoveryRepository) {
+      persisted.status = next.status as AccountRecoveryRequestStatus;
+      persisted.completedAt = new Date();
+      await this.accountRecoveryRepository.save(persisted);
+    }
     this.recoveryQueue.set(accountId, next);
     this.recordHistory(accountId, 'recovery', approved ? 'Account recovery approved' : 'Account recovery rejected', { method: next.method });
     return next;
@@ -662,6 +976,19 @@ export class AccountManagementService {
     };
 
     this.privacySettings.set(accountId, next);
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, {
+        showOnlineStatus: next.showOnlineStatus,
+        readReceipts: next.readReceipts,
+        mentions: next.mentions,
+        activityVisibility: next.activityVisibility,
+        storyVisibility: next.storyVisibility,
+        searchVisibility: next.searchVisibility,
+        contactDiscovery: next.contactDiscovery,
+        personalization: next.personalization,
+        adPersonalization: next.adPersonalization,
+      });
+    }
     this.recordHistory(accountId, 'settings', 'Privacy settings updated', { settings: next });
     return next;
   }
@@ -674,9 +1001,9 @@ export class AccountManagementService {
     accountId: string,
     payload: { label?: string; accountType?: AccountProfile['accountType']; isPrimary?: boolean; id?: string } = {},
   ): Promise<AccountProfile> {
-    const profiles = this.accountProfiles.get(accountId) ?? [];
+    const profiles = await this.loadAccountProfiles(accountId);
     const now = new Date().toISOString();
-    const profileId = payload.id ?? (profiles.length === 0 ? accountId : `profile-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`);
+    const profileId = payload.id ?? (profiles.length === 0 ? `${accountId}-profile-primary` : `profile-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`);
 
     const profile: AccountProfile = {
       id: profileId,
@@ -690,17 +1017,75 @@ export class AccountManagementService {
     };
 
     const nextProfiles = [profile, ...profiles.filter((entry) => entry.id !== profileId)];
+    if (profile.isPrimary || !nextProfiles.some((entry) => entry.isPrimary)) {
+      for (const entry of nextProfiles) {
+        entry.isPrimary = entry.id === profile.id;
+      }
+    }
     this.accountProfiles.set(accountId, nextProfiles);
+    if (this.accountProfilesRepository) {
+      await this.accountProfilesRepository.save(
+        nextProfiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+      );
+    }
+    this.activeAccountProfileByAccount.set(accountId, profile.id);
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { activeAccountProfileId: profile.id });
+    }
     this.recordHistory(accountId, 'settings', 'Account profile created', { profileId: profile.id, label: profile.label });
     return profile;
   }
 
-  listAccountProfiles(accountId: string): AccountProfile[] {
-    return this.accountProfiles.get(accountId) ?? [];
+  async listAccountProfiles(accountId: string): Promise<AccountProfile[]> {
+    const profiles = await this.loadAccountProfiles(accountId);
+    const activeProfileId = this.activeAccountProfileByAccount.get(accountId);
+    return profiles
+      .map((profile) => ({ ...profile, isCurrent: profile.id === activeProfileId }))
+      .sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent) || Number(b.isPrimary) - Number(a.isPrimary) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async switchAccountProfile(accountId: string, profileId: string): Promise<{ accountId: string; profileId: string; switched: boolean; message: string; profile: AccountProfile }> {
+    const profiles = await this.loadAccountProfiles(accountId);
+    if (profiles.length === 0) {
+      const created = await this.createAccountProfile(accountId, { label: 'Primary', accountType: 'personal', isPrimary: true });
+      this.activeAccountProfileByAccount.set(accountId, created.id);
+      return {
+        accountId,
+        profileId: created.id,
+        switched: true,
+        message: 'Account profile switched successfully.',
+        profile: created,
+      };
+    }
+
+    const profile = profiles.find((entry) => entry.id === profileId) ?? null;
+    if (!profile) {
+      throw new Error(`Account profile ${profileId} was not found for account ${accountId}`);
+    }
+
+    this.accountProfiles.set(accountId, profiles);
+    if (this.accountProfilesRepository) {
+      await this.accountProfilesRepository.save(
+        profiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+      );
+    }
+    this.activeAccountProfileByAccount.set(accountId, profile.id);
+    if (this.usersRepository) {
+      await this.usersRepository.update(accountId, { activeAccountProfileId: profile.id });
+    }
+    this.recordHistory(accountId, 'settings', 'Account profile switched', { profileId: profile.id, label: profile.label });
+
+    return {
+      accountId,
+      profileId: profile.id,
+      switched: true,
+      message: 'Account profile switched successfully.',
+      profile,
+    };
   }
 
   async setPrimaryAccountProfile(accountId: string, profileId: string): Promise<AccountProfile | null> {
-    const profiles = this.accountProfiles.get(accountId) ?? [];
+    const profiles = await this.loadAccountProfiles(accountId);
     const profile = profiles.find((entry) => entry.id === profileId);
     if (!profile) {
       return null;
@@ -712,8 +1097,56 @@ export class AccountManagementService {
     }
 
     this.accountProfiles.set(accountId, profiles);
+    if (this.accountProfilesRepository) {
+      await this.accountProfilesRepository.save(
+        profiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+      );
+    }
+    this.activeAccountProfileByAccount.set(accountId, profileId);
     this.recordHistory(accountId, 'settings', 'Primary account profile updated', { profileId });
     return profile;
+  }
+
+  private async loadAccountProfiles(accountId: string): Promise<AccountProfile[]> {
+    if (this.accountProfilesRepository) {
+      const persisted = await this.accountProfilesRepository.find({ where: { accountId } });
+      const profiles = persisted.map((entry) => this.accountProfileModelFromEntity(entry));
+      this.accountProfiles.set(accountId, profiles);
+      if (this.usersRepository) {
+        const user = await this.usersRepository.findOne({ where: { id: accountId } });
+        if (user?.activeAccountProfileId && profiles.some((profile) => profile.id === user.activeAccountProfileId)) {
+          this.activeAccountProfileByAccount.set(accountId, user.activeAccountProfileId);
+        }
+      }
+      return profiles;
+    }
+    return this.accountProfiles.get(accountId) ?? [];
+  }
+
+  private accountProfileEntityFromModel(model: AccountProfile): AccountProfileEntity {
+    return this.accountProfilesRepository!.create({
+      id: model.id,
+      accountId: model.accountId,
+      label: model.label,
+      accountType: model.accountType as AccountProfileType,
+      isPrimary: model.isPrimary,
+      isActive: model.isActive,
+      createdAt: new Date(model.createdAt),
+      updatedAt: new Date(model.updatedAt),
+    });
+  }
+
+  private accountProfileModelFromEntity(entity: AccountProfileEntity): AccountProfile {
+    return {
+      id: entity.id,
+      accountId: entity.accountId,
+      label: entity.label,
+      accountType: entity.accountType,
+      isPrimary: entity.isPrimary,
+      isActive: entity.isActive,
+      createdAt: entity.createdAt.toISOString(),
+      updatedAt: entity.updatedAt.toISOString(),
+    };
   }
 
   async getIdentitySettings(accountId: string): Promise<IdentitySettings> {
@@ -786,16 +1219,63 @@ export class AccountManagementService {
       return { ...existing, accountId };
     }
 
-    const initial = {
+    const identitySettings = await this.getIdentitySettings(accountId);
+    const securitySettings = await this.getAccountSecuritySettings(accountId);
+    const appeals = this.verificationAppeals.get(accountId) ?? [];
+    const latestAppeal = appeals[0] ?? null;
+    const hasLinkedAccount = (this.getLinkedAccounts(accountId)?.length ?? 0) > 0;
+
+    const verified = latestAppeal?.status === 'approved' || identitySettings.ageVerified || identitySettings.enhancedSecurity;
+    const badges: string[] = [];
+    let trustScore = 0;
+
+    if (verified) {
+      badges.push('identity_verified');
+      trustScore += 30;
+    }
+
+    const hasProfile = Boolean(identitySettings.displayName && identitySettings.displayName.trim()) && Boolean(identitySettings.bio && identitySettings.bio.trim());
+    if (hasProfile) {
+      badges.push('profile_complete');
+      trustScore += 20;
+    }
+
+    if (securitySettings.twoFactorAuthentication) {
+      badges.push('two_factor_enabled');
+      trustScore += 20;
+    }
+
+    if (securitySettings.passkeysEnabled) {
+      badges.push('passkey_ready');
+      trustScore += 15;
+    }
+
+    if (securitySettings.securityCenterEnabled) {
+      badges.push('security_center_active');
+      trustScore += 10;
+    }
+
+    if (identitySettings.publicProfile) {
+      badges.push('public_profile');
+      trustScore += 5;
+    }
+
+    if (hasLinkedAccount) {
+      badges.push('connected_account');
+      trustScore += 5;
+    }
+
+    const normalized = Math.min(100, Math.max(0, trustScore));
+    const next = {
       accountId,
-      verified: false,
-      badges: [],
-      trustScore: 0,
+      verified,
+      badges: Array.from(new Set(badges)),
+      trustScore: normalized,
       updatedAt: new Date().toISOString(),
     };
 
-    this.trustIndicatorsMap.set(accountId, initial);
-    return initial;
+    this.trustIndicatorsMap.set(accountId, next);
+    return next;
   }
 
   async updateTrustIndicators(
@@ -848,7 +1328,25 @@ export class AccountManagementService {
   }
 
   async createAccountSession(accountId: string, deviceName: string, ipAddress?: string, userAgent?: string): Promise<AccountSession> {
-    const sessions = this.accountSessions.get(accountId) ?? [];
+    if (this.loginSessionsRepository) {
+      const loginSession = await this.loginSessionsRepository.save(
+        this.loginSessionsRepository.create({
+          user: { id: accountId } as User,
+          deviceName,
+          ipAddress: ipAddress ?? null,
+          userAgent: userAgent ?? null,
+          isTrusted: true,
+          lastSeenAt: new Date(),
+        }),
+      );
+      const session = this.accountSessionModelFromLoginEntity(loginSession, true);
+      this.recordHistory(accountId, 'security', 'Account session created', { sessionId: session.id, deviceName, ipAddress });
+      return session;
+    }
+
+    const sessions = this.accountSessionsRepository
+      ? (await this.accountSessionsRepository.find({ where: { accountId } })).map((session) => this.accountSessionModelFromEntity(session))
+      : (this.accountSessions.get(accountId) ?? []);
     const now = new Date().toISOString();
     const session: AccountSession = {
       id: `session-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -864,16 +1362,49 @@ export class AccountManagementService {
 
     sessions.unshift(session);
     this.accountSessions.set(accountId, sessions);
+    if (this.accountSessionsRepository) {
+      await this.accountSessionsRepository.save(this.accountSessionEntityFromModel(session));
+    }
     this.recordHistory(accountId, 'security', 'Account session created', { sessionId: session.id, deviceName, ipAddress });
     return session;
   }
 
   async listAccountSessions(accountId: string): Promise<AccountSession[]> {
+    if (this.loginSessionsRepository) {
+      const sessions = await this.loginSessionsRepository.find({
+        where: { user: { id: accountId } },
+        order: { createdAt: 'DESC' },
+      });
+      return sessions.map((session) => this.accountSessionModelFromLoginEntity(session));
+    }
+
+    if (this.accountSessionsRepository) {
+      const sessions = await this.accountSessionsRepository.find({ where: { accountId }, order: { createdAt: 'DESC' } });
+      const models = sessions.map((session) => this.accountSessionModelFromEntity(session));
+      this.accountSessions.set(accountId, models);
+      return models;
+    }
     return this.accountSessions.get(accountId) ?? [];
   }
 
   async revokeAccountSession(accountId: string, sessionId: string): Promise<{ accountId: string; sessionId: string; revoked: boolean; message: string }> {
-    const sessions = this.accountSessions.get(accountId) ?? [];
+    if (this.loginSessionsRepository) {
+      const session = await this.loginSessionsRepository.findOne({
+        where: { id: sessionId, user: { id: accountId } },
+      });
+      if (!session) {
+        return { accountId, sessionId, revoked: false, message: 'Session not found.' };
+      }
+
+      if (!session.revokedAt) {
+        session.revokedAt = new Date();
+        await this.loginSessionsRepository.save(session);
+        this.recordHistory(accountId, 'security', 'Account session revoked', { sessionId });
+      }
+      return { accountId, sessionId, revoked: true, message: 'Session revoked successfully.' };
+    }
+
+    const sessions = await this.listAccountSessions(accountId);
     const target = sessions.find((entry) => entry.id === sessionId);
     if (!target) {
       return { accountId, sessionId, revoked: false, message: 'Session not found.' };
@@ -881,12 +1412,36 @@ export class AccountManagementService {
 
     target.status = 'revoked';
     target.lastSeenAt = new Date().toISOString();
+    if (this.accountSessionsRepository) {
+      await this.accountSessionsRepository.update({ id: sessionId, accountId }, { status: 'revoked', lastSeenAt: new Date() });
+    }
+    this.accountSessions.set(accountId, sessions);
     this.recordHistory(accountId, 'security', 'Account session revoked', { sessionId });
     return { accountId, sessionId, revoked: true, message: 'Session revoked successfully.' };
   }
 
   async revokeAllOtherSessions(accountId: string, currentSessionId?: string): Promise<{ accountId: string; revoked: boolean; message: string }> {
-    const sessions = this.accountSessions.get(accountId) ?? [];
+    if (this.loginSessionsRepository) {
+      const sessions = await this.loginSessionsRepository.find({
+        where: { user: { id: accountId } },
+      });
+      const activeOtherSessions = sessions.filter((session) => session.id !== currentSessionId && !session.revokedAt);
+      if (activeOtherSessions.length > 0) {
+        const revokedAt = new Date();
+        await this.loginSessionsRepository
+          .createQueryBuilder()
+          .update(LoginSession)
+          .set({ revokedAt })
+          .where('userId = :accountId', { accountId })
+          .andWhere('revokedAt IS NULL')
+          .andWhere(currentSessionId ? 'id != :currentSessionId' : '1 = 1', { currentSessionId })
+          .execute();
+      }
+      this.recordHistory(accountId, 'security', 'Other account sessions revoked', { currentSessionId });
+      return { accountId, revoked: true, message: 'Other sessions revoked successfully.' };
+    }
+
+    const sessions = await this.listAccountSessions(accountId);
     const updated = sessions.map((session) => {
       const shouldRevoke = session.id !== currentSessionId && session.status !== 'revoked';
       if (shouldRevoke) {
@@ -897,9 +1452,61 @@ export class AccountManagementService {
     });
 
     this.accountSessions.set(accountId, updated);
+    if (this.accountSessionsRepository) {
+      await this.accountSessionsRepository
+        .createQueryBuilder()
+        .update(AccountSessionEntity)
+        .set({ status: 'revoked', lastSeenAt: new Date() })
+        .where('accountId = :accountId', { accountId })
+        .andWhere('status != :status', { status: 'revoked' })
+        .andWhere(currentSessionId ? 'id != :currentSessionId' : '1 = 1', { currentSessionId })
+        .execute();
+    }
     this.recordHistory(accountId, 'security', 'Other account sessions revoked', { currentSessionId });
 
     return { accountId, revoked: true, message: 'Other sessions revoked successfully.' };
+  }
+
+  private accountSessionEntityFromModel(model: AccountSession): AccountSessionEntity {
+    return this.accountSessionsRepository!.create({
+      id: model.id,
+      accountId: model.accountId,
+      deviceName: model.deviceName,
+      ipAddress: model.ipAddress,
+      userAgent: model.userAgent,
+      isCurrent: model.isCurrent,
+      status: model.status,
+      createdAt: new Date(model.createdAt),
+      lastSeenAt: new Date(model.lastSeenAt),
+    });
+  }
+
+  private accountSessionModelFromEntity(entity: AccountSessionEntity): AccountSession {
+    return {
+      id: entity.id,
+      accountId: entity.accountId,
+      deviceName: entity.deviceName,
+      ipAddress: entity.ipAddress,
+      userAgent: entity.userAgent,
+      isCurrent: entity.isCurrent,
+      createdAt: entity.createdAt.toISOString(),
+      lastSeenAt: entity.lastSeenAt.toISOString(),
+      status: entity.status,
+    };
+  }
+
+  private accountSessionModelFromLoginEntity(entity: LoginSession, isCurrent = false): AccountSession {
+    return {
+      id: entity.id,
+      accountId: entity.user.id,
+      deviceName: entity.deviceName ?? 'Unknown device',
+      ipAddress: entity.ipAddress ?? undefined,
+      userAgent: entity.userAgent ?? undefined,
+      isCurrent,
+      createdAt: entity.createdAt.toISOString(),
+      lastSeenAt: (entity.lastSeenAt ?? entity.createdAt).toISOString(),
+      status: entity.revokedAt ? 'revoked' : 'active',
+    };
   }
 
   async requestDataDownload(accountId: string, dataTypes: string[] = []): Promise<{ accountId: string; status: 'ready'; fileUrl: string; createdAt: string; dataTypes: string[] }> {
@@ -944,7 +1551,19 @@ export class AccountManagementService {
       createdAt,
     };
 
-    this.accountDeletionRequests.set(accountId, request);
+    if (this.accountDeletionRepository) {
+      await this.accountDeletionRepository.delete({ accountId, status: 'pending' });
+      await this.accountDeletionRepository.save(this.accountDeletionRepository.create({
+        accountId,
+        reason: request.reason,
+        additionalInfo: request.additionalInfo,
+        deleteLinkedAccounts: request.deleteLinkedAccounts,
+        deleteAllData: request.deleteAllData,
+        status: 'pending',
+      }));
+    } else {
+      this.accountDeletionRequests.set(accountId, request);
+    }
     this.recordHistory(accountId, 'security', 'Account deletion requested', {
       reason: request.reason,
       deleteLinkedAccounts: request.deleteLinkedAccounts,
@@ -955,6 +1574,9 @@ export class AccountManagementService {
     const settings = this.ensureSettings(accountId);
     settings.deactivated = true;
     settings.updatedAt = new Date().toISOString();
+    if (this.usersService?.deactivate) {
+      await this.usersService.deactivate(accountId, 'Account deletion requested');
+    }
 
     return {
       accountId,
@@ -968,7 +1590,11 @@ export class AccountManagementService {
   }
 
   async confirmAccountDeletion(accountId: string, confirmationCode: string): Promise<{ accountId: string; status: 'deleted'; message: string; deletedAt: string }> {
-    const existing = this.accountDeletionRequests.get(accountId);
+    const persisted = this.accountDeletionRepository
+      ? await this.accountDeletionRepository.findOne({ where: { accountId, status: 'pending' }, order: { createdAt: 'DESC' } })
+      : null;
+    const memoryRequest = this.accountDeletionRequests.get(accountId);
+    const existing = persisted ?? memoryRequest;
     if (!existing) {
       throw new Error('No account deletion request is pending for this account.');
     }
@@ -982,11 +1608,17 @@ export class AccountManagementService {
     settings.deactivated = true;
     settings.updatedAt = deletedAt;
 
-    this.accountDeletionRequests.set(accountId, {
-      ...existing,
-      status: 'deleted',
-      processedAt: deletedAt,
-    });
+    if (persisted && this.accountDeletionRepository) {
+      persisted.status = 'deleted';
+      persisted.processedAt = new Date(deletedAt);
+      await this.accountDeletionRepository.save(persisted);
+    } else if (memoryRequest) {
+      this.accountDeletionRequests.set(accountId, {
+        ...memoryRequest,
+        status: 'deleted',
+        processedAt: deletedAt,
+      });
+    }
     this.recordHistory(accountId, 'security', 'Account deleted permanently', {
       requestId: existing.id,
       deletedAt,
@@ -994,15 +1626,28 @@ export class AccountManagementService {
       deleteAllData: existing.deleteAllData,
     });
 
-    if (this.usersService?.delete) {
+    if (this.usersService) {
       await this.usersService.delete(accountId);
     }
 
     return {
       accountId,
       status: 'deleted',
-      message: 'Account deleted successfully and all associated data has been queued for removal.',
+      message: 'Account deleted successfully and all associated data was removed.',
       deletedAt,
+    };
+  }
+
+  private toSecurityAlert(alert: SecurityAlertEntity): SecurityAlert {
+    return {
+      id: alert.id,
+      accountId: alert.userId,
+      type: alert.type as SecurityAlert['type'],
+      message: alert.message,
+      severity: alert.severity as SecurityAlert['severity'],
+      createdAt: alert.createdAt.toISOString(),
+      resolved: alert.resolved,
+      metadata: alert.metadata,
     };
   }
 
@@ -1013,6 +1658,21 @@ export class AccountManagementService {
     severity: SecurityAlert['severity'] = 'medium',
     metadata: Record<string, any> = {},
   ): Promise<SecurityAlert> {
+    if (this.securityAlertsRepository) {
+      const saved = await this.securityAlertsRepository.save(
+        this.securityAlertsRepository.create({
+          userId: accountId,
+          type,
+          message,
+          severity,
+          resolved: false,
+          metadata,
+        }),
+      );
+      this.recordHistory(accountId, 'security', `Security alert: ${message}`, { type, severity, metadata });
+      return this.toSecurityAlert(saved);
+    }
+
     const alerts = this.securityAlerts.get(accountId) ?? [];
     const alert: SecurityAlert = {
       id: `alert-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -1032,6 +1692,17 @@ export class AccountManagementService {
   }
 
   async resolveSecurityAlert(accountId: string, alertId: string, resolved = true): Promise<SecurityAlert | null> {
+    if (this.securityAlertsRepository) {
+      const alert = await this.securityAlertsRepository.findOne({ where: { id: alertId, userId: accountId } });
+      if (!alert) {
+        return null;
+      }
+      alert.resolved = resolved;
+      const saved = await this.securityAlertsRepository.save(alert);
+      this.recordHistory(accountId, 'security', resolved ? 'Security alert resolved' : 'Security alert reopened', { alertId });
+      return this.toSecurityAlert(saved);
+    }
+
     const alerts = this.securityAlerts.get(accountId) ?? [];
     const alert = alerts.find((entry) => entry.id === alertId);
     if (!alert) {
@@ -1086,15 +1757,6 @@ export class AccountManagementService {
     });
 
     return approval;
-  }
-
-  async importAccountData(accountId: string, payload: Record<string, any>): Promise<{ accountId: string; imported: boolean; summary: string }> {
-    this.recordHistory(accountId, 'settings', 'Account data imported', { payloadKeys: Object.keys(payload ?? {}) });
-    return {
-      accountId,
-      imported: true,
-      summary: 'Account data imported successfully.',
-    };
   }
 
   async getPrivacySettings(accountId: string): Promise<PrivacySettingsSnapshot> {
@@ -1162,23 +1824,82 @@ export class AccountManagementService {
     appeals: VerificationAppeal[];
     securityCenter: Awaited<ReturnType<AccountManagementService['getSecurityCenter']>>;
   }> {
-    const [history, privacy, securityCenter, preferences, notifications] = await Promise.all([
+    const [history, privacy, securityCenter, preferences, notifications, persistedUser, persistedLinkedAccounts] = await Promise.all([
       this.getAccountHistory(accountId),
       this.getPrivacySettings(accountId),
       this.getSecurityCenter(accountId),
       this.getAccountPreferences(accountId),
       this.getNotificationPreferences(accountId),
+      this.getPersistedUser(accountId),
+      this.getPersistedLinkedAccounts(accountId),
     ]);
 
-    const recoveryStatus = this.recoveryQueue.get(accountId);
+    const persistedRecovery = this.accountRecoveryRepository
+      ? await this.accountRecoveryRepository.findOne({ where: { accountId }, order: { createdAt: 'DESC' } })
+      : null;
+    const recoveryStatus = persistedRecovery
+      ? { accountId, status: persistedRecovery.status, method: persistedRecovery.method, createdAt: persistedRecovery.createdAt.toISOString() }
+      : this.recoveryQueue.get(accountId);
+    const mappedLinkedAccounts = persistedLinkedAccounts.length > 0
+      ? persistedLinkedAccounts.map((entry) => ({
+          id: entry.id,
+          provider: entry.provider,
+          externalUserId: entry.externalUserId,
+          displayName: entry.displayName ?? undefined,
+          email: entry.email ?? undefined,
+          connectedAt: entry.connectedAt ? new Date(entry.connectedAt).toISOString() : new Date().toISOString(),
+          isPrimary: entry.isPrimary,
+        }))
+      : this.getLinkedAccounts(accountId);
+
+    const account = persistedUser
+      ? {
+          accountId,
+          deactivated: Boolean(persistedUser.status === 'deactivated' || persistedUser.banned),
+          status: persistedUser.status ?? 'active',
+          switchingEnabled: true,
+          permissions: persistedUser.accountPermissions ?? this.ensureSettings(accountId).permissions,
+          personalizationSettings: {},
+          dataPermissions: ['profile', 'posts', 'settings'],
+          updatedAt: new Date().toISOString(),
+        }
+      : this.ensureSettings(accountId);
+
+    const persistedPrivacy = persistedUser
+      ? {
+          showOnlineStatus: typeof persistedUser.showOnlineStatus === 'boolean' ? persistedUser.showOnlineStatus : privacy.showOnlineStatus,
+          readReceipts: typeof persistedUser.readReceipts === 'boolean' ? persistedUser.readReceipts : privacy.readReceipts,
+          mentions: (persistedUser.mentions as PrivacySettingsSnapshot['mentions']) ?? privacy.mentions,
+          activityVisibility: (persistedUser.activityVisibility as PrivacySettingsSnapshot['activityVisibility']) ?? privacy.activityVisibility,
+          storyVisibility: (persistedUser.storyVisibility as PrivacySettingsSnapshot['storyVisibility']) ?? privacy.storyVisibility,
+          searchVisibility: (persistedUser.searchVisibility as PrivacySettingsSnapshot['searchVisibility']) ?? privacy.searchVisibility,
+          contactDiscovery: typeof persistedUser.contactDiscovery === 'boolean' ? persistedUser.contactDiscovery : privacy.contactDiscovery,
+          personalization: typeof persistedUser.personalization === 'boolean' ? persistedUser.personalization : privacy.personalization,
+          adPersonalization: typeof persistedUser.adPersonalization === 'boolean' ? persistedUser.adPersonalization : privacy.adPersonalization,
+          updatedAt: privacy.updatedAt,
+        }
+      : privacy;
+
+    const persistedPreferences = persistedUser
+      ? {
+          ...preferences,
+          theme: ((persistedUser as any).profileTheme ?? preferences.theme ?? 'system') as AccountPreferences['theme'],
+          language: (persistedUser as any).language ?? preferences.language,
+          timezone: (persistedUser as any).timezone ?? preferences.timezone,
+        }
+      : preferences;
+
+    const persistedNotifications = persistedUser?.notificationSettings
+      ? this.toNotificationPreferences(persistedUser.notificationSettings)
+      : notifications;
 
     return {
-      account: this.ensureSettings(accountId),
-      preferences,
-      notifications,
-      linkedAccounts: this.getLinkedAccounts(accountId),
+      account,
+      preferences: persistedPreferences,
+      notifications: persistedNotifications,
+      linkedAccounts: mappedLinkedAccounts,
       history,
-      privacy,
+      privacy: persistedPrivacy,
       recoveryStatus: recoveryStatus
         ? { ...recoveryStatus, accountId }
         : null,
@@ -1269,16 +1990,34 @@ export class AccountManagementService {
     securityAlerts: SecurityAlert[];
     pendingApprovals: LoginApprovalRequest[];
   }> {
-    const logs = this.ensureHistory(accountId).slice(0, 25).map((entry) => ({
+    const fallbackLogs = this.ensureHistory(accountId).slice(0, 25).map((entry) => ({
       id: entry.id,
       message: entry.summary,
       timestamp: entry.occurredAt,
       type: entry.type,
     }));
 
-    const [connectedAccounts, trustedDevices] = await Promise.all([
+    let logs = fallbackLogs;
+    if (this.securityAuditService) {
+      try {
+        const persisted = await this.securityAuditService.getUserAuditLog(accountId, { take: 25, skip: 0 });
+        logs = persisted.logs.map((entry) => ({
+          id: entry.id,
+          message: entry.message,
+          timestamp: entry.createdAt.toISOString(),
+          type: 'security' as const,
+        }));
+      } catch {
+        logs = fallbackLogs;
+      }
+    }
+
+    const [connectedAccounts, trustedDevices, storedAlerts] = await Promise.all([
       Promise.resolve(this.getLinkedAccounts(accountId)),
       this.getTrustedDevices(accountId),
+      this.securityAlertsRepository
+        ? this.securityAlertsRepository.find({ where: { userId: accountId }, order: { createdAt: 'DESC' }, take: 50 })
+        : Promise.resolve(null),
     ]);
 
     return {
@@ -1289,7 +2028,9 @@ export class AccountManagementService {
       trustedDevices,
       recoveryStatus: this.recoveryQueue.get(accountId) ?? null,
       pendingAppeals: (this.verificationAppeals.get(accountId) ?? []).filter((entry) => entry.status === 'pending'),
-      securityAlerts: this.securityAlerts.get(accountId) ?? [],
+      securityAlerts: storedAlerts
+        ? storedAlerts.map((alert) => this.toSecurityAlert(alert))
+        : this.securityAlerts.get(accountId) ?? [],
       pendingApprovals: (this.loginApprovals.get(accountId) ?? []).filter((entry) => entry.status === 'pending'),
     };
   }

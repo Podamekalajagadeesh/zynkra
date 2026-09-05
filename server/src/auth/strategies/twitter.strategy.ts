@@ -7,8 +7,8 @@ import { ConfigService } from '@nestjs/config';
 export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
   constructor(private configService: ConfigService) {
     super({
-      consumerKey: configService.get<string>('TWITTER_CONSUMER_KEY'),
-      consumerSecret: configService.get<string>('TWITTER_CONSUMER_SECRET'),
+      consumerKey: configService.get<string>('TWITTER_CONSUMER_KEY') || 'twitter-oauth-not-configured',
+      consumerSecret: configService.get<string>('TWITTER_CONSUMER_SECRET') || 'twitter-oauth-not-configured',
       callbackURL: configService.get<string>('TWITTER_CALLBACK_URL', '/auth/twitter/callback'),
       includeEmail: true,
     });

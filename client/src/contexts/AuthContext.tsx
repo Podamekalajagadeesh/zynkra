@@ -112,11 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const switchAccount = useCallback(
-    (accountId: string) => {
+    async (accountId: string) => {
       const accountToSwitch = accounts.find((a) => a.user.id === accountId);
-      if (accountToSwitch) {
-        updateStoredAccounts(accounts, accountId);
+      if (!accountToSwitch) {
+        return;
       }
+
+      updateStoredAccounts(accounts, accountId);
     },
     [accounts],
   );
