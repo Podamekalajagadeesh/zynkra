@@ -26,6 +26,7 @@ import { WebhooksService } from '../webhooks/webhooks.service';
 import { LoginSession } from '../auth/entities/login-session.entity';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
+import { DEFAULT_PERSONALIZATION_CONTROLS, normalizePersonalizationControls } from './personalization-controls';
 
 @Injectable()
 export class UsersService {
@@ -209,6 +210,13 @@ export class UsersService {
       user.adPersonalization = updatePrivacyDto.adPersonalization;
     }
 
+    if (updatePrivacyDto.personalizationControls) {
+      user.personalizationControls = normalizePersonalizationControls({
+        ...(user.personalizationControls ?? DEFAULT_PERSONALIZATION_CONTROLS),
+        ...updatePrivacyDto.personalizationControls,
+      });
+    }
+
     if (updatePrivacyDto.mentions) {
       user.mentions = updatePrivacyDto.mentions;
     }
@@ -235,7 +243,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async getPrivacy(userId: string): Promise<Pick<User, 'postVisibility' | 'friendRequestPrivacy' | 'emailSearchPrivacy' | 'commentPrivacy' | 'tagPrivacy' | 'messagePrivacy' | 'screenshotProtection' | 'showOnlineStatus' | 'showLastSeenTimestamp' | 'readReceipts' | 'mentions' | 'activityVisibility' | 'storyVisibility' | 'searchVisibility' | 'contactDiscovery' | 'personalization' | 'adPersonalization'>> {
+  async getPrivacy(userId: string): Promise<Pick<User, 'postVisibility' | 'friendRequestPrivacy' | 'emailSearchPrivacy' | 'commentPrivacy' | 'tagPrivacy' | 'messagePrivacy' | 'screenshotProtection' | 'showOnlineStatus' | 'showLastSeenTimestamp' | 'readReceipts' | 'mentions' | 'activityVisibility' | 'storyVisibility' | 'searchVisibility' | 'contactDiscovery' | 'personalization' | 'adPersonalization' | 'personalizationControls'>> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -259,7 +267,19 @@ export class UsersService {
       contactDiscovery: user.contactDiscovery,
       personalization: user.personalization,
       adPersonalization: user.adPersonalization,
+      personalizationControls: normalizePersonalizationControls(user.personalizationControls),
     };
+  }
+
+  async resetPersonalizationControls(userId: string): Promise<Pick<User, 'personalizationControls'>> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.personalizationControls = { ...DEFAULT_PERSONALIZATION_CONTROLS };
+    await this.usersRepository.save(user);
+    return { personalizationControls: user.personalizationControls };
   }
 
   async findOneById(

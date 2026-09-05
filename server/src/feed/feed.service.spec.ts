@@ -167,6 +167,18 @@ describe('FeedService', () => {
       expect(ids.indexOf('followed')).toBeGreaterThanOrEqual(0);
     });
 
+    it('uses chronological ordering when feed personalization is disabled', async () => {
+      const user = makeUser({ personalizationControls: { feedPersonalization: false } as any });
+      const chronologicalPosts = [makePost({ id: 'newest' }), makePost({ id: 'older' })];
+      postsRepo.find.mockResolvedValue(chronologicalPosts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(chronologicalPosts);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result).toEqual(chronologicalPosts);
+      expect(userInterestsService.getInterests).not.toHaveBeenCalled();
+    });
+
     it('works for logged-out users (no user provided)', async () => {
       const posts = [makePost()];
       postsRepo.find.mockResolvedValue(posts);
@@ -189,6 +201,17 @@ describe('FeedService', () => {
 
       const result = await service.getRecommendedFeed(user, 10);
       expect(result).toHaveLength(1);
+    });
+
+    it('uses chronological posts when recommendations are disabled', async () => {
+      const user = makeUser({ personalizationControls: { recommendations: false } as any });
+      const posts = [makePost({ id: 'newest' }), makePost({ id: 'older' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getRecommendedFeed(user, 1);
+
+      expect(result).toEqual([posts[0]]);
     });
 
     it('falls back to trending feed for logged-out users', async () => {

@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { Tag } from '../tags/tag.entity';
 import { Post, PostVisibility } from '../posts/entities/post.entity';
 import { Product } from '../marketplace/entities/product.entity';
+import { normalizePersonalizationControls } from '../users/personalization-controls';
 
 interface InterestScoreConfig {
   baseInteractionScore: Record<string, number>;
@@ -59,7 +60,8 @@ export class UserInterestsService {
     tags: Tag[],
     interactionType: 'view' | 'like' | 'comment' | 'share' | 'save' | 'purchase' = 'view',
   ): Promise<void> {
-    if (tags.length === 0) return;
+    const controls = normalizePersonalizationControls(user.personalizationControls);
+    if (tags.length === 0 || user.personalization === false || !controls.activityPersonalization) return;
 
     const baseScore = this.config.baseInteractionScore[interactionType];
     
@@ -166,6 +168,18 @@ export class UserInterestsService {
     limit: number = 20,
   ): Promise<RecommendedContent<Post>> {
     const skip = (page - 1) * limit;
+    const controls = normalizePersonalizationControls(user.personalizationControls);
+    if (user.personalization === false || !controls.recommendations) {
+      const [posts, total] = await this.postsRepository.findAndCount({
+        relations: ['user', 'tags'],
+        where: { visibility: PostVisibility.PUBLIC },
+        order: { createdAt: 'DESC' },
+        skip,
+        take: limit,
+      });
+
+      return { data: posts, total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
     const interests = await this.getInterests(user, 15);
     
     if (interests.length === 0) {
@@ -236,6 +250,18 @@ export class UserInterestsService {
     limit: number = 20,
   ): Promise<RecommendedContent<Product>> {
     const skip = (page - 1) * limit;
+    const controls = normalizePersonalizationControls(user.personalizationControls);
+    if (user.personalization === false || !controls.shoppingPersonalization) {
+      const [products, total] = await this.productsRepository.findAndCount({
+        relations: ['seller', 'variants'],
+        where: { isActive: true },
+        order: { createdAt: 'DESC' },
+        skip,
+        take: limit,
+      });
+
+      return { data: products, total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
     const interests = await this.getInterests(user, 15);
     
     if (interests.length === 0) {
@@ -297,6 +323,9 @@ export class UserInterestsService {
   }
 
   async getUserSimilarInterests(user: User, limit: number = 10): Promise<Tag[]> {
+    const controls = normalizePersonalizationControls(user.personalizationControls);
+    if (user.personalization === false || !controls.recommendations) return [];
+
     // Find users with similar interests to this user
     const userInterests = await this.getInterests(user, 10);
     if (userInterests.length === 0) return [];

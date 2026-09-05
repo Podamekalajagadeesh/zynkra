@@ -10,6 +10,7 @@ const mockUpdatePrivacy = vi.fn();
 const mockGetAgeVerificationStatus = vi.fn();
 const mockSetBirthDate = vi.fn();
 const mockDiscoverContacts = vi.fn();
+const mockResetPersonalizationControls = vi.fn();
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -18,6 +19,19 @@ vi.mock('../lib/api', () => ({
     delete: mockApiDelete,
   },
   updatePrivacy: mockUpdatePrivacy,
+  DEFAULT_PERSONALIZATION_CONTROLS: {
+    feedPersonalization: true,
+    searchPersonalization: true,
+    recommendations: true,
+    notificationPersonalization: true,
+    creatorPersonalization: true,
+    communityPersonalization: true,
+    shoppingPersonalization: true,
+    eventPersonalization: true,
+    locationPersonalization: true,
+    activityPersonalization: true,
+  },
+  resetPersonalizationControls: mockResetPersonalizationControls,
   getAgeVerificationStatus: mockGetAgeVerificationStatus,
   setBirthDate: mockSetBirthDate,
   discoverContacts: mockDiscoverContacts,
@@ -39,6 +53,18 @@ describe('DataPrivacyPage', () => {
             tagPrivacy: 'everyone',
             activityVisibility: 'friends',
             adPersonalization: true,
+            personalizationControls: {
+              feedPersonalization: true,
+              searchPersonalization: true,
+              recommendations: true,
+              notificationPersonalization: true,
+              creatorPersonalization: true,
+              communityPersonalization: true,
+              shoppingPersonalization: true,
+              eventPersonalization: true,
+              locationPersonalization: true,
+              activityPersonalization: true,
+            },
             storyVisibility: 'followers',
             searchVisibility: 'friends',
             birthDate: '2000-01-01',
@@ -55,6 +81,18 @@ describe('DataPrivacyPage', () => {
     });
     mockSetBirthDate.mockResolvedValue({ ok: true });
     mockUpdatePrivacy.mockResolvedValue({ ok: true });
+    mockResetPersonalizationControls.mockResolvedValue({ personalizationControls: {
+      feedPersonalization: true,
+      searchPersonalization: true,
+      recommendations: true,
+      notificationPersonalization: true,
+      creatorPersonalization: true,
+      communityPersonalization: true,
+      shoppingPersonalization: true,
+      eventPersonalization: true,
+      locationPersonalization: true,
+      activityPersonalization: true,
+    } });
     mockDiscoverContacts.mockResolvedValue([
       { id: 'friend-id', username: 'friend', displayName: 'Friend', avatar: null },
     ]);
@@ -119,6 +157,28 @@ describe('DataPrivacyPage', () => {
 
     await waitFor(() => {
       expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ searchVisibility: 'no_one' }));
+    });
+  });
+
+  it('saves a selected personalization control', async () => {
+    const { default: DataPrivacyPage } = await import('./data-privacy');
+
+    render(
+      <ToastProvider>
+        <MemoryRouter>
+          <DataPrivacyPage />
+        </MemoryRouter>
+      </ToastProvider>,
+    );
+
+    const feedControl = await screen.findByLabelText(/feed personalization/i);
+    fireEvent.click(feedControl);
+    fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
+
+    await waitFor(() => {
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({
+        personalizationControls: expect.objectContaining({ feedPersonalization: false }),
+      }));
     });
   });
 

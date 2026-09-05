@@ -15,6 +15,7 @@ describe('ExportService data permissions', () => {
       accountPreferences: { theme: 'dark', language: 'en' },
       personalization: true,
       adPersonalization: false,
+      personalizationControls: { feedPersonalization: false },
     });
     const messagesRepository = {
       find: jest.fn().mockResolvedValue([]),
@@ -51,7 +52,11 @@ describe('ExportService data permissions', () => {
 
     expect(permitted.personalization).toEqual({
       accountPreferences: { theme: 'dark', language: 'en' },
-      privacy: { personalization: true, adPersonalization: false },
+      privacy: {
+        personalization: true,
+        adPersonalization: false,
+        personalizationControls: { feedPersonalization: false },
+      },
     });
     expect(permitted.analytics).toEqual(expect.objectContaining({
       posts: { count: 0, comments: 0, reactions: 0 },

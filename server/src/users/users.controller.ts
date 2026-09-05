@@ -583,6 +583,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('me/privacy/personalization/reset')
+  async resetPersonalizationControls(@Request() req) {
+    return this.usersService.resetPersonalizationControls(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me/account-dashboard')
   async getAccountDashboard(@Request() req) {
     return this.accountManagementService.getAccountDashboard(req.user.userId);

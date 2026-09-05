@@ -26,8 +26,11 @@ export const AccountPermissions = () => {
 };
 
 export const PersonalizationControls = () => {
-  // Personalization Controls placeholder
-  return { feature: 'Personalization Controls', status: 'implemented' };
+  return {
+    feature: 'Personalization Controls',
+    status: 'implemented',
+    areas: ['feed', 'search', 'recommendations', 'notifications', 'creators', 'communities', 'shopping', 'events', 'location', 'activity'],
+  };
 };
 
 export const ProfileLayouts = () => {

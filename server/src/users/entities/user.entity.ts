@@ -33,6 +33,7 @@ import { Bookmark } from '../../bookmarks/entities/bookmark.entity';
 import { UserInterest } from '../../user-interests/user-interest.entity';
 import { NotificationSettings } from './notification-settings.entity';
 import { FollowRequest } from './follow-request.entity';
+import { PersonalizationControls } from '../personalization-controls';
 import { Watchlist } from '../../bookmarks/entities/watchlist.entity';
 import { Collection } from '../../bookmarks/entities/collection.entity';
 import { Fundraiser } from '../../fundraisers/entities/fundraiser.entity';
@@ -346,6 +347,9 @@ export class User {
 
   @Column({ default: true })
   adPersonalization: boolean;
+
+  @Column({ type: 'jsonb', default: {} })
+  personalizationControls: PersonalizationControls;
 
   @Column({ default: 'everyone' })
   mentions: 'everyone' | 'followers' | 'no_one';

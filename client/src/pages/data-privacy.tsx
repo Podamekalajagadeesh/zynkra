@@ -4,7 +4,7 @@ import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api, requestAccountDeletion, confirmAccountDeletion, discoverContacts, getAgeVerificationStatus, setBirthDate, updatePrivacy } from '../lib/api';
+import { api, DEFAULT_PERSONALIZATION_CONTROLS, PersonalizationControls, requestAccountDeletion, confirmAccountDeletion, discoverContacts, getAgeVerificationStatus, resetPersonalizationControls, setBirthDate, updatePrivacy } from '../lib/api';
 import { TagPrivacy } from '../lib/types';
 
 export default function DataPrivacyPage() {
@@ -25,6 +25,7 @@ export default function DataPrivacyPage() {
   const [tagPrivacy, setTagPrivacy] = useState<TagPrivacy>(TagPrivacy.EVERYONE);
   const [activityVisibility, setActivityVisibility] = useState<'public' | 'friends' | 'private'>('friends');
   const [adPersonalization, setAdPersonalization] = useState(true);
+  const [personalizationControls, setPersonalizationControls] = useState<PersonalizationControls>(DEFAULT_PERSONALIZATION_CONTROLS);
   const [birthDate, setBirthDateValue] = useState('');
   const [ageStatus, setAgeStatus] = useState<any>(null);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
@@ -58,6 +59,7 @@ export default function DataPrivacyPage() {
         setTagPrivacy(profile.tagPrivacy ?? TagPrivacy.EVERYONE);
         setActivityVisibility((profile.activityVisibility as any) ?? 'friends');
         setAdPersonalization(profile.adPersonalization !== false);
+        setPersonalizationControls({ ...DEFAULT_PERSONALIZATION_CONTROLS, ...(profile.personalizationControls ?? {}) });
         if (profile.birthDate) {
           setBirthDateValue(new Date(profile.birthDate).toISOString().slice(0, 10));
         }
@@ -94,6 +96,7 @@ export default function DataPrivacyPage() {
         tagPrivacy,
         activityVisibility,
         adPersonalization,
+        personalizationControls,
       } as any);
       addToast('Privacy settings saved', 'success');
     } catch {
@@ -102,6 +105,29 @@ export default function DataPrivacyPage() {
       setSavingPrivacy(false);
     }
   };
+
+  const handleResetPersonalization = async () => {
+    try {
+      const response = await resetPersonalizationControls();
+      setPersonalizationControls({ ...DEFAULT_PERSONALIZATION_CONTROLS, ...response.personalizationControls });
+      addToast('Personalization controls reset', 'success');
+    } catch {
+      addToast('Failed to reset personalization controls', 'error');
+    }
+  };
+
+  const personalizationOptions: Array<{ key: keyof PersonalizationControls; label: string; description: string }> = [
+    { key: 'feedPersonalization', label: 'Feed personalization', description: 'Use your activity and interests to rank your For You feed.' },
+    { key: 'searchPersonalization', label: 'Search personalization', description: 'Use your activity to improve search relevance.' },
+    { key: 'recommendations', label: 'Recommendations', description: 'Personalize suggested people, content, and communities.' },
+    { key: 'notificationPersonalization', label: 'Notification personalization', description: 'Prioritize notifications using your relationships and activity.' },
+    { key: 'creatorPersonalization', label: 'Creator personalization', description: 'Personalize creator discovery and creator suggestions.' },
+    { key: 'communityPersonalization', label: 'Community personalization', description: 'Personalize groups, forums, and community suggestions.' },
+    { key: 'shoppingPersonalization', label: 'Shopping personalization', description: 'Personalize products, services, and marketplace suggestions.' },
+    { key: 'eventPersonalization', label: 'Event personalization', description: 'Personalize event discovery and event reminders.' },
+    { key: 'locationPersonalization', label: 'Location personalization', description: 'Use location context for local recommendations.' },
+    { key: 'activityPersonalization', label: 'Activity personalization', description: 'Use your interactions and viewing activity for personalization.' },
+  ];
 
   const handleContactDiscovery = async () => {
     const contacts = Array.from(new Set(
@@ -299,9 +325,36 @@ export default function DataPrivacyPage() {
             </label>
             <label className="flex items-center justify-between rounded-xl border border-dark-200 bg-dark-50 p-3 dark:border-dark-700 dark:bg-dark-800/70">
               <span className="text-sm font-medium">Personalization</span>
-              <input type="checkbox" checked={personalization} onChange={(e) => setPersonalization(e.target.checked)} className="h-4 w-4" />
+              <input aria-label="Personalization" type="checkbox" checked={personalization} onChange={(e) => setPersonalization(e.target.checked)} className="h-4 w-4" />
             </label>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-dark-200 bg-dark-50 p-4 dark:border-dark-700 dark:bg-dark-800/70" aria-labelledby="personalization-controls-heading">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 id="personalization-controls-heading" className="font-semibold">Personalization controls</h3>
+                <p className="text-sm text-gray-500">Choose which parts of Zynkra may use your activity to tailor what you see.</p>
+              </div>
+              <Button type="button" variant="secondary" onClick={handleResetPersonalization}>Reset defaults</Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {personalizationOptions.map(({ key, label, description }) => (
+                <label key={key} className="flex items-start justify-between gap-3 rounded-lg border border-dark-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                  <span>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="mt-1 block text-xs text-gray-500">{description}</span>
+                  </span>
+                  <input
+                    aria-label={label}
+                    type="checkbox"
+                    checked={personalizationControls[key]}
+                    onChange={(event) => setPersonalizationControls((current) => ({ ...current, [key]: event.target.checked }))}
+                    className="mt-1 h-4 w-4 shrink-0"
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
 
           <div className="space-y-3 rounded-xl border border-dark-200 bg-dark-50 p-4 dark:border-dark-700 dark:bg-dark-800/70">
             <div>

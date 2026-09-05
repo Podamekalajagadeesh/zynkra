@@ -3,6 +3,32 @@ import { getAuthToken, setAuthTokenStorage } from './auth-storage';
 import { enqueueOfflineOperation } from './offlineSync';
 import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
 
+export type PersonalizationControls = {
+  feedPersonalization: boolean;
+  searchPersonalization: boolean;
+  recommendations: boolean;
+  notificationPersonalization: boolean;
+  creatorPersonalization: boolean;
+  communityPersonalization: boolean;
+  shoppingPersonalization: boolean;
+  eventPersonalization: boolean;
+  locationPersonalization: boolean;
+  activityPersonalization: boolean;
+};
+
+export const DEFAULT_PERSONALIZATION_CONTROLS: PersonalizationControls = {
+  feedPersonalization: true,
+  searchPersonalization: true,
+  recommendations: true,
+  notificationPersonalization: true,
+  creatorPersonalization: true,
+  communityPersonalization: true,
+  shoppingPersonalization: true,
+  eventPersonalization: true,
+  locationPersonalization: true,
+  activityPersonalization: true,
+};
+
 export const updatePrivacy = async (privacy: { 
   postVisibility?: PostVisibility; 
   friendRequestPrivacy?: FriendRequestPrivacy;
@@ -21,6 +47,7 @@ export const updatePrivacy = async (privacy: {
   storyVisibility?: 'public' | 'friends' | 'followers' | 'only_me';
   searchVisibility?: 'everyone' | 'friends' | 'no_one';
   adPersonalization?: boolean;
+  personalizationControls?: Partial<PersonalizationControls>;
   screenshotProtection?: {
     enabled?: boolean;
     level?: string;
@@ -36,6 +63,11 @@ export const updatePrivacy = async (privacy: {
     : '/users/me/privacy';
   const response = await api.patch(endpoint, privacy);
   return response.data;
+};
+
+export const resetPersonalizationControls = async () => {
+  const response = await api.post('/users/me/privacy/personalization/reset');
+  return response.data as { personalizationControls: PersonalizationControls };
 };
 
 export const API_BASE_URL = (() => {

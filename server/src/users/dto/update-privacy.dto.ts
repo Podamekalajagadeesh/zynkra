@@ -11,6 +11,48 @@ import {
 } from '../entities/user.entity';
 import { Type } from 'class-transformer';
 
+class PersonalizationControlsDto {
+  @IsOptional()
+  @IsBoolean()
+  feedPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  searchPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  recommendations?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  notificationPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  creatorPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  communityPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  shoppingPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  eventPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  locationPersonalization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  activityPersonalization?: boolean;
+}
+
 class ScreenshotProtectionDto {
   @IsOptional()
   @IsBoolean()
@@ -88,6 +130,11 @@ export class UpdatePrivacyDto {
   @IsOptional()
   @IsBoolean()
   adPersonalization?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PersonalizationControlsDto)
+  personalizationControls?: PersonalizationControlsDto;
 
   @IsOptional()
   @IsEnum(['everyone', 'followers', 'no_one'])

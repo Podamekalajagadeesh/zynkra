@@ -13,6 +13,7 @@ import { SnapMapGateway } from '../snapmap/snapmap.gateway';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
+import { normalizePersonalizationControls } from '../users/personalization-controls';
 // import { AdsService } from '../ads/ads.service'; // AdsService commented out - broken imports
 
 @Injectable()
@@ -120,6 +121,10 @@ export class FeedService {
   async getForYouFeed(user: User): Promise<(Post & { isAd?: boolean })[]> {
     if (user) {
       await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
+      const controls = normalizePersonalizationControls(user.personalizationControls);
+      if (user.personalization === false || !controls.feedPersonalization) {
+        return this.getChronologicalFeed(user);
+      }
     }
     const [publicPosts, userInterests, followingIds] = await Promise.all([
       this.postsRepository.find({
@@ -257,6 +262,9 @@ export class FeedService {
   async getRecommendedFeed(user: User, limit: number = 20): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[] })[]> {
     if (!user) {
       return this.getTrendingFeed(user, limit);
+    }
+    if (user.personalization === false || !normalizePersonalizationControls(user.personalizationControls).recommendations) {
+      return (await this.getChronologicalFeed(user)).slice(0, limit);
     }
     await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
 

@@ -343,6 +343,7 @@ export class ExportService {
         privacy: {
           personalization: (user as any).personalization ?? null,
           adPersonalization: (user as any).adPersonalization ?? null,
+          personalizationControls: (user as any).personalizationControls ?? {},
         },
       } : {},
       analytics: canExportAnalytics ? {
