@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-path .eslintignore",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:legacy": "node --test src/lib/i18n.test.js src/lib/deviceCapabilities.test.js src/lib/offlineSmoke.test.js",
     "test:ci": "vitest --run --coverage",
     "smoke:offline": "node scripts/offline-smoke.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\""
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",

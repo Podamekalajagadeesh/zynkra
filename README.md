@@ -75,7 +75,7 @@ npm run dev
 ✅ Core social (posts, comments, reactions, stories, reels, polls, bookmarks)
 ✅ User auth (JWT, OAuth, Passkeys, 2FA, Sign-In with Ethereum)
 ✅ DMs with Signal Protocol key infrastructure (encrypted in transit; full E2EE in progress)
-✅ ActivityPub federation (inbound + outbound with HTTP Signatures)
+✅ ActivityPub federation (inbound discovery + outbound delivery with HTTP Signatures)
 ✅ Creator monetization (Stripe Connect payouts, 90/10 revenue split)
 ✅ Real-time messaging with Socket.IO
 ✅ Marketplace with listings, cart, orders
@@ -83,7 +83,7 @@ npm run dev
 ✅ Community-led moderation (spam, harassment, hate speech detection via NSFWJS)
 ✅ Data export & portability
 ✅ Web3 (crypto wallet, WalletConnect, NFTs, token-gated content)
-✅ AI chatbot (FAQ-based); on-device LLM is **Preview** (requires `@mlc-ai/web-llm`)
+✅ AI chatbot (FAQ-based via OpenRouter cloud API); on-device LLM is **Preview** (requires `@mlc-ai/web-llm`)
 ✅ Offline-first (IndexedDB queue + Service Worker)
 
 ## Development Status
@@ -114,7 +114,7 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assess
 ### ❌ Not started
 - Mobile apps (iOS/Android native)
 - On-device LLM (requires `@mlc-ai/web-llm` dependency)
-- Full end-to-end encryption (server-side enforcement)
+- Full end-to-end encryption (server-side enforcement; currently plaintext storage)
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:

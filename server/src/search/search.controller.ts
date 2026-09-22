@@ -13,6 +13,25 @@ export class SearchController {
     return this.searchService.search(query, req.user.userId || req.user.id);
   }
 
+  @Get('advanced')
+  async advancedSearch(
+    @Query('q') query: string,
+    @Query('type') type?: 'users' | 'posts' | 'hashtags' | 'places' | 'groups' | 'events' | 'products',
+    @Query('sort') sort?: 'relevance' | 'date' | 'popularity',
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Req() req?: any,
+  ) {
+    return this.searchService.advancedSearch({
+      query,
+      type,
+      sort,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
+      viewerId: req.user.userId || req.user.id,
+    });
+  }
+
   @Post('follow-up')
   async followUpSearch(@Body() body: { previousQuery: string; followUpQuery: string }, @Req() req) {
     return this.searchService.followUpSearch(body?.previousQuery, body?.followUpQuery, req.user.userId || req.user.id);

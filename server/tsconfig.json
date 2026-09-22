@@ -16,18 +16,18 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "strict": false,
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
-  ,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true
+  },
   "exclude": [
-  "test",
-  "archive",
-  "**/*.spec.ts",
-  "**/*.test.ts",
-  "dist"
-]
+    "test",
+    "archive",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "dist"
+  ]
 }

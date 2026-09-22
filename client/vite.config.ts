@@ -79,6 +79,9 @@ export default defineConfig({
   },
   server: {
     host: true,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/auth': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/users': { target: 'http://localhost:3000', changeOrigin: true, ws: true },

@@ -6,6 +6,22 @@ on:
   pull_request:
 
 jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+      - name: Check formatting
+        working-directory: server
+        run: npm run format -- --check
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -53,9 +69,28 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm ci
-      - name: Unit tests
+      - name: Unit tests with coverage
         working-directory: server
-        run: npm run test:unit
+        run: npm run test:coverage
+      - name: Enforce coverage threshold
+        working-directory: server
+        run: |
+          node -e "
+          const fs = require('fs');
+          const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+          const thresholds = { lines: 50, functions: 50, branches: 50, statements: 50 };
+          let failed = false;
+          for (const [metric, threshold] of Object.entries(thresholds)) {
+            const actual = coverage.total[metric].pct;
+            if (actual < threshold) {
+              console.error('❌ Coverage ' + metric + ': ' + actual + '% < ' + threshold + '%');
+              failed = true;
+            } else {
+              console.log('✅ Coverage ' + metric + ': ' + actual + '% >= ' + threshold + '%');
+            }
+          }
+          if (failed) process.exit(1);
+          "
       - name: Core loop tests
         working-directory: server
         run: npx jest --runInBand --runTestsByPath test/core-loop.test.ts

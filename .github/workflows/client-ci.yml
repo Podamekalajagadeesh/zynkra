@@ -6,6 +6,21 @@ on:
   pull_request:
 
 jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install dependencies
+        working-directory: client
+        run: npm ci
+      - name: Check formatting
+        run: npx prettier --check "client/src/**/*.{ts,tsx,js,jsx}"
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -53,6 +68,26 @@ jobs:
       - name: Install dependencies
         working-directory: client
         run: npm ci
-      - name: Unit tests
+      - name: Unit tests with coverage
         working-directory: client
-        run: npm run test -- --run
+        run: npm run test:ci -- --run --coverage
+      - name: Enforce coverage threshold
+        working-directory: client
+        run: |
+          npx vitest --run --coverage --reporter=json --outputFile=coverage-summary.json
+          node -e "
+          const fs = require('fs');
+          const coverage = JSON.parse(fs.readFileSync('coverage-summary.json', 'utf8'));
+          const thresholds = { lines: 50, functions: 50, branches: 50, statements: 50 };
+          let failed = false;
+          for (const [metric, threshold] of Object.entries(thresholds)) {
+            const actual = coverage.total[metric].pct;
+            if (actual < threshold) {
+              console.error('❌ Coverage ' + metric + ': ' + actual + '% < ' + threshold + '%');
+              failed = true;
+            } else {
+              console.log('✅ Coverage ' + metric + ': ' + actual + '% >= ' + threshold + '%');
+            }
+          }
+          if (failed) process.exit(1);
+          "

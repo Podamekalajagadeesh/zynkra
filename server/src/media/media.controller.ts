@@ -1,15 +1,16 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
+  Get,
+  Param,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { randomBytes } from 'crypto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MediaService } from './media.service';
 
@@ -23,12 +24,7 @@ export class MediaController {
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) =>
-          cb(null, `${randomBytes(16).toString('hex')}${extname(file.originalname)}`),
-      }),
-      limits: { fileSize: 50 * 1024 * 1024 },
+      limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
       fileFilter: (req, file, cb) => {
         if (ALLOWED_MEDIA.test(file.mimetype)) {
           cb(null, true);
@@ -38,10 +34,51 @@ export class MediaController {
       },
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
     return this.mediaService.uploadFile(file);
+  }
+
+  @Post('upload/image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB for images
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only image files are allowed'), false);
+        }
+      },
+    }),
+  )
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('maxWidth') maxWidth?: string,
+    @Query('maxHeight') maxHeight?: string,
+    @Query('quality') quality?: string,
+    @Query('format') format?: 'jpeg' | 'png' | 'webp' | 'avif',
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.mediaService.uploadImage(file, {
+      maxWidth: maxWidth ? parseInt(maxWidth, 10) : undefined,
+      maxHeight: maxHeight ? parseInt(maxHeight, 10) : undefined,
+      quality: quality ? parseInt(quality, 10) : undefined,
+      format,
+    });
+  }
+
+  @Get(':id')
+  async getMedia(@Param('id') id: string) {
+    return this.mediaService.getMedia(id);
+  }
+
+  @Delete(':id')
+  async deleteMedia(@Param('id') id: string) {
+    return this.mediaService.deleteMedia(id);
   }
 }

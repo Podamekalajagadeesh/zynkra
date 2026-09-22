@@ -2,8 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import sharp, { Metadata } from 'sharp';
-import Tesseract from 'tesseract.js';
+
+// sharp and tesseract.js are loaded lazily (see loadSharp/loadTesseract) so the
+// server can boot even when their native/WASM payloads are unavailable (e.g. on
+// Termux). The type surface below mirrors the small slice of sharp's Metadata
+// that this service actually reads.
+interface DocumentImageMetadata {
+  width?: number;
+  height?: number;
+  channels?: number;
+}
 
 export interface DocumentMetadata {
   documentId: string;
@@ -44,8 +52,39 @@ export class DocumentProcessingService {
   private readonly uploadDir = path.join(process.cwd(), 'uploads', 'documents');
   private readonly encryptionKey = process.env.DOCUMENT_ENCRYPTION_KEY || 'fallback-key-32-char-length!!!!!';
 
+  private sharpInstance: unknown = null;
+  private sharpAttempted = false;
+  private tesseractInstance: unknown = null;
+  private tesseractAttempted = false;
+
   constructor() {
     this.ensureUploadDirectory();
+  }
+
+  private loadSharp(): ((input: string) => any) | null {
+    if (!this.sharpAttempted) {
+      this.sharpAttempted = true;
+      try {
+        this.sharpInstance = require('sharp');
+      } catch (error) {
+        this.sharpInstance = null;
+        this.logger.warn(`sharp unavailable: ${(error as Error).message}`);
+      }
+    }
+    return this.sharpInstance as ((input: string) => any) | null;
+  }
+
+  private loadTesseract(): any | null {
+    if (!this.tesseractAttempted) {
+      this.tesseractAttempted = true;
+      try {
+        this.tesseractInstance = require('tesseract.js');
+      } catch (error) {
+        this.tesseractInstance = null;
+        this.logger.warn(`tesseract.js unavailable: ${(error as Error).message}`);
+      }
+    }
+    return this.tesseractInstance;
   }
 
   private ensureUploadDirectory(): void {
@@ -126,6 +165,12 @@ export class DocumentProcessingService {
     try {
       this.logger.log(`Extracting text from: ${filePath}`);
 
+      const Tesseract = this.loadTesseract();
+      if (!Tesseract) {
+        this.logger.warn('OCR unavailable (tesseract.js not loaded) — skipping text extraction');
+        return '';
+      }
+
       const result = await Tesseract.recognize(filePath, 'eng', {
         logger: (m) => this.logger.debug(`OCR Progress: ${JSON.stringify(m)}`),
       });
@@ -146,6 +191,18 @@ export class DocumentProcessingService {
     metadata: DocumentMetadata,
   ): Promise<DocumentMetadata['validationResults']> {
     try {
+      const sharp = this.loadSharp();
+      if (!sharp) {
+        return {
+          isExpired: false,
+          isLegible: extractedText.length > 20 && extractedText.length < 10000,
+          hasFacialImage: this.detectFacialFeatures(extractedText),
+          qualityScore: 0,
+          securityFeaturesDetected: false,
+          warnings: ['Image processing library (sharp) not available'],
+        };
+      }
+
       const image = sharp(filePath);
       const metadata_sharp = await image.metadata();
 
@@ -273,7 +330,7 @@ export class DocumentProcessingService {
    * Calculate image quality score
    */
   private calculateImageQuality(
-    metadata: Metadata,
+    metadata: DocumentImageMetadata,
     extractedText: string,
   ): number {
     let score = 0.5;
@@ -312,7 +369,7 @@ export class DocumentProcessingService {
   /**
    * Detect security features
    */
-  private detectSecurityFeatures(text: string, metadata: Metadata): boolean {
+  private detectSecurityFeatures(text: string, metadata: DocumentImageMetadata): boolean {
     // Check for security-related keywords
     const securityKeywords = ['hologram', 'security', 'feature', 'stripe', 'magnetic', 'chip'];
     const hasSecurityKeywords = securityKeywords.some((keyword) =>
@@ -368,6 +425,11 @@ export class DocumentProcessingService {
    */
   private async createThumbnail(filePath: string, documentId: string): Promise<string> {
     try {
+      const sharp = this.loadSharp();
+      if (!sharp) {
+        this.logger.warn('Thumbnail skipped (sharp unavailable)');
+        return '';
+      }
       const thumbnailPath = path.join(this.uploadDir, `${documentId}-thumb.jpg`);
       await sharp(filePath).resize(200, 300, { fit: 'cover' }).jpeg({ quality: 80 }).toFile(thumbnailPath);
       return thumbnailPath;

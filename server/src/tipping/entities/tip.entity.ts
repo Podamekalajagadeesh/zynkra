@@ -18,6 +18,12 @@ export class Tip {
   @Column('decimal')
   amount: number;
 
+  @Column({ type: 'varchar', length: 10, default: 'usd' })
+  currency: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  method: string;
+
   @Column()
   txHash: string;
 

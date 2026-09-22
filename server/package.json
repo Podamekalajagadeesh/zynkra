@@ -7,11 +7,13 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\" --fix",
+    "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
     "test:unit": "jest --runInBand --testPathIgnorePatterns=/test/",
     "test:e2e": "jest --runInBand --runTestsByPath test/e2e-smoke.test.ts",
@@ -90,6 +92,7 @@
     "siwe": "^2.3.2",
     "socket.io": "^4.8.3",
     "stripe": "^22.2.2",
+    "tesseract.js": "^7.0.0",
     "typeorm": "^0.3.17",
     "web-push": "^3.6.7"
   },

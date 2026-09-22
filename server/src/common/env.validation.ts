@@ -35,7 +35,7 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
 
   // Observability (optional — features are off when unset)
-  SENTRY_DSN: Joi.string().uri().optional(),
+  SENTRY_DSN: Joi.string().uri().allow('').optional(),
   SENTRY_TRACES_SAMPLE_RATE: Joi.number().min(0).max(1).optional(),
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
@@ -56,14 +56,14 @@ export const envValidationSchema = Joi.object({
   CRYPTO_PAYOUT_CHAINS: Joi.string().optional().default('8453'),
 
   // Email / SMTP (optional — console-logged when unset)
-  SMTP_HOST: Joi.string().optional(),
+  SMTP_HOST: Joi.string().allow('').optional(),
   SMTP_PORT: Joi.number().port().optional(),
-  SMTP_USER: Joi.string().optional(),
-  SMTP_PASS: Joi.string().optional(),
+  SMTP_USER: Joi.string().allow('').optional(),
+  SMTP_PASS: Joi.string().allow('').optional(),
   FROM_EMAIL: Joi.string().email().optional(),
 
   // AI / OpenRouter (optional — features fall back to templates when unset)
-  OPENROUTER_API_KEY: Joi.string().optional(),
+  OPENROUTER_API_KEY: Joi.string().allow('').optional(),
   OPENROUTER_BASE_URL: Joi.string().uri().optional().default('https://openrouter.ai/api/v1'),
   AI_TEXT_MODEL: Joi.string().optional().default('openai/gpt-4o-mini'),
   AI_VISION_MODEL: Joi.string().optional().default('openai/gpt-4o'),

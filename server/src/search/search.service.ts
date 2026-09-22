@@ -33,6 +33,10 @@ export class SearchService {
     private readonly visibilityService: VisibilityService,
   ) {}
 
+  /**
+   * Perform full-text search across multiple entity types
+   * Uses PostgreSQL ILIKE for simple matching (upgrade to tsvector for production)
+   */
   async search(query: string, viewerId?: string) {
     const q = `%${query}%`;
 
@@ -98,6 +102,142 @@ export class SearchService {
       .getMany();
 
     return { users, posts, hashtags, places, groups, events, products };
+  }
+
+  /**
+   * Advanced search with filters and sorting
+   */
+  async advancedSearch(params: {
+    query: string;
+    type?: 'users' | 'posts' | 'hashtags' | 'places' | 'groups' | 'events' | 'products';
+    sort?: 'relevance' | 'date' | 'popularity';
+    limit?: number;
+    offset?: number;
+    viewerId?: string;
+  }) {
+    const { query, type, sort = 'relevance', limit = 20, offset = 0, viewerId } = params;
+    const q = `%${query}%`;
+
+    if (type) {
+      // Search specific type
+      switch (type) {
+        case 'users':
+          return this.searchUsers(q, viewerId, limit, offset);
+        case 'posts':
+          return this.searchPosts(q, viewerId, limit, offset, sort);
+        case 'hashtags':
+          return this.searchHashtags(q, limit, offset);
+        case 'groups':
+          return this.searchGroups(q, limit, offset);
+        case 'events':
+          return this.searchEvents(q, limit, offset);
+        case 'products':
+          return this.searchProducts(q, limit, offset);
+        default:
+          throw new BadRequestException(`Invalid search type: ${type}`);
+      }
+    }
+
+    // Search all types
+    return this.search(query, viewerId);
+  }
+
+  private async searchUsers(q: string, viewerId?: string, limit = 20, offset = 0) {
+    const users = await this.usersRepository
+      .createQueryBuilder('user')
+      .where(new Brackets((nameQuery) => {
+        nameQuery
+          .where('user.username ILIKE :q', { q })
+          .orWhere('user.displayName ILIKE :q', { q });
+      }))
+      .andWhere(`(
+          user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
+          (user."searchVisibility" = 'friends' AND EXISTS (
+            SELECT 1 FROM follows f1
+            WHERE f1."followerId" = :viewerId AND f1."followingId" = user.id
+          ) AND EXISTS (
+            SELECT 1 FROM follows f2
+            WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
+          ))
+        )`, { viewerId: viewerId ?? null })
+      .orderBy('user."createdAt"', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { users, total: users.length };
+  }
+
+  private async searchPosts(q: string, viewerId?: string, limit = 20, offset = 0, sort = 'date') {
+    const query = this.postsRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .where('post.content ILIKE :q', { q });
+
+    if (sort === 'date') {
+      query.orderBy('post."createdAt"', 'DESC');
+    } else if (sort === 'popularity') {
+      query.orderBy('post."likeCount"', 'DESC');
+    }
+
+    const posts = await query
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    const filteredPosts = await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
+
+    return { posts: filteredPosts, total: filteredPosts.length };
+  }
+
+  private async searchHashtags(q: string, limit = 20, offset = 0) {
+    const hashtags = await this.tagsRepository
+      .createQueryBuilder('tag')
+      .where('tag.name ILIKE :q', { q })
+      .orderBy('tag.postCount', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { hashtags, total: hashtags.length };
+  }
+
+  private async searchGroups(q: string, limit = 20, offset = 0) {
+    const groups = await this.groupsRepository
+      .createQueryBuilder('group')
+      .where('group.name ILIKE :q', { q })
+      .orderBy('group.memberCount', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { groups, total: groups.length };
+  }
+
+  private async searchEvents(q: string, limit = 20, offset = 0) {
+    const events = await this.eventsRepository
+      .createQueryBuilder('event')
+      .where('event.title ILIKE :q', { q })
+      .orWhere('event.description ILIKE :q', { q })
+      .orderBy('event.startDate', 'ASC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { events, total: events.length };
+  }
+
+  private async searchProducts(q: string, limit = 20, offset = 0) {
+    const products = await this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.name ILIKE :q', { q })
+      .orWhere('product.description ILIKE :q', { q })
+      .orderBy('product."createdAt"', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { products, total: products.length };
   }
 
   async followUpSearch(previousQuery: string, followUpQuery: string, viewerId?: string) {

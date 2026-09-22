@@ -2,6 +2,21 @@
   "name": "zynkra",
   "private": true,
   "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:client": "cd client && npm run lint",
+    "lint:server": "cd server && npm run lint",
+    "test": "npm run test --workspaces --if-present",
+    "test:client": "cd client && npm run test -- --run",
+    "test:server": "cd server && npm run test:unit",
+    "test:ci": "npm run test:ci --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .prettierignore",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck:client": "cd client && npx tsc --noEmit",
+    "typecheck:server": "cd server && npx tsc --noEmit",
+    "build": "npm run build --workspaces --if-present",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
     "feature:audit": "node tools/feature-status-audit.js",
     "feature:test": "node tools/feature-status-test.js",
     "feature:test:quick": "node tools/feature-status-test.js --quick"
@@ -11,5 +26,8 @@
     "playwright-core": "^1.62.1",
     "sharp": "^0.35.4",
     "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
   }
 }

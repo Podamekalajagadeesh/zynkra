@@ -30,14 +30,14 @@ depth, mocked features, and near-zero tests put it at ~25%.
 | Offline (IndexedDB queue + SW) | Real queue | ⚠️ Not a conflict-resolving sync engine |
 | ActivityPub federation | Inbound discovery real | ❌ Outbound unsigned → **won't interoperate** |
 | Blockchain identity / DAO / token / tipping | Wallet-sign auth only | ❌ Rest are stubs |
-| Local AI (Llama 3) | `setTimeout` + hardcoded strings | ❌ **Fully mocked** |
+| AI (cloud via OpenRouter) | OpenRouter API + template fallbacks | ⚠️ Cloud-based, not on-device |
 | ~40 modules (metaverse, snapmap, digital-twin, brainwave-auth, nonprofits, fundraisers…) | CRUD skeletons / empty | ❌ Facade |
 | Tests | 4 server specs, ~0 client | ❌ Negligible |
 
 **The three credibility bombs** (things that actively mislead and must be defused early):
 1. DMs advertised as E2EE but stored in plaintext.
 2. Federation advertised as interoperable but outbound delivery is unsigned (Mastodon rejects it).
-3. "Local AI" advertised as on-device Llama 3 but is a hardcoded mock.
+3. "Local AI" advertised as on-device Llama 3 but is actually cloud-based via OpenRouter.
 
 ---
 
