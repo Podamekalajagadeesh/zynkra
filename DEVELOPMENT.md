@@ -190,13 +190,15 @@ psql -h localhost -U zynkra -d zynkra_dev
 ```bash
 cd server
 npm run test:unit
+npm run test:core-db
+npm run test:money
 npm run test:qa
 npm run test:coverage
 npm run qa:check
 
 cd ../client
 npm run smoke:offline
-npm run test
+npm run test:ci
 npm run build
 
 cd ../mobile

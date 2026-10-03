@@ -9,7 +9,7 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { User } from '../users/entities/user.entity';
 import { EmailService } from '../email/email.service';
-import { createHash, createHmac, randomBytes } from 'crypto';
+import { createHash, createHmac, randomBytes, randomInt } from 'crypto';
 import type { StringValue } from 'ms';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
@@ -21,6 +21,7 @@ import { AccountManagementService } from '../features/account-management/account
 import { LoginApprovalService } from '../features/account-management/login-approval.service';
 import { SecurityAuditService } from '../security-audit/security-audit.service';
 import { SecurityEventType, SecurityEventSeverity } from '../security-audit/entities/security-audit.entity';
+import { ipInAllowlist } from '../common/ip';
 
 class LoginApprovalRequiredException extends UnauthorizedException {
   readonly sessionId: string;
@@ -30,6 +31,20 @@ class LoginApprovalRequiredException extends UnauthorizedException {
     this.sessionId = sessionId;
     this.name = 'LoginApprovalRequiredException';
   }
+}
+
+type AuthTokenResponse = {
+  access_token: string;
+  refresh_token: string;
+};
+
+/**
+ * Strips the IPv4-mapped IPv6 prefix Node reports for IPv4 clients
+ * (`::ffff:127.0.0.1` -> `127.0.0.1`) so the same client does not look like a
+ * new address on every request.
+ */
+function normalizeIp(ip: string): string {
+  return ip.startsWith('::ffff:') ? ip.slice(7) : ip;
 }
 
 @Injectable()
@@ -128,20 +143,30 @@ export class AuthService {
   }
 
   private getRequestIp(req?: any): string | null {
-    const forwardedFor = req?.headers?.['x-forwarded-for'];
-    if (typeof forwardedFor === 'string' && forwardedFor.length > 0) {
-      return forwardedFor.split(',')[0].trim();
+    // Use the Express-resolved address, not the raw header. `req.ip` only
+    // honours `x-forwarded-for` when `trust proxy` is configured (see
+    // TRUST_PROXY in main.ts), so it cannot be spoofed by a client that sets
+    // the header itself. Reading the header directly let anyone forge their IP,
+    // which defeated new-device detection and poisoned the security audit log.
+    if (typeof req?.ip === 'string' && req.ip.length > 0) {
+      return normalizeIp(req.ip);
     }
 
-    if (typeof req?.ip === 'string' && req.ip.length > 0) {
-      return req.ip;
+    const remote = req?.socket?.remoteAddress;
+    if (typeof remote === 'string' && remote.length > 0) {
+      return normalizeIp(remote);
     }
 
     return null;
   }
 
   private async createLoginSession(user: User, req?: any, isTrusted = false): Promise<LoginSession> {
-    const suspicious = isTrusted ? false : await this.isSuspiciousSession(user.id, req);
+    // Resolve trust from the persisted allowlist unless the caller already
+    // decided. `isTrusted` was previously never passed as true, so
+    // `LoginSession.isTrusted` was always false and the trusted-IP control did
+    // nothing.
+    const trusted = isTrusted || (await this.isTrustedIp(user, req));
+    const suspicious = trusted ? false : await this.isSuspiciousSession(user.id, req);
     const session = this.loginSessionsRepository.create({
       user,
       deviceName: this.getRequestDeviceName(req),
@@ -151,10 +176,26 @@ export class AuthService {
       revokedAt: null,
       approvedAt: suspicious ? null : new Date(),
       suspicious,
-      isTrusted,
+      isTrusted: trusted,
     });
 
     return this.loginSessionsRepository.save(session);
+  }
+
+  /**
+   * True when the request's IP is covered by the user's trusted list.
+   *
+   * Entries may be exact addresses or CIDR ranges (`203.0.113.0/24`,
+   * `2001:db8::/32`). Hostnames are deliberately not resolved — a trusted entry
+   * must be a literal address, otherwise an attacker-controlled DNS record could
+   * widen the allowlist.
+   */
+  private async isTrustedIp(user: User, req?: any): Promise<boolean> {
+    const trusted = user?.trustedIpAddresses;
+    if (!Array.isArray(trusted) || trusted.length === 0) {
+      return false;
+    }
+    return ipInAllowlist(this.getRequestIp(req), trusted);
   }
 
   private async isSuspiciousSession(userId: string, req?: any): Promise<boolean> {
@@ -271,6 +312,48 @@ export class AuthService {
     ) as StringValue;
   }
 
+  private getTokenAudience(): string {
+    return this.configService.get<string>('JWT_AUDIENCE', 'zynkra-api');
+  }
+
+  private getTwoFactorSecret(): string {
+    return this.configService.get<string>(
+      'JWT_2FA_SECRET',
+      createHash('sha256')
+        .update(`${this.configService.get<string>('JWT_SECRET')}:two-factor`)
+        .digest('hex'),
+    );
+  }
+
+  private createTokenResponse(
+    user: User,
+    session: LoginSession,
+    rememberMe: boolean,
+  ): AuthTokenResponse {
+    const audience = this.getTokenAudience();
+    return {
+      access_token: this.jwtService.sign(
+        {
+          sub: user.id,
+          email: user.email,
+          sid: session.id,
+          typ: 'access',
+          aud: audience,
+        },
+        { expiresIn: this.getTokenExpiry(rememberMe) },
+      ),
+      refresh_token: this.jwtService.sign(
+        {
+          sub: user.id,
+          sid: session.id,
+          typ: 'refresh',
+          aud: audience,
+        },
+        { expiresIn: rememberMe ? '30d' : '7d' },
+      ),
+    };
+  }
+
   private async recordSecurityEvent(
     userId: string,
     eventType: SecurityEventType,
@@ -299,8 +382,8 @@ export class AuthService {
     }
   }
 
-  private async issueAccessToken(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
-    const session = await this.createLoginSession(user, req, rememberMe);
+  private async issueAccessToken(user: User, req?: any, rememberMe = false): Promise<AuthTokenResponse> {
+    const session = await this.createLoginSession(user, req);
     await this.notifyLoginAlert(user, session);
     await this.handleSuspiciousLogin(user, session, req);
 
@@ -323,8 +406,6 @@ export class AuthService {
       throw new LoginApprovalRequiredException(session.id);
     }
 
-    const payload = { sub: user.id, email: user.email, sid: session.id };
-
     await this.recordSecurityEvent(
       user.id,
       SecurityEventType.LOGIN_SUCCESS,
@@ -339,15 +420,86 @@ export class AuthService {
       typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
     );
 
-    return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: this.getTokenExpiry(rememberMe),
-      }),
-    };
+    return this.createTokenResponse(user, session, rememberMe);
   }
 
-  async login(user: User, req?: any, rememberMe = false): Promise<{ access_token: string }> {
+  async login(user: User, req?: any, rememberMe = false): Promise<AuthTokenResponse> {
     return this.issueAccessToken(user, req, rememberMe);
+  }
+
+  /**
+   * Anti-bot gate on signin.
+   *
+   * The CAPTCHA is an `a + b` puzzle whose expression is returned to the client,
+   * so it is solvable by any script. It is a speed bump, not proof of a human —
+   * the code and docs say so. What makes it worth having is *when* it is
+   * demanded:
+   *
+   *  - Always, when `CAPTCHA_REQUIRED_ON_SIGNIN=true`.
+   *  - Always, when a client supplies a challenge (so a well-behaved client can
+   *    opt in and have it validated).
+   *  - Automatically, once this identifier has accumulated
+   *    `CAPTCHA_FAILURE_THRESHOLD` recent failed sign-ins — i.e. it escalates
+   *    exactly when credential stuffing is being attempted, instead of taxing
+   *    every legitimate user.
+   *
+   * The counter is derived from `security_audit_logs`, so it is shared across
+   * instances and survives restarts rather than living in memory.
+   */
+  private async enforceSigninCaptcha(
+    identifier: string,
+    captchaId?: string,
+    captchaAnswer?: string,
+  ): Promise<void> {
+    const requiredByConfig = this.configService.get<string>('CAPTCHA_REQUIRED_ON_SIGNIN', 'false') === 'true';
+    const alwaysWhenSupplied = Boolean(captchaId);
+    const challengedByRisk = await this.recentFailuresForIdentifier(identifier);
+
+    if (!requiredByConfig && !alwaysWhenSupplied && !challengedByRisk) {
+      return;
+    }
+
+    if (!(await this.captchaService.verify(captchaId, captchaAnswer))) {
+      throw new BadRequestException('CAPTCHA failed or expired. Please try again.');
+    }
+  }
+
+  /**
+   * Count recent failed sign-ins for an email/username, reading the persisted
+   * audit log rather than an in-process counter.
+   */
+  private async recentFailuresForIdentifier(identifier: string): Promise<boolean> {
+    if (!this.securityAuditService) {
+      return false;
+    }
+    const threshold = this.configService.get<number>('CAPTCHA_FAILURE_THRESHOLD', 3);
+    if (threshold <= 0) {
+      return false;
+    }
+
+    const windowMs = this.configService.get<number>('CAPTCHA_FAILURE_WINDOW_MINUTES', 15) * 60_000;
+    const since = new Date(Date.now() - windowMs);
+
+    try {
+      const { total } = await this.securityAuditService.getUserAuditLog(
+        // The audit log is keyed by user id, so this only works once the
+        // identifier resolves to a user; an unknown identifier is left to the
+        // per-IP throttle, which is the right place for it anyway.
+        await this.resolveAuditUserId(identifier),
+        { eventType: SecurityEventType.LOGIN_FAILED, fromDate: since, take: threshold },
+      );
+      return total >= threshold;
+    } catch (error) {
+      this.logger.warn(`Failed to read recent sign-in failures: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+
+  private async resolveAuditUserId(identifier: string): Promise<string> {
+    const user = identifier.includes('@')
+      ? await this.usersService.findByEmail(identifier)
+      : await this.usersService.findByUsername(identifier);
+    return user?.id ?? '00000000-0000-0000-0000-000000000000';
   }
 
   async guestSignIn(req?: any): Promise<{ access_token: string }> {
@@ -400,7 +552,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
     const { username, email, password, birthDate, captchaId, captchaAnswer, inviteCode } = signUpDto;
 
-    if (!this.captchaService.verify(captchaId, captchaAnswer)) {
+    if (!(await this.captchaService.verify(captchaId, captchaAnswer))) {
       throw new BadRequestException('CAPTCHA failed or expired. Please try again.');
     }
 
@@ -435,7 +587,10 @@ export class AuthService {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
-    const emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // randomInt, not Math.random(): this is a 6-digit email verification code
+    // with a 1-hour lifetime and no attempt limit, so a predictable generator
+    // makes account takeover a matter of luck rather than work.
+    const emailVerificationCode = randomInt(100000, 1000000).toString();
     const emailVerificationToken = emailVerificationCode;
     const emailVerificationTokenExpires = new Date();
     emailVerificationTokenExpires.setHours(emailVerificationTokenExpires.getHours() + 1); // Token expires in 1 hour
@@ -495,12 +650,18 @@ export class AuthService {
       return { message: 'If a user with that email exists, a verification email has been sent.' };
     }
 
-    const emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // randomInt, not Math.random() — see the note in signUp.
+    const emailVerificationCode = randomInt(100000, 1000000).toString();
     const emailVerificationTokenExpires = new Date();
     emailVerificationTokenExpires.setHours(emailVerificationTokenExpires.getHours() + 1);
 
     user.emailVerificationToken = emailVerificationCode;
     user.emailVerificationTokenExpires = emailVerificationTokenExpires;
+    // Issuing a fresh code clears any lockout — otherwise a user who exhausted
+    // their attempts could never recover, since a lockout blocks redemption of
+    // the very code we just emailed them.
+    user.emailVerificationAttempts = 0;
+    user.emailVerificationLockedUntil = null;
     await this.usersService.save(user);
 
     await this.emailService.sendVerificationCode(user.email, emailVerificationCode);
@@ -537,6 +698,15 @@ export class AuthService {
     return this.issueAccessToken(user, req);
   }
 
+  /**
+   * Redeem a 6-digit email verification code.
+   *
+   * Failures are counted per account and, past
+   * `VERIFICATION_CODE_MAX_ATTEMPTS`, redemption is blocked for a cooling-off
+   * period that grows with each additional breach. The per-IP throttle on this
+   * route was the only other barrier, which a patient attacker with a few IPs
+   * could work around. Success resets the counter.
+   */
   async verifyByCode(email: string, code: string, req?: any): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(email);
 
@@ -545,10 +715,39 @@ export class AuthService {
     }
 
     if (user.emailVerified) {
-      return this.issueAccessToken(user, req);
+      throw new UnauthorizedException('Invalid email or code');
     }
 
+    this.assertNotVerificationLocked(user);
+
+    const maxAttempts = this.configService.get<number>('VERIFICATION_CODE_MAX_ATTEMPTS', 5);
+    const lockoutMs = this.configService.get<number>('VERIFICATION_CODE_LOCKOUT_MINUTES', 15);
+
     if (user.emailVerificationToken !== code) {
+      user.emailVerificationAttempts = (user.emailVerificationAttempts ?? 0) + 1;
+      user.emailVerificationLockedUntil =
+        user.emailVerificationAttempts >= maxAttempts
+          ? new Date(Date.now() + lockoutMs * 60_000)
+          : null;
+      await this.usersRepository.save(user);
+
+      await this.recordSecurityEvent(
+        user.id,
+        SecurityEventType.LOGIN_FAILED,
+        SecurityEventSeverity.MEDIUM,
+        `Failed email verification code attempt for ${user.email ?? user.username ?? user.id} ` +
+          `(${user.emailVerificationAttempts}/${maxAttempts}).`,
+        { reason: 'invalid_verification_code', attempts: user.emailVerificationAttempts },
+        this.getRequestIp(req) ?? undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      );
+
+      if (user.emailVerificationAttempts >= maxAttempts) {
+        throw new UnauthorizedException(
+          `Too many incorrect codes. Try again in ${lockoutMs} minutes or request a new one.`,
+        );
+      }
+
       throw new UnauthorizedException('Invalid verification code');
     }
 
@@ -559,21 +758,43 @@ export class AuthService {
     user.emailVerified = true;
     user.emailVerificationToken = null;
     user.emailVerificationTokenExpires = null;
+    user.emailVerificationAttempts = 0;
+    user.emailVerificationLockedUntil = null;
     await this.usersRepository.save(user);
 
     return this.issueAccessToken(user, req);
   }
 
+  private assertNotVerificationLocked(user: User): void {
+    if (!user.emailVerificationLockedUntil) {
+      return;
+    }
+    if (user.emailVerificationLockedUntil > new Date()) {
+      const minutes = Math.max(
+        1,
+        Math.ceil((user.emailVerificationLockedUntil.getTime() - Date.now()) / 60_000),
+      );
+      throw new UnauthorizedException(
+        `Too many incorrect codes. Try again in ${minutes} minute(s) or request a new one.`,
+      );
+    }
+    // Lockout has elapsed — let them try again, but keep the escalated counter.
+    user.emailVerificationLockedUntil = null;
+  }
+
   async signIn(
     signInDto: SignInDto,
     req?: any,
-  ): Promise<{ access_token: string } | { twoFactorEnabled: true; tempToken: string } | { loginApprovalRequired: true; message: string; sessionId: string } | { reactivationRequired: true; message: string }> {
-    const { email, username, password, rememberMe } = signInDto;
+  ): Promise<AuthTokenResponse | { twoFactorEnabled: true; tempToken: string } | { loginApprovalRequired: true; message: string; sessionId: string } | { reactivationRequired: true; message: string }> {
+    const { email, username, password, rememberMe, captchaId, captchaAnswer } = signInDto;
     const identifier = email || username;
 
     if (!identifier) {
       throw new BadRequestException('Email or username is required.');
     }
+
+    // Anti-bot gate. Escalates by risk — see enforceSigninCaptcha.
+    await this.enforceSigninCaptcha(identifier, captchaId, captchaAnswer);
 
     const user = email
       ? await this.usersService.findByEmail(email)
@@ -618,8 +839,17 @@ export class AuthService {
 
     if (user.twoFactorEnabled && user.twoFactorSecret) {
       const tempToken = this.jwtService.sign(
-        { sub: user.id, purpose: 'two-factor-login', rememberMe: rememberMe ?? false },
-        { expiresIn: '10m' },
+        {
+          sub: user.id,
+          purpose: 'two-factor-login',
+          typ: 'two-factor',
+          aud: 'zynkra-two-factor',
+          rememberMe: rememberMe ?? false,
+        },
+        {
+          secret: this.getTwoFactorSecret(),
+          expiresIn: '10m',
+        },
       );
       await this.recordSecurityEvent(
         user.id,
@@ -633,7 +863,7 @@ export class AuthService {
       return { twoFactorEnabled: true, tempToken };
     }
 
-    const session = await this.createLoginSession(user, req, rememberMe);
+    const session = await this.createLoginSession(user, req);
     await this.notifyLoginAlert(user, session);
     await this.handleSuspiciousLogin(user, session, req);
 
@@ -660,8 +890,6 @@ export class AuthService {
       };
     }
 
-    const payload = { sub: user.id, email: user.email, sid: session.id };
-
     await this.recordSecurityEvent(
       user.id,
       SecurityEventType.LOGIN_SUCCESS,
@@ -676,11 +904,7 @@ export class AuthService {
       typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
     );
 
-    return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: this.getTokenExpiry(rememberMe),
-      }),
-    };
+    return this.createTokenResponse(user, session, rememberMe);
   }
 
   async reactivateAndSignIn(signInDto: SignInDto, req?: any) {
@@ -772,10 +996,16 @@ export class AuthService {
     return res.redirect(`${this.clientUrl}/auth/callback#token=${access_token}`);
   }
 
-  async setup2FA(userId: string): Promise<{ secret: string; otpauthUrl: string }> {
+  async setup2FA(userId: string, token?: string): Promise<{ secret: string; otpauthUrl: string }> {
     const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (user.twoFactorEnabled) {
+      if (!token || !user.twoFactorSecret || !this.verifyTotp(user.twoFactorSecret, token)) {
+        throw new UnauthorizedException('A valid 2FA token is required to replace the current authenticator.');
+      }
     }
 
     const secret = this.generateBase32Secret();
@@ -894,16 +1124,25 @@ export class AuthService {
     return { message: 'Two-factor authentication disabled.' };
   }
 
-  async verify2FALogin(tempToken: string, token: string, req?: any): Promise<{ access_token: string }> {
-    let payload: { sub: string; purpose?: string; rememberMe?: boolean };
+  async verify2FALogin(tempToken: string, token: string, req?: any): Promise<AuthTokenResponse> {
+    let payload: { sub: string; purpose?: string; typ?: string; aud?: string | string[]; rememberMe?: boolean };
 
     try {
-      payload = this.jwtService.verify(tempToken);
+      payload = this.jwtService.verify(tempToken, {
+        secret: this.getTwoFactorSecret(),
+        audience: 'zynkra-two-factor',
+      });
     } catch {
       throw new UnauthorizedException('Invalid or expired login challenge.');
     }
 
-    if (payload.purpose !== 'two-factor-login') {
+    const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+    if (
+      payload.purpose !== 'two-factor-login' ||
+      payload.typ !== 'two-factor' ||
+      !audiences.includes('zynkra-two-factor') ||
+      !payload.sub
+    ) {
       throw new UnauthorizedException('Invalid or expired login challenge.');
     }
 
@@ -1087,32 +1326,52 @@ export class AuthService {
     return -1;
   }
 
-  async getLoginSessions(userId: string, currentSessionId?: string): Promise<Array<LoginSession & { isCurrent: boolean; isRevoked: boolean; isApproved: boolean }>> {
+  private serializeLoginSession(
+    session: LoginSession,
+    currentSessionId?: string,
+  ) {
+    return {
+      id: session.id,
+      deviceName: session.deviceName,
+      userAgent: session.userAgent,
+      ipAddress: session.ipAddress,
+      revokedAt: session.revokedAt,
+      lastSeenAt: session.lastSeenAt,
+      approvedAt: session.approvedAt,
+      suspicious: session.suspicious,
+      isTrusted: session.isTrusted,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      isCurrent: session.id === currentSessionId,
+      isRevoked: Boolean(session.revokedAt),
+      isApproved: Boolean(session.approvedAt),
+      user: session.user
+        ? {
+            id: session.user.id,
+            username: session.user.username,
+            displayName: session.user.displayName,
+            avatar: session.user.avatar,
+          }
+        : undefined,
+    };
+  }
+
+  async getLoginSessions(userId: string, currentSessionId?: string) {
     const sessions = await this.loginSessionsRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
     });
 
-    return sessions.map((session) => ({
-      ...session,
-      isCurrent: session.id === currentSessionId,
-      isRevoked: Boolean(session.revokedAt),
-      isApproved: Boolean(session.approvedAt),
-    }));
+    return sessions.map((session) => this.serializeLoginSession(session, currentSessionId));
   }
 
-  async getPendingLoginSessions(userId: string): Promise<Array<LoginSession & { isCurrent: boolean; isRevoked: boolean; isApproved: boolean }>> {
+  async getPendingLoginSessions(userId: string) {
     const sessions = await this.loginSessionsRepository.find({
       where: { user: { id: userId }, revokedAt: null, approvedAt: null },
       order: { createdAt: 'DESC' },
     });
 
-    return sessions.map((session) => ({
-      ...session,
-      isCurrent: false,
-      isRevoked: false,
-      isApproved: false,
-    }));
+    return sessions.map((session) => this.serializeLoginSession(session));
   }
 
   async approveLoginSession(userId: string, sessionId: string): Promise<{ message: string }> {
@@ -1145,13 +1404,14 @@ export class AuthService {
     return { message: 'Session revoked.' };
   }
 
-  async refreshToken(userId: string, sessionId?: string): Promise<{ access_token: string }> {
+  async refreshToken(userId: string, sessionId?: string): Promise<AuthTokenResponse> {
     if (!sessionId) {
       throw new BadRequestException('No active session to refresh.');
     }
 
     const session = await this.loginSessionsRepository.findOne({
-      where: { id: sessionId },
+      where: { id: sessionId, user: { id: userId } },
+      relations: ['user'],
     });
 
     if (!session || session.revokedAt) {
@@ -1165,12 +1425,29 @@ export class AuthService {
 
     await this.loginSessionsRepository.update(session.id, { lastSeenAt: new Date() });
 
-    const payload = { sub: user.id, email: user.email, sid: session.id };
-    return {
-      access_token: this.jwtService.sign(payload, {
-        expiresIn: this.getTokenExpiry(session.isTrusted),
-      }),
-    };
+    return this.createTokenResponse(user, session, session.isTrusted);
+  }
+
+  async refreshFromToken(token: string): Promise<AuthTokenResponse> {
+    let payload: { sub?: string; sid?: string; typ?: string; aud?: string | string[] };
+
+    try {
+      payload = this.jwtService.verify(token);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token.');
+    }
+
+    const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+    if (
+      typeof payload.sub !== 'string' ||
+      typeof payload.sid !== 'string' ||
+      (payload.typ !== 'refresh' && payload.typ !== undefined) ||
+      (payload.aud !== undefined && !audiences.includes(this.getTokenAudience()))
+    ) {
+      throw new UnauthorizedException('Invalid or expired refresh token.');
+    }
+
+    return this.refreshToken(payload.sub, payload.sid);
   }
 
   async signOut(sessionId?: string): Promise<{ message: string }> {

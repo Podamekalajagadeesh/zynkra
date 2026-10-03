@@ -21,6 +21,8 @@ import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
 import { Article } from '../articles/article.entity';
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment } from '../courses/course.entity';
+import { VerificationRequest } from '../verification/entities/verification-request.entity';
+import { ConnectedAccount } from '../connected-accounts/entities/connected-account.entity';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { Course, CourseEnrollment } from '../courses/course.entity';
       Podcast,
       Course,
       CourseEnrollment,
+      VerificationRequest,
+      ConnectedAccount,
     ]),
   ],
   providers: [DataExportService, ExportService],

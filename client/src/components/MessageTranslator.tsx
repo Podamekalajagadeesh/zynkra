@@ -61,7 +61,7 @@ const MessageTranslator: React.FC<MessageTranslatorProps> = ({ content, onTransl
       <button
         onClick={() => { setIsOpen(!isOpen); loadLanguages(); }}
         className="flex items-center gap-1 text-xs text-dark-400 hover:text-primary-500 transition-colors"
-        title="Translate message"
+        title="Translate message (cloud API)"
       >
         <Languages size={12} />
         Translate

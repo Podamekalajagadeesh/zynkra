@@ -114,7 +114,7 @@ export function Trending() {
             {trendsData.trendingPlaces.map(({ place, postCount }) => (
               <Link
                 key={place.id}
-                to={`/places/${place.id}`}
+                to={`/place/${place.id}`}
                 className="text-xs bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded-full hover:bg-gray-200 dark:hover:bg-dark-600"
               >
                 {place.name} ({postCount} posts)
@@ -139,7 +139,7 @@ export function Trending() {
         <ul>
           {currentTrends.map((trend) => (
             <li key={trend.tag} className="mb-2">
-              <Link to={`/tags/${trend.tag.substring(1)}`} className="text-primary-600 hover:underline font-semibold">
+              <Link to={`/hashtag/${trend.tag.replace(/^#/, '')}`} className="text-primary-600 hover:underline font-semibold">
                 {trend.tag}
               </Link>
               <span className="text-sm text-dark-500 dark:text-dark-400 ml-2">{Math.round(trend.score)} posts</span>

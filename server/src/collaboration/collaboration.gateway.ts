@@ -3,111 +3,158 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, ConfigService } from '@nestjs/common';
 import { CollaborationService } from './collaboration.service';
+import { WsAuthService } from '../common/ws-auth/ws-auth.service';
+import { WsRateLimiter } from '../common/ws-auth/ws-rate-limiter';
+import { applyWsCors } from '../common/ws-auth/ws-cors';
 
-@WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
-})
-export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisconnect {
+// CORS is applied in afterInit, not the decorator — see ws-cors.ts.
+@WebSocketGateway()
+export class CollaborationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(CollaborationGateway.name);
 
-  constructor(private readonly collaborationService: CollaborationService) {}
+  constructor(
+    private readonly collaborationService: CollaborationService,
+    private readonly wsAuth: WsAuthService,
+    private readonly configService: ConfigService,
+    private readonly rateLimiter: WsRateLimiter,
+  ) {}
+
+  afterInit(server: Server) {
+    applyWsCors(server, this.configService);
+  }
+
+  /**
+   * The acting user is always the authenticated socket, never `payload.userId`
+   * / `payload.hostId`. A client could previously edit, join, or host any
+   * editing room on another user's behalf.
+   *
+   * Returns undefined when the socket is unauthenticated, the payload is
+   * missing its subject, or the socket is over its message budget — every
+   * handler below bails on undefined.
+   */
+  private actorId(client: Socket, payload?: { postId?: string; sessionId?: string }): string | undefined {
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return undefined;
+    if (payload && !payload.postId && !payload.sessionId) return undefined;
+    if (!this.rateLimiter.allow(client, userId)) return undefined;
+    return userId;
+  }
 
   async handleConnection(client: Socket) {
+    if (!(await this.wsAuth.authenticate(client))) {
+      return;
+    }
     this.logger.log(`Collaboration client connected: ${client.id}`);
   }
 
   async handleDisconnect(client: Socket) {
+    this.rateLimiter.release(client.id);
     this.logger.log(`Collaboration client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('join-editing-room')
-  async handleJoinEditingRoom(client: Socket, payload: { postId: string; userId: string; displayName: string }) {
-    const { postId, userId, displayName } = payload;
-    
+  async handleJoinEditingRoom(client: Socket, payload: { postId: string; displayName: string }) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+    const { postId, displayName } = payload;
+
     // Add user to the editing room
     await this.collaborationService.addCollaboratorToRoom(postId, userId, displayName);
     client.join(postId);
-    
+
     // Notify everyone in the room
     this.server.to(postId).emit('collaborator-joined', { userId, displayName });
-    
+
     // Send current collaborators list to the new user
     const collaborators = this.collaborationService.getActiveCollaborators(postId);
     client.emit('active-collaborators', collaborators);
   }
 
   @SubscribeMessage('leave-editing-room')
-  async handleLeaveEditingRoom(client: Socket, payload: { postId: string; userId: string }) {
-    const { postId, userId } = payload;
-    
+  async handleLeaveEditingRoom(client: Socket, payload: { postId: string }) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+    const { postId } = payload;
+
     await this.collaborationService.removeCollaboratorFromRoom(postId, userId);
     client.leave(postId);
-    
+
     this.server.to(postId).emit('collaborator-left', { userId });
   }
 
   @SubscribeMessage('content-update')
-  async handleContentUpdate(client: Socket, payload: { postId: string; userId: string; content: any; timestamp: number }) {
-    const { postId, userId, content, timestamp } = payload;
-    
+  async handleContentUpdate(client: Socket, payload: { postId: string; content: any; timestamp: number }) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+    const { postId, content, timestamp } = payload;
+
     // Broadcast the update to everyone else in the room
     client.to(postId).emit('content-updated', { userId, content, timestamp });
-    
+
     // Save the latest version
     await this.collaborationService.saveDraftVersion(postId, content, userId);
   }
 
   @SubscribeMessage('cursor-position')
-  async handleCursorPosition(client: Socket, payload: { postId: string; userId: string; position: { x: number; y: number } }) {
-    const { postId, userId, position } = payload;
+  async handleCursorPosition(client: Socket, payload: { postId: string; position: { x: number; y: number } }) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+    const { postId, position } = payload;
     client.to(postId).emit('cursor-moved', { userId, position });
   }
 
   @SubscribeMessage('selection-change')
-  async handleSelectionChange(client: Socket, payload: { postId: string; userId: string; selection: any }) {
-    const { postId, userId, selection } = payload;
+  async handleSelectionChange(client: Socket, payload: { postId: string; selection: any }) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+    const { postId, selection } = payload;
     client.to(postId).emit('selection-changed', { userId, selection });
   }
 
   @SubscribeMessage('invite-collaborator')
-  async handleInviteCollaborator(client: Socket, payload: { postId: string; hostId: string; guestId: string; guestEmail: string }) {
-    const { postId, hostId, guestId, guestEmail } = payload;
-    
+  async handleInviteCollaborator(client: Socket, payload: { postId: string; guestId: string; guestEmail: string }) {
+    const hostId = this.actorId(client, payload);
+    if (!hostId || !payload.guestId) return;
+    const { postId, guestId, guestEmail } = payload;
+
     // Add collaborator to the post's permanent list
     await this.collaborationService.addPermanentCollaborator(postId, guestId);
-    
-    // Send notification to the invited user (could be via email or in-app)
-    this.server.emit(`invite-${guestId}`, {
+
+    // Send notification to the invited user's own sockets
+    this.server.to(guestId).emit('collaboration-invite', {
       type: 'collaboration-invite',
       postId,
       hostId,
       guestEmail,
-      message: 'You have been invited to collaborate on a post'
+      message: 'You have been invited to collaborate on a post',
     });
   }
 
   @SubscribeMessage('remove-collaborator')
-  async handleRemoveCollaborator(client: Socket, payload: { postId: string; hostId: string; collaboratorId: string }) {
-    const { postId, hostId, collaboratorId } = payload;
-    
+  async handleRemoveCollaborator(client: Socket, payload: { postId: string; collaboratorId: string }) {
+    if (!this.actorId(client, payload) || !payload.collaboratorId) return;
+    const { postId, collaboratorId } = payload;
+
     await this.collaborationService.removePermanentCollaborator(postId, collaboratorId);
-    
+
     // Notify the removed collaborator they no longer have access
     this.server.to(postId).emit('collaborator-removed', { collaboratorId });
-    
-    // Kick them from the room if they're in it
+
+    // Kick them from the room if they're in it. Match on the authenticated
+    // principal, not `handshake.query.userId`, which a client controls.
     const sockets = await this.server.in(postId).allSockets();
     for (const socketId of sockets) {
       const socketClient = this.server.sockets.sockets.get(socketId);
-      if (socketClient?.handshake.query.userId === collaboratorId) {
+      if (socketClient?.data?.userId === collaboratorId) {
         socketClient.leave(postId);
         socketClient.emit('access-revoked', { postId });
       }
@@ -118,7 +165,6 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   async handleCreateCollectiveExperienceSession(
     client: Socket,
     payload: {
-      hostId: string;
       displayName: string;
       title: string;
       theme: 'virtual-trip' | 'event' | 'story';
@@ -127,8 +173,11 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
       sensoryMood?: string;
     },
   ) {
+    const hostId = this.actorId(client, payload);
+    if (!hostId || !payload?.title) return;
+
     const session = this.collaborationService.createCollectiveExperienceSession({
-      hostId: payload.hostId,
+      hostId,
       hostName: payload.displayName,
       title: payload.title,
       theme: payload.theme,
@@ -177,18 +226,21 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('collective-experience:join-session')
   async handleJoinCollectiveExperienceSession(
     client: Socket,
-    payload: { sessionId: string; userId: string; displayName: string },
+    payload: { sessionId: string; displayName: string },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.joinCollectiveExperienceSession(
       payload.sessionId,
-      payload.userId,
+      userId,
       payload.displayName,
     );
 
     client.join(payload.sessionId);
     this.server.to(payload.sessionId).emit('collective-experience:participant-joined', {
       sessionId: payload.sessionId,
-      userId: payload.userId,
+      userId,
       displayName: payload.displayName,
     });
     this.server.to(payload.sessionId).emit('collective-experience:session-updated', { session });
@@ -199,14 +251,17 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('collective-experience:leave-session')
   async handleLeaveCollectiveExperienceSession(
     client: Socket,
-    payload: { sessionId: string; userId: string },
+    payload: { sessionId: string },
   ) {
-    const session = this.collaborationService.leaveCollectiveExperienceSession(payload.sessionId, payload.userId);
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
+    const session = this.collaborationService.leaveCollectiveExperienceSession(payload.sessionId, userId);
     client.leave(payload.sessionId);
 
     this.server.to(payload.sessionId).emit('collective-experience:participant-left', {
       sessionId: payload.sessionId,
-      userId: payload.userId,
+      userId,
     });
 
     if (session) {
@@ -223,10 +278,13 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('collective-experience:update-scene')
   async handleUpdateCollectiveExperienceScene(
     client: Socket,
-    payload: { sessionId: string; userId: string; updates: { prompt?: string; location?: string; sensoryMood?: string; highlights?: string[] } },
+    payload: { sessionId: string; updates: { prompt?: string; location?: string; sensoryMood?: string; highlights?: string[] } },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.updateCollectiveExperienceScene(payload.sessionId, payload.updates);
-    this.server.to(payload.sessionId).emit('collective-experience:session-updated', { session, userId: payload.userId });
+    this.server.to(payload.sessionId).emit('collective-experience:session-updated', { session, userId });
     this.broadcastCollectiveExperienceSessions();
   }
 
@@ -235,15 +293,17 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client: Socket,
     payload: {
       sessionId: string;
-      userId: string;
       displayName: string;
       type: 'travel-note' | 'event-step' | 'story-beat' | 'sensory-cue';
       text: string;
       intensity: number;
     },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.addCollectiveExperienceContribution(payload.sessionId, {
-      userId: payload.userId,
+      userId,
       displayName: payload.displayName,
       type: payload.type,
       text: payload.text,
@@ -262,7 +322,6 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   async handleCreateNeuralLiveStreamSession(
     client: Socket,
     payload: {
-      hostId: string;
       displayName: string;
       title: string;
       headline: string;
@@ -274,8 +333,11 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
       maxAudience?: number;
     },
   ) {
+    const hostId = this.actorId(client, payload);
+    if (!hostId || !payload?.title) return;
+
     const session = this.collaborationService.createNeuralLiveStreamSession({
-      hostId: payload.hostId,
+      hostId,
       hostName: payload.displayName,
       title: payload.title,
       headline: payload.headline,
@@ -327,11 +389,14 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('neural-live-stream:join-session')
   async handleJoinNeuralLiveStreamSession(
     client: Socket,
-    payload: { sessionId: string; userId: string; displayName: string; role?: 'host' | 'co-host' | 'viewer' },
+    payload: { sessionId: string; displayName: string; role?: 'host' | 'co-host' | 'viewer' },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.joinNeuralLiveStreamSession(
       payload.sessionId,
-      payload.userId,
+      userId,
       payload.displayName,
       payload.role,
     );
@@ -339,7 +404,7 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client.join(payload.sessionId);
     this.server.to(payload.sessionId).emit('neural-live-stream:participant-joined', {
       sessionId: payload.sessionId,
-      userId: payload.userId,
+      userId,
       displayName: payload.displayName,
       role: payload.role || 'viewer',
     });
@@ -351,14 +416,17 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
   @SubscribeMessage('neural-live-stream:leave-session')
   async handleLeaveNeuralLiveStreamSession(
     client: Socket,
-    payload: { sessionId: string; userId: string },
+    payload: { sessionId: string },
   ) {
-    const session = this.collaborationService.leaveNeuralLiveStreamSession(payload.sessionId, payload.userId);
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
+    const session = this.collaborationService.leaveNeuralLiveStreamSession(payload.sessionId, userId);
     client.leave(payload.sessionId);
 
     this.server.to(payload.sessionId).emit('neural-live-stream:participant-left', {
       sessionId: payload.sessionId,
-      userId: payload.userId,
+      userId,
     });
 
     if (session) {
@@ -377,7 +445,6 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client: Socket,
     payload: {
       sessionId: string;
-      userId: string;
       updates: {
         headline?: string;
         description?: string;
@@ -388,8 +455,11 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
       };
     },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.updateNeuralLiveStreamBroadcast(payload.sessionId, payload.updates);
-    this.server.to(payload.sessionId).emit('neural-live-stream:session-updated', { session, userId: payload.userId });
+    this.server.to(payload.sessionId).emit('neural-live-stream:session-updated', { session, userId });
     this.broadcastNeuralLiveStreamSessions();
   }
 
@@ -398,7 +468,6 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client: Socket,
     payload: {
       sessionId: string;
-      userId: string;
       displayName: string;
       type: 'observation' | 'thought' | 'memory' | 'sensory-input';
       content: string;
@@ -406,8 +475,11 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
       sensoryTags: string[];
     },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.addNeuralLiveStreamThought(payload.sessionId, {
-      userId: payload.userId,
+      userId,
       displayName: payload.displayName,
       type: payload.type,
       content: payload.content,
@@ -428,15 +500,17 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client: Socket,
     payload: {
       sessionId: string;
-      userId: string;
       displayName: string;
       type: 'reaction' | 'question' | 'spotlight-request' | 'sensory-feedback';
       content: string;
       reaction?: string;
     },
   ) {
+    const userId = this.actorId(client, payload);
+    if (!userId) return;
+
     const session = this.collaborationService.addNeuralLiveStreamAudienceSignal(payload.sessionId, {
-      userId: payload.userId,
+      userId,
       displayName: payload.displayName,
       type: payload.type,
       content: payload.content,
@@ -456,6 +530,8 @@ export class CollaborationGateway implements OnGatewayConnection, OnGatewayDisco
     client: Socket,
     payload: { sessionId: string },
   ) {
+    if (!this.actorId(client, payload)) return;
+
     const ended = this.collaborationService.endNeuralLiveStreamSession(payload.sessionId);
 
     if (ended) {

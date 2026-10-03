@@ -153,7 +153,7 @@ export default function MessageContent({ message }: MessageContentProps) {
         ) : (
           <>
             <Lock size={12} className="text-amber-600 dark:text-amber-400" />
-            <span className="text-[10px] text-amber-600 dark:text-amber-400">Encrypted in transit</span>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400">TLS only — not E2EE</span>
           </>
         )}
       </div>

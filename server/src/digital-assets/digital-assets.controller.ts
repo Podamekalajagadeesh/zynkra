@@ -33,13 +33,13 @@ export class DigitalAssetsController {
       }),
     ) file: Express.Multer.File,
   ) {
-    return this.digitalAssetsService.createAsset(user.id, createAssetDto, file.buffer);
+    return this.digitalAssetsService.createAsset(user.userId, createAssetDto, file.buffer);
   }
 
   @Get('my-assets')
   @UseGuards(JwtAuthGuard)
   async getMyAssets(@CurrentUser() user: any) {
-    return this.digitalAssetsService.getUserAssets(user.id);
+    return this.digitalAssetsService.getUserAssets(user.userId);
   }
 
   @Get(':id')
@@ -54,7 +54,7 @@ export class DigitalAssetsController {
     @CurrentUser() user: any,
     @Body() transferAssetDto: TransferAssetDto,
   ) {
-    return this.digitalAssetsService.transferAsset(user.id, transferAssetDto);
+    return this.digitalAssetsService.transferAsset(user.userId, transferAssetDto);
   }
 
   @Post(':id/sync-to-instance/:domain')

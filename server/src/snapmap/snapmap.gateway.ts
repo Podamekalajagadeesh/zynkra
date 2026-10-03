@@ -3,195 +3,167 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, ConfigService } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { UseGuards } from '@nestjs/common';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { WsAuthService } from '../common/ws-auth/ws-auth.service';
+import { applyWsCors } from '../common/ws-auth/ws-cors';
+import { LocationService, UserLocation } from './location.service';
 
-interface UserLocation {
-  userId: string;
-  latitude: number;
-  longitude: number;
-  lastUpdated: Date;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
-}
-
-interface LocationPrivacy {
-  userId: string;
-  shareWith: 'all_friends' | 'selected_friends' | 'no_one';
-  selectedFriendIds: string[];
-  ghostMode: boolean;
-  expireAfter: string;
-  expiresAt: Date;
-}
-
+// CORS is applied in afterInit, not the decorator — see ws-cors.ts.
 @WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
   transports: ['websocket', 'polling'],
 })
-export class SnapMapGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class SnapMapGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   @WebSocketServer()
   server: Server;
 
   private logger: Logger = new Logger('SnapMapGateway');
-  private userLocations: Map<string, UserLocation> = new Map();
-  private userSockets: Map<string, string> = new Map(); // userId -> socketId
-  private locationPrivacy: Map<string, LocationPrivacy> = new Map();
+  private userSockets: Map<string, Set<string>> = new Map(); // userId -> socketIds
 
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly wsAuth: WsAuthService,
+    private readonly configService: ConfigService,
+    private readonly locationService: LocationService,
+  ) {}
 
-  handleConnection(client: Socket) {
-    const userId = client.handshake.query.userId as string;
-    if (userId) {
-      this.userSockets.set(userId, client.id);
-      this.logger.log(`SnapMap client connected: ${client.id}, user: ${userId}`);
+  afterInit(server: Server) {
+    applyWsCors(server, this.configService);
+  }
+
+  async handleConnection(client: Socket) {
+    if (!(await this.wsAuth.authenticate(client))) {
+      return;
     }
+    const userId = client.data.userId as string;
+    const sockets = this.userSockets.get(userId) ?? new Set<string>();
+    sockets.add(client.id);
+    this.userSockets.set(userId, sockets);
+    this.logger.log(`SnapMap client connected: ${client.id}, user: ${userId}`);
   }
 
   handleDisconnect(client: Socket) {
-    const userId = [...this.userSockets.entries()].find(([, socketId]) => socketId === client.id)?.[0];
-    if (userId) {
-      this.userSockets.delete(userId);
-      this.userLocations.delete(userId);
-      this.logger.log(`SnapMap client disconnected: ${client.id}, user: ${userId}`);
+    const userId = client.data.userId as string | undefined;
+    if (!userId) {
+      return;
     }
+    const sockets = this.userSockets.get(userId);
+    sockets?.delete(client.id);
+    if (sockets && sockets.size === 0) {
+      this.userSockets.delete(userId);
+    }
+    this.locationService.clearLocation(userId);
+    this.logger.log(`SnapMap client disconnected: ${client.id}, user: ${userId}`);
   }
 
   @SubscribeMessage('update-location')
   async handleUpdateLocation(
-    @MessageBody() data: { userId: string; latitude: number; longitude: number },
+    @MessageBody() data: { latitude: number; longitude: number },
     @ConnectedSocket() client: Socket,
   ) {
-    const location: UserLocation = {
-      userId: data.userId,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      lastUpdated: new Date(),
-    };
-    
-    this.userLocations.set(data.userId, location);
+    // The owner is the authenticated socket, never a client-supplied userId —
+    // otherwise anyone could publish coordinates on another user's behalf.
+    const userId = client.data.userId as string | undefined;
+    if (!userId) {
+      return;
+    }
+    if (typeof data?.latitude !== 'number' || typeof data?.longitude !== 'number') {
+      return;
+    }
+    if (Math.abs(data.latitude) > 90 || Math.abs(data.longitude) > 180) {
+      return;
+    }
 
-    // Get user's friends to broadcast location to
-    const user = await this.usersService.findOneById(data.userId);
-    if (user && user.following) {
-      const privacy = this.locationPrivacy.get(data.userId);
-      
-      // Only broadcast if user is not in ghost mode
-      if (!privacy?.ghostMode) {
-        // Broadcast to all mutual friends who can see this user's location
-        for (const followed of user.following) {
-          const canSee = this.canUserSeeLocation(data.userId, followed.id, privacy);
-          if (canSee && this.userSockets.has(followed.id)) {
-            const friendSocketId = this.userSockets.get(followed.id);
-            if (friendSocketId) {
-              this.server.to(friendSocketId).emit('friend-location-updated', {
-                ...location,
-                username: user.username,
-                displayName: user.displayName,
-                avatar: user.avatar,
-              });
-            }
-          }
-        }
+    const location = this.locationService.setLocation(userId, data.latitude, data.longitude);
+
+    const user = await this.usersService.findOneById(userId);
+    if (!user?.following?.length) {
+      return;
+    }
+
+    // Ghost mode suppresses broadcast entirely.
+    if (this.locationService.getPrivacy(userId)?.ghostMode) {
+      return;
+    }
+
+    for (const followed of user.following) {
+      if (!this.locationService.canViewLocation(userId, followed.id)) {
+        continue;
       }
+      this.server.to(followed.id).emit('friend-location-updated', {
+        ...location,
+        username: user.username,
+        displayName: user.displayName,
+        avatar: user.avatar,
+      });
     }
   }
 
   @SubscribeMessage('request-friend-locations')
-  async handleRequestFriendLocations(
-    @CurrentUser() user: User,
-    @ConnectedSocket() client: Socket,
-  ) {
-    // Send all visible friend locations to the requesting user
+  async handleRequestFriendLocations(@ConnectedSocket() client: Socket) {
+    // @CurrentUser() does not work in a WS context — it reads the HTTP request.
+    // The authenticated principal is on the socket.
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return;
+
     const visibleLocations: UserLocation[] = [];
-    
-    for (const [userId, location] of this.userLocations.entries()) {
-      // Skip if it's the current user
-      if (userId === user.id) continue;
-      
-      const privacy = this.locationPrivacy.get(userId);
-      if (this.canUserSeeLocation(userId, user.id, privacy)) {
-        const friendUser = await this.usersService.findOneById(userId);
-        if (friendUser) {
-          visibleLocations.push({
-            ...location,
-            username: friendUser.username,
-            displayName: friendUser.displayName,
-            avatar: friendUser.avatar,
-          });
-        }
+    for (const [ownerId, location] of this.locationService.allLocations()) {
+      if (ownerId === userId) continue;
+      if (!this.locationService.canViewLocation(ownerId, userId)) continue;
+      const friendUser = await this.usersService.findOneById(ownerId);
+      if (friendUser) {
+        visibleLocations.push({
+          ...location,
+          username: friendUser.username,
+          displayName: friendUser.displayName,
+          avatar: friendUser.avatar,
+        });
       }
     }
-    
+
     client.emit('initial-friend-locations', visibleLocations);
   }
 
   @SubscribeMessage('update-location-privacy')
-  async handleUpdatePrivacy(
-    @MessageBody() data: { userId: string; privacy: any },
+  handleUpdatePrivacy(
+    @MessageBody() data: {
+      privacy: {
+        shareWith: 'all_friends' | 'selected_friends' | 'no_one';
+        selectedFriendIds?: string[];
+        ghostMode: boolean;
+        expireAfter: string;
+      };
+    },
     @ConnectedSocket() client: Socket,
   ) {
-    const privacySettings: LocationPrivacy = {
-      ...data.privacy,
-      userId: data.userId,
-      expiresAt: this.calculateExpiration(data.privacy.expireAfter),
-    };
-    
-    this.locationPrivacy.set(data.userId, privacySettings);
-    this.logger.log(`Updated location privacy for user: ${data.userId}`);
+    const userId = client.data.userId as string | undefined;
+    if (!userId || !data?.privacy) {
+      return;
+    }
+    this.locationService.setPrivacy(userId, data.privacy);
   }
 
   @SubscribeMessage('create-location-story')
   async handleCreateLocationStory(
-    @MessageBody() story: any,
-    @CurrentUser() user: User,
+    @MessageBody() story: unknown,
     @ConnectedSocket() client: Socket,
   ) {
-    // Broadcast location story to all eligible friends
-    for (const followed of user.following || []) {
-      if (this.userSockets.has(followed.id)) {
-        const socketId = this.userSockets.get(followed.id);
-        if (socketId) {
-          this.server.to(socketId).emit('new-location-story', story);
-        }
-      }
-    }
-  }
+    const userId = client.data.userId as string | undefined;
+    if (!userId) return;
 
-  private canUserSeeLocation(ownerId: string, viewerId: string, privacy: LocationPrivacy | undefined): boolean {
-    if (!privacy) return true; // Default to sharing with all friends
-    if (privacy.ghostMode) return false;
-    if (privacy.shareWith === 'no_one') return false;
-    if (privacy.shareWith === 'selected_friends' && !privacy.selectedFriendIds.includes(viewerId)) return false;
-    
-    // Check if location has expired
-    if (new Date() > privacy.expiresAt) return false;
-    
-    return true;
-  }
+    const user = await this.usersService.findOneById(userId);
+    if (!user?.following?.length) return;
 
-  private calculateExpiration(expireAfter: string): Date {
-    const now = new Date();
-    switch (expireAfter) {
-      case '1hour':
-        return new Date(now.getTime() + 60 * 60 * 1000);
-      case '4hours':
-        return new Date(now.getTime() + 4 * 60 * 60 * 1000);
-      case '24hours':
-        return new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      default:
-        return new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000); // Until turned off (1 year)
+    for (const followed of user.following) {
+      this.server.to(followed.id).emit('new-location-story', story);
     }
   }
 }

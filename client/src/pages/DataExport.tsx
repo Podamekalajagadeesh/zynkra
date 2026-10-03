@@ -67,7 +67,7 @@ const DataExportPage: React.FC = () => {
       const payload = JSON.parse(await file.text());
       const response = await api.post('/data-export/import', payload);
       const result = response.data;
-      addToast(`Data imported: ${result.posts ?? 0} posts, ${result.articles ?? 0} articles, ${result.courses ?? 0} courses.`, 'success');
+      addToast(`Data imported: ${result.posts ?? 0} posts, ${result.messages ?? 0} messages, ${result.walletEntries ?? 0} wallet entries, ${result.orders ?? 0} orders.`, 'success');
       await loadInfo();
     } catch (error: any) {
       const message = error instanceof SyntaxError
@@ -167,6 +167,40 @@ const DataExportPage: React.FC = () => {
             {importing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             {importing ? 'Importing...' : 'Choose Export File'}
           </label>
+        </div>
+
+        {/* Portability notes */}
+        <div className="surface p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Shield size={20} className="text-cyan-500" />
+            What "Import" restores
+          </h3>
+          <ul className="space-y-2 text-sm text-dark-600 dark:text-dark-400">
+            <li className="flex items-start gap-2">
+              <CheckCircle size={14} className="text-green-500 mt-0.5" />
+              <span>
+                Content: posts, comments, reactions, bookmarks, stories, articles, podcasts, courses, enrollments, profile &amp; settings.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle size={14} className="text-green-500 mt-0.5" />
+              <span>
+                DMs: threaded with their original counterparts when those users exist here; encrypted envelopes are preserved as-is.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <AlertTriangle size={14} className="text-amber-500 mt-0.5" />
+              <span>
+                Wallet, orders, verification &amp; linked accounts are imported as archival history only — no money is fabricated, badges aren&apos;t granted, and OAuth credentials must be re-linked.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <AlertTriangle size={14} className="text-amber-500 mt-0.5" />
+              <span>
+                Import is additive: re-importing the same file duplicates content.
+              </span>
+            </li>
+          </ul>
         </div>
 
         {/* Deletion Section */}

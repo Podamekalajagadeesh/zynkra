@@ -14,6 +14,11 @@ import { PostVisibility, PostType } from '../entities/post.entity';
 import { Type } from 'class-transformer';
 
 class MediaDto {
+  // Optional media row id from POST /media/upload — preferred over re-creating rows.
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   // Upload endpoint returns relative /uploads/<hash> paths; legacy rows hold data URLs.
   @IsString()
   url: string;

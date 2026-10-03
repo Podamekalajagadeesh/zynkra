@@ -12,6 +12,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import request from 'supertest';
 import { StoriesController } from '../src/stories/stories.controller';
 import { StoriesService } from '../src/stories/stories.service';
+import { MediaService } from '../src/media/media.service';
 import { StoriesReactionController } from '../src/stories/stories-reaction.controller';
 import { StoriesReactionService } from '../src/stories/stories-reaction.service';
 import { StoriesReplyController } from '../src/stories/stories-reply.controller';
@@ -31,6 +32,18 @@ function createModule(overrides: Record<string, any> = {}) {
     controllers: [StoriesController, StoriesReactionController, StoriesReplyController],
     providers: [
       { provide: StoriesService, useValue: { ...defaults, ...overrides.stories } },
+      {
+        provide: MediaService,
+        useValue: overrides.media || {
+          uploadFile: jest.fn(async (file: any, ctx: any) => ({
+            id: 'media-1',
+            url: '/uploads/stories/story.jpg',
+            type: 'image',
+            size: file?.size ?? 0,
+            mimeType: file?.mimetype ?? 'image/jpeg',
+          })),
+        },
+      },
       { provide: StoriesReactionService, useValue: { addReaction: overrides.addReaction || jest.fn() } },
       { provide: StoriesReplyService, useValue: { addReply: overrides.addReply || jest.fn() } },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },

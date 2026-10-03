@@ -5,6 +5,7 @@ import { StoriesController } from './stories.controller';
 import { Story } from './entities/story.entity';
 import { StoryElement } from './entities/story-element.entity';
 import { UsersModule } from '../users/users.module';
+import { MediaModule } from '../media/media.module';
 import { StoryHighlight } from './entities/story-highlight.entity';
 import { HighlightsService } from './highlights.service';
 import { HighlightsController } from './highlights.controller';
@@ -19,7 +20,7 @@ import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, StoryElement, StoryHighlight, StoryReaction, StoryReply, StoryView, Subscription, CustomAudience]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Story, StoryElement, StoryHighlight, StoryReaction, StoryReply, StoryView, Subscription, CustomAudience]), UsersModule, MediaModule],
   controllers: [StoriesController, HighlightsController, StoriesReactionController, StoriesReplyController],
   providers: [StoriesService, HighlightsService, StoriesReactionService, StoriesReplyService],
   exports: [StoriesService],

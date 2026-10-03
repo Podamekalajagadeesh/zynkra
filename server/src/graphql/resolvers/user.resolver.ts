@@ -1,5 +1,8 @@
-import { Resolver, Query, Args, ObjectType, Field, ID } from '@nestjs/graphql';
+import { Resolver, Query, Args, ObjectType, Field, ID, Context, UseGuards } from '@nestjs/graphql';
+import { NotFoundException } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
+import { VisibilityService } from '../../common/visibility/visibility.service';
+import { GqlAuthGuard } from '../guards/gql-jwt-auth.guard';
 
 @ObjectType()
 export class GqlUser {
@@ -20,11 +23,33 @@ export class GqlUser {
 }
 
 @Resolver(() => GqlUser)
+@UseGuards(GqlAuthGuard)
 export class UserResolver {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly visibilityService: VisibilityService,
+  ) {}
 
   @Query(() => GqlUser, { nullable: true })
-  async user(@Args('id', { type: () => ID }) id: string): Promise<GqlUser | null> {
+  async user(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: any,
+  ): Promise<GqlUser | null> {
+    const viewerId: string = context?.req?.user?.userId;
+    if (!viewerId) {
+      throw new NotFoundException('User not found.');
+    }
+
+    // A block in either direction hides the user entirely, and a private
+    // account is only visible to the owner and accepted followers. Returning
+    // null (rather than throwing) keeps this consistent with the REST surface.
+    if (await this.visibilityService.isBlockedEither(viewerId, id)) {
+      return null;
+    }
+    if (!(await this.visibilityService.canViewAuthor(viewerId, id))) {
+      return null;
+    }
+
     const user = await this.usersService.findOneById(id);
     if (!user) {
       return null;

@@ -1,48 +1,88 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-
-interface CaptchaChallenge {
-  answer: number;
-  expiresAt: number;
-}
+import { randomInt, randomUUID } from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CaptchaChallengeEntity } from './entities/captcha-challenge.entity';
 
 const CHALLENGE_TTL_MS = 2 * 60 * 1000;
 
+/**
+ * Arithmetic CAPTCHA (`a + b`) for signup and, optionally, signin.
+ *
+ * This is an **anti-bot speed bump, not authentication.** The expression is
+ * returned to the client, so any script can solve it. It exists to make bulk
+ * signup scripted rather than trivial; do not treat a passing CAPTCHA as proof
+ * of a human. Real step-up authentication is TOTP (`/auth/2fa/*`) or a passkey.
+ *
+ * Challenges are persisted, so they work across instances and survive a restart
+ * — previously an in-process `Map`, which meant a challenge issued on instance A
+ * could not be redeemed on instance B.
+ */
 @Injectable()
 export class CaptchaService {
-  private readonly challenges = new Map<string, CaptchaChallenge>();
+  constructor(
+    @InjectRepository(CaptchaChallengeEntity)
+    private readonly captchaRepository: Repository<CaptchaChallengeEntity>,
+  ) {}
 
-  generate(): { id: string; expression: string } {
-    this.sweepExpired();
+  /**
+   * Issue a challenge. The answer is never returned to the caller.
+   */
+  async generate(userId?: string | null): Promise<{ id: string; expression: string; expiresIn: number }> {
+    // randomInt, not Math.random — and a stored digest is not appropriate here
+    // because the answer is shown to the user anyway; what matters is that the
+    // challenge cannot be precomputed.
+    const a = randomInt(1, 10);
+    const b = randomInt(1, 10);
 
-    const a = 1 + Math.floor(Math.random() * 9);
-    const b = 1 + Math.floor(Math.random() * 9);
-    const id = randomUUID();
-
-    this.challenges.set(id, {
+    const record = this.captchaRepository.create({
+      userId: userId ?? null,
       answer: a + b,
-      expiresAt: Date.now() + CHALLENGE_TTL_MS,
+      attempts: 0,
+      maxAttempts: 3,
+      expiresAt: new Date(Date.now() + CHALLENGE_TTL_MS),
     });
+    const saved = await this.captchaRepository.save(record);
 
-    return { id, expression: `${a} + ${b}` };
+    return {
+      id: saved.id,
+      expression: `${a} + ${b}`,
+      expiresIn: Math.floor(CHALLENGE_TTL_MS / 1000),
+    };
   }
 
-  verify(id: string, answer: string | number): boolean {
-    const challenge = this.challenges.get(id);
-    if (!challenge) return false;
+  /**
+   * Redeem a challenge. Single-use: the row is consumed on every attempt, pass
+   * or fail, so a challenge cannot be brute-forced by repeated guessing.
+   */
+  async verify(id: string | undefined, answer: string | number | undefined): Promise<boolean> {
+    if (!id || answer === undefined || answer === null || answer === '') {
+      return false;
+    }
 
-    this.challenges.delete(id);
+    const challenge = await this.captchaRepository.findOne({ where: { id } });
+    if (!challenge) {
+      return false;
+    }
 
-    if (Date.now() > challenge.expiresAt) return false;
+    // Consume regardless of outcome.
+    await this.captchaRepository.delete(id);
+
+    if (challenge.expiresAt < new Date()) {
+      return false;
+    }
+    if (challenge.attempts >= challenge.maxAttempts) {
+      return false;
+    }
+
     return Number(answer) === challenge.answer;
   }
 
-  private sweepExpired(): void {
-    const now = Date.now();
-    for (const [id, challenge] of this.challenges) {
-      if (now > challenge.expiresAt) {
-        this.challenges.delete(id);
-      }
-    }
+  /** Remove challenges that can no longer be redeemed. */
+  async prune(): Promise<number> {
+    const result = await this.captchaRepository.delete({
+      expiresAt: new Date(),
+    });
+    return result.affected ?? 0;
   }
 }

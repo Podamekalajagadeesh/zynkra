@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { FeedService } from './feed.service';
-import { Post, PostVisibility } from '../posts/entities/post.entity';
+import { Post, PostType, PostVisibility } from '../posts/entities/post.entity';
 import { TrendsService } from '../trends/trends.service';
 import { UserInterestsService } from '../user-interests/user-interests.service';
 import { UsersService } from '../users/users.service';
@@ -33,6 +33,7 @@ function makePost(overrides: Partial<Post> = {}): Post {
   Object.assign(p, {
     id: 'post-1',
     content: 'Test post',
+    postType: PostType.POST,
     visibility: PostVisibility.PUBLIC,
     user: makeUser(),
     tags: [],
@@ -56,7 +57,25 @@ describe('FeedService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FeedService,
-        { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), createQueryBuilder: jest.fn().mockReturnValue({ where: jest.fn().mockReturnThis(), andWhere: jest.fn().mockReturnThis(), leftJoinAndSelect: jest.fn().mockReturnThis(), orderBy: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(), skip: jest.fn().mockReturnThis(), take: jest.fn().mockReturnThis(), getMany: jest.fn().mockResolvedValue([]) }) } },
+        {
+          provide: getRepositoryToken(Post),
+          useValue: {
+            find: jest.fn(),
+            createQueryBuilder: jest.fn().mockReturnValue({
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
+              innerJoin: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              addOrderBy: jest.fn().mockReturnThis(),
+              limit: jest.fn().mockReturnThis(),
+              skip: jest.fn().mockReturnThis(),
+              take: jest.fn().mockReturnThis(),
+              getMany: jest.fn().mockResolvedValue([]),
+              getCount: jest.fn().mockResolvedValue(0),
+            }),
+          },
+        },
         { provide: UserInterestsService, useValue: { getInterests: jest.fn().mockResolvedValue([]) } },
         { provide: UsersService, useValue: { findFollowingIds: jest.fn().mockResolvedValue([]) } },
         { provide: SponsoredPostsService, useValue: {} },
@@ -64,8 +83,20 @@ describe('FeedService', () => {
         { provide: StoriesService, useValue: {} },
         { provide: SnapMapGateway, useValue: { userLocations: new Map() } },
         { provide: TrendsService, useValue: { getTrending: jest.fn().mockResolvedValue([]) } },
-        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn(), filterVisiblePostsForViewer: jest.fn().mockImplementation((_uid, posts) => posts) } },
-        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: VisibilityService,
+          useValue: {
+            filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts),
+            filterVisiblePostsForViewer: jest.fn().mockImplementation((_uid, posts) => posts),
+          },
+        },
+        {
+          provide: DataPermissionsService,
+          useValue: {
+            require: jest.fn().mockResolvedValue(undefined),
+            has: jest.fn().mockResolvedValue(true),
+          },
+        },
       ],
     }).compile();
 
@@ -87,9 +118,13 @@ describe('FeedService', () => {
 
       const result = await service.getChronologicalFeed(makeUser());
       expect(result).toHaveLength(2);
-      expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ relations: ['user', 'reactions', 'comments', 'tags'] }),
-      );
+       expect(postsRepo.find).toHaveBeenCalledWith(
+         expect.objectContaining({
+           where: { isDraft: false },
+           relations: ['user', 'reactions', 'comments', 'tags'],
+         }),
+       );
+
       expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith('user-1', posts);
     });
   });
@@ -164,7 +199,7 @@ describe('FeedService', () => {
       const result = await service.getForYouFeed(user);
       const ids = result.map((p: any) => p.id);
       // Followed user's posts should appear before strangers
-      expect(ids.indexOf('followed')).toBeGreaterThanOrEqual(0);
+      expect(ids.indexOf('followed')).toBeLessThan(ids.indexOf('other'));
     });
 
     it('uses chronological ordering when feed personalization is disabled', async () => {
@@ -185,6 +220,58 @@ describe('FeedService', () => {
 
       const result = await service.getForYouFeed(null as any);
       expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('getShortsFeed', () => {
+    it('returns an empty result for anonymous viewers', async () => {
+      const result = await service.getShortsFeed(null as any);
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+      expect(userInterestsService.getInterests).not.toHaveBeenCalled();
+    });
+
+    it('includes both reel and shorts posts and applies visibility', async () => {
+      const user = makeUser();
+      const reel = makePost({ id: 'reel', postType: PostType.REEL });
+      const shorts = makePost({ id: 'shorts', postType: PostType.SHORTS });
+      postsRepo.find.mockResolvedValue([reel, shorts]);
+      visibilityService.filterVisiblePosts.mockResolvedValue([reel, shorts]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+
+      const result = await service.getShortsFeed(user);
+
+      expect(result).toHaveLength(2);
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isDraft: false, postType: expect.anything() }),
+          take: 50,
+        }),
+      );
+      expect(visibilityService.filterVisiblePosts).toHaveBeenCalledWith('user-1', [reel, shorts]);
+    });
+
+    it('filters blocked keywords from shorts', async () => {
+      const user = makeUser({ blockedKeywords: ['spoiler'] });
+      const blocked = makePost({ id: 'blocked', content: 'A spoiler' });
+      const visible = makePost({ id: 'visible', content: 'Safe clip' });
+      postsRepo.find.mockResolvedValue([blocked, visible]);
+      visibilityService.filterVisiblePosts.mockResolvedValue([blocked, visible]);
+
+      const result = await service.getShortsFeed(user);
+
+      expect(result.map((post) => post.id)).toEqual(['visible']);
+    });
+
+    it('skips interest personalization when the user opts out', async () => {
+      const user = makeUser({ personalization: false });
+      postsRepo.find.mockResolvedValue([]);
+      visibilityService.filterVisiblePosts.mockResolvedValue([]);
+
+      await service.getShortsFeed(user);
+
+      expect(userInterestsService.getInterests).not.toHaveBeenCalled();
     });
   });
 
@@ -310,14 +397,26 @@ describe('FeedService', () => {
   // ─── getSubscriptionsFeed ─────────────────────────────────────────────
 
   describe('getSubscriptionsFeed', () => {
-    it('returns posts from subscribed creators', async () => {
-      const user = makeUser();
-      usersService.findFollowingIds.mockResolvedValue(['sub-1']);
-      postsRepo.find.mockResolvedValue([makePost({ id: 'sub-post' })]);
-      visibilityService.filterVisiblePosts.mockResolvedValue([makePost({ id: 'sub-post' })]);
+    it('returns posts from active, unexpired subscribed creators', async () => {
+      const user = makeUser({
+        subscriptions: [
+          { status: 'active', creator: { id: 'creator-1' } },
+          { status: 'canceled', creator: { id: 'creator-2' } },
+          { status: 'active', expiresAt: new Date(Date.now() - 1000), creator: { id: 'creator-3' } },
+        ] as any,
+      });
+      const posts = [makePost({ id: 'sub-post' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
 
       const result = await service.getSubscriptionsFeed(user);
-      expect(Array.isArray(result)).toBe(true);
+
+      expect(result).toHaveLength(1);
+      const criteria = postsRepo.find.mock.calls[0][0].where;
+      expect(criteria.user.id._value).toEqual(['creator-1']);
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ user: expect.anything() }) }),
+      );
     });
   });
 

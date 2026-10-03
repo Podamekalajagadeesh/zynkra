@@ -279,9 +279,9 @@ export function ConversationPage() {
           <h2 className="text-xl font-bold">Conversation</h2>
           <div className="flex items-center space-x-2 mr-4">
             {e2eeReady ? (
-              <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400" title="Encrypted in transit (TLS). Full E2EE is in progress.">
+              <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400" title="Transport is encrypted via TLS. End-to-end encryption is not yet enforced server-side.">
                 <Lock size={16} />
-                <span className="text-xs hidden sm:inline">Encrypted</span>
+                <span className="text-xs hidden sm:inline">TLS</span>
               </div>
             ) : e2eeInit ? (
               <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">

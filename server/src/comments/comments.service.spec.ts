@@ -95,7 +95,12 @@ describe('CommentsService', () => {
     it('creates a reply to a comment', async () => {
       const user = makeUser();
       const post = makePost();
-      const parentComment = { id: 'parent-1', isLocked: false } as Comment;
+       const parentComment = {
+         id: 'parent-1',
+         isLocked: false,
+         user: makeUser({ id: 'parent-user' }),
+       } as Comment;
+
       commentsRepo.findOne.mockResolvedValue(parentComment);
       usersService.findOneById.mockResolvedValue(post.user);
       commentsRepo.create.mockReturnValue({} as any);

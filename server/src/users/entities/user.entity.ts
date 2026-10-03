@@ -1,4 +1,5 @@
 
+import { Exclude } from 'class-transformer';
 import { RelationshipStatus } from './relationship-status.enum';
 import { LifeEvent } from './life-event.entity';
 import { Role } from '../roles.enum';
@@ -148,6 +149,7 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: Role,
@@ -165,30 +167,39 @@ export class User {
   @Column({ default: false })
   verified: boolean;
 
+  @Exclude()
   @Column({ nullable: true })
   verificationStatus?: 'pending' | 'approved' | 'rejected';
 
+  @Exclude()
   @Column({ nullable: true })
   idDocumentUrl?: string;
 
+  @Exclude()
   @Column({ nullable: true })
   verificationSubmittedAt?: Date;
 
+  @Exclude()
   @Column({ default: false })
   banned: boolean;
 
+  @Exclude()
   @Column({ unique: true, nullable: true })
   email: string | null;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 32, nullable: true, unique: true })
   phoneNumber: string | null;
 
+  @Exclude()
   @Column({ nullable: true })
   password_hash: string | null;
 
+  @Exclude()
   @Column({ default: false })
   emailVerified: boolean;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: PostVisibility,
@@ -196,6 +207,7 @@ export class User {
   })
   postVisibility: PostVisibility;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: FriendRequestPrivacy,
@@ -203,6 +215,7 @@ export class User {
   })
   friendRequestPrivacy: FriendRequestPrivacy;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: EmailSearchPrivacy,
@@ -210,6 +223,7 @@ export class User {
   })
   emailSearchPrivacy: EmailSearchPrivacy;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: CommentPrivacy,
@@ -217,6 +231,7 @@ export class User {
   })
   commentPrivacy: CommentPrivacy;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: TagPrivacy,
@@ -224,6 +239,7 @@ export class User {
   })
   tagPrivacy: TagPrivacy;
 
+  @Exclude()
   @Column({
     type: 'enum',
     enum: MessagePrivacy,
@@ -231,56 +247,100 @@ export class User {
   })
   messagePrivacy: MessagePrivacy;
 
+  @Exclude()
   @Column({ nullable: true })
   emailVerificationToken: string;
 
+  @Exclude()
   @Column({ nullable: true })
   emailVerificationTokenExpires: Date;
 
+  /**
+   * Failed attempts at redeeming `emailVerificationToken`.
+   *
+   * The code is 6 digits and there is no other per-account barrier, so without a
+   * counter a patient attacker can grind the space. `verifyByCode` locks the
+   * account out of code redemption for a cooling-off period once
+   * `VERIFICATION_CODE_MAX_ATTEMPTS` is exceeded. Reset on every successful
+   * verification and whenever a fresh code is issued.
+   */
+  @Exclude()
+  @Column({ type: 'int', default: 0 })
+  emailVerificationAttempts: number;
+
+  @Exclude()
+  @Column({ nullable: true })
+  emailVerificationLockedUntil: Date | null;
+
+  @Exclude()
   @Column({ nullable: true })
   passwordResetToken: string | null;
 
+  @Exclude()
   @Column({ nullable: true })
   passwordResetTokenExpires: Date | null;
 
+  @Exclude()
   @Column({ type: 'simple-array', nullable: true })
   recoveryCodeHashes: string[] | null;
 
-  @Column({ nullable: true })
+  /**
+   * IP addresses (or CIDR-free exact addresses) the user has marked as trusted.
+   *
+   * A sign-in from one of these does not raise a new-device / suspicious-login
+   * prompt. Previously this lived only in an in-process `Map` inside
+   * `SecuritySettingsService`, so the control was cosmetic: adding a trusted IP
+   * changed nothing, and a restart discarded the list.
+   */
+  @Exclude()
+  @Column({ type: 'simple-array', nullable: true })
+  trustedIpAddresses: string[] | null;
+
+  @Exclude()
+  @Column({ type: 'timestamp with time zone', nullable: true })
   recoveryCodesGeneratedAt: Date | null;
 
+  @Exclude()
   @Column({ type: 'simple-array', nullable: true })
   trustedRecoveryContacts: string[] | null;
 
+  @Exclude()
   @Column({ nullable: true })
   trustedRecoveryCodeHash: string | null;
 
-  @Column({ nullable: true })
+  @Exclude()
+  @Column({ type: 'timestamp with time zone', nullable: true })
   trustedRecoveryCodeExpiresAt: Date | null;
 
+  @Exclude()
   @Column({ type: 'varchar', nullable: true })
   magicLinkTokenHash: string | null;
 
+  @Exclude()
   @Column({ type: 'timestamp with time zone', nullable: true })
   magicLinkTokenExpiresAt: Date | null;
 
+  @Exclude()
   @Column({ nullable: true })
   provider: string;
 
+  @Exclude()
   @Column({ nullable: true })
   providerId: string;
 
+  @Exclude()
   @Column({ type: 'varchar', nullable: true, unique: true })
   walletAddress: string | null;
 
+  @Exclude()
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   walletBalance: number;
 
-  /** Stripe Connect (Express) account used to pay out creator earnings. */
+  @Exclude()
   @Column({ type: 'varchar', nullable: true })
   stripeConnectAccountId: string | null;
 
-  /** True once Stripe onboarding is complete and the account can receive transfers. */
+  @Exclude()
   @Column({ type: 'boolean', default: false })
   payoutsEnabled: boolean;
 
@@ -314,18 +374,23 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   nftPfpTokenId: string | null;
 
+  @Exclude()
   @Column({ default: false })
   twoFactorEnabled: boolean;
 
+  @Exclude()
   @Column({ type: 'varchar', nullable: true })
   twoFactorSecret: string | null;
 
+  @Exclude()
   @Column({ type: 'varchar', nullable: true })
   status: string | null;
 
+  @Exclude()
   @Column({ type: 'timestamp with time zone', nullable: true })
   deactivatedAt: Date | null;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 500, nullable: true })
   deactivationReason: string | null;
 

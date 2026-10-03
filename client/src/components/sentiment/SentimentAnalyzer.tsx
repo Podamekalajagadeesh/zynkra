@@ -50,8 +50,8 @@ export function SentimentAnalyzer() {
       <div>
         <h2 className="text-xl font-bold">Sentiment Analysis</h2>
         <p className="text-sm text-gray-500">
-          Analyze the emotional tone of any text. Runs a lexicon-based classifier with sarcasm and
-          negation handling.
+          Analyze the emotional tone of any text. Server-side lexicon classifier with sarcasm and
+          negation handling — text is sent to the API for analysis.
         </p>
       </div>
 

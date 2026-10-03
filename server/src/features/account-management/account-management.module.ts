@@ -25,6 +25,8 @@ import { AccountRecoveryRequest } from './entities/account-recovery-request.enti
 import { UsersModule } from '../../users/users.module';
 import { DataExportModule } from '../../data-export/data-export.module';
 import { LoginSession } from '../../auth/entities/login-session.entity';
+import { Authenticator } from '../../auth/entities/authenticator.entity';
+import { SecurityAuditLog } from '../../security-audit/entities/security-audit.entity';
 
 @Module({
   imports: [
@@ -42,6 +44,11 @@ import { LoginSession } from '../../auth/entities/login-session.entity';
       AccountSessionEntity,
       AccountRecoveryRequest,
       LoginSession,
+      // Read by SecuritySettingsService to compute risk from real state
+      // (2FA on User, passkey count, failed logins, active sessions) rather
+      // than from its own in-process map.
+      Authenticator,
+      SecurityAuditLog,
     ]),
     UsersModule,
     NotificationsModule,

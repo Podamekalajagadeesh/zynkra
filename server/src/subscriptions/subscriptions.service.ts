@@ -9,9 +9,17 @@ import {
 } from './entities/subscription-bundle.entity';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
-import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { PaymentsService } from '../payments/payments.service';
+
+export interface SubscriptionPaymentResult {
+  success: boolean;
+  status: string;
+  paymentId: string | null;
+  transactionId?: string | null;
+  clientSecret: string | null;
+  subscription: Subscription | null;
+}
 
 @Injectable()
 export class SubscriptionsService {
@@ -26,24 +34,35 @@ export class SubscriptionsService {
     private bundleTiersRepository: Repository<SubscriptionBundleTier>,
     private usersService: UsersService,
     private readonly paymentsService: PaymentsService,
-  ) {}
+  ) {
+    if (typeof this.paymentsService.registerFulfillmentHandler === 'function') {
+      this.paymentsService.registerFulfillmentHandler('subscription', async (transaction) => {
+        await this.fulfillSubscription(transaction);
+      });
+    }
+  }
 
   async createSubscription(
     subscriberId: string,
     creatorId: string,
     tier: string,
-  ): Promise<Subscription> {
+    paymentMethodId?: string,
+  ): Promise<Subscription | SubscriptionPaymentResult> {
     const subscriber = await this.usersService.findOneById(subscriberId);
     const creator = await this.usersService.findOneById(creatorId);
 
     if (!subscriber || !creator) {
       throw new NotFoundException('User not found');
     }
+    if (subscriberId === creatorId) {
+      throw new BadRequestException('Cannot subscribe to yourself');
+    }
 
     const existingSubscription = await this.subscriptionsRepository.findOne({
       where: {
         subscriber: { id: subscriberId },
         creator: { id: creatorId },
+        tier,
         status: SubscriptionStatus.ACTIVE,
       },
       relations: ['creator', 'subscriber'],
@@ -53,32 +72,91 @@ export class SubscriptionsService {
       return existingSubscription;
     }
 
-    const tierRecord = await this.subscriptionTiersRepository.findOne({ where: { creator: { id: creatorId } }, relations: ['creator'] });
-    const amount = tierRecord?.price ?? 10;
-
-    await this.paymentsService.processPayment(subscriberId, Number(amount), 'subscription', {
-      currency: 'usd',
-      payerId: subscriberId,
-      recipientId: creatorId,
-      metadata: { tier, creatorId },
+    const tierRecord = await this.subscriptionTiersRepository.findOne({
+      where: { name: tier, creator: { id: creatorId } },
+      relations: ['creator'],
     });
+    if (!tierRecord) {
+      throw new NotFoundException('Subscription tier not found');
+    }
 
-    const subscription = this.subscriptionsRepository.create({
-      subscriber,
-      creator,
-      tier,
-      status: SubscriptionStatus.ACTIVE,
-      expiresAt: new Date(new Date().setMonth(new Date().getMonth() + 1)), // 1 month from now
-    });
+    const amount = Number(tierRecord.price);
+    const metadata = {
+      fulfillmentType: 'subscription',
+      subscriberId,
+      creatorId,
+      tier: tierRecord.name,
+      tierId: tierRecord.id,
+    };
+    const payment = await this.paymentsService.processPayment(
+      subscriberId,
+      amount,
+      'subscription',
+      {
+        currency: 'usd',
+        payerId: subscriberId,
+        recipientId: creatorId,
+        metadata,
+        platformFeeRate: 0.10,
+        paymentMethodId,
+      },
+    );
 
-    return this.subscriptionsRepository.save(subscription);
+    if (!payment?.success) {
+      return {
+        success: false,
+        status: payment?.status ?? 'requires_payment_method',
+        paymentId: payment?.paymentId ?? null,
+        transactionId: payment?.transactionId ?? null,
+        clientSecret: payment?.clientSecret ?? null,
+        subscription: null,
+      };
+    }
+
+    const subscription = payment.fulfillmentCompleted
+      ? await this.subscriptionsRepository.findOne({
+          where: {
+            subscriber: { id: subscriberId },
+            creator: { id: creatorId },
+            tier: metadata.tier,
+            status: SubscriptionStatus.ACTIVE,
+          },
+          relations: ['creator', 'subscriber'],
+        })
+      : await this.fulfillSubscription({
+          id: payment.transactionId,
+          paymentId: payment.paymentId,
+          amount,
+          currency: 'usd',
+          metadata,
+          payer: { id: subscriberId },
+          recipient: { id: creatorId },
+        });
+    if (subscription) {
+      return subscription;
+    }
+
+    return {
+      success: true,
+      status: payment.status,
+      paymentId: payment.paymentId ?? null,
+      transactionId: payment.transactionId ?? null,
+      clientSecret: payment.clientSecret ?? null,
+      subscription: null,
+    };
   }
 
-  async cancelSubscription(subscriptionId: string): Promise<Subscription> {
-    const subscription = await this.subscriptionsRepository.findOne({ where: { id: subscriptionId } });
+  async cancelSubscription(subscriptionId: string, userId?: string): Promise<Subscription> {
+    const subscription = await this.subscriptionsRepository.findOne({
+      where: { id: subscriptionId },
+      relations: ['subscriber'],
+    });
 
     if (!subscription) {
       throw new NotFoundException('Subscription not found');
+    }
+    if (userId && subscription.subscriber?.id !== userId) {
+      throw new ForbiddenException('You can only cancel your own subscriptions');
     }
 
     subscription.status = SubscriptionStatus.CANCELED;
@@ -86,10 +164,16 @@ export class SubscriptionsService {
   }
 
   async getSubscriptions(userId: string): Promise<Subscription[]> {
-    return this.subscriptionsRepository.find({
+    const subscriptions = await this.subscriptionsRepository.find({
       where: { subscriber: { id: userId } },
       relations: ['creator'],
     });
+    const now = Date.now();
+    return subscriptions.filter(
+      (subscription) =>
+        subscription.status === SubscriptionStatus.ACTIVE &&
+        (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now),
+    );
   }
 
   async getSubscribers(userId: string): Promise<Subscription[]> {
@@ -99,14 +183,17 @@ export class SubscriptionsService {
     });
   }
 
-  async getSubscription(subscriptionId: string): Promise<Subscription> {
+  async getSubscription(subscriptionId: string, userId?: string): Promise<Subscription> {
     const subscription = await this.subscriptionsRepository.findOne({
-        where: { id: subscriptionId },
-        relations: ['creator', 'subscriber'],
+      where: { id: subscriptionId },
+      relations: ['creator', 'subscriber'],
     });
 
     if (!subscription) {
-        throw new NotFoundException('Subscription not found');
+      throw new NotFoundException('Subscription not found');
+    }
+    if (userId && subscription.subscriber?.id !== userId) {
+      throw new ForbiddenException('You can only view your own subscriptions');
     }
 
     return subscription;
@@ -238,27 +325,30 @@ export class SubscriptionsService {
       throw new ForbiddenException('You can only update your own bundles');
     }
 
-    if (dto.name !== undefined) bundle.name = dto.name;
-    if (dto.description !== undefined) bundle.description = dto.description;
-    if (dto.isActive !== undefined) bundle.isActive = dto.isActive;
-
-    if (dto.tierIds !== undefined) {
-      const tiers = await this.loadOwnedTiers(creatorId, dto.tierIds);
-      await this.bundleTiersRepository.remove(bundle.tiers);
-      bundle.tiers = tiers.map((tier) =>
-        this.bundleTiersRepository.create({ bundle, tier }),
-      );
-      await this.bundleTiersRepository.save(bundle.tiers);
-    }
-
-    const tierSum = bundle.tiers.reduce((sum, t) => sum + Number(t.tier.price), 0);
+    const nextTierEntities =
+      dto.tierIds !== undefined
+        ? await this.loadOwnedTiers(creatorId, dto.tierIds)
+        : bundle.tiers.map((entry) => entry.tier);
+    const tierSum = nextTierEntities.reduce((sum, tier) => sum + Number(tier.price), 0);
     const price = dto.price !== undefined ? dto.price : Number(bundle.price);
     if (price > tierSum) {
       throw new BadRequestException(
         `Bundle price cannot exceed the sum of its tier prices ($${tierSum.toFixed(2)})`,
       );
     }
+
+    if (dto.name !== undefined) bundle.name = dto.name;
+    if (dto.description !== undefined) bundle.description = dto.description;
+    if (dto.isActive !== undefined) bundle.isActive = dto.isActive;
     bundle.price = price;
+
+    if (dto.tierIds !== undefined) {
+      await this.bundleTiersRepository.remove(bundle.tiers);
+      bundle.tiers = nextTierEntities.map((tier) =>
+        this.bundleTiersRepository.create({ bundle, tier }),
+      );
+      await this.bundleTiersRepository.save(bundle.tiers);
+    }
 
     return this.bundlesRepository.save(bundle);
   }
@@ -277,17 +367,25 @@ export class SubscriptionsService {
     await this.bundlesRepository.remove(bundle);
   }
 
-  async purchaseBundle(subscriberId: string, bundleId: string): Promise<Subscription> {
+  async purchaseBundle(
+    subscriberId: string,
+    bundleId: string,
+    paymentMethodId?: string,
+  ): Promise<Subscription | SubscriptionPaymentResult> {
     const bundle = await this.getBundle(bundleId);
     if (!bundle.isActive) {
       throw new BadRequestException('This bundle is no longer available');
     }
     const creator = bundle.creator;
+    if (subscriberId === creator.id) {
+      throw new BadRequestException('Cannot purchase your own bundle');
+    }
 
     const existing = await this.subscriptionsRepository.findOne({
       where: {
         subscriber: { id: subscriberId },
         creator: { id: creator.id },
+        tier: `bundle:${bundle.name}`,
         status: SubscriptionStatus.ACTIVE,
       },
     });
@@ -300,21 +398,126 @@ export class SubscriptionsService {
       throw new NotFoundException('Subscriber not found');
     }
 
-    await this.paymentsService.processPayment(subscriberId, Number(bundle.price), 'subscription', {
-      currency: 'usd',
-      payerId: subscriberId,
-      recipientId: creator.id,
-      metadata: { bundleId, bundleName: bundle.name, creatorId: creator.id },
-    });
+    const metadata = {
+      fulfillmentType: 'subscription',
+      subscriptionType: 'bundle',
+      subscriberId,
+      creatorId: creator.id,
+      tier: `bundle:${bundle.name}`,
+      bundleId,
+      bundleName: bundle.name,
+    };
+    const payment = await this.paymentsService.processPayment(
+      subscriberId,
+      Number(bundle.price),
+      'subscription',
+      {
+        currency: 'usd',
+        payerId: subscriberId,
+        recipientId: creator.id,
+        metadata,
+        platformFeeRate: 0.10,
+        paymentMethodId,
+      },
+    );
 
+    if (!payment?.success) {
+      return {
+        success: false,
+        status: payment?.status ?? 'requires_payment_method',
+        paymentId: payment?.paymentId ?? null,
+        transactionId: payment?.transactionId ?? null,
+        clientSecret: payment?.clientSecret ?? null,
+        subscription: null,
+      };
+    }
+
+    const subscription = payment.fulfillmentCompleted
+      ? await this.subscriptionsRepository.findOne({
+          where: {
+            subscriber: { id: subscriberId },
+            creator: { id: creator.id },
+            tier: metadata.tier,
+            status: SubscriptionStatus.ACTIVE,
+          },
+          relations: ['creator', 'subscriber'],
+        })
+      : await this.fulfillSubscription({
+          id: payment.transactionId,
+          paymentId: payment.paymentId,
+          amount: Number(bundle.price),
+          currency: 'usd',
+          metadata,
+          payer: { id: subscriberId },
+          recipient: { id: creator.id },
+        });
+    if (subscription) {
+      return subscription;
+    }
+
+    return {
+      success: true,
+      status: payment.status,
+      paymentId: payment.paymentId ?? null,
+      transactionId: payment.transactionId ?? null,
+      clientSecret: payment.clientSecret ?? null,
+      subscription: null,
+    };
+  }
+
+  private async fulfillSubscription(transaction: any): Promise<Subscription | null> {
+    const metadata = transaction?.metadata ?? {};
+    const subscriberId = metadata.subscriberId ?? transaction?.payer?.id;
+    const creatorId = metadata.creatorId ?? transaction?.recipient?.id;
+    const tier = metadata.tier;
+    if (!subscriberId || !creatorId || !tier) {
+      throw new Error('Subscription payment metadata is incomplete');
+    }
+
+    const existing = await this.subscriptionsRepository.findOne({
+      where: {
+        subscriber: { id: subscriberId },
+        creator: { id: creatorId },
+        tier,
+        status: SubscriptionStatus.ACTIVE,
+      },
+      relations: ['creator', 'subscriber'],
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const subscriber = await this.usersService.findOneById(subscriberId);
+    const creator = await this.usersService.findOneById(creatorId);
+    if (!subscriber || !creator) {
+      throw new NotFoundException('Subscription user not found');
+    }
+
+    const requestedExpiry = metadata.expiresAt ? new Date(metadata.expiresAt) : null;
+    const expiresAt =
+      requestedExpiry && !Number.isNaN(requestedExpiry.getTime())
+        ? requestedExpiry
+        : this.oneMonthFromNow();
     const subscription = this.subscriptionsRepository.create({
       subscriber,
       creator,
-      tier: `bundle:${bundle.name}`,
+      tier,
       status: SubscriptionStatus.ACTIVE,
-      expiresAt: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+      expiresAt,
     });
     return this.subscriptionsRepository.save(subscription);
+  }
+
+  private oneMonthFromNow(): Date {
+    const date = new Date();
+    const day = date.getUTCDate();
+    date.setUTCDate(1);
+    date.setUTCMonth(date.getUTCMonth() + 1);
+    const lastDay = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    date.setUTCDate(Math.min(day, lastDay));
+    return date;
   }
 
   private async loadOwnedTiers(
@@ -323,6 +526,9 @@ export class SubscriptionsService {
   ): Promise<SubscriptionTier[]> {
     if (tierIds.length === 0) {
       throw new BadRequestException('A bundle needs at least one tier');
+    }
+    if (new Set(tierIds).size !== tierIds.length) {
+      throw new BadRequestException('A bundle cannot contain duplicate tiers');
     }
     const tiers = await this.subscriptionTiersRepository.find({
       where: { id: In(tierIds) },

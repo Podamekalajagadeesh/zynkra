@@ -8,12 +8,22 @@ import { WalletService } from './wallet.service';
 
 /**
  * USDC contract addresses across supported chains.
+ *
+ * Authoritative source (Circle):
+ * https://developers.circle.com/stablecoins/usdc-contract-addresses
+ *
+ * These are transcribed by hand, so they are pinned by
+ * `crypto-payouts.spec.ts`. Never "fix" a typo here by eyeballing the hex —
+ * a wrong-but-well-formed address sends real funds to an address nobody
+ * controls, and a transfer to an account with no contract code can succeed
+ * while moving nothing. That is why `assertUsdcContract` also checks the
+ * chain actually has code at the address before any money moves.
  */
-const USDC_ADDRESSES: Record<number, string> = {
-  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',  // Ethereum
-  137: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // Polygon
+export const USDC_ADDRESSES: Record<number, string> = {
+  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Ethereum
+  137: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // Polygon PoS
   8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base
-  42161: '0xaf88d065b77c8c223d7d5ac3b63c4c8c6c6b6b6', // Arbitrum
+  42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // Arbitrum One
 };
 
 /** Minimum USDC payout amount (~$0.50 equivalent). */
@@ -102,6 +112,10 @@ export class CryptoPayoutsService {
     if (!signer) {
       throw new ServiceUnavailableException('Crypto payouts are not configured on this instance');
     }
+
+    // Verify the USDC address is a real contract BEFORE the wallet is debited.
+    // See assertUsdcContract for why this is not optional.
+    await this.assertUsdcContract(chainId, usdcAddress, this.getProvider(chainId));
 
     // This is the amount in USD that goes to the user
     // We transfer the same amount in USDC (1:1)
@@ -195,6 +209,47 @@ export class CryptoPayoutsService {
     if (!this.cryptoEnabled) {
       throw new ServiceUnavailableException(
         'Crypto payouts are disabled. Set CRYPTO_PAYOUTS_ENABLED=true and configure a private key.',
+      );
+    }
+  }
+
+  /**
+   * Verify the configured USDC address is well-formed, and that the target chain
+   * actually has a contract deployed there.
+   *
+   * `ethers` will happily construct a Contract against an address that has no
+   * code. Calling `transfer` on it reverts with an opaque ABI error, or on some
+   * chains succeeds while moving no tokens at all — and in both cases the
+   * creator's wallet has already been debited. A single `eth_getCode` before the
+   * debit is the cheapest place to catch a mistyped or wrong-chain address.
+   *
+   * Skips the network check when no provider is configured, since that is
+   * already reported as "not configured on this instance" by the caller.
+   */
+  private async assertUsdcContract(
+    chainId: number,
+    usdcAddress: string,
+    provider: ethers.JsonRpcProvider | null,
+  ): Promise<void> {
+    if (!ethers.isAddress(usdcAddress)) {
+      this.logger.error(
+        `USDC_ADDRESSES[${chainId}] is not a valid address: ${usdcAddress}`,
+      );
+      throw new ServiceUnavailableException(
+        'Crypto payouts are misconfigured: the USDC contract address is malformed. Refusing to move funds.',
+      );
+    }
+
+    if (!provider) return;
+
+    const code = await provider.getCode(usdcAddress);
+    if (!code || code === '0x') {
+      this.logger.error(
+        `No contract deployed at USDC address ${usdcAddress} on chain ${chainId}. ` +
+          'The address is wrong, or the RPC endpoint is pointing at a different network.',
+      );
+      throw new ServiceUnavailableException(
+        'Crypto payouts are misconfigured: no USDC contract at the configured address on this network. Refusing to move funds.',
       );
     }
   }

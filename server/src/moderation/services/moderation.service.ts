@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { ModerationQueueItemEntity } from '../entities/moderation-queue-item.entity';
 import { ContentFlagEntity } from '../entities/content-flag.entity';
+import { ModerationMitigationEntity } from '../entities/moderation-mitigation.entity';
 import { DeepfakeDetectionService, DeepfakeDetectionResult } from './deepfake-detection.service';
 import { BiasDetectionService, BiasDetectionResult } from './bias-detection.service';
 import { AnalyzeContentDto } from '../dto/analyze-content.dto';
@@ -26,14 +28,14 @@ export interface ContentAnalysisResult {
 @Injectable()
 export class ModerationService {
   private readonly logger = new Logger(ModerationService.name);
-  private feedMetricsHistory: any[] = [];
-  private biasMitigationsApplied: any[] = [];
 
   constructor(
     @InjectRepository(ModerationQueueItemEntity)
     private moderationQueueRepository: Repository<ModerationQueueItemEntity>,
     @InjectRepository(ContentFlagEntity)
     private contentFlagRepository: Repository<ContentFlagEntity>,
+    @InjectRepository(ModerationMitigationEntity)
+    private moderationMitigationRepository: Repository<ModerationMitigationEntity>,
     private deepfakeDetectionService: DeepfakeDetectionService,
     private biasDetectionService: BiasDetectionService,
     private readonly openRouter: OpenRouterService,
@@ -309,27 +311,107 @@ Return valid JSON ONLY with this exact shape:
     await this.moderationQueueRepository.save(queueItem);
   }
 
+  /**
+   * Feed-representation metrics, computed from the moderation queue.
+   *
+   * This previously read `feedMetricsHistory`, an in-process array that nothing
+   * ever appended to, so the endpoint always returned `[]`. The data it needs is
+   * already persisted in `moderation_queue_items`, so derive it from there
+   * instead of from a dead field.
+   */
   async getFeedRepresentationMetrics(timeframe?: string) {
-    if (timeframe) {
-      const cutoffDate = new Date();
-      if (timeframe === 'week') cutoffDate.setDate(cutoffDate.getDate() - 7);
-      if (timeframe === 'month') cutoffDate.setMonth(cutoffDate.getMonth() - 1);
-      if (timeframe === 'year') cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
-      return this.feedMetricsHistory.filter((m) => new Date(m.timestamp) > cutoffDate);
-    }
-    return this.feedMetricsHistory;
+    const cutoff = this.timeframeCutoff(timeframe);
+
+    const where = cutoff ? MoreThan(cutoff) : undefined;
+    const [total, flagged, removed, appealed, systemBias] = await Promise.all([
+      this.moderationQueueRepository.count(where ? { createdAt: where } : {}),
+      this.moderationQueueRepository.count({
+        ...(where ? { createdAt: where } : {}),
+        status: 'pending',
+      }),
+      this.moderationQueueRepository.count({
+        ...(where ? { createdAt: where } : {}),
+        status: 'removed',
+      }),
+      this.moderationQueueRepository.count({
+        ...(where ? { createdAt: where } : {}),
+        status: 'appealed',
+      }),
+      this.moderationQueueRepository.count({
+        ...(where ? { createdAt: where } : {}),
+        contentType: 'system',
+      }),
+    ]);
+
+    const enforced = removed + appealed;
+    const enforcementRate = total === 0 ? 0 : Math.round((enforced / total) * 100);
+
+    return {
+      timeframe: timeframe ?? 'all',
+      computedAt: new Date().toISOString(),
+      source: 'moderation_queue',
+      totalItems: total,
+      pending: flagged,
+      removed,
+      appealed,
+      // Enforced items where a human overrode the automated recommendation.
+      appealRate: enforced === 0 ? 0 : Math.round((appealed / enforced) * 100),
+      enforcementRate,
+      algorithmicBiasFlags: systemBias,
+      note:
+        total === 0
+          ? 'No moderation activity in this timeframe; representation cannot be assessed.'
+          : undefined,
+    };
   }
 
-  async applyBiasMitigations(mitigationStrategy: any) {
-    this.biasMitigationsApplied.push({
-      timestamp: new Date().toISOString(),
-      strategy: mitigationStrategy,
+  private timeframeCutoff(timeframe?: string): Date | null {
+    if (!timeframe) return null;
+    const cutoff = new Date();
+    if (timeframe === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (timeframe === 'month') cutoff.setMonth(cutoff.getMonth() - 1);
+    else if (timeframe === 'year') cutoff.setFullYear(cutoff.getFullYear() - 1);
+    else return null;
+    return cutoff;
+  }
+
+  /**
+   * Record an applied bias-mitigation strategy.
+   *
+   * Previously this pushed into an in-process array that nothing read, so the
+   * response said "applied" while leaving no trace. Now it is persisted, so the
+   * action is auditable and survives a restart.
+   */
+  async applyBiasMitigations(mitigationStrategy: any, appliedById?: string | null) {
+    const record = this.moderationMitigationRepository.create({
+      strategy: mitigationStrategy ?? {},
+      appliedById: appliedById ?? null,
+      appliedAt: new Date(),
     });
+    const saved = await this.moderationMitigationRepository.save(record);
+
+    this.logger.log(`Recorded bias mitigation ${saved.id}`);
+
     return {
       success: true,
-      message: 'Bias mitigation strategies have been applied',
-      appliedAt: new Date().toISOString(),
+      message: 'Bias mitigation strategies have been recorded',
+      id: saved.id,
+      appliedAt: saved.appliedAt?.toISOString() ?? new Date().toISOString(),
     };
+  }
+
+  /** Mitigation history, newest first. */
+  async listBiasMitigations(limit = 50) {
+    const records = await this.moderationMitigationRepository.find({
+      order: { appliedAt: 'DESC' },
+      take: Math.min(Math.max(limit, 1), 200),
+    });
+    return records.map((r) => ({
+      id: r.id,
+      strategy: r.strategy,
+      appliedById: r.appliedById,
+      appliedAt: r.appliedAt,
+    }));
   }
 
   // Bias analysis — uses actual data when available, no Math.random()
@@ -481,6 +563,7 @@ Return valid JSON ONLY with this exact shape:
   }
 
   private generateId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    // randomUUID, not Math.random(): these ids are embedded in audit records.
+    return randomUUID();
   }
 }

@@ -236,10 +236,10 @@ These features represent the full Zynkra vision. They are aspirational goals tha
 - [ ] Offline queue with conflict resolution
 
 ### AI
-- [ ] On-device LLM (WebLLM — runs 100% in browser)
-- [ ] AI chatbot (community FAQ)
-- [ ] AI copilot (content suggestions)
-- [ ] Sentiment analysis on posts
+- [x] On-device LLM (WebLLM — Preview panel; not default AI path)
+- [x] AI chatbot (community FAQ) — Preview (OpenRouter cloud)
+- [x] AI copilot (content suggestions) — Preview (OpenRouter cloud)
+- [x] Sentiment analysis on posts (server-side lexicon)
 - [ ] Content moderation (ML-powered)
 
 ### Advanced Monetization

@@ -12,10 +12,15 @@ import LiveStreamChat from '../components/LiveStreamChat';
 import SpatialAudioControls from '../components/SpatialAudioControls';
 import { Room, LocalVideoTrack, RoomEvent, Track } from 'livekit-client';
 import { io } from 'socket.io-client';
+import { API_BASE_URL } from '../lib/api';
+import { getAuthToken } from '../lib/auth-storage';
 import { spatialAudioService } from '../services/spatialAudio';
 
-// LiveKit socket connection to our backend
-const socket = io('http://localhost:3001');
+// LiveKit socket connection to our backend. The gateway authenticates the
+// handshake and derives identity from this token, so it must be present — and
+// the port must match the server (PORT, default 3000; this used to be 3001,
+// which never connected).
+const socket = io(API_BASE_URL, { auth: { token: getAuthToken() } });
 
 export const LiveStreamPage = () => {
   const [isTipping, setIsTipping] = useState(false);
@@ -51,12 +56,12 @@ export const LiveStreamPage = () => {
     // Listen for stream invites as guest
     socket.on('stream-invite', async ({ roomName, hostId }) => {
       const accepted = window.confirm(`You have been invited to join the stream as a guest. Accept?`);
-      if (accepted && currentUser?.id) {
-        // Join as guest (can publish)
-        socket.emit('join-stream', { 
-          roomName, 
-          userId: currentUser.id, 
-          isHost: false 
+      if (accepted) {
+        // Join as guest (can publish). The server derives identity from the
+        // authenticated socket — sending userId here is ignored.
+        socket.emit('join-stream', {
+          roomName,
+          isHost: false
         });
       }
     });
@@ -86,7 +91,10 @@ export const LiveStreamPage = () => {
   const connectToLiveKit = async (token: string, roomName: string) => {
     try {
       const newRoom = new Room();
-      await newRoom.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', token);
+      // Vite exposes env vars on import.meta.env; process.env is always undefined
+      // in the browser bundle.
+      const livekitUrl = import.meta.env.VITE_LIVEKIT_URL || 'wss://your-livekit-instance.com';
+      await newRoom.connect(livekitUrl, token);
       setRoom(newRoom);
 
       // Initialize spatial audio service with the LiveKit room
@@ -130,10 +138,11 @@ export const LiveStreamPage = () => {
         userVideo.current.srcObject = stream;
       }
 
-      // Request LiveKit token from backend (host = can publish)
+      // Request LiveKit token from backend (host = can publish).
+      // Identity comes from the authenticated socket; only the intent to host
+      // is declared here.
       socket.emit('join-stream', {
         roomName: 'zynkra-main-stream',
-        userId: currentUser.id,
         isHost: true
       });
 
@@ -149,11 +158,10 @@ export const LiveStreamPage = () => {
   const handleInviteGuest = () => {
     if (!guestId || !currentUser?.id) return;
     
-    // Send invite to guest through backend
+    // Send invite to guest through backend (host identity is server-derived)
     socket.emit('invite-guest', {
       roomName: 'zynkra-main-stream',
-      guestId: guestId,
-      hostId: currentUser.id
+      guestId: guestId
     });
     
     addToast(`Invitation sent to ${guestId}`, 'success');
@@ -168,7 +176,7 @@ export const LiveStreamPage = () => {
     setIsStreaming(false);
     setParticipants([]);
     stopRecording();
-    socket.emit('leave-stream', { roomName: 'zynkra-main-stream', userId: currentUser?.id });
+    socket.emit('leave-stream', { roomName: 'zynkra-main-stream' });
   };
 
   const startRecording = (stream: MediaStream) => {

@@ -1,9 +1,21 @@
-import { Controller, Post, Get, Param, Delete, UseGuards, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  BadRequestException,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { IpfsService } from './ipfs.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
-import { createReadStream } from 'fs';
-import { join } from 'path';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('ipfs')
@@ -12,6 +24,7 @@ export class IpfsController {
   constructor(private readonly ipfsService: IpfsService) {}
 
   @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile(
       new ParseFilePipe({
@@ -24,6 +37,9 @@ export class IpfsController {
     file: Express.Multer.File,
     @CurrentUser() user: User,
   ): Promise<{ cid: string; url: string }> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
     const cid = await this.ipfsService.upload(file.buffer);
     return {
       cid,

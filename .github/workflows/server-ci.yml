@@ -20,7 +20,7 @@ jobs:
         run: npm ci
       - name: Check formatting
         working-directory: server
-        run: npm run format -- --check
+        run: npm run format:check
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -91,12 +91,28 @@ jobs:
           }
           if (failed) process.exit(1);
           "
+      - name: Federation specs (signing, inbound verification, SSRF guards)
+        working-directory: server
+        # Standalone because the inbound-verification suite generates RSA keys
+        # and performs DNS lookups; it is slower than a pure unit test.
+        run: npm run test:federation
+      - name: Claim-proving specs (E2EE, portability, federation discovery)
+        working-directory: server
+        # These three files were never executed by any script or CI step: both
+        # `test:unit` and `test:coverage` pass --testPathIgnorePatterns=/test/,
+        # and every other script names its paths explicitly. They are the only
+        # evidence for the E2EE, portability, and WebFinger/NodeInfo claims.
+        run: npm run test:claims
       - name: Core loop tests
         working-directory: server
-        run: npx jest --runInBand --runTestsByPath test/core-loop.test.ts
+        run: npm run test:core
+      - name: Core loop tests (real Postgres)
+        working-directory: server
+        run: npm run test:core-db
       - name: Money path tests
         working-directory: server
-        run: npx jest --runInBand --runTestsByPath test/money-path.test.ts
+        run: npx jest --runInBand --runTestsByPath test/money-path.test.ts test/payments.payouts.spec.ts test/payments.webhooks.spec.ts test/payments.reconciliation.spec.ts
+
 
   test-e2e:
     runs-on: ubuntu-latest
@@ -130,6 +146,20 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm ci
+      # Exits 1 on findings, so this job can now actually go red. It previously
+      # ran a version of the script that always exited 0.
       - name: Security audit
         working-directory: server
         run: node scripts/security-audit.js
+      # Informational for now: the dependency tree predates this job and is not
+      # yet clean. Flip `continue-on-error` to false once it is.
+      - name: Dependency audit (advisory)
+        continue-on-error: true
+        working-directory: server
+        run: npm audit --audit-level=high
+      # Verifies all 65+ migrations apply to an empty database. Slow (boots an
+      # embedded Postgres), so it is advisory rather than blocking.
+      - name: Validate migrations (advisory)
+        continue-on-error: true
+        working-directory: server
+        run: npm run migration:verify

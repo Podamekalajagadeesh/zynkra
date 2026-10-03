@@ -120,6 +120,10 @@ export default defineConfig({
       '/reports': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/keys': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/webhooks': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
+      // ActivityPub surface. Without this the /federation page 404s in dev:
+      // API_BASE_URL falls back to the dev server's own origin, and an unlisted
+      // path is served by Vite instead of proxied to Nest.
+      '/federation': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/places': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/uploads': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/api': { target: 'http://localhost:3000', changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, ''), ws: true },

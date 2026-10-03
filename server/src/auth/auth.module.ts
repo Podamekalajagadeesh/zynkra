@@ -18,13 +18,12 @@ import { TwitterStrategy } from './strategies/twitter.strategy';
 import { AppleStrategy } from './strategies/apple.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { WebauthnService } from './webauthn.service';
-import { BiometricAuthService } from './biometric-auth.service';
 import { LoginSession } from './entities/login-session.entity';
 import { User } from '../users/entities/user.entity';
 import { CaptchaService } from './captcha.service';
 import { InviteCodesModule } from '../invite-codes/invite-codes.module';
 import { BrainwaveDevice } from './entities/brainwave-device.entity';
-import { BiometricDeviceEntity } from './entities/biometric-device.entity';
+import { CaptchaChallengeEntity } from './entities/captcha-challenge.entity';
 import { SecurityAuditModule } from '../security-audit/security-audit.module';
 import { AccountManagementModule } from '../features/account-management/account-management.module';
 
@@ -37,7 +36,13 @@ import { AccountManagementModule } from '../features/account-management/account-
     InviteCodesModule,
     SecurityAuditModule,
     AccountManagementModule,
-    TypeOrmModule.forFeature([Authenticator, LoginSession, User, BrainwaveDevice, BiometricDeviceEntity]),
+    TypeOrmModule.forFeature([
+      Authenticator,
+      LoginSession,
+      User,
+      BrainwaveDevice,
+      CaptchaChallengeEntity,
+    ]),
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -54,7 +59,6 @@ import { AccountManagementModule } from '../features/account-management/account-
     CaptchaService,
     JwtStrategy,
     WebauthnService,
-    BiometricAuthService,
     GoogleStrategy,
     FacebookStrategy,
     GitHubStrategy,
@@ -62,6 +66,12 @@ import { AccountManagementModule } from '../features/account-management/account-
     TwitterStrategy,
     AppleStrategy,
   ],
-  exports: [AuthService, WebauthnService, BiometricAuthService, JwtModule],
+  // `BiometricAuthService` and its `biometric_devices` / `biometric_challenges`
+  // entities were removed. They duplicated what `/auth/webauthn/*` (passkeys)
+  // already does correctly, had no callers anywhere in the client, and the
+  // `biometric_devices` table had no migration — so with `synchronize: false`
+  // those routes could not have worked on a cleanly-migrated database anyway.
+  // Do not reintroduce them; use passkeys for device-bound authentication.
+  exports: [AuthService, WebauthnService, JwtModule],
 })
 export class AuthModule {}

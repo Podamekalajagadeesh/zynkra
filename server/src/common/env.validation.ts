@@ -14,6 +14,39 @@ export const envValidationSchema = Joi.object({
   // "remember me" flow uses a longer lifetime via JWT_REMEMBER_ME_EXPIRES.
   JWT_EXPIRES_IN: Joi.string().default('60m').optional(),
   JWT_REMEMBER_ME_EXPIRES: Joi.string().default('30d').optional(),
+  JWT_AUDIENCE: Joi.string().min(1).default('zynkra-api').optional(),
+  JWT_2FA_SECRET: Joi.string().min(32).optional(),
+
+  // Require a CAPTCHA on signin as well as signup. Off by default so existing
+  // clients that do not send a challenge keep working; when on, POST /auth/signin
+  // fails without a valid captchaId + captchaAnswer.
+  CAPTCHA_REQUIRED_ON_SIGNIN: Joi.string().valid('true', 'false').optional().default('false'),
+
+  // Risk-based CAPTCHA escalation. Once an identifier has this many failed
+  // sign-ins inside the window, a CAPTCHA is demanded even when
+  // CAPTCHA_REQUIRED_ON_SIGNIN is off. Counted from security_audit_logs, so it
+  // is shared across instances. 0 disables the risk trigger.
+  CAPTCHA_FAILURE_THRESHOLD: Joi.number().integer().min(0).default(3),
+  CAPTCHA_FAILURE_WINDOW_MINUTES: Joi.number().integer().min(1).default(15),
+
+  // Double-submit CSRF protection for the session-authenticated routes
+  // (webauthn verification, SIWE verify, wallet connect). Bearer-token requests
+  // and safe methods always bypass the check, so this only affects flows whose
+  // sole credential is the session cookie. Set false to disable.
+  CSRF_PROTECTION_ENABLED: Joi.string().valid('true', 'false').optional().default('true'),
+  CSRF_COOKIE_NAME: Joi.string().min(1).default('zynkra.csrf').optional(),
+
+  // Server-side idle timeout, in minutes, applied on every authenticated
+  // request against LoginSession.lastSeenAt. An expired session is revoked.
+  // 0 disables it, which is the default: existing deployments rely on JWT
+  // expiry alone, and turning this on logs users out mid-workflow.
+  SESSION_IDLE_TIMEOUT_MINUTES: Joi.number().integer().min(0).default(0),
+
+  // Email verification code redemption. The code is 6 digits, so a per-account
+  // attempt counter with a lockout is the real barrier; the per-IP throttle is
+  // only the first of two.
+  VERIFICATION_CODE_MAX_ATTEMPTS: Joi.number().integer().min(1).default(5),
+  VERIFICATION_CODE_LOCKOUT_MINUTES: Joi.number().integer().min(1).default(15),
   SESSION_SECRET: Joi.string().min(32).required().messages({
     'any.required': 'SESSION_SECRET is not set — see server/.env.example',
     'string.min': 'SESSION_SECRET must be at least 32 characters',
@@ -33,6 +66,38 @@ export const envValidationSchema = Joi.object({
 
   CLIENT_URL: Joi.string().uri().optional(),
   PORT: Joi.number().port().default(3000),
+
+  // Reverse-proxy hops to trust for X-Forwarded-For. `1` matches a typical
+  // single-proxy deploy. Set to `false` when the server is directly exposed.
+  // NEVER set `true`: that means "believe any client's forwarded header", which
+  // lets a client spoof its IP and defeat new-device login detection.
+  TRUST_PROXY: Joi.alternatives()
+    .try(Joi.boolean(), Joi.number().integer().min(0), Joi.string().valid('false', 'true'))
+    .default(1),
+
+  // Bound on the in-memory translation cache. The cache key includes
+  // attacker-supplied text, so it must not be able to grow without limit.
+  TRANSLATION_CACHE_MAX_ENTRIES: Joi.number().integer().min(0).default(1000),
+
+  // WebSocket / real-time.
+  // Allowed socket origins, comma-separated. Falls back to CLIENT_URL, plus the
+  // local dev origins when NODE_ENV is not production. In production an empty
+  // value means sockets accept no browser origin.
+  WS_ALLOWED_ORIGINS: Joi.string().allow('').optional(),
+  // Inbound socket messages allowed per socket per minute. Once exceeded the
+  // message is dropped; after WS_RATE_LIMIT_CLOSE_AFTER consecutive violations
+  // the socket is disconnected.
+  WS_RATE_LIMIT_PER_MINUTE: Joi.number().integer().min(1).default(240),
+  WS_RATE_LIMIT_CLOSE_AFTER: Joi.number().integer().min(1).default(5),
+
+  // The /mobile/feed + /mobile/posts demo endpoints serve a hardcoded in-memory
+  // array and accept unauthenticated writes. Off by default; only enable for
+  // local Expo prototyping. The mobile client should use the real API instead.
+  MOBILE_DEMO_ENDPOINTS_ENABLED: Joi.string().valid('true', 'false').optional().default('false'),
+
+  // Media / uploads (local disk backend; optional CDN origin)
+  UPLOAD_DIR: Joi.string().optional().default('./uploads'),
+  CDN_BASE_URL: Joi.string().uri().allow('').optional(),
 
   // Observability (optional — features are off when unset)
   SENTRY_DSN: Joi.string().uri().allow('').optional(),

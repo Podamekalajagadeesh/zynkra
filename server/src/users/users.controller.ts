@@ -19,7 +19,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UsersService } from './users.service';
+import {
+  toPublicUserResponse,
+  toSearchUserResponse,
+  toSelfUserResponse,
+  UsersService,
+} from './users.service';
 import { PagesService } from '../pages/pages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -48,39 +53,68 @@ export class UsersController {
     private readonly visibilityService: VisibilityService,
   ) {}
 
+  private mapPublicUsers(users: User[] | null | undefined) {
+    return (users ?? []).map((user) => toPublicUserResponse(user));
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch('me/face-recognition')
   async updateFaceRecognition(
     @Request() req,
     @Body() updateFaceRecognitionDto: UpdateFaceRecognitionDto,
-  ): Promise<User> {
-    return this.usersService.updateFaceRecognition(
+  ) {
+    const user = await this.usersService.updateFaceRecognition(
       req.user.userId,
       updateFaceRecognitionDto,
     );
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadAvatar(@Request() req, @UploadedFile() file: any): Promise<User> {
-    return this.usersService.updateAvatar(req.user.userId, file);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype?.startsWith('image/')) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Avatar must be an image'), false);
+        }
+      },
+    }),
+  )
+  async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    const user = await this.usersService.updateAvatar(req.user.userId, file);
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype?.startsWith('image/')) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Avatar must be an image'), false);
+        }
+      },
+    }),
+  )
   async updateProfile(
     @Request() req,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
   ) {
-    return this.usersService.updateProfile(req.user.userId, updateUserDto, avatar);
+    const user = await this.usersService.updateProfile(req.user.userId, updateUserDto, avatar);
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getCurrentUser(@Request() req): Promise<Omit<User, 'password_hash'>> {
+  async getCurrentUser(@Request() req) {
     const user = await this.usersService.findOneById(req.user.userId, [
       'following',
       'followers',
@@ -88,8 +122,7 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { ...result } = user;
-    return result;
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -97,8 +130,9 @@ export class UsersController {
   async update(
     @Request() req,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    return this.usersService.update(req.user.userId, updateUserDto);
+  ) {
+    const user = await this.usersService.update(req.user.userId, updateUserDto);
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -205,8 +239,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('restricted')
-  async getRestrictedUsers(@Request() req): Promise<User[]> {
-    return this.usersService.getRestrictedUsers(req.user.userId);
+  async getRestrictedUsers(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getRestrictedUsers(req.user.userId));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -225,8 +259,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('blocked')
-  async getBlockedUsers(@Request() req): Promise<User[]> {
-    return this.usersService.getBlockedUsers(req.user.userId);
+  async getBlockedUsers(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getBlockedUsers(req.user.userId));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -245,8 +279,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('muted')
-  async getMutedUsers(@Request() req): Promise<User[]> {
-    return this.usersService.getMutedUsers(req.user.userId);
+  async getMutedUsers(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getMutedUsers(req.user.userId));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -284,10 +318,10 @@ export class UsersController {
   // Must be declared before the ':username' catch-all route below.
   @UseGuards(JwtAuthGuard)
   @Get('suggestions')
-  async getFollowSuggestions(@Request() req): Promise<{ users: User[], pages: Page[] }> {
+  async getFollowSuggestions(@Request() req): Promise<{ users: Record<string, any>[]; pages: Page[] }> {
     const users = await this.usersService.findFollowSuggestions(req.user.userId);
     const pages = await this.pagesService.findPageSuggestions(req.user.userId);
-    return { users, pages };
+    return { users: this.mapPublicUsers(users) as Record<string, any>[], pages };
   }
 
 
@@ -297,10 +331,11 @@ export class UsersController {
   async findByUsername(
     @Request() req,
     @Param('username') username: string,
-  ): Promise<User | null> {
+  ) {
     const requestingUserId = req.user ? req.user.userId : undefined;
     const user = await this.usersService.findByUsername(username, [], requestingUserId);
-    return this.filterActivityFields(user, requestingUserId);
+    const visibleUser = await this.filterActivityFields(user, requestingUserId);
+    return toPublicUserResponse(visibleUser);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -394,7 +429,7 @@ export class UsersController {
     @Param('id') id: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
-  ): Promise<Omit<User, 'password_hash'>> {
+  ) {
     const currentUserId = req.user?.userId;
     const user = await this.usersService.findOneWithPosts(
       id,
@@ -405,8 +440,8 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const result = this.filterActivityFields(user, currentUserId);
-    return result;
+    const result = await this.filterActivityFields(user, currentUserId);
+    return toPublicUserResponse(result);
   }
 
   private async filterActivityFields<T extends User | null | undefined>(
@@ -425,9 +460,10 @@ export class UsersController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get('search')
-  async searchUsers(@Request() req, @Query('q') query: string): Promise<User[]> {
+  async searchUsers(@Request() req, @Query('q') query: string) {
     const searchingUserId = req.user ? req.user.userId : undefined;
-    return this.usersService.search(query, searchingUserId);
+    const users = await this.usersService.search(query, searchingUserId);
+    return users.map((user) => toSearchUserResponse(user));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -444,8 +480,8 @@ export class UsersController {
   async getMutualFollows(
     @Request() req,
     @Param('id') id: string,
-  ): Promise<User[]> {
-    return this.usersService.findMutualFollows(req.user.userId, id);
+  ) {
+    return this.mapPublicUsers(await this.usersService.findMutualFollows(req.user.userId, id));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -464,8 +500,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me/close-friends')
-  async getCloseFriends(@Request() req): Promise<User[]> {
-    return this.usersService.getCloseFriends(req.user.userId);
+  async getCloseFriends(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getCloseFriends(req.user.userId));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -473,20 +509,21 @@ export class UsersController {
   async updateCloseFriends(
     @Request() req,
     @Body() { closeFriendIds }: { closeFriendIds: string[] },
-  ): Promise<User> {
-    return this.usersService.updateCloseFriends(req.user.userId, closeFriendIds);
+  ) {
+    const user = await this.usersService.updateCloseFriends(req.user.userId, closeFriendIds);
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me/followers')
-  async getMyFollowers(@Request() req): Promise<User[]> {
-    return this.usersService.getFollowers(req.user.userId);
+  async getMyFollowers(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getFollowers(req.user.userId));
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me/following')
-  async getMyFollowing(@Request() req): Promise<User[]> {
-    return this.usersService.getFollowing(req.user.userId);
+  async getMyFollowing(@Request() req) {
+    return this.mapPublicUsers(await this.usersService.getFollowing(req.user.userId));
   }
 
   @UseGuards(OptionalJwtAuthGuard)
@@ -494,8 +531,8 @@ export class UsersController {
   async getUserFollowers(
     @Request() req,
     @Param('id') id: string,
-  ): Promise<User[]> {
-    return this.usersService.getUserFollowers(id, req.user?.userId);
+  ) {
+    return this.mapPublicUsers(await this.usersService.getUserFollowers(id, req.user?.userId));
   }
 
   @UseGuards(OptionalJwtAuthGuard)
@@ -503,8 +540,8 @@ export class UsersController {
   async getUserFollowing(
     @Request() req,
     @Param('id') id: string,
-  ): Promise<User[]> {
-    return this.usersService.getUserFollowing(id, req.user?.userId);
+  ) {
+    return this.mapPublicUsers(await this.usersService.getUserFollowing(id, req.user?.userId));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -532,8 +569,9 @@ export class UsersController {
   async updateNotificationSettings(
     @Request() req,
     @Body() settings: NotificationSettingsDto,
-  ): Promise<User> {
-    return this.usersService.updateNotificationSettings(req.user.userId, settings);
+  ) {
+    const user = await this.usersService.updateNotificationSettings(req.user.userId, settings);
+    return toSelfUserResponse(user);
   }
 
   @UseGuards(JwtAuthGuard)

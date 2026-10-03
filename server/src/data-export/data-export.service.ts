@@ -137,6 +137,8 @@ export class DataExportService {
       archive.pipe(output);
       archive.file(filePath, { name: 'data.json' });
       const mediaUrls = [
+        userData.user?.avatar,
+        userData.user?.header,
         ...userData.posts.flatMap((post) => post.media?.map((media) => media.url) ?? []),
         ...userData.stories.map((story) => story.mediaUrl),
         ...userData.messages.map((message) => message.mediaUrl),

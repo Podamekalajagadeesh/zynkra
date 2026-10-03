@@ -13,13 +13,17 @@ import { WalletService } from '../wallet/wallet.service';
 
 export interface TipResult {
   success: boolean;
-  tipId: string;
+  tipId: string | null;
   amount: number;
   currency: string;
   method: 'fiat' | 'crypto';
   fromUserId: string;
   toUserId: string;
   postId?: string;
+  paymentId?: string | null;
+  transactionId?: string | null;
+  clientSecret?: string | null;
+  status?: string;
 }
 
 @Injectable()
@@ -34,7 +38,13 @@ export class TippingService {
     private readonly reputationService: ReputationService,
     private readonly paymentsService: PaymentsService,
     private readonly walletService: WalletService,
-  ) {}
+  ) {
+    if (typeof this.paymentsService.registerFulfillmentHandler === 'function') {
+      this.paymentsService.registerFulfillmentHandler('tip', async (transaction) => {
+        await this.fulfillFiatTip(transaction);
+      });
+    }
+  }
 
   /**
    * Create a fiat tip using Stripe via PaymentsService
@@ -45,6 +55,7 @@ export class TippingService {
     amount: number,
     postId?: string,
     currency: string = 'usd',
+    paymentMethodId?: string,
   ): Promise<TipResult> {
     if (amount <= 0) {
       throw new BadRequestException('Tip amount must be greater than zero');
@@ -73,29 +84,58 @@ export class TippingService {
       }
     }
 
-    // Process payment via Stripe
-    await this.paymentsService.processPayment(fromUserId, amount, 'tip', {
-      currency,
-      payerId: fromUserId,
-      recipientId: toUserId,
-      metadata: { postId, type: 'tip' },
-    });
-
-    // Create tip record
-    const tip = this.tipsRepository.create({
-      from: fromUser,
-      to: toUser,
+    const metadata = {
+      fulfillmentType: 'tip',
+      fromUserId,
+      toUserId,
+      postId,
+      type: 'tip',
+    };
+    const payment = await this.paymentsService.processPayment(
+      fromUserId,
       amount,
-      currency,
-      post,
-      method: 'fiat',
-    });
+      'tip',
+      {
+        currency,
+        payerId: fromUserId,
+        recipientId: toUserId,
+        metadata,
+        platformFeeRate: 0.10,
+        paymentMethodId,
+      },
+    );
 
-    const savedTip = await this.tipsRepository.save(tip);
+    if (!payment?.success) {
+      return {
+        success: false,
+        tipId: null,
+        amount,
+        currency,
+        method: 'fiat',
+        fromUserId,
+        toUserId,
+        postId,
+        paymentId: payment?.paymentId ?? null,
+        transactionId: payment?.transactionId ?? null,
+        clientSecret: payment?.clientSecret ?? null,
+        status: payment?.status ?? 'requires_payment_method',
+      };
+    }
 
-    // Add reputation
-    await this.reputationService.addReputation(ReputationEvent.TIP_SENT, fromUser);
-    await this.reputationService.addReputation(ReputationEvent.TIP_RECEIVED, toUser);
+    const savedTip = payment.fulfillmentCompleted
+      ? await this.tipsRepository.findOne({ where: { txHash: payment.paymentId } })
+      : await this.fulfillFiatTip({
+          id: payment.transactionId,
+          paymentId: payment.paymentId,
+          amount,
+          currency,
+          metadata,
+          payer: { id: fromUserId },
+          recipient: { id: toUserId },
+        });
+    if (!savedTip) {
+      throw new Error('Fiat tip payment succeeded but the tip was not created');
+    }
 
     return {
       success: true,
@@ -106,7 +146,52 @@ export class TippingService {
       fromUserId,
       toUserId,
       postId,
+      paymentId: payment.paymentId ?? null,
+      transactionId: payment.transactionId ?? null,
+      clientSecret: payment.clientSecret ?? null,
+      status: payment.status,
     };
+  }
+
+  private async fulfillFiatTip(transaction: any): Promise<Tip | null> {
+    const metadata = transaction?.metadata ?? {};
+    const fromUserId = metadata.fromUserId ?? transaction?.payer?.id;
+    const toUserId = metadata.toUserId ?? transaction?.recipient?.id;
+    const paymentId = transaction?.paymentId ?? transaction?.id;
+    if (!fromUserId || !toUserId || !paymentId) {
+      throw new Error('Tip payment metadata is incomplete');
+    }
+
+    const existing = await this.tipsRepository.findOne({
+      where: { txHash: paymentId },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const fromUser = await this.usersRepository.findOne({ where: { id: fromUserId } });
+    const toUser = await this.usersRepository.findOne({ where: { id: toUserId } });
+    if (!fromUser || !toUser) {
+      throw new NotFoundException('Tip user not found');
+    }
+
+    const postId = metadata.postId;
+    const post = postId
+      ? await this.postsRepository.findOne({ where: { id: postId } })
+      : undefined;
+    const tip = this.tipsRepository.create({
+      from: fromUser,
+      to: toUser,
+      amount: Number(transaction.amount),
+      currency: transaction.currency ?? 'usd',
+      txHash: paymentId,
+      post,
+      method: 'fiat',
+    });
+    const savedTip = await this.tipsRepository.save(tip);
+    await this.reputationService.addReputation(ReputationEvent.TIP_SENT, fromUser);
+    await this.reputationService.addReputation(ReputationEvent.TIP_RECEIVED, toUser);
+    return savedTip;
   }
 
   /**

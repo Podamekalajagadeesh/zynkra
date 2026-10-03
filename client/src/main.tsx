@@ -11,6 +11,7 @@ import { config } from './lib/web3';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { initializeOfflineSync } from './lib/offlineSync';
+import { primeCsrfToken } from './lib/api';
 import { SocketProvider } from './hooks/useSocket';
 
 // Color blindness correction SVG filters
@@ -93,6 +94,11 @@ const queryClient = new QueryClient();
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 initializeOfflineSync();
 void unregisterStaleMockServiceWorker();
+
+// Prime the CSRF token for the routes authenticated by the session cookie
+// (WebAuthn verification, SIWE verify, wallet connect). Bearer-token calls and
+// safe methods do not need it.
+void primeCsrfToken();
 
 // MSW is disabled to avoid ERR_NETWORK from stale cached service worker.
 // The Vite proxy handles API forwarding in dev mode instead.

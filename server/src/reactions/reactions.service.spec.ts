@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ReactionsService } from './reactions.service';
 import { PostReaction } from '../posts/entities/post-reaction.entity';
@@ -7,11 +7,15 @@ import { PostsService } from '../posts/posts.service';
 import { Post } from '../posts/entities/post.entity';
 import { User } from '../users/entities/user.entity';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 describe('ReactionsService', () => {
   let service: ReactionsService;
   let postReactionsRepo: jest.Mocked<any>;
   let postsService: jest.Mocked<PostsService>;
+  let notificationsService: jest.Mocked<NotificationsService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,8 +38,16 @@ describe('ReactionsService', () => {
           },
         },
         {
+          provide: UsersService,
+          useValue: { findOneById: jest.fn().mockResolvedValue({ id: 'user-1' }) },
+        },
+        {
+          provide: NotificationsService,
+          useValue: { createNotification: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
           provide: WebhooksService,
-          useValue: { dispatchEvent: jest.fn() },
+          useValue: { dispatchEvent: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -43,6 +55,7 @@ describe('ReactionsService', () => {
     service = module.get<ReactionsService>(ReactionsService);
     postReactionsRepo = module.get(getRepositoryToken(PostReaction));
     postsService = module.get(PostsService) as jest.Mocked<PostsService>;
+    notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
   });
 
   describe('addReaction', () => {
@@ -88,6 +101,31 @@ describe('ReactionsService', () => {
       postsService.findOne.mockResolvedValue(undefined);
 
       await expect(service.addReaction('user-1', 'bad-id', 'like')).rejects.toThrow(NotFoundException);
+    });
+
+    it('checks visibility as the reacting user and notifies the post author', async () => {
+      postsService.findOne.mockResolvedValue({
+        id: 'post-1',
+        user: { id: 'author-1' },
+      } as any);
+      postReactionsRepo.findOne.mockResolvedValue(null);
+      postReactionsRepo.create.mockReturnValue({ id: 'reaction-1' } as any);
+      postReactionsRepo.save.mockResolvedValue({ id: 'reaction-1' } as any);
+
+      await service.addReaction('user-1', 'post-1', 'like');
+
+      expect(postsService.findOne).toHaveBeenCalledWith('post-1', 'user-1');
+      expect(notificationsService.createNotification).toHaveBeenCalledWith(
+        { id: 'author-1' },
+        NotificationType.LIKE,
+        { userId: 'user-1', postId: 'post-1' },
+      );
+    });
+
+    it('rejects unsupported reaction types', async () => {
+      await expect(service.addReaction('user-1', 'post-1', 'rocket')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('handles common reaction types', async () => {

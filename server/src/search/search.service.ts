@@ -1,3 +1,7 @@
+/**
+ * Postgres full-text search (websearch_to_tsquery + ts_rank over searchVector).
+ * Fallback ILIKE covers partial/prefix matches that tsquery misses (e.g. "alex" → "alexander").
+ */
 import { Injectable, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import axios from 'axios';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,20 +37,35 @@ export class SearchService {
     private readonly visibilityService: VisibilityService,
   ) {}
 
+  private normalize(query: string): string {
+    const q = query?.trim();
+    if (!q) {
+      throw new BadRequestException('Search query is required');
+    }
+    return q;
+  }
+
+  private rank(alias: string): string {
+    return `ts_rank(${alias}."searchVector", websearch_to_tsquery('simple', :ftsQuery))`;
+  }
+
   /**
-   * Perform full-text search across multiple entity types
-   * Uses PostgreSQL ILIKE for simple matching (upgrade to tsvector for production)
+   * Full-text search across users, posts, hashtags, places, groups, events, products.
    */
   async search(query: string, viewerId?: string) {
-    const q = `%${query}%`;
+    const q = this.normalize(query);
+    const pattern = `%${q}%`;
 
     const users = await this.usersRepository
       .createQueryBuilder('user')
-      .where(new Brackets((nameQuery) => {
-        nameQuery
-          .where('user.username ILIKE :q', { q })
-          .orWhere('user.displayName ILIKE :q', { q });
-      }))
+      .where(
+        new Brackets((nameQuery) => {
+          nameQuery
+            .where('user."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('user.username ILIKE :pattern')
+            .orWhere('user."displayName" ILIKE :pattern');
+        }),
+      )
       .andWhere(`(
           user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
           (user."searchVisibility" = 'friends' AND EXISTS (
@@ -57,47 +76,125 @@ export class SearchService {
             WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
           ))
         )`, { viewerId: viewerId ?? null })
+      .orderBy(this.rank('user'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(MAX_RESULTS)
       .getMany();
 
     let posts = await this.postsRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
-      .where('post.content ILIKE :q', { q })
-      .orderBy('post."createdAt"', 'DESC')
+      .where(
+        new Brackets((contentQuery) => {
+          contentQuery
+            .where('post."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('post.content ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('post'), 'DESC')
+      .addOrderBy('post."createdAt"', 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(MAX_RESULTS)
       .getMany();
     posts = await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
 
-    const hashtags = await this.tagsRepository
-      .createQueryBuilder('tag')
-      .where('tag.name ILIKE :q', { q })
-      .limit(MAX_RESULTS)
-      .getMany();
+    const hashtags = await Promise.all(
+      (
+        await this.tagsRepository
+          .createQueryBuilder('tag')
+          .where(
+            new Brackets((tagQuery) => {
+              tagQuery
+                .where('tag."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+                .orWhere('tag.name ILIKE :pattern');
+            }),
+          )
+          .orderBy(this.rank('tag'), 'DESC')
+          .setParameter('ftsQuery', q)
+          .setParameter('pattern', pattern)
+          .limit(MAX_RESULTS)
+          .getMany()
+      ).map(async (tag) => {
+        const countRow: { count: number }[] = await this.tagsRepository.query(
+          `SELECT COUNT(*)::int AS count FROM post_tags pt WHERE pt."tag_id" = $1`,
+          [tag.id],
+        );
+        return { ...tag, postCount: countRow[0]?.count ?? 0 };
+      }),
+    );
 
     const places = await this.placesRepository
       .createQueryBuilder('place')
-      .where('place.name ILIKE :q', { q })
+      .where(
+        new Brackets((placeQuery) => {
+          placeQuery
+            .where('place."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('place.name ILIKE :pattern')
+            .orWhere('place.address ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('place'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(MAX_RESULTS)
       .getMany();
 
-    const groups = await this.groupsRepository
-      .createQueryBuilder('group')
-      .where('group.name ILIKE :q', { q })
-      .limit(MAX_RESULTS)
-      .getMany();
+    const groups = await Promise.all(
+      (
+        await this.groupsRepository
+          .createQueryBuilder('group')
+          .where(
+            new Brackets((groupQuery) => {
+              groupQuery
+                .where('group."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+                .orWhere('group.name ILIKE :pattern');
+            }),
+          )
+          .orderBy(this.rank('group'), 'DESC')
+          .setParameter('ftsQuery', q)
+          .setParameter('pattern', pattern)
+          .limit(MAX_RESULTS)
+          .getMany()
+      ).map(async (group) => {
+        const countRow: { count: number }[] = await this.groupsRepository.query(
+          `SELECT COUNT(*)::int AS count FROM group_members gm WHERE gm."groupId" = $1`,
+          [group.id],
+        );
+        return { ...group, memberCount: countRow[0]?.count ?? 0 };
+      }),
+    );
 
     const events = await this.eventsRepository
       .createQueryBuilder('event')
-      .where('event.title ILIKE :q', { q })
-      .orWhere('event.description ILIKE :q', { q })
+      .where(
+        new Brackets((eventQuery) => {
+          eventQuery
+            .where('event."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('event.title ILIKE :pattern')
+            .orWhere('event.description ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('event'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(MAX_RESULTS)
       .getMany();
 
     const products = await this.productsRepository
       .createQueryBuilder('product')
-      .where('product.name ILIKE :q', { q })
-      .orWhere('product.description ILIKE :q', { q })
+      .where(
+        new Brackets((productQuery) => {
+          productQuery
+            .where('product."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('product.name ILIKE :pattern')
+            .orWhere('product.description ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('product'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(MAX_RESULTS)
       .getMany();
 
@@ -116,40 +213,44 @@ export class SearchService {
     viewerId?: string;
   }) {
     const { query, type, sort = 'relevance', limit = 20, offset = 0, viewerId } = params;
-    const q = `%${query}%`;
+    this.normalize(query);
 
     if (type) {
-      // Search specific type
       switch (type) {
         case 'users':
-          return this.searchUsers(q, viewerId, limit, offset);
+          return this.searchUsers(query.trim(), viewerId, limit, offset);
         case 'posts':
-          return this.searchPosts(q, viewerId, limit, offset, sort);
+          return this.searchPosts(query.trim(), viewerId, limit, offset, sort);
         case 'hashtags':
-          return this.searchHashtags(q, limit, offset);
+          return this.searchHashtags(query.trim(), limit, offset);
+        case 'places':
+          return this.searchPlaces(query.trim(), limit, offset);
         case 'groups':
-          return this.searchGroups(q, limit, offset);
+          return this.searchGroups(query.trim(), limit, offset);
         case 'events':
-          return this.searchEvents(q, limit, offset);
+          return this.searchEvents(query.trim(), limit, offset);
         case 'products':
-          return this.searchProducts(q, limit, offset);
+          return this.searchProducts(query.trim(), limit, offset);
         default:
           throw new BadRequestException(`Invalid search type: ${type}`);
       }
     }
 
-    // Search all types
     return this.search(query, viewerId);
   }
 
   private async searchUsers(q: string, viewerId?: string, limit = 20, offset = 0) {
+    const pattern = `%${q}%`;
     const users = await this.usersRepository
       .createQueryBuilder('user')
-      .where(new Brackets((nameQuery) => {
-        nameQuery
-          .where('user.username ILIKE :q', { q })
-          .orWhere('user.displayName ILIKE :q', { q });
-      }))
+      .where(
+        new Brackets((nameQuery) => {
+          nameQuery
+            .where('user."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('user.username ILIKE :pattern')
+            .orWhere('user."displayName" ILIKE :pattern');
+        }),
+      )
       .andWhere(`(
           user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
           (user."searchVisibility" = 'friends' AND EXISTS (
@@ -160,7 +261,9 @@ export class SearchService {
             WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
           ))
         )`, { viewerId: viewerId ?? null })
-      .orderBy('user."createdAt"', 'DESC')
+      .orderBy(this.rank('user'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(limit)
       .offset(offset)
       .getMany();
@@ -169,15 +272,24 @@ export class SearchService {
   }
 
   private async searchPosts(q: string, viewerId?: string, limit = 20, offset = 0, sort = 'date') {
+    const pattern = `%${q}%`;
     const query = this.postsRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
-      .where('post.content ILIKE :q', { q });
+      .where(
+        new Brackets((contentQuery) => {
+          contentQuery
+            .where('post."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('post.content ILIKE :pattern');
+        }),
+      )
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern);
 
-    if (sort === 'date') {
-      query.orderBy('post."createdAt"', 'DESC');
-    } else if (sort === 'popularity') {
-      query.orderBy('post."likeCount"', 'DESC');
+    if (sort === 'popularity') {
+      query.orderBy('post."repostCount"', 'DESC').addOrderBy('post."createdAt"', 'DESC');
+    } else {
+      query.orderBy(this.rank('post'), 'DESC').addOrderBy('post."createdAt"', 'DESC');
     }
 
     const posts = await query
@@ -191,35 +303,104 @@ export class SearchService {
   }
 
   private async searchHashtags(q: string, limit = 20, offset = 0) {
-    const hashtags = await this.tagsRepository
+    const pattern = `%${q}%`;
+    const rows = await this.tagsRepository
       .createQueryBuilder('tag')
-      .where('tag.name ILIKE :q', { q })
-      .orderBy('tag.postCount', 'DESC')
+      .where(
+        new Brackets((tagQuery) => {
+          tagQuery
+            .where('tag."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('tag.name ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('tag'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(limit)
       .offset(offset)
       .getMany();
+
+    const hashtags = await Promise.all(
+      rows.map(async (tag) => {
+        const countRow: { count: number }[] = await this.tagsRepository.query(
+          `SELECT COUNT(*)::int AS count FROM post_tags pt WHERE pt."tag_id" = $1`,
+          [tag.id],
+        );
+        return { ...tag, postCount: countRow[0]?.count ?? 0 };
+      }),
+    );
 
     return { hashtags, total: hashtags.length };
   }
 
-  private async searchGroups(q: string, limit = 20, offset = 0) {
-    const groups = await this.groupsRepository
-      .createQueryBuilder('group')
-      .where('group.name ILIKE :q', { q })
-      .orderBy('group.memberCount', 'DESC')
+  private async searchPlaces(q: string, limit = 20, offset = 0) {
+    const pattern = `%${q}%`;
+    const places = await this.placesRepository
+      .createQueryBuilder('place')
+      .where(
+        new Brackets((placeQuery) => {
+          placeQuery
+            .where('place."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('place.name ILIKE :pattern')
+            .orWhere('place.address ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('place'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(limit)
       .offset(offset)
       .getMany();
+
+    return { places, total: places.length };
+  }
+
+  private async searchGroups(q: string, limit = 20, offset = 0) {
+    const pattern = `%${q}%`;
+    const rows = await this.groupsRepository
+      .createQueryBuilder('group')
+      .where(
+        new Brackets((groupQuery) => {
+          groupQuery
+            .where('group."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('group.name ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('group'), 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    const groups = await Promise.all(
+      rows.map(async (group) => {
+        const countRow: { count: number }[] = await this.groupsRepository.query(
+          `SELECT COUNT(*)::int AS count FROM group_members gm WHERE gm."groupId" = $1`,
+          [group.id],
+        );
+        return { ...group, memberCount: countRow[0]?.count ?? 0 };
+      }),
+    );
 
     return { groups, total: groups.length };
   }
 
   private async searchEvents(q: string, limit = 20, offset = 0) {
+    const pattern = `%${q}%`;
     const events = await this.eventsRepository
       .createQueryBuilder('event')
-      .where('event.title ILIKE :q', { q })
-      .orWhere('event.description ILIKE :q', { q })
-      .orderBy('event.startDate', 'ASC')
+      .where(
+        new Brackets((eventQuery) => {
+          eventQuery
+            .where('event."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('event.title ILIKE :pattern')
+            .orWhere('event.description ILIKE :pattern');
+        }),
+      )
+      .orderBy('event.date', 'ASC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(limit)
       .offset(offset)
       .getMany();
@@ -228,11 +409,21 @@ export class SearchService {
   }
 
   private async searchProducts(q: string, limit = 20, offset = 0) {
+    const pattern = `%${q}%`;
     const products = await this.productsRepository
       .createQueryBuilder('product')
-      .where('product.name ILIKE :q', { q })
-      .orWhere('product.description ILIKE :q', { q })
-      .orderBy('product."createdAt"', 'DESC')
+      .where(
+        new Brackets((productQuery) => {
+          productQuery
+            .where('product."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
+            .orWhere('product.name ILIKE :pattern')
+            .orWhere('product.description ILIKE :pattern');
+        }),
+      )
+      .orderBy(this.rank('product'), 'DESC')
+      .addOrderBy('product."createdAt"', 'DESC')
+      .setParameter('ftsQuery', q)
+      .setParameter('pattern', pattern)
       .limit(limit)
       .offset(offset)
       .getMany();
@@ -256,12 +447,17 @@ export class SearchService {
     };
   }
 
+  /**
+   * Reverse image search (Preview): returns recent public posts with images.
+   * True perceptual/ML image matching is not implemented — this path only
+   * surfaces image-bearing posts so the UI has something honest to show.
+   */
   async reverseImageSearch(_image?: Express.Multer.File) {
     return this.postsRepository
       .createQueryBuilder('post')
+      .innerJoin('post.media', 'media')
       .where('post.visibility = :visibility', { visibility: 'public' })
-      .andWhere('post."imageUrls" IS NOT NULL')
-      .andWhere('array_length(post."imageUrls", 1) > 0')
+      .andWhere('media.type = :mediaType', { mediaType: 'image' })
       .leftJoinAndSelect('post.user', 'user')
       .orderBy('post."createdAt"', 'DESC')
       .limit(MAX_RESULTS)
@@ -269,15 +465,20 @@ export class SearchService {
   }
 
   async imageTextSearch(query: string, image?: Express.Multer.File) {
-    const textResults = query?.trim() ? await this.search(query.trim()) : {
-      users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [],
-    };
+    const textResults = query?.trim()
+      ? await this.search(query.trim())
+      : {
+          users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [],
+        };
 
     return {
       ...textResults,
       imageSearchResults: await this.reverseImageSearch(image),
       query: query?.trim() ?? '',
       imageProvided: Boolean(image),
+      note: image
+        ? 'Reverse image matching is Preview — showing recent public image posts instead of perceptual matches.'
+        : undefined,
     };
   }
 

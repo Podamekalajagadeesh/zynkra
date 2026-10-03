@@ -48,7 +48,16 @@ describe('SubscriptionsService (bundles)', () => {
         },
         {
           provide: PaymentsService,
-          useValue: { processPayment: jest.fn().mockResolvedValue(undefined) },
+          useValue: {
+            processPayment: jest.fn().mockResolvedValue({
+              success: true,
+              status: 'succeeded',
+              paymentId: 'pi_subscription',
+              transactionId: 'txn_subscription',
+              clientSecret: null,
+            }),
+            registerFulfillmentHandler: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -151,7 +160,74 @@ describe('SubscriptionsService (bundles)', () => {
       expect(subscriptionsRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ tier: 'bundle:All access' }),
       );
-      expect(result.id).toBe('sub-1');
+      expect(result).toEqual({ id: 'sub-1' });
+    });
+  });
+
+  describe('payment-gated subscriptions', () => {
+    beforeEach(() => {
+      usersService.findOneById.mockImplementation(async (id: string) => ({ id }));
+      subscriptionsRepo.findOne.mockResolvedValue(null);
+    });
+
+    it('does not create a subscription before payment succeeds', async () => {
+      tiersRepo.findOne.mockResolvedValue({
+        id: 'tier-monthly',
+        name: 'monthly',
+        price: 7,
+        creator,
+      });
+      paymentsService.processPayment.mockResolvedValue({
+        success: false,
+        status: 'requires_payment_method',
+        paymentId: 'pi_pending',
+        transactionId: 'txn_pending',
+        clientSecret: 'secret',
+      });
+
+      const result = await service.createSubscription('subscriber-1', 'creator-1', 'monthly');
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          success: false,
+          status: 'requires_payment_method',
+          paymentId: 'pi_pending',
+          clientSecret: 'secret',
+        }),
+      );
+      expect(subscriptionsRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('uses the requested creator tier and creates after success', async () => {
+      tiersRepo.findOne.mockResolvedValue({
+        id: 'tier-monthly',
+        name: 'monthly',
+        price: 7,
+        creator,
+      });
+      subscriptionsRepo.create.mockReturnValue({ id: 'sub-created' });
+      subscriptionsRepo.save.mockResolvedValue({ id: 'sub-created' });
+
+      const result = await service.createSubscription('subscriber-1', 'creator-1', 'monthly');
+
+      expect(paymentsService.processPayment).toHaveBeenCalledWith(
+        'subscriber-1',
+        7,
+        'subscription',
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            fulfillmentType: 'subscription',
+            tierId: 'tier-monthly',
+          }),
+        }),
+      );
+      expect(tiersRepo.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ name: 'monthly' }) }),
+      );
+      expect(subscriptionsRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ tier: 'monthly', status: 'active' }),
+      );
+      expect(result).toEqual({ id: 'sub-created' });
     });
   });
 });

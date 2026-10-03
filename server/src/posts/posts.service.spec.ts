@@ -88,7 +88,7 @@ describe('PostsService', () => {
         { provide: getRepositoryToken(Report), useValue: { delete: jest.fn() } },
         { provide: getRepositoryToken(Poll), useValue: {} },
         { provide: getRepositoryToken(PollOption), useValue: {} },
-        { provide: getRepositoryToken(Media), useValue: {} },
+        { provide: getRepositoryToken(Media), useValue: { findOne: jest.fn().mockResolvedValue(null), create: jest.fn(), save: jest.fn(), remove: jest.fn() } },
         { provide: getRepositoryToken(ReelEffect), useValue: { findOne: jest.fn() } },
         { provide: getRepositoryToken(TimelineReview), useValue: {} },
         { provide: getRepositoryToken(Subscription), useValue: { find: jest.fn() } },
@@ -371,7 +371,7 @@ describe('PostsService', () => {
   describe('like', () => {
     it('likes a post', async () => {
       const user = makeUser();
-      const post = makePost();
+      const post = makePost({ user: makeUser({ id: 'author-id' }) });
       postsRepo.findOne.mockResolvedValueOnce(post); // findOne
       postsRepo.findOne.mockResolvedValueOnce(post); // and during findOne, token check
       usersService.findOneById.mockResolvedValue(user);
@@ -479,7 +479,7 @@ describe('PostsService', () => {
       postsRepo.findOne.mockResolvedValue(post);
       usersService.findOneById.mockResolvedValue(user);
 
-      await service.share('post-id', { userId: user.id });
+      await service.share('post-id', user.id);
       expect(postsRepo.increment).toHaveBeenCalledWith({ id: 'post-id' }, 'shareCount', 1);
       expect(notificationsService.createNotification).toHaveBeenCalled();
     });
@@ -491,15 +491,18 @@ describe('PostsService', () => {
     it('creates a repost', async () => {
       const user = makeUser();
       const original = makePost();
-      postsRepo.findOne.mockResolvedValueOnce(original); // findOne
-      postsRepo.findOne.mockResolvedValueOnce(original); // visible during findOne
-      usersService.findOneById.mockResolvedValue(user);
-      postsRepo.findOne.mockResolvedValueOnce(null); // no existing repost
+       postsRepo.findOne.mockResolvedValueOnce(original); // findOne
+       usersService.findOneById.mockResolvedValue(user);
+       postsRepo.findOne.mockResolvedValueOnce(null); // no existing repost
+
       postsRepo.create.mockReturnValue({} as any);
       postsRepo.save.mockResolvedValue({} as any);
 
-      const result = await service.repost('post-id', { userId: user.id });
-      expect(result).toBe(original);
+       const result = await service.repost('post-id', user.id);
+       expect(result).toBe(original);
+       expect(postsRepo.create).toHaveBeenCalled();
+       expect(postsRepo.save).toHaveBeenCalled();
+
     });
   });
 
@@ -509,12 +512,12 @@ describe('PostsService', () => {
       const original = makePost();
       const repost = { id: 'repost-id' } as any;
       // undoRepost calls findOne(original) → find repost → remove repost
-      postsRepo.findOne.mockResolvedValueOnce(original); // findOne(original)
-      postsRepo.findOne.mockResolvedValueOnce(original); // findOne inside visibility check
-      usersService.findOneById.mockResolvedValue(user);
-      postsRepo.findOne.mockResolvedValueOnce(repost);   // find existing repost
+       postsRepo.findOne.mockResolvedValueOnce(original); // findOne(original)
+       usersService.findOneById.mockResolvedValue(user);
+       postsRepo.findOne.mockResolvedValueOnce(repost); // find existing repost
 
-      await service.undoRepost('post-id', { userId: user.id });
+
+      await service.undoRepost('post-id', user.id);
       expect(postsRepo.remove).toHaveBeenCalled();
     });
   });

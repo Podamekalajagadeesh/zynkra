@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body, UseGuards, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, UseGuards, UseInterceptors, UploadedFile, Req, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SearchService } from './search.service';
@@ -10,6 +10,9 @@ export class SearchController {
 
   @Get()
   async search(@Query('q') query: string, @Req() req) {
+    if (!query?.trim()) {
+      throw new BadRequestException('Query parameter q is required');
+    }
     return this.searchService.search(query, req.user.userId || req.user.id);
   }
 
@@ -42,6 +45,7 @@ export class SearchController {
     return this.searchService.webConnectedSearch(query);
   }
 
+  /** Preview: returns recent public image posts (not perceptual reverse-image matching). */
   @Post('reverse-image')
   @UseInterceptors(FileInterceptor('image'))
   async reverseImageSearch(@UploadedFile() image: Express.Multer.File) {

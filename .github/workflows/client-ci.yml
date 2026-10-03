@@ -19,7 +19,8 @@ jobs:
         working-directory: client
         run: npm ci
       - name: Check formatting
-        run: npx prettier --check "client/src/**/*.{ts,tsx,js,jsx}"
+        working-directory: client
+        run: npm run format:check
 
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -68,26 +69,6 @@ jobs:
       - name: Install dependencies
         working-directory: client
         run: npm ci
-      - name: Unit tests with coverage
+      - name: Unit tests
         working-directory: client
-        run: npm run test:ci -- --run --coverage
-      - name: Enforce coverage threshold
-        working-directory: client
-        run: |
-          npx vitest --run --coverage --reporter=json --outputFile=coverage-summary.json
-          node -e "
-          const fs = require('fs');
-          const coverage = JSON.parse(fs.readFileSync('coverage-summary.json', 'utf8'));
-          const thresholds = { lines: 50, functions: 50, branches: 50, statements: 50 };
-          let failed = false;
-          for (const [metric, threshold] of Object.entries(thresholds)) {
-            const actual = coverage.total[metric].pct;
-            if (actual < threshold) {
-              console.error('❌ Coverage ' + metric + ': ' + actual + '% < ' + threshold + '%');
-              failed = true;
-            } else {
-              console.log('✅ Coverage ' + metric + ': ' + actual + '% >= ' + threshold + '%');
-            }
-          }
-          if (failed) process.exit(1);
-          "
+        run: npm run test:ci

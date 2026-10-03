@@ -20,6 +20,9 @@ import { Course, CourseEnrollment } from '../courses/course.entity';
 import { Media } from '../media/entities/media.entity';
 import { DataExport } from './entities/data-export.entity';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
+import { VerificationRequest } from '../verification/entities/verification-request.entity';
+import { ConnectedAccount } from '../connected-accounts/entities/connected-account.entity';
+import { ConversationType } from '../dms/conversation-type.enum';
 import { DEFAULT_DATA_PERMISSIONS } from '../common/data-permissions/data-permissions.service';
 
 type ExportCategory =
@@ -41,6 +44,7 @@ export interface ExportData {
   stories: any[];
   reels: any[];
   messages: any[];
+  conversations: any[];
   articles: any[];
   podcasts: any[];
   courses: any[];
@@ -49,6 +53,8 @@ export interface ExportData {
   notifications: any[];
   orders: any[];
   wallet: any[];
+  verification: any[];
+  linkedAccounts: any[];
   settings: any;
   personalization: any;
   analytics: any;
@@ -88,6 +94,8 @@ export class ExportService {
     @InjectRepository(Course) private readonly coursesRepo: Repository<Course>,
     @InjectRepository(CourseEnrollment) private readonly enrollmentsRepo: Repository<CourseEnrollment>,
     @InjectRepository(DataExport) private readonly dataExportsRepo: Repository<DataExport>,
+    @InjectRepository(VerificationRequest) private readonly verificationRepo: Repository<VerificationRequest>,
+    @InjectRepository(ConnectedAccount) private readonly connectedAccountsRepo: Repository<ConnectedAccount>,
   ) {}
 
   async exportUserData(userId: string): Promise<ExportData> {
@@ -158,19 +166,28 @@ export class ExportService {
     ]) : [[], []];
 
     // DMs received: messages in conversations the user is part of, excluding
-    // their own sent messages (already captured above).
+    // their own sent messages (already captured above). Relations are loaded so
+    // received messages carry their conversation id and sender id for import.
     const conversations = canExportMessages ? await this.conversationsRepo.find({
       where: { participants: { id: userId } },
+      relations: ['participants'],
     }) : [];
     const conversationIds = conversations.map((c) => c.id);
     let receivedMessages: Message[] = [];
     if (canExportMessages && conversationIds.length > 0) {
       receivedMessages = await this.messagesRepo
         .createQueryBuilder('m')
+        .leftJoinAndSelect('m.conversation', 'conversation')
+        .leftJoinAndSelect('m.sender', 'sender')
         .where('m.conversationId IN (:...ids)', { ids: conversationIds })
         .andWhere('m.senderId != :userId', { userId })
         .getMany();
     }
+
+    const [verification, linkedAccounts] = await Promise.all([
+      canExportProfile ? this.verificationRepo.find({ where: { user: { id: userId } } }) : Promise.resolve([]),
+      canExportConnectedServices ? this.connectedAccountsRepo.find({ where: { userId } }) : Promise.resolve([]),
+    ]);
 
     return {
       user: canExportProfile ? {
@@ -258,6 +275,9 @@ export class ExportService {
           conversationId: (m.conversation as any)?.id,
           mediaType: m.mediaType,
           mediaUrl: m.mediaUrl,
+          media: m.media ?? null,
+          voiceNote: m.voiceNote ?? null,
+          senderPublicKey: m.senderPublicKey ?? null,
           createdAt: m.createdAt,
         })),
         ...receivedMessages.map((m) => ({
@@ -268,9 +288,47 @@ export class ExportService {
           senderId: (m.sender as any)?.id,
           mediaType: m.mediaType,
           mediaUrl: m.mediaUrl,
+          media: m.media ?? null,
+          voiceNote: m.voiceNote ?? null,
+          senderPublicKey: m.senderPublicKey ?? null,
           createdAt: m.createdAt,
         })),
       ],
+      conversations: conversations.map((c) => {
+        const other = c.type === ConversationType.ONE_TO_ONE
+          ? (c.participants || []).find((p) => p.id !== userId)
+          : undefined;
+        return {
+          id: c.id,
+          type: c.type,
+          name: c.name,
+          isEncrypted: c.isEncrypted,
+          otherParticipant: other
+            ? { userId: other.id, username: other.username }
+            : null,
+        };
+      }),
+      verification: verification.map((v) => ({
+        id: v.id,
+        workflow: v.workflow,
+        category: v.category,
+        organizationName: v.organizationName,
+        documentType: v.documentType,
+        justification: v.justification,
+        links: v.links,
+        status: v.status,
+        reviewNote: v.reviewNote,
+        createdAt: v.createdAt,
+        updatedAt: v.updatedAt,
+      })),
+      linkedAccounts: linkedAccounts.map((a) => ({
+        id: a.id,
+        platform: a.platform,
+        platformUsername: a.platformUsername,
+        platformUserId: a.platformUserId,
+        isActive: a.isActive,
+        createdAt: a.createdAt,
+      })),
       articles: articles.map((a) => ({
         id: a.id,
         title: a.title,
@@ -377,7 +435,7 @@ export class ExportService {
           .filter((category) => !hasCategory(category)),
       },
       exportedAt: new Date().toISOString(),
-      version: '2.0.0',
+      version: '2.1.0',
     };
   }
 
@@ -386,13 +444,15 @@ export class ExportService {
     return JSON.stringify(data, null, 2);
   }
 
-  // Recreates profile, posts, and follows from a Zynkra export payload
-  // (the JSON produced by exportAsJson / GET /data-export/download).
-  // Identity fields (email, wallet, verified) are intentionally not imported.
+  // Recreates profile, posts, follows, DMs (where the peer exists), and stores
+  // archival copies of orders, wallet, verification, and linked accounts from a
+  // Zynkra export payload (the JSON produced by exportAsJson / download).
+  // Identity fields (email, wallet balance, verification grant) are intentionally
+  // not restored: importing never fabricates money, trust, or credentials.
   async importFromJson(
     userId: string,
     data: ExportData,
-  ): Promise<{ imported: boolean; posts: number; comments: number; reactions: number; bookmarks: number; stories: number; follows: number; articles: number; podcasts: number; courses: number; enrollments: number }> {
+  ): Promise<{ imported: boolean; posts: number; comments: number; reactions: number; bookmarks: number; stories: number; follows: number; articles: number; podcasts: number; courses: number; enrollments: number; messages: number; skippedMessages: number; conversations: number; skippedConversations: number; orders: number; walletEntries: number; verificationRequests: number; linkedAccounts: number }> {
     this.validateImportPayload(data);
 
     let importedPosts = 0;
@@ -405,6 +465,14 @@ export class ExportService {
     let importedPodcasts = 0;
     let importedCourses = 0;
     let importedEnrollments = 0;
+    let importedMessages = 0;
+    let skippedMessages = 0;
+    let importedConversations = 0;
+    let skippedConversations = 0;
+    let importedOrders = 0;
+    let importedWallet = 0;
+    let importedVerification = 0;
+    let importedLinkedAccounts = 0;
 
     await this.postsRepo.manager.transaction(async (manager) => {
       const user = await manager.findOne(User, { where: { id: userId } });
@@ -606,9 +674,172 @@ export class ExportService {
           importedFollows++;
         }
       }
+
+      // --- DMs: restore 1:1 threads whose peer exists on this instance. Group and
+      // page/modmail threads and unknown peers cannot be faithfully rebuilt, so
+      // they are counted as skipped (their records remain in the user's export).
+      // Imported encrypted envelopes are stored verbatim — they cannot be
+      // decrypted here, which matches what the export itself could hold.
+      if (canImport(DataPermission.MESSAGES) && Array.isArray(data.conversations)) {
+        const peerCache = new Map<string, User>();
+        for (const convData of data.conversations) {
+          const isOneToOne = convData.type === ConversationType.ONE_TO_ONE;
+          const peerUsername = convData.otherParticipant?.username;
+          if (!isOneToOne || !peerUsername) {
+            skippedConversations++;
+            continue;
+          }
+
+          let peer = peerCache.get(peerUsername);
+          if (!peer) {
+            peer = await manager.findOne(User, { where: { username: peerUsername } });
+            if (peer) peerCache.set(peerUsername, peer);
+          }
+          if (!peer) {
+            skippedConversations++;
+            continue;
+          }
+
+          const candidates = await manager.find(Conversation, {
+            where: { type: ConversationType.ONE_TO_ONE, participants: { id: user.id } },
+            relations: ['participants'],
+          });
+          let conversation = candidates.find(
+            (c) => (c.participants || []).some((p) => p.id === peer!.id),
+          );
+          if (!conversation) {
+            conversation = await manager.save(
+              Conversation,
+              manager.create(Conversation, {
+                type: ConversationType.ONE_TO_ONE,
+                isEncrypted: !!user.publicKey && !!peer.publicKey,
+                participants: [user, peer],
+              } as Partial<Conversation>),
+            );
+          }
+          importedConversations++;
+
+          const threadMessages = (data.messages || []).filter(
+            (m) => m.conversationId === convData.id,
+          );
+          for (const m of threadMessages) {
+            const sender = m.direction === 'received' ? peer : user;
+            await manager.save(
+              Message,
+              manager.create(Message, {
+                content: m.content ?? '',
+                sender,
+                conversation,
+                senderPublicKey: m.senderPublicKey ?? null,
+                mediaType: m.mediaType ?? 'text',
+                mediaUrl: m.mediaUrl ?? null,
+                media: m.media ?? null,
+                voiceNote: m.voiceNote ?? null,
+                createdAt: m.createdAt ? new Date(m.createdAt) : undefined,
+              } as Partial<Message>),
+            );
+            importedMessages++;
+          }
+        }
+        skippedMessages = Math.max(0, (data.messages?.length || 0) - importedMessages);
+      }
+
+      // --- Wallet: imported as archival history. Rows keep their original
+      // balanceAfter so the earnings history reads correctly, but they are
+      // explicitly tagged and do NOT change the user's spendable balance
+      // (that is governed by real payments activity on this instance).
+      if (canImport(DataPermission.CONNECTED_SERVICES) && Array.isArray(data.wallet)) {
+        for (const entry of data.wallet) {
+          await manager.save(
+            LedgerEntry,
+            manager.create(LedgerEntry, {
+              user,
+              type: entry.type ?? 'earning',
+              amount: entry.amount ?? 0,
+              balanceAfter: entry.balanceAfter ?? 0,
+              currency: entry.currency ?? 'usd',
+              reference: entry.reference ?? null,
+              purpose: entry.purpose ?? null,
+              metadata: {
+                imported: true,
+                note: 'Archival history from a Zynkra export. Does not change your spendable balance.',
+              },
+              createdAt: entry.createdAt ? new Date(entry.createdAt) : undefined,
+            } as Partial<LedgerEntry>),
+          );
+          importedWallet++;
+        }
+      }
+
+      // --- Marketplace orders: header-only records. Line items reference
+      // products that do not exist on the new instance, so they cannot be
+      // recreated faithfully; the full order detail is in the user's export.
+      if (canImport(DataPermission.CONNECTED_SERVICES) && Array.isArray(data.orders)) {
+        for (const o of data.orders) {
+          await manager.save(
+            Order,
+            manager.create(Order, {
+              customerId: user.id,
+              total: o.total ?? 0,
+              status: o.status ?? 'pending',
+              createdAt: o.createdAt ? new Date(o.createdAt) : undefined,
+            } as Partial<Order>),
+          );
+          importedOrders++;
+        }
+      }
+
+      // --- Verification: recreated as a record, never as a grant. The badge is
+      // only set through the real review flow, so an imported 'approved' request
+      // does not fabricate verification status.
+      if (canImport(DataPermission.PROFILE) && Array.isArray(data.verification)) {
+        for (const v of data.verification) {
+          await manager.save(
+            VerificationRequest,
+            manager.create(VerificationRequest, {
+              user,
+              workflow: v.workflow ?? 'personal',
+              category: v.category ?? 'other',
+              organizationName: v.organizationName ?? null,
+              documentType: v.documentType ?? null,
+              justification: v.justification ?? '',
+              links: v.links ?? [],
+              status: v.status ?? 'pending',
+              reviewNote: v.reviewNote ?? null,
+              createdAt: v.createdAt ? new Date(v.createdAt) : undefined,
+              updatedAt: v.updatedAt ? new Date(v.updatedAt) : new Date(),
+            } as Partial<VerificationRequest>),
+          );
+          importedVerification++;
+        }
+      }
+
+      // --- Linked accounts: metadata only. OAuth credentials belong to the
+      // originating instance's app and are never exported or re-imported;
+      // the user must re-link to use a connection.
+      if (canImport(DataPermission.CONNECTED_SERVICES) && Array.isArray(data.linkedAccounts)) {
+        for (const account of data.linkedAccounts) {
+          if (!account.platform) continue;
+          await manager.save(
+            ConnectedAccount,
+            manager.create(ConnectedAccount, {
+              userId: user.id,
+              platform: account.platform,
+              platformUsername: account.platformUsername ?? '',
+              platformUserId: account.platformUserId ?? '',
+              apiKey: null,
+              apiSecret: null,
+              accessToken: null,
+              isActive: account.isActive ?? true,
+              createdAt: account.createdAt ? new Date(account.createdAt) : undefined,
+            } as Partial<ConnectedAccount>),
+          );
+          importedLinkedAccounts++;
+        }
+      }
     });
 
-    return { imported: true, posts: importedPosts, comments: importedComments, reactions: importedReactions, bookmarks: importedBookmarks, stories: importedStories, follows: importedFollows, articles: importedArticles, podcasts: importedPodcasts, courses: importedCourses, enrollments: importedEnrollments };
+    return { imported: true, posts: importedPosts, comments: importedComments, reactions: importedReactions, bookmarks: importedBookmarks, stories: importedStories, follows: importedFollows, articles: importedArticles, podcasts: importedPodcasts, courses: importedCourses, enrollments: importedEnrollments, messages: importedMessages, skippedMessages, conversations: importedConversations, skippedConversations, orders: importedOrders, walletEntries: importedWallet, verificationRequests: importedVerification, linkedAccounts: importedLinkedAccounts };
   }
 
   private validateImportPayload(data: ExportData): void {
@@ -620,13 +851,16 @@ export class ExportService {
       throw new BadRequestException('Unsupported export version. Expected version 2.x.');
     }
 
-    const collections = ['posts', 'comments', 'reactions', 'bookmarks', 'stories', 'articles', 'podcasts', 'courses', 'enrollments'] as const;
+    const collections = ['posts', 'comments', 'reactions', 'bookmarks', 'stories', 'articles', 'podcasts', 'courses', 'enrollments', 'messages', 'orders', 'wallet', 'conversations', 'verification', 'linkedAccounts'] as const;
+    // Message histories are the one collection that legitimately gets large;
+    // everything else keeps the conservative 10k cap.
+    const collectionLimits: Record<string, number> = { messages: 100000 };
     for (const collection of collections) {
       if (data[collection] !== undefined && !Array.isArray(data[collection])) {
         throw new BadRequestException(`Invalid export data: ${collection} must be an array`);
       }
-      if (Array.isArray(data[collection]) && data[collection].length > 10000) {
-        throw new BadRequestException(`Invalid export data: ${collection} exceeds the 10,000 item limit`);
+      if (Array.isArray(data[collection]) && data[collection].length > (collectionLimits[collection] ?? 10000)) {
+        throw new BadRequestException(`Invalid export data: ${collection} exceeds the ${collectionLimits[collection] ?? 10000} item limit`);
       }
     }
 
@@ -662,6 +896,7 @@ export class ExportService {
         'stories',
         'reels',
         'messages',
+        'conversations',
         'articles',
         'podcasts',
         'courses',
@@ -670,6 +905,8 @@ export class ExportService {
         'notifications',
         'orders',
         'wallet',
+        'verification',
+        'linkedAccounts',
         'settings',
       ],
       estimatedSize: 'Unknown',

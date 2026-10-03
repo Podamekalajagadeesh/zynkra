@@ -3,14 +3,22 @@ import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { PaymentTransaction } from './entities/payment-transaction.entity';
 import { Payout } from './entities/payout.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import {
+  DEFAULT_PLATFORM_FEE_RATE,
+  PLATFORM_USER_ID,
+  splitRevenue,
+} from './revenue-split';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Stripe = require('stripe');
+
+export type PaymentFulfillmentHandler = (transaction: PaymentTransaction) => Promise<void>;
 
 @Injectable()
 export class PaymentsService {
@@ -21,6 +29,7 @@ export class PaymentsService {
   private readonly connectEnabled: boolean;
   private readonly webhookSecret: string | undefined;
   private readonly clientUrl: string;
+  private readonly fulfillmentHandlers = new Map<string, PaymentFulfillmentHandler>();
 
   constructor(
     @InjectRepository(PaymentTransaction)
@@ -42,7 +51,7 @@ export class PaymentsService {
       this.configService.get<string>('CLIENT_URL') || 'http://127.0.0.1:5173';
 
     this.stripe = stripeKey
-      ? new Stripe(stripeKey, { apiVersion: '2026-05-27.dahlia' })
+      ? new Stripe(stripeKey)
       : null;
 
     // Connect defaults to following PAYMENTS_ENABLED, but can be turned off
@@ -62,53 +71,220 @@ export class PaymentsService {
     }
   }
 
-  async createPaymentIntent(amount: number, currency: string): Promise<any> {
+  registerFulfillmentHandler(type: string, handler: PaymentFulfillmentHandler): void {
+    this.fulfillmentHandlers.set(type, handler);
+  }
+
+  async createPaymentIntent(
+    amount: number,
+    currency: string,
+    options: { paymentMethodId?: string } = {},
+  ): Promise<any> {
     this.assertPaymentsEnabled();
-    // Let Stripe errors propagate — a failed intent must never look like a success.
     return this.stripe.paymentIntents.create({
       amount,
       currency,
+      ...(options.paymentMethodId
+        ? { payment_method: options.paymentMethodId, confirm: true }
+        : {}),
     });
   }
 
-  async processPayment(userId: string, amount: number, purpose: string, options: { currency?: string; metadata?: Record<string, any>; payerId?: string; recipientId?: string } = {}) {
+  async processPayment(
+    userId: string,
+    amount: number,
+    purpose: string,
+    options: {
+      currency?: string;
+      metadata?: Record<string, any>;
+      payerId?: string;
+      recipientId?: string;
+      platformFeeRate?: number;
+      paymentMethodId?: string;
+    } = {},
+  ) {
     this.assertPaymentsEnabled();
-    const currency = options.currency || 'usd';
-    const paymentIntent = await this.createPaymentIntent(Math.round(amount * 100), currency);
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      throw new BadRequestException('Payment amount must be greater than zero');
+    }
+    const currency = String(options.currency || 'usd').toLowerCase();
+    if (!/^[a-z]{3}$/.test(currency)) {
+      throw new BadRequestException('Payment currency must be a three-letter code');
+    }
+    const feeRate = options.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE;
+    const paymentIntent = await this.createPaymentIntent(
+      Math.round(numericAmount * 100),
+      currency,
+      { paymentMethodId: options.paymentMethodId },
+    );
 
     const transaction = this.paymentRepository.create({
       provider: 'stripe',
-      status: paymentIntent.status === 'succeeded' ? 'succeeded' : 'requires_payment_method',
+      status: paymentIntent.status ?? 'requires_payment_method',
       paymentId: paymentIntent.id,
       purpose,
-      amount,
+      amount: numericAmount,
       currency,
-      metadata: { ...options.metadata, paymentIntent },
+      metadata: {
+        ...options.metadata,
+        paymentIntent: {
+          id: paymentIntent.id,
+          status: paymentIntent.status,
+        },
+        platformFeeRate: feeRate,
+      },
       payer: options.payerId ? ({ id: options.payerId } as any) : null,
       recipient: options.recipientId ? ({ id: options.recipientId } as any) : null,
     });
 
-    await this.paymentRepository.save(transaction);
+    const savedTransaction =
+      (await this.paymentRepository.save(transaction)) ?? transaction;
 
-    // Only move money on a confirmed payment. A newly created intent is almost
-    // never 'succeeded' — confirmation normally arrives asynchronously via the
-    // Stripe webhook (payment_intent.succeeded → confirmPaymentSucceeded).
-    if (paymentIntent.status === 'succeeded' && options.recipientId && amount > 0) {
-      await this.walletService.credit(options.recipientId, amount, { purpose });
+    let fulfillmentCompleted = false;
+    if (paymentIntent.status === 'succeeded') {
+      try {
+        fulfillmentCompleted = await this.confirmPaymentSucceeded(
+          paymentIntent,
+          savedTransaction,
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `Immediate payment fulfillment deferred for ${paymentIntent.id}: ${err?.message ?? err}`,
+        );
+      }
     }
 
     return {
       success: paymentIntent.status === 'succeeded',
       status: paymentIntent.status,
       userId,
-      amount,
+      amount: numericAmount,
       purpose,
-      paymentId: transaction.paymentId,
+      paymentId: savedTransaction.paymentId,
+      transactionId: savedTransaction.id,
+      clientSecret: paymentIntent.client_secret ?? null,
+      fulfillmentCompleted,
       currency,
     };
   }
 
-  async createDemoPaymentScenario(amount: number, currency = 'usd', recipientId: string, payerId: string) {
+  async confirmPayment(
+    paymentId: string,
+    userId: string,
+    paymentMethodId?: string,
+  ) {
+    this.assertPaymentsEnabled();
+    const transaction = await this.paymentRepository.findOne({
+      where: { paymentId },
+      relations: ['payer'],
+    });
+    if (!transaction || transaction.payer?.id !== userId) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    const paymentIntent = paymentMethodId
+      ? await this.stripe.paymentIntents.confirm(paymentId, {
+          payment_method: paymentMethodId,
+        })
+      : await this.stripe.paymentIntents.retrieve(paymentId);
+
+    let fulfillmentCompleted = false;
+    if (paymentIntent.status === 'succeeded') {
+      fulfillmentCompleted = await this.confirmPaymentSucceeded(paymentIntent);
+    } else if (
+      paymentIntent.status === 'canceled' ||
+      paymentIntent.status === 'payment_failed'
+    ) {
+      await this.markPaymentFailed(
+        paymentIntent,
+        paymentIntent.status === 'canceled'
+          ? 'payment_intent.canceled'
+          : 'payment_intent.payment_failed',
+      );
+    }
+
+    return {
+      success: paymentIntent.status === 'succeeded',
+      status: paymentIntent.status,
+      paymentId,
+      clientSecret: paymentIntent.client_secret ?? null,
+      fulfillmentCompleted,
+    };
+  }
+
+  private async fulfillPayment(transaction: PaymentTransaction): Promise<boolean> {
+    const fulfillmentType = transaction.metadata?.fulfillmentType;
+    if (!fulfillmentType) {
+      return false;
+    }
+    if (transaction.metadata?.fulfillmentStatus === 'completed') {
+      return true;
+    }
+
+    const handler = this.fulfillmentHandlers.get(fulfillmentType);
+    if (!handler) {
+      return false;
+    }
+
+    await handler(transaction);
+    transaction.metadata = {
+      ...(transaction.metadata ?? {}),
+      fulfillmentStatus: 'completed',
+      fulfilledAt: new Date().toISOString(),
+    };
+    await this.paymentRepository.save(transaction);
+    return true;
+  }
+
+  /**
+   * Credit the recipient their net share and the platform fee account, both
+   * with matching ledger rows. Idempotent callers must check status first.
+   */
+  private async creditRecipientWithSplit(
+    transaction: PaymentTransaction,
+    feeRate: number = DEFAULT_PLATFORM_FEE_RATE,
+  ): Promise<void> {
+    const recipientId = transaction.recipient?.id;
+    if (!recipientId) return;
+    const amount = Number(transaction.amount);
+    if (!(amount > 0)) return;
+
+    const split = splitRevenue(amount, feeRate);
+    await this.walletService.credit(recipientId, split.recipientAmount, {
+      purpose: transaction.purpose ?? 'payment',
+      type: 'earning',
+      reference: transaction.paymentId,
+      metadata: { platformFee: split.platformFee, feeRate: split.feeRate },
+    });
+    if (split.platformFee > 0) {
+      await this.walletService.credit(PLATFORM_USER_ID, split.platformFee, {
+        purpose: 'platform-fee',
+        type: 'earning',
+        reference: transaction.paymentId,
+        metadata: {
+          feeRate: split.feeRate,
+          gross: split.gross,
+          recipientId,
+          creatorId: recipientId,
+          purpose: transaction.purpose,
+        },
+      });
+    }
+    transaction.metadata = {
+      ...(transaction.metadata ?? {}),
+      recipientCredited: split.recipientAmount,
+      platformCredited: split.platformFee,
+    };
+    await this.paymentRepository.save(transaction);
+  }
+
+  async createDemoPaymentScenario(
+    amount: number,
+    currency: string,
+    recipientId: string,
+    payerId: string,
+  ) {
     // Demo flow: never available in production, and never touches Stripe.
     if (this.configService.get<string>('NODE_ENV') === 'production') {
       throw new ServiceUnavailableException('Demo payments are disabled in production.');
@@ -163,7 +339,7 @@ export class PaymentsService {
 
     // Debit first — if the creator lacks funds this throws and no payout row is
     // created. The wallet ledger records the debit atomically.
-    const payoutRef = `payout_${creatorId}_${await this.nextPayoutSuffix()}`;
+    const payoutRef = `payout_${creatorId}_${randomUUID()}`;
     await this.walletService.debit(creatorId, payoutAmount, {
       purpose,
       type: 'payout',
@@ -187,38 +363,46 @@ export class PaymentsService {
     }
 
     // Connect path: send a real Stripe transfer to the creator's account.
-    try {
-      payout.status = 'processing';
-      await this.payoutRepository.save(payout);
+    payout.status = 'processing';
+    await this.payoutRepository.save(payout);
 
-      const transfer = await this.stripe.transfers.create({
+    let transfer: any;
+    try {
+      transfer = await this.stripe.transfers.create({
         amount: Math.round(payoutAmount * 100),
         currency: payout.currency,
         destination: creator.stripeConnectAccountId,
         metadata: { payoutId: payout.payoutId, creatorId },
       });
-
-      payout.stripeTransferId = transfer.id;
-      // transfers.create resolves once the transfer is booked; treat it as paid
-      // and let transfer.failed webhooks reverse it if it later bounces.
-      payout.status = 'paid';
-      payout.processedAt = new Date();
-      await this.payoutRepository.save(payout);
-
-      return this.serializePayout(payout, { mode: 'stripe' });
     } catch (err: any) {
-      // Refund the wallet — the money never left, so the debit must be undone.
       await this.walletService.credit(creatorId, payoutAmount, {
         purpose: 'payout-reversal',
         type: 'payout_reversal',
         reference: payout.payoutId,
       });
-      payout.status = 'failed';
-      payout.failureReason = err?.message ?? 'Stripe transfer failed';
-      await this.payoutRepository.save(payout);
-
-      return this.serializePayout(payout, { mode: 'stripe' });
+      const markedFailed = await this.updateProcessingPayout(payout.id, {
+        status: 'failed',
+        failureReason: err?.message ?? 'Stripe transfer failed',
+        processedAt: new Date(),
+      });
+      if (!markedFailed) {
+        return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'stripe' });
+      }
+      return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'stripe' });
     }
+
+    const settled = await this.updateProcessingPayout(payout.id, {
+      status: 'paid',
+      stripeTransferId: transfer.id,
+      processedAt: new Date(),
+    });
+    if (!settled) {
+      return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'stripe' });
+    }
+    payout.stripeTransferId = transfer.id;
+    payout.status = 'paid';
+    payout.processedAt = new Date();
+    return this.serializePayout(payout, { mode: 'stripe' });
   }
 
   async getCreatorPayouts(creatorId: string) {
@@ -311,10 +495,14 @@ export class PaymentsService {
   // ---- Admin manual payout queue -----------------------------------------
 
   async listPendingPayouts() {
-    return this.payoutRepository.find({
+    const payouts = await this.payoutRepository.find({
       where: { status: 'pending' },
       order: { createdAt: 'ASC' },
     });
+    const now = Date.now();
+    return payouts.filter(
+      (payout: Payout) => !payout.dueAt || new Date(payout.dueAt).getTime() <= now,
+    );
   }
 
   /**
@@ -340,7 +528,7 @@ export class PaymentsService {
       throw new NotFoundException('Creator not found');
     }
 
-    const payoutRef = `payout_${creatorId}_${await this.nextPayoutSuffix()}`;
+    const payoutRef = `payout_${creatorId}_${randomUUID()}`;
     await this.walletService.debit(creatorId, payoutAmount, {
       purpose,
       type: 'payout',
@@ -362,16 +550,32 @@ export class PaymentsService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async autoProcessDuePayouts(): Promise<void> {
+    if (!this.connectEnabled) {
+      return;
+    }
+
     const due = await this.payoutRepository.find({
       where: { status: 'pending', dueAt: LessThanOrEqual(new Date()) },
       relations: ['creator'],
     });
     for (const payout of due) {
-      try {
-        await this.approvePayout(payout.id);
-        this.logger.log(
-          `Auto-released scheduled payout ${payout.id} (${payout.amount} ${payout.currency})`,
+      if (!payout.creator?.stripeConnectAccountId || !payout.creator.payoutsEnabled) {
+        this.logger.warn(
+          `Skipped scheduled payout ${payout.id}: creator is not ready for Stripe Connect`,
         );
+        continue;
+      }
+      try {
+        const result = await this.approvePayout(payout.id);
+        if (result.status === 'paid') {
+          this.logger.log(
+            `Auto-released scheduled payout ${payout.id} (${payout.amount} ${payout.currency})`,
+          );
+        } else {
+          this.logger.warn(
+            `Scheduled payout ${payout.id} ended in status ${result.status}`,
+          );
+        }
       } catch (err) {
         this.logger.warn(
           `Failed to auto-release payout ${payout.id}: ${(err as Error).message}`,
@@ -381,41 +585,150 @@ export class PaymentsService {
   }
 
   async approvePayout(payoutId: string) {
-    const payout = await this.getPayoutOrThrow(payoutId);
-    if (payout.status !== 'pending') {
-      throw new BadRequestException(`Payout is not pending (status: ${payout.status})`);
+    const payout = await this.claimPendingPayout(payoutId);
+    if (!payout.creator?.id) {
+      await this.updatePayoutFromStatus(payout.id, 'processing', { status: 'pending' });
+      throw new NotFoundException('Payout creator not found');
     }
-    payout.status = 'paid';
-    payout.processedAt = new Date();
-    await this.payoutRepository.save(payout);
 
-    void this.webhooksService.dispatchEvent('payment.payout_completed', {
-      payoutId: payout.id,
-      payoutReference: payout.payoutId,
-      creatorId: payout.creator?.id,
-      amount: payout.amount,
-      currency: payout.currency,
-    });
+    const creator = payout.creator;
+    const canTransfer =
+      this.connectEnabled && !!creator.stripeConnectAccountId && !!creator.payoutsEnabled;
+    if (canTransfer) {
+      let transfer: any;
+      try {
+        transfer = await this.stripe.transfers.create({
+          amount: Math.round(Number(payout.amount) * 100),
+          currency: payout.currency,
+          destination: creator.stripeConnectAccountId,
+          metadata: { payoutId: payout.payoutId, creatorId: creator.id },
+        });
+      } catch (err: any) {
+        await this.walletService.credit(creator.id, Number(payout.amount), {
+          purpose: 'payout-transfer-failed',
+          type: 'payout_reversal',
+          reference: payout.payoutId,
+        });
+        const markedFailed = await this.updateProcessingPayout(payout.id, {
+          status: 'failed',
+          failureReason: err?.message ?? 'Stripe transfer failed',
+          processedAt: new Date(),
+        });
+        if (!markedFailed) {
+          return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'stripe' });
+        }
+        const failed = await this.getPayoutOrThrow(payout.id);
+        return this.serializePayout(failed, { mode: 'stripe' });
+      }
 
-    return this.serializePayout(payout, { mode: 'manual' });
+      const settled = await this.updateProcessingPayout(payout.id, {
+        status: 'paid',
+        stripeTransferId: transfer.id,
+        processedAt: new Date(),
+      });
+      if (!settled) {
+        return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'stripe' });
+      }
+      payout.status = 'paid';
+      payout.stripeTransferId = transfer.id;
+      payout.processedAt = new Date();
+    } else {
+      try {
+        const settled = await this.updateProcessingPayout(payout.id, {
+          status: 'paid',
+          processedAt: new Date(),
+        });
+        if (!settled) {
+          return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'manual' });
+        }
+        payout.status = 'paid';
+        payout.processedAt = new Date();
+      } catch (err) {
+        await this.payoutRepository.update(
+          { id: payout.id, status: 'processing' },
+          { status: 'pending' },
+        );
+        throw err;
+      }
+    }
+
+    void this.webhooksService
+      .dispatchEvent('payment.payout_completed', {
+        payoutId: payout.id,
+        payoutReference: payout.payoutId,
+        creatorId: payout.creator?.id,
+        amount: payout.amount,
+        currency: payout.currency,
+      })
+      .catch((err) => {
+        this.logger.warn(`Payout completion webhook failed: ${err?.message ?? err}`);
+      });
+
+    return this.serializePayout(payout, { mode: canTransfer ? 'stripe' : 'manual' });
   }
 
   async rejectPayout(payoutId: string, reason?: string) {
-    const payout = await this.getPayoutOrThrow(payoutId);
-    if (payout.status !== 'pending') {
-      throw new BadRequestException(`Payout is not pending (status: ${payout.status})`);
+    const payout = await this.claimPendingPayout(payoutId);
+    if (!payout.creator?.id) {
+      await this.updatePayoutFromStatus(payout.id, 'processing', { status: 'pending' });
+      throw new NotFoundException('Payout creator not found');
     }
-    // Refund the wallet — the creator never received these funds.
-    await this.walletService.credit(payout.creator.id, Number(payout.amount), {
-      purpose: 'payout-rejected',
-      type: 'payout_reversal',
-      reference: payout.payoutId,
+    try {
+      await this.walletService.credit(payout.creator.id, Number(payout.amount), {
+        purpose: 'payout-rejected',
+        type: 'payout_reversal',
+        reference: payout.payoutId,
+      });
+    } catch (err) {
+      await this.payoutRepository.update(
+        { id: payout.id, status: 'processing' },
+        { status: 'pending' },
+      );
+      throw err;
+    }
+    const settled = await this.updateProcessingPayout(payout.id, {
+      status: 'rejected',
+      failureReason: reason ?? 'Rejected by admin',
+      processedAt: new Date(),
     });
+    if (!settled) {
+      return this.serializePayout(await this.getPayoutOrThrow(payout.id), { mode: 'manual' });
+    }
     payout.status = 'rejected';
     payout.failureReason = reason ?? 'Rejected by admin';
     payout.processedAt = new Date();
-    await this.payoutRepository.save(payout);
     return this.serializePayout(payout, { mode: 'manual' });
+  }
+
+  private async claimPendingPayout(payoutId: string): Promise<Payout> {
+    const result = await this.payoutRepository.update(
+      { id: payoutId, status: 'pending' },
+      { status: 'processing' },
+    );
+    if (result?.affected !== 1) {
+      const current = await this.getPayoutOrThrow(payoutId);
+      throw new BadRequestException(`Payout is not pending (status: ${current.status})`);
+    }
+    return this.getPayoutOrThrow(payoutId);
+  }
+
+  private async updatePayoutFromStatus(
+    payoutId: string,
+    fromStatus: Payout['status'],
+    patch: Record<string, any>,
+  ): Promise<boolean> {
+    const result = await this.payoutRepository.update(
+      { id: payoutId, status: fromStatus },
+      patch,
+    );
+    return result?.affected === 1;
+  }
+
+  private async updateProcessingPayout(
+    payoutId: string,
+    patch: Record<string, any>,
+  ): Promise<boolean> {
+    return this.updatePayoutFromStatus(payoutId, 'processing', patch);
   }
 
   private async getPayoutOrThrow(payoutId: string): Promise<Payout> {
@@ -429,15 +742,9 @@ export class PaymentsService {
     return payout;
   }
 
-  /** Monotonic-ish suffix for a human-readable payout reference. */
-  private async nextPayoutSuffix(): Promise<number> {
-    const count = await this.payoutRepository.count();
-    return count + 1;
-  }
-
   private serializePayout(payout: Payout, extra: Record<string, any> = {}) {
     return {
-      success: payout.status !== 'failed',
+      success: payout.status !== 'failed' && payout.status !== 'rejected',
       status: payout.status,
       creatorId: payout.creator?.id,
       amount: Number(payout.amount),
@@ -486,21 +793,104 @@ export class PaymentsService {
       case 'account.updated':
         await this.syncConnectAccount(event.data.object);
         return { received: true, handled: true };
+      case 'charge.refunded':
+        await this.handleChargeRefunded(event.data.object);
+        return { received: true, handled: true };
       default:
         // Acknowledge unhandled event types so Stripe stops retrying them.
         return { received: true, handled: false };
     }
   }
 
+  /**
+   * A charge was fully or partially refunded. Reverse the wallet credits
+   * exactly once (recipient net + platform fee) and mark the transaction.
+   * Replaying the same event is a no-op once status is 'refunded'.
+   */
+  private async handleChargeRefunded(charge: any): Promise<void> {
+    const paymentIntentId =
+      typeof charge?.payment_intent === 'string'
+        ? charge.payment_intent
+        : charge?.payment_intent?.id;
+    if (!paymentIntentId) return;
+
+    const transaction = await this.paymentRepository.findOne({
+      where: { paymentId: paymentIntentId },
+    });
+    if (!transaction || transaction.status === 'refunded' || transaction.status === 'canceled') {
+      return;
+    }
+
+    const gross = Number(transaction.amount);
+    if (charge.amount_refunded != null && charge.amount_refunded <= 0) {
+      return;
+    }
+    const refundedGross = Math.min(
+      gross,
+      charge.amount_refunded != null && charge.amount_refunded > 0
+        ? Math.round((charge.amount_refunded / 100) * 100) / 100
+        : gross,
+    );
+    const previousRefunded = Number(transaction.metadata?.refundedGross ?? 0);
+    const refundDelta = Math.max(0, refundedGross - previousRefunded);
+    if (refundDelta <= 0) return;
+
+    const hasRecipientCredit = Object.prototype.hasOwnProperty.call(
+      transaction.metadata ?? {},
+      'recipientCredited',
+    );
+    const recipient = transaction.recipient?.id;
+    const feeRate = Number(transaction.metadata?.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE);
+    const split = splitRevenue(gross, feeRate);
+    const scale = gross > 0 ? refundDelta / gross : 1;
+    const recipientBack = Math.round(split.recipientAmount * scale * 100) / 100;
+    const platformBack = Math.round(split.platformFee * scale * 100) / 100;
+
+    if (hasRecipientCredit && recipient) {
+      if (recipientBack > 0) {
+        await this.walletService.debit(recipient, recipientBack, {
+          purpose: 'refund',
+          type: 'adjustment',
+          reference: transaction.paymentId,
+          metadata: { chargeId: charge.id, refundedGross },
+        });
+      }
+      if (platformBack > 0) {
+        await this.walletService.debit(PLATFORM_USER_ID, platformBack, {
+          purpose: 'platform-fee-refund',
+          type: 'adjustment',
+          reference: transaction.paymentId,
+          metadata: { chargeId: charge.id, refundedGross },
+        });
+      }
+    }
+
+    transaction.status = refundedGross >= gross ? 'refunded' : 'partially_refunded';
+    transaction.metadata = {
+      ...transaction.metadata,
+      refundedAt: new Date().toISOString(),
+      refundedGross,
+      recipientReversed: Number(transaction.metadata?.recipientReversed ?? 0) + recipientBack,
+      platformReversed: Number(transaction.metadata?.platformReversed ?? 0) + platformBack,
+    };
+    await this.paymentRepository.save(transaction);
+  }
+
   /** Finalize a payout whose Stripe transfer has settled. Idempotent. */
   private async markPayoutPaid(transfer: any): Promise<void> {
     const payout = await this.findPayoutByTransfer(transfer);
-    if (!payout || payout.status === 'paid' || payout.status === 'failed') {
+    if (
+      !payout ||
+      payout.status === 'paid' ||
+      payout.status === 'failed' ||
+      payout.status === 'reversing'
+    ) {
       return;
     }
-    payout.status = 'paid';
-    payout.processedAt = new Date();
-    await this.payoutRepository.save(payout);
+    await this.updatePayoutFromStatus(payout.id, payout.status, {
+      status: 'paid',
+      processedAt: new Date(),
+    });
   }
 
   /**
@@ -509,18 +899,41 @@ export class PaymentsService {
    */
   private async reversePayout(transfer: any): Promise<void> {
     const payout = await this.findPayoutByTransfer(transfer);
-    if (!payout || payout.status === 'failed' || payout.status === 'rejected') {
+    if (
+      !payout ||
+      payout.status === 'failed' ||
+      payout.status === 'rejected' ||
+      payout.status === 'reversing'
+    ) {
       return;
     }
-    await this.walletService.credit(payout.creator.id, Number(payout.amount), {
-      purpose: 'payout-transfer-failed',
-      type: 'payout_reversal',
-      reference: payout.payoutId,
+    if (!payout.creator?.id) {
+      await this.updatePayoutFromStatus(payout.id, payout.status, {
+        status: 'failed',
+        failureReason: 'Payout creator not found',
+        processedAt: new Date(),
+      });
+      return;
+    }
+    const claimed = await this.updatePayoutFromStatus(payout.id, payout.status, {
+      status: 'reversing',
     });
-    payout.status = 'failed';
-    payout.failureReason = transfer?.failure_message ?? 'Stripe transfer failed';
-    payout.processedAt = new Date();
-    await this.payoutRepository.save(payout);
+    if (!claimed) return;
+    try {
+      await this.walletService.credit(payout.creator.id, Number(payout.amount), {
+        purpose: 'payout-transfer-failed',
+        type: 'payout_reversal',
+        reference: payout.payoutId,
+      });
+    } catch (err) {
+      await this.updatePayoutFromStatus(payout.id, 'reversing', { status: payout.status });
+      throw err;
+    }
+    await this.updatePayoutFromStatus(payout.id, 'reversing', {
+      status: 'failed',
+      failureReason: transfer?.failure_message ?? 'Stripe transfer failed',
+      processedAt: new Date(),
+    });
   }
 
   private async findPayoutByTransfer(transfer: any): Promise<Payout | null> {
@@ -560,29 +973,45 @@ export class PaymentsService {
    * Idempotently confirm a payment: flip the transaction to 'succeeded' and
    * credit the recipient's wallet exactly once.
    */
-  private async confirmPaymentSucceeded(paymentIntent: any): Promise<void> {
-    const transaction = await this.paymentRepository.findOne({
-      where: { paymentId: paymentIntent.id },
-    });
-    if (!transaction || transaction.status === 'succeeded') {
-      return;
+  private async confirmPaymentSucceeded(
+    paymentIntent: any,
+    existingTransaction?: PaymentTransaction,
+  ): Promise<boolean> {
+    const transaction =
+      existingTransaction ??
+      (await this.paymentRepository.findOne({
+        where: { paymentId: paymentIntent.id },
+      }));
+    if (
+      !transaction ||
+      transaction.status === 'refunded' ||
+      transaction.status === 'partially_refunded'
+    ) {
+      return false;
     }
 
-    transaction.status = 'succeeded';
-    transaction.metadata = {
-      ...transaction.metadata,
-      confirmedByWebhookAt: new Date().toISOString(),
-    };
-    await this.paymentRepository.save(transaction);
+    if (transaction.status !== 'succeeded') {
+      transaction.status = 'succeeded';
+      transaction.metadata = {
+        ...transaction.metadata,
+        confirmedByWebhookAt: new Date().toISOString(),
+      };
+      await this.paymentRepository.save(transaction);
+    }
 
+    const hasRecipientCredit = Object.prototype.hasOwnProperty.call(
+      transaction.metadata ?? {},
+      'recipientCredited',
+    );
     const amount = Number(transaction.amount);
-    if (transaction.recipient?.id && amount > 0) {
-      await this.walletService.credit(transaction.recipient.id, amount, {
-        purpose: transaction.purpose ?? 'payment',
-        type: 'earning',
-        reference: transaction.paymentId,
-      });
+    if (!hasRecipientCredit && transaction.recipient?.id && amount > 0) {
+      const feeRate = Number(
+        transaction.metadata?.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE,
+      );
+      await this.creditRecipientWithSplit(transaction, feeRate);
     }
+
+    return this.fulfillPayment(transaction);
   }
 
   private async markPaymentFailed(paymentIntent: any, eventType: string): Promise<void> {
@@ -590,7 +1019,12 @@ export class PaymentsService {
       where: { paymentId: paymentIntent.id },
     });
     // Never regress a succeeded transaction — Stripe can deliver events out of order.
-    if (!transaction || transaction.status === 'succeeded') {
+    if (
+      !transaction ||
+      transaction.status === 'succeeded' ||
+      transaction.status === 'refunded' ||
+      transaction.status === 'partially_refunded'
+    ) {
       return;
     }
 
@@ -601,5 +1035,88 @@ export class PaymentsService {
       failureMessage: paymentIntent.last_payment_error?.message ?? null,
     };
     await this.paymentRepository.save(transaction);
+  }
+
+  // ---- Reconciliation API (Phase 2) --------------------------------------
+
+  /** Report whether Stripe Connect payouts are active (gate for the job). */
+  get isConnectEnabled(): boolean {
+    return this.connectEnabled;
+  }
+
+  /**
+   * Reconcile ONE local payout against its Stripe transfer. Replay-safe: it
+   * partners with the transfer.paid / transfer.failed webhooks, and both paths
+   * are idempotent. Only 'processing' (or stale 'paid' awaiting confirmation)
+   * payouts with a known transfer are touched.
+   */
+  async syncPayoutWithStripe(
+    payout: Payout,
+  ): Promise<{ outcome: 'paid' | 'failed' | 'unchanged'; reason?: string }> {
+    if (!this.stripe || !this.connectEnabled) {
+      return { outcome: 'unchanged', reason: 'payments-disabled' };
+    }
+    const transferId = payout.stripeTransferId;
+    if (!transferId) {
+      return { outcome: 'unchanged', reason: 'no-stripe-transfer-id' };
+    }
+    if (payout.status !== 'processing' && payout.status !== 'paid') {
+      return { outcome: 'unchanged', reason: `status-${payout.status}` };
+    }
+
+    let transfer: any;
+    try {
+      transfer = await this.stripe.transfers.retrieve(transferId);
+    } catch (err: any) {
+      this.logger.warn(`Reconciliation could not retrieve transfer ${transferId}: ${err?.message}`);
+      return { outcome: 'unchanged', reason: `retrieve-failed: ${err?.message ?? 'unknown'}` };
+    }
+
+    if (transfer?.status === 'paid') {
+      await this.markPayoutPaid(transfer);
+      return { outcome: 'paid' };
+    }
+    if (transfer?.status === 'failed') {
+      await this.reversePayout(transfer);
+      return { outcome: 'failed' };
+    }
+    return { outcome: 'unchanged', reason: `stripe-status-${transfer?.status ?? 'unknown'}` };
+  }
+
+  /**
+   * Fallback lookup for orphaned payouts: find a Stripe transfer by the
+   * payoutId stamped into its metadata. Covers a crash between creating the
+   * transfer and persisting stripeTransferId on the local payout.
+   */
+  async locateTransferByPayoutId(payoutId: string, sinceHours = 24): Promise<any | null> {
+    if (!this.stripe || !this.connectEnabled) return null;
+    const since = Math.floor((Date.now() - sinceHours * 3600_000) / 1000);
+    try {
+      const list = await this.stripe.transfers.list({
+        limit: 100,
+        created: { gte: since },
+      });
+      return list?.data?.find((t: any) => t?.metadata?.payoutId === payoutId) ?? null;
+    } catch (err: any) {
+      this.logger.warn(`Reconciliation transfer lookup failed: ${err?.message}`);
+      return null;
+    }
+  }
+
+  /** Informational Stripe balance snapshot for drift checking (cents). */
+  async getStripeBalanceSnapshot(): Promise<{ available: number; pending: number } | null> {
+    if (!this.stripe) return null;
+    try {
+      const balance = await this.stripe.balance.retrieve();
+      const net = (entries?: any[]) =>
+        (entries ?? []).reduce((sum, entry: any) => sum + Number(entry?.amount ?? 0), 0);
+      return {
+        available: net(balance?.available),
+        pending: net(balance?.pending),
+      };
+    } catch (err: any) {
+      this.logger.warn(`Stripe balance snapshot failed: ${err?.message}`);
+      return null;
+    }
   }
 }

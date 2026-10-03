@@ -37,13 +37,13 @@ export class ModerationController {
     @Body() appealNeuralModerationDto: AppealNeuralModerationDto,
     @CurrentUser() user: any
   ) {
-    return this.neuralModerationService.appealNeuralModeration(appealNeuralModerationDto, user.id);
+    return this.neuralModerationService.appealNeuralModeration(appealNeuralModerationDto, user.userId);
   }
 
   @Get('neural/user')
   @UseGuards(JwtAuthGuard)
   async getUserNeuralFlags(@CurrentUser() user: any) {
-    return this.neuralModerationService.getUserNeuralFlags(user.id);
+    return this.neuralModerationService.getUserNeuralFlags(user.userId);
   }
 
   @Get('queue')
@@ -88,7 +88,19 @@ export class ModerationController {
 
   @Post('bias/apply-mitigations')
   @UseGuards(JwtAuthGuard, AdminGuard)
-  async applyBiasMitigations(@Body() applyMitigationsDto: ApplyMitigationsDto) {
-    return this.moderationService.applyBiasMitigations(applyMitigationsDto.mitigationStrategy);
+  async applyBiasMitigations(
+    @CurrentUser() user: any,
+    @Body() applyMitigationsDto: ApplyMitigationsDto,
+  ) {
+    return this.moderationService.applyBiasMitigations(
+      applyMitigationsDto.mitigationStrategy,
+      user?.userId,
+    );
+  }
+
+  @Get('bias/mitigations')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async listBiasMitigations(@Query('limit') limit?: string) {
+    return this.moderationService.listBiasMitigations(limit ? Number(limit) : 50);
   }
 }

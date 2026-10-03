@@ -7,6 +7,7 @@ import { User } from '../../users/entities/user.entity';
  * Lifecycle:
  *   pending     — awaiting a manual admin decision (no Stripe Connect configured)
  *   processing  — a Stripe transfer is in flight; finalized by webhook
+ *   reversing   — a failed transfer is being refunded exactly once
  *   paid        — funds sent to the creator
  *   rejected    — admin declined; wallet balance refunded
  *   failed      — Stripe transfer failed; wallet balance refunded
@@ -14,6 +15,7 @@ import { User } from '../../users/entities/user.entity';
 export type PayoutStatus =
   | 'pending'
   | 'processing'
+  | 'reversing'
   | 'paid'
   | 'rejected'
   | 'failed';

@@ -1,5 +1,6 @@
 import { useAuth } from '../hooks/useAuth';
 import { User } from 'lucide-react';
+import { resolveMediaUrl } from '../lib/api';
 import type { UserProfile } from '../lib/types';
 
 interface AvatarProps {
@@ -18,7 +19,8 @@ export function Avatar({ className, size = 40, user, userId, src, alt, name }: A
   const displayName = name || avatarUser?.displayName || avatarUser?.username || 'User';
 
   const isNft = avatarUser?.nftPfpUrl && avatarUser.nftPfpContractAddress && avatarUser.nftPfpTokenId;
-  const imageSrc = src || avatarUser?.pfp || avatarUser?.avatar || avatarUser?.profile?.avatarUrl || avatarUser?.nftPfpUrl;
+  const rawImageSrc = src || avatarUser?.pfp || avatarUser?.avatar || avatarUser?.profile?.avatarUrl || avatarUser?.nftPfpUrl;
+  const imageSrc = resolveMediaUrl(rawImageSrc);
 
   const baseClasses = 'flex items-center justify-center rounded-full object-cover';
   const nftClasses = isNft ? 'clip-path-hexagon' : '';

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { PostReaction } from './entities/post-reaction.entity';
@@ -30,6 +30,8 @@ import { Media } from '../media/entities/media.entity';
 import { TimelineReview } from '../timeline-review/entities/timeline-review.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { WebhooksModule } from '../webhooks/webhooks.module';
+import { DataPermissionsModule } from '../common/data-permissions/data-permissions.module';
+import { FederationModule } from '../federation/federation.module';
 
 @Module({
   imports: [
@@ -48,9 +50,15 @@ import { WebhooksModule } from '../webhooks/webhooks.module';
     GroupsModule,
     TimelineReviewModule,
     MediaModule,
-    ProfileReviewModule,
-    WebhooksModule,
-  ],
+     ProfileReviewModule,
+     WebhooksModule,
+     DataPermissionsModule,
+     // FederationModule imports PostsModule (it builds a local outbox from
+     // PostsService), so this edge is a genuine cycle and must be forwardRef'd
+     // on both sides or the container fails to resolve.
+     forwardRef(() => FederationModule),
+   ],
+
   providers: [PostsService],
   controllers: [PostsController],
   exports: [PostsService],

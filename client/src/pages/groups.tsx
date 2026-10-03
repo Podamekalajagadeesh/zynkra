@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { GroupList } from '../components/groups/GroupList';
 import { GroupLockdownPanel } from '../components/groups/GroupLockdownPanel';
 import { ChannelList } from '../components/groups/ChannelList';
@@ -15,7 +16,8 @@ import { Conversation } from '../components/dms/ConversationList';
 import { Message } from '../lib/types';
 
 export const GroupsPage = () => {
-  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
+  const { id: routeGroupId } = useParams<{ id: string }>();
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(routeGroupId);
   const [selectedChannelId, setSelectedChannelId] = useState<
     string | undefined
   >();
@@ -33,6 +35,15 @@ export const GroupsPage = () => {
     setSelectedChannelType(undefined);
     setSelectedModMailConversation(null);
   };
+
+  useEffect(() => {
+    if (routeGroupId) {
+      setSelectedGroupId(routeGroupId);
+      setSelectedChannelId(undefined);
+      setSelectedChannelType(undefined);
+      setSelectedModMailConversation(null);
+    }
+  }, [routeGroupId]);
 
   // Check if current user is a moderator or admin for the selected group
   useEffect(() => {

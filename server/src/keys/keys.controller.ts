@@ -9,7 +9,7 @@ export class KeysController {
   @UseGuards(JwtAuthGuard)
   @Post('upload')
   async uploadPublicKey(@Req() req, @Body('publicKey') publicKey: string) {
-    return this.keysService.savePublicKey(req.user.id, publicKey);
+    return this.keysService.savePublicKey(req.user.userId, publicKey);
   }
 
   @Get(':userId')

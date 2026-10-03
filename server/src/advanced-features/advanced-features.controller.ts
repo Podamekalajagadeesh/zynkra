@@ -40,9 +40,9 @@ export class AdvancedFeaturesController {
         description: 'Preview — immersive VR/AR experiences.',
       },
       deepfakeDetection: {
-        supported: true,
-        enabled: true,
-        description: 'AI-powered deepfake detection for uploaded media.',
+        supported: false,
+        enabled: false,
+        description: 'Not implemented — no deepfake detection model is wired up.',
       },
       realTimeTranslation: {
         supported: true,

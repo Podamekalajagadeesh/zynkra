@@ -27,7 +27,7 @@
 | **Real-time** | Socket.io Client | WebSocket communication |
 | **Testing** | Vitest + React Testing Lib | Unit & component tests |
 | **Code Quality** | ESLint + Prettier | Linting & formatting |
-| **Crypto** | libsodium.js | E2EE |
+| **Crypto** | libsodium.js + libsignal-protocol-typescript | Client-side crypto (1:1 DMs are E2EE) |
 | **Offline** | IndexedDB + Service Workers | Offline-first support |
 
 ### Backend
@@ -44,7 +44,7 @@
 | **Testing** | Jest | Unit & integration tests |
 | **Caching** | Redis (optional) | In-memory cache |
 | **Job Queue** | Bull (optional) | Background jobs |
-| **File Storage** | AWS S3 or local | Media storage |
+| **File Storage** | Local disk (`UPLOAD_DIR`) + optional `CDN_BASE_URL` | Media storage (S3 not wired yet) |
 
 ### Infrastructure
 | Service | Technology | Purpose |
@@ -146,8 +146,8 @@ CREATE TABLE posts (
   user_id UUID REFERENCES users(id),
   content TEXT NOT NULL,
   media_urls TEXT[], -- Array of S3/IPFS URLs
-  is_encrypted BOOLEAN DEFAULT false,
-  encrypted_key VARCHAR, -- For E2EE
+  is_encrypted BOOLEAN DEFAULT false, -- Server-side E2EE flag (not yet enforced)
+  encrypted_key VARCHAR, -- Reserved for future E2EE
   visibility VARCHAR DEFAULT 'public', -- public, private, followers
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP
@@ -187,7 +187,7 @@ CREATE TABLE direct_messages (
   sender_id UUID REFERENCES users(id),
   recipient_id UUID REFERENCES users(id),
   content TEXT NOT NULL,
-  is_encrypted BOOLEAN DEFAULT true,
+  is_encrypted BOOLEAN DEFAULT false, -- Not enforced server-side yet
   encrypted_key VARCHAR,
   is_read BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
@@ -276,7 +276,7 @@ reactions/
 ```
 
 #### 6. **DMs Module** (`src/dms/`)
-Handles direct messaging with E2EE.
+Handles direct messaging. Client may encrypt 1:1 messages (Signal Protocol); server stores content as received — full server-enforced E2EE is not yet implemented.
 ```
 dms/
 ├── dms.controller.ts        # Routes: GET /dms, POST /dms
@@ -306,14 +306,22 @@ follows/
 ### Commerce Modules
 
 #### 9. **Payments Module** (`src/payments/`)
-Handles payments, creator payouts.
+Stripe payments, Connect payouts, and the 90/10 revenue split.
 ```
 payments/
 ├── payments.controller.ts
-├── payments.service.ts      # Stripe integration, payout logic
-├── transaction.entity.ts    # Transaction records
+├── payments.service.ts              # PaymentIntents, Connect, payout queue, webhooks
+├── revenue-split.ts                 # Shared 90/10 split + PLATFORM_USER_ID
+├── entities/payment-transaction.entity.ts
+├── entities/payout.entity.ts
 └── payments.module.ts
 ```
+
+Companion modules:
+- `src/wallet/` — append-only `ledger_entries` + atomic balance mutations (row lock).
+- `src/monetization/creator-monetization.service.ts` — wallet tips/subs/PPV with platform fee to the system wallet.
+- `src/webhooks/` — Stripe ingress (`POST /webhooks/stripe`) + outbound event delivery.
+- Platform fee account: fixed user id `PLATFORM_USER_ID` (`revenue-split.ts`), seeded by migration `PlatformSystemUser1789200000000`.
 
 #### 10. **Marketplace Module** (`src/marketplace/`)
 Handles product listings, sales.
@@ -325,18 +333,27 @@ marketplace/
 └── marketplace.module.ts
 ```
 
-### Advanced Modules
+#### 11. **Search Module** (`src/search/`)
+Postgres full-text search across users, posts, hashtags, places, groups, events, and products.
+```
+search/
+├── search.controller.ts      # GET /search, GET /search/advanced, POST /search/reverse-image
+├── search.service.ts         # websearch_to_tsquery + ts_rank over searchVector (GIN) + ILIKE fallback
+├── search.module.ts
+└── search.service.spec.ts
+```
+Reverse-image search is Preview only (returns recent public image posts, not perceptual matching).
 
-#### 11. **Crypto Module** (`src/crypto/`)
+#### 12. **Crypto Module** (`src/crypto/`)
 Handles blockchain, wallets, NFTs.
 
-#### 12. **ActivityPub Module** (`src/federation/`)
+#### 13. **ActivityPub Module** (`src/federation/`)
 Handles federation with other servers (Mastodon, Pixelfed).
 
-#### 13. **IPFS Module** (`src/ipfs/`)
+#### 14. **IPFS Module** (`src/ipfs/`)
 Handles decentralized storage.
 
-#### 14. **Notifications Module** (`src/notifications/`)
+#### 15. **Notifications Module** (`src/notifications/`)
 Handles WebSocket notifications, notifications feed.
 
 ---
@@ -425,7 +442,7 @@ client/src/
 │   ├── comment.ts
 │   └── etc.
 ├── lib/                 # Utilities
-│   ├── encryption.ts     # E2EE logic
+│   ├── encryption.ts     # Client-side crypto helpers
 │   ├── validation.ts
 │   └── etc.
 └── App.tsx              # Main app component

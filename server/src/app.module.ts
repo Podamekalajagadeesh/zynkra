@@ -34,7 +34,6 @@ import { TippingModule } from './tipping/tipping.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { StorageModule } from './storage/storage.module';
-import { TokenModule } from './token/token.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { SearchModule } from './search/search.module';
@@ -76,7 +75,6 @@ import { ProfileReviewModule } from './tags/profile-review.module';
 import { FormsModule } from './forms/forms.module';
 import { LiveKitModule } from './livekit/livekit.module';
 import { CollaborationModule } from './collaboration/collaboration.module';
-import { SnapMapModule } from './snapmap/snapmap.module';
 import { LiveshoppingModule } from './liveshopping/liveshopping.module';
 import { DataExportModule } from './data-export/data-export.module';
 import { ActivityModule } from './activity/activity.module';
@@ -196,7 +194,6 @@ import { DocumentationModule } from './documentation/documentation.module';
     AnalyticsModule,
     ReputationModule,
     StorageModule,
-    TokenModule,
     SubscriptionsModule,
     CollaborationModule,
     ActivityModule,
@@ -231,7 +228,6 @@ import { DocumentationModule } from './documentation/documentation.module';
     WebhooksModule,
     VerificationModule,
     DatingModule,
-    SnapMapModule,
     SnoozeModule,
     CollectionsModule,
     SavedMarketplaceListingsModule,
@@ -271,6 +267,20 @@ import { DocumentationModule } from './documentation/documentation.module';
     SecurityAuditModule,
     LocalizationModule,
     DocumentationModule,
+    // Deliberately NOT registered here — code left on disk, per ROADMAP.md §2/§6:
+    //   TokenModule  (fake `$ZYNK` token stored as a Postgres row)
+    //   DaoModule    (DAO governance layered on a Group)
+    // Do not register them without first replacing them with real
+    // implementations. `archive-modules.sh` reports on this list.
+    //
+    // ⚠️  CORRECTION (this comment was previously wrong in the unsafe direction):
+    // It used to also list TokenGatedContentModule and SnapMapModule as
+    // "not wired". They are NOT unwired — they are registered transitively:
+    //   posts.module.ts and groups.module.ts import TokenGatedContentModule
+    //   feed.module.ts imports SnapMapModule
+    // So token-gated post access and the SnapMap location gateway ARE both
+    // reachable over HTTP/socket today, and `archive-modules.sh` is right to
+    // report them as WIRED. Unregister them there too if they should go.
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

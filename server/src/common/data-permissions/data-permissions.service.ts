@@ -8,6 +8,7 @@ export const DEFAULT_DATA_PERMISSIONS: DataPermission[] = [
   DataPermission.PROFILE,
   DataPermission.POSTS,
   DataPermission.SETTINGS,
+  DataPermission.PERSONALIZATION,
 ];
 
 @Injectable()

@@ -11,11 +11,15 @@ import {
 import { PostType, PostVisibility } from '../entities/post.entity';
 
 export class DraftMediaDto {
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @IsString()
   url: string;
 
   @IsString()
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
 
   @IsOptional()
   @IsString()

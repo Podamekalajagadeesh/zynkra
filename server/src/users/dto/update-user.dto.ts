@@ -1,7 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsOptional, IsString, IsEnum, IsBoolean, Length, Matches, MaxLength, IsUrl, IsDate } from 'class-validator';
-import { ProfilePrivacy, AccountType } from '../entities/user.entity';
-import { RelationshipStatus } from '../entities/relationship-status.enum';
+import { IsOptional, IsString, Length, Matches, MaxLength, IsUrl } from 'class-validator';
 
 // Multipart profile forms send every field as a string, including empty ones.
 // Convert '' to undefined so @IsOptional() validators skip blank fields and the
@@ -11,19 +9,6 @@ const emptyToUndefined = ({ value }: { value: unknown }): unknown =>
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsEmail()
-  @Transform(emptyToUndefined)
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  @Matches(/^\+[1-9]\d{7,14}$/, {
-    message: 'phoneNumber must use international E.164 format, for example +14155552671.',
-  })
-  @Transform(({ value }) => value === '' ? undefined : String(value).replace(/[\s().-]/g, ''))
-  phoneNumber?: string;
-
-  @IsOptional()
   @IsString()
   @Length(3, 50)
   @Matches(/^[a-zA-Z0-9_.]+$/, {
@@ -31,11 +16,6 @@ export class UpdateUserDto {
   })
   @Transform(emptyToUndefined)
   username?: string;
-
-  @IsOptional()
-  @IsString()
-  @Transform(emptyToUndefined)
-  walletAddress?: string;
 
   @IsOptional()
   @IsString()
@@ -95,53 +75,9 @@ export class UpdateUserDto {
   profileBioFont?: string;
 
   @IsOptional()
-  @IsEnum(ProfilePrivacy)
-  @Transform(emptyToUndefined)
-  profilePrivacy?: ProfilePrivacy;
-
-  @IsOptional()
-  @IsEnum(AccountType)
-  @Transform(emptyToUndefined)
-  accountType?: AccountType;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(emptyToUndefined)
-  isProfessional?: boolean;
-
-  @IsOptional()
   @IsString()
   @Length(2, 50)
   @Transform(emptyToUndefined)
   categoryLabel?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  @Transform(emptyToUndefined)
-  verified?: boolean;
-
-  @IsOptional()
-  @IsEnum(RelationshipStatus)
-  @Transform(emptyToUndefined)
-  relationshipStatus?: RelationshipStatus;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(emptyToUndefined)
-  showOnlineStatus?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(emptyToUndefined)
-  showLastSeenTimestamp?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @Transform(emptyToUndefined)
-  isOnline?: boolean;
-
-  @IsOptional()
-  @IsDate()
-  @Transform(emptyToUndefined)
-  lastSeenAt?: Date;
 }

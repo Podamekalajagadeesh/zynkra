@@ -5,6 +5,8 @@ import { Tip } from './entities/tip.entity';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { ReputationService } from '../reputation/reputation.service';
+import { PaymentsService } from '../payments/payments.service';
+import { WalletService } from '../wallet/wallet.service';
 
 describe('TippingService', () => {
   let service: TippingService;
@@ -46,6 +48,8 @@ describe('TippingService', () => {
             createQueryBuilder: jest.fn().mockReturnValue(qb),
             create: jest.fn(),
             save: jest.fn(),
+            findOne: jest.fn(),
+            find: jest.fn(),
           },
         },
         {
@@ -65,6 +69,20 @@ describe('TippingService', () => {
           provide: ReputationService,
           useValue: {
             addReputation: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: PaymentsService,
+          useValue: {
+            registerFulfillmentHandler: jest.fn(),
+            processPayment: jest.fn(),
+          },
+        },
+        {
+          provide: WalletService,
+          useValue: {
+            credit: jest.fn(),
+            debit: jest.fn(),
           },
         },
       ],

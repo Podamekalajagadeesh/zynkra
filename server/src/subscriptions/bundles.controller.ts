@@ -53,7 +53,15 @@ export class BundlesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/purchase')
-  purchase(@Request() req, @Param('id') id: string) {
-    return this.subscriptionsService.purchaseBundle(req.user.userId, id);
+  purchase(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: { paymentMethodId?: string } = {},
+  ) {
+    return this.subscriptionsService.purchaseBundle(
+      req.user.userId,
+      id,
+      body.paymentMethodId,
+    );
   }
 }

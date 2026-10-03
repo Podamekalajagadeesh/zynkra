@@ -1,519 +1,283 @@
 /**
- * Missing Features Placeholder Implementation
- * These features have source evidence but lack comprehensive test coverage
- * Status: Implemented feature registry
+ * Unimplemented feature stubs.
+ *
+ * NONE of the features below are built. Each one used to return
+ * `{ status: 'implemented' }` from an empty function, which made this file a
+ * feature checklist that lied — it looked like coverage and was padding. Per
+ * ROADMAP.md §5.3, "no mocked data presented as real."
+ *
+ * The named exports are kept so existing imports keep resolving, but they now
+ * report `status: 'not_implemented'`. Nothing here is wired into a route or a
+ * page. Delete this file when you are done with it; adding a real feature means
+ * writing the component, not filling in a registry entry.
+ *
+ * `status` is typed as a union that still permits `'implemented'` so that any
+ * existing consumer comparing against that literal keeps compiling — it just
+ * receives the truthful value at runtime.
  */
 
-// Account Management Features
-export const AccountSwitching = () => {
-  // Account switching is implemented via the account management service and user controller
-  return { feature: 'Account Switching', status: 'implemented' };
-};
-
-export const AccountDeactivation = () => {
-  // Account deactivation is implemented via the user lifecycle and account status flow
-  return { feature: 'Account Deactivation', status: 'implemented' };
-};
-
-export const AccountReactivation = () => {
-  // Account reactivation is implemented via the user lifecycle and account status flow
-  return { feature: 'Account Reactivation', status: 'implemented' };
-};
-
-export const AccountPermissions = () => {
-  // Account permissions are managed through the authenticated account settings API.
-  return { feature: 'Account Permissions', status: 'implemented' };
-};
-
-export const PersonalizationControls = () => {
-  return {
-    feature: 'Personalization Controls',
-    status: 'implemented',
-    areas: ['feed', 'search', 'recommendations', 'notifications', 'creators', 'communities', 'shopping', 'events', 'location', 'activity'],
-  };
-};
-
-export const ProfileLayouts = () => {
-  // Profile Layouts placeholder
-  return { feature: 'Profile Layouts', status: 'implemented' };
-};
-
-export const ProfileWidgets = () => {
-  // Profile Widgets placeholder
-  return { feature: 'Profile Widgets', status: 'implemented' };
-};
-
-// Social Features
-export const SuggestedProfiles = () => {
-  // Suggested Profiles placeholder
-  return { feature: 'Suggested Profiles', status: 'implemented' };
-};
-
-export const PeopleYouMayKnow = () => {
-  // People You May Know placeholder
-  return { feature: 'People You May Know', status: 'implemented' };
-};
-
-export const MutualConnections = () => {
-  // Mutual Connections placeholder
-  return { feature: 'Mutual Connections', status: 'implemented' };
-};
-
-export const NearbyProfiles = () => {
-  // Nearby Profiles placeholder
-  return { feature: 'Nearby Profiles', status: 'implemented' };
-};
-
-export const ConnectionSuggestions = () => {
-  // Connection Suggestions placeholder
-  return { feature: 'Connection Suggestions', status: 'implemented' };
-};
-
-// Feed & Discovery Features
-export const FreshnessRanking = () => {
-  // Freshness Ranking placeholder
-  return { feature: 'Freshness Ranking', status: 'implemented' };
-};
-
-export const DiversityControls = () => {
-  // Diversity Controls placeholder
-  return { feature: 'Diversity Controls', status: 'implemented' };
-};
-
-export const QualitySignals = () => {
-  // Quality Signals placeholder
-  return { feature: 'Quality Signals', status: 'implemented' };
-};
-
-export const NotInterested = () => {
-  // Not Interested placeholder
-  return { feature: 'Not Interested', status: 'implemented' };
-};
-
-export const LearningFeed = () => {
-  // Learning Feed placeholder
-  return { feature: 'Learning Feed', status: 'implemented' };
-};
-
-export const HideCreators = () => {
-  // Hide Creators placeholder
-  return { feature: 'Hide Creators', status: 'implemented' };
-};
-
-export const RecommendationControls = () => {
-  // Recommendation Controls placeholder
-  return { feature: 'Recommendation Controls', status: 'implemented' };
-};
-
-// Video & Media Features
-export const VideoChapters = () => {
-  // Video Chapters placeholder
-  return { feature: 'Video Chapters', status: 'implemented' };
-};
-
-export const Thumbnails = () => {
-  // Thumbnails placeholder
-  return { feature: 'Thumbnails', status: 'implemented' };
-};
-
-export const Playlists = () => {
-  // Playlists placeholder
-  return { feature: 'Playlists', status: 'implemented' };
-};
-
-export const Premieres = () => {
-  // Premieres placeholder
-  return { feature: 'Premieres', status: 'implemented' };
-};
-
-export const SpeedControls = () => {
-  // Speed Controls placeholder
-  return { feature: 'Speed Controls', status: 'implemented' };
-};
-
-export const VerticalPlayer = () => {
-  // Vertical Player placeholder
-  return { feature: 'Vertical Player', status: 'implemented' };
-};
-
-export const SwipeNavigation = () => {
-  // Swipe Navigation placeholder
-  return { feature: 'Swipe Navigation', status: 'implemented' };
-};
-
-// Story Features
-export const StoryQuizzes = () => {
-  // Story Quizzes placeholder
-  return { feature: 'Story Quizzes', status: 'implemented' };
-};
-
-export const CollaborativeStories = () => {
-  // Collaborative Stories placeholder
-  return { feature: 'Collaborative Stories', status: 'implemented' };
-};
-
-export const StoryHiding = () => {
-  // Story Hiding placeholder
-  return { feature: 'Story Hiding', status: 'implemented' };
-};
-
-export const HighlightCovers = () => {
-  // Highlight Covers placeholder
-  return { feature: 'Highlight Covers', status: 'implemented' };
-};
-
-// Messaging Features
-export const ArchiveChats = () => {
-  // Archive Chats placeholder
-  return { feature: 'Archive Chats', status: 'implemented' };
-};
-
-export const MuteChats = () => {
-  // Mute Chats placeholder
-  return { feature: 'Mute Chats', status: 'implemented' };
-};
-
-export const PinChats = () => {
-  // Pin Chats placeholder
-  return { feature: 'Pin Chats', status: 'implemented' };
-};
-
-export const MessageFolders = () => {
-  // Message Folders placeholder
-  return { feature: 'Message Folders', status: 'implemented' };
-};
-
-export const SuggestedChats = () => {
-  // Suggested Chats placeholder
-  return { feature: 'Suggested Chats', status: 'implemented' };
-};
-
-// Video Calling Features
-export const GalleryView = () => {
-  // Gallery View placeholder
-  return { feature: 'Gallery View', status: 'implemented' };
-};
-
-export const ParticipantManagement = () => {
-  // Participant Management placeholder
-  return { feature: 'Participant Management', status: 'implemented' };
-};
-
-export const WaitingRoom = () => {
-  // Waiting Room placeholder
-  return { feature: 'Waiting Room', status: 'implemented' };
-};
-
-export const Whiteboard = () => {
-  // Whiteboard placeholder
-  return { feature: 'Whiteboard', status: 'implemented' };
-};
-
-export const BreakoutRooms = () => {
-  // Breakout Rooms placeholder
-  return { feature: 'Breakout Rooms', status: 'implemented' };
-};
-
-export const Attendance = () => {
-  // Attendance placeholder
-  return { feature: 'Attendance', status: 'implemented' };
-};
-
-// Community Features
-export const ForumCreation = () => {
-  // Forum Creation placeholder
-  return { feature: 'Forum Creation', status: 'implemented' };
-};
-
-export const Subforums = () => {
-  // Subforums placeholder
-  return { feature: 'Subforums', status: 'implemented' };
-};
-
-export const ThreadPinning = () => {
-  // Thread Pinning placeholder
-  return { feature: 'Thread Pinning', status: 'implemented' };
-};
-
-export const ThreadLocking = () => {
-  // Thread Locking placeholder
-  return { feature: 'Thread Locking', status: 'implemented' };
-};
-
-export const ClubCreation = () => {
-  // Club Creation placeholder
-  return { feature: 'Club Creation', status: 'implemented' };
-};
-
-export const ClubAnalytics = () => {
-  // Club Analytics placeholder
-  return { feature: 'Club Analytics', status: 'implemented' };
-};
-
-// Monetization Features
-export const MembershipsFeature = () => {
-  // Memberships placeholder
-  return { feature: 'Paid Membership', status: 'implemented' };
-};
-
-export const TieredMemberships = () => {
-  // Tiered Memberships placeholder
-  return { feature: 'Tiered Memberships', status: 'implemented' };
-};
-
-export const MembershipBenefits = () => {
-  // Membership Benefits placeholder
-  return { feature: 'Membership Benefits', status: 'implemented' };
-};
-
-export const SubscriptionPricing = () => {
-  // Subscription Pricing placeholder
-  return { feature: 'Subscription Pricing', status: 'implemented' };
-};
-
-export const TipAmounts = () => {
-  // Tip Amounts placeholder
-  return { feature: 'Tip Amounts', status: 'implemented' };
-};
-
-export const TipLeaderboards = () => {
-  // Tip Leaderboards placeholder
-  return { feature: 'Tip Leaderboards', status: 'implemented' };
-};
-
-export const PaidVideos = () => {
-  // Paid Videos placeholder
-  return { feature: 'Paid Videos', status: 'implemented' };
-};
-
-export const Paywall = () => {
-  // Paywall placeholder
-  return { feature: 'Paywall', status: 'implemented' };
-};
-
-export const SponsorshipRequests = () => {
-  // Sponsorship Requests placeholder
-  return { feature: 'Sponsorship Requests', status: 'implemented' };
-};
-
-// AI & Content Generation Features
-export const MultilingualChat = () => {
-  // Multilingual Chat placeholder
-  return { feature: 'Multilingual Chat', status: 'implemented' };
-};
-
-export const ImageUnderstanding = () => {
-  // Image Understanding placeholder
-  return { feature: 'Image Understanding', status: 'implemented' };
-};
-
-export const FileUnderstanding = () => {
-  // File Understanding placeholder
-  return { feature: 'File Understanding', status: 'implemented' };
-};
-
-export const Brainstorming = () => {
-  // Brainstorming placeholder
-  return { feature: 'Brainstorming', status: 'implemented' };
-};
-
-export const TaskPlanning = () => {
-  // Task Planning placeholder
-  return { feature: 'Task Planning', status: 'implemented' };
-};
-
-// Search Features
-export const ConversationalSearch = () => {
-  // Conversational Search placeholder
-  return { feature: 'Conversational Search', status: 'implemented' };
-};
-
-export const QueryRefinement = () => {
-  // Query Refinement placeholder
-  return { feature: 'Query Refinement', status: 'implemented' };
-};
-
-export const SearchSummaries = () => {
-  // Search Summaries placeholder
-  return { feature: 'Search Summaries', status: 'implemented' };
-};
-
-export const SearchAnswers = () => {
-  // Search Answers placeholder
-  return { feature: 'Search Answers', status: 'implemented' };
-};
-
-export const SearchComparisons = () => {
-  // Search Comparisons placeholder
-  return { feature: 'Search Comparisons', status: 'implemented' };
-};
-
-export const KnowledgePanels = () => {
-  // Knowledge Panels placeholder
-  return { feature: 'Knowledge Panels', status: 'implemented' };
-};
-
-// Business & Services Features
-export const AppointmentBooking = () => {
-  // Appointment Booking placeholder
-  return { feature: 'Appointment Booking', status: 'implemented' };
-};
-
-export const LeadScoring = () => {
-  // Lead Scoring placeholder
-  return { feature: 'Lead Scoring', status: 'implemented' };
-};
-
-export const DealManagement = () => {
-  // Deal Management placeholder
-  return { feature: 'Deal Management', status: 'implemented' };
-};
-
-export const FreelancerProfiles = () => {
-  // Freelancer Profiles placeholder
-  return { feature: 'Freelancer Profile', status: 'implemented' };
-};
-
-export const ProjectManagement = () => {
-  // Project Management placeholder
-  return { feature: 'Project Invitations', status: 'implemented' };
-};
-
-export const ProposalTemplates = () => {
-  // Proposal Templates placeholder
-  return { feature: 'Proposal Templates', status: 'implemented' };
-};
-
-export const AuctionCreation = () => {
-  // Auction Creation placeholder
-  return { feature: 'Auction Creation', status: 'implemented' };
-};
-
-export const RentalListings = () => {
-  // Rental Listings placeholder
-  return { feature: 'Rental Listings', status: 'implemented' };
-};
-
-// Safety & Moderation Features
-export const SceneDetection = () => {
-  // Scene Detection placeholder
-  return { feature: 'Scene Detection', status: 'implemented' };
-};
-
-export const DeepfakeDetection = () => {
-  // Deepfake Detection placeholder
-  return { feature: 'Dangerous Content Detection', status: 'implemented' };
-};
-
-export const ImpersonationDetection = () => {
-  // Impersonation Detection placeholder
-  return { feature: 'Impersonation Detection', status: 'implemented' };
-};
-
-export const FakeAccountDetection = () => {
-  // Fake Account Detection placeholder
-  return { feature: 'Fake Account Detection', status: 'implemented' };
-};
-
-export const CoordinatedAbuseDetection = () => {
-  // Coordinated Abuse Detection placeholder
-  return { feature: 'Coordinated Abuse Detection', status: 'implemented' };
-};
-
-export const ScamDetection = () => {
-  // Scam Detection placeholder
-  return { feature: 'Scam Links', status: 'implemented' };
-};
-
-export const PhishingDetection = () => {
-  // Phishing Detection placeholder
-  return { feature: 'Phishing', status: 'implemented' };
-};
-
-export const FraudDetection = () => {
-  // Fraud Detection placeholder
-  return { feature: 'Fraud Risk', status: 'implemented' };
-};
-
-// Content Moderation
-export const BulkModeration = () => {
-  // Bulk Moderation placeholder
-  return { feature: 'Bulk Moderation', status: 'implemented' };
-};
-
-export const RolePermissions = () => {
-  // Role Permissions placeholder
-  return { feature: 'Role Permissions', status: 'implemented' };
-};
-
-export const RuleVersioning = () => {
-  // Rule Versioning placeholder
-  return { feature: 'Rule Versioning', status: 'implemented' };
-};
-
-export const EscalationPolicies = () => {
-  // Escalation Policies placeholder
-  return { feature: 'Escalation', status: 'implemented' };
-};
-
-export const ReputationLevels = () => {
-  // Reputation Levels placeholder
-  return { feature: 'Reputation Levels', status: 'implemented' };
-};
-
-// Analytics & Insights
-export const CreatorAnalytics = () => {
-  // Creator Analytics placeholder
-  return { feature: 'Audience Retention', status: 'implemented' };
-};
-
-export const AudienceAnalytics = () => {
-  // Audience Analytics placeholder
-  return { feature: 'Audience Overlap', status: 'implemented' };
-};
-
-export const FinancialReports = () => {
-  // Financial Reports placeholder
-  return { feature: 'Financial Reports', status: 'implemented' };
-};
-
-export const RetentionAnalytics = () => {
-  // Retention Analytics placeholder
-  return { feature: 'Retention', status: 'implemented' };
-};
-
-export const GrowthPredictions = () => {
-  // Growth Predictions placeholder
-  return { feature: 'Growth Predictions', status: 'implemented' };
-};
-
-// Advanced Features
-export const VoiceDubbing = () => {
-  // Voice Dubbing placeholder
-  return { feature: 'Voice Dubbing', status: 'implemented' };
-};
-
-export const MemoryManagement = () => {
-  // Memory Management placeholder
-  return { feature: 'Memory Retrieval', status: 'implemented' };
-};
-
-export const TranslationVersions = () => {
-  // Translation Versions placeholder
-  return { feature: 'Translation Versions', status: 'implemented' };
-};
-
-export const AutoCutting = () => {
-  // Auto Cutting placeholder
-  return { feature: 'Auto Cutting', status: 'implemented' };
-};
-
-export const SmartReframing = () => {
-  // Smart Reframing placeholder
-  return { feature: 'Smart Reframing', status: 'implemented' };
-};
-
-// Default export with all features
+export type FeatureStatus = 'implemented' | 'not_implemented';
+
+export interface FeatureStub {
+  feature: string;
+  status: FeatureStatus;
+}
+
+const stub = (feature: string): FeatureStub => ({ feature, status: 'not_implemented' });
+
+// ---------------------------------------------------------------------------
+// Account lifecycle — genuinely implemented. Kept as real, with pointers to
+// the code that actually does the work so this stays auditable rather than
+// merely asserted.
+// ---------------------------------------------------------------------------
+
+/** `client/src/contexts/AuthContext.tsx` (switchAccount/addAccount) */
+export const AccountSwitching = () => stub('Account Switching');
+/** `server/src/features/account-management/` + `client/src/pages/settings.tsx` */
+export const AccountDeactivation = () => stub('Account Deactivation');
+/** `server/src/features/account-management/` + `client/src/pages/account-status.tsx` */
+export const AccountReactivation = () => stub('Account Reactivation');
+/** `server/src/features/account-management/` */
+export const AccountPermissions = () => stub('Account Permissions');
+/** `client/src/contexts/PreferencesContext.tsx` */
+export const PersonalizationControls = () => stub('Personalization Controls');
+
+// ---------------------------------------------------------------------------
+// Not implemented
+// ---------------------------------------------------------------------------
+
+// Profile
+export const ProfileLayouts = () => stub('Profile Layouts');
+export const ProfileWidgets = () => stub('Profile Widgets');
+
+// Social graph
+export const SuggestedProfiles = () => stub('Suggested Profiles');
+export const PeopleYouMayKnow = () => stub('People You May Know');
+export const MutualConnections = () => stub('Mutual Connections');
+export const NearbyProfiles = () => stub('Nearby Profiles');
+export const ConnectionSuggestions = () => stub('Connection Suggestions');
+
+// Feed & discovery
+export const FreshnessRanking = () => stub('Freshness Ranking');
+export const DiversityControls = () => stub('Diversity Controls');
+export const QualitySignals = () => stub('Quality Signals');
+export const NotInterested = () => stub('Not Interested');
+export const LearningFeed = () => stub('Learning Feed');
+export const HideCreators = () => stub('Hide Creators');
+export const RecommendationControls = () => stub('Recommendation Controls');
+
+// Video & media
+export const VideoChapters = () => stub('Video Chapters');
+export const Thumbnails = () => stub('Thumbnails');
+export const Playlists = () => stub('Playlists');
+export const Premieres = () => stub('Premieres');
+export const SpeedControls = () => stub('Speed Controls');
+export const VerticalPlayer = () => stub('Vertical Player');
+export const SwipeNavigation = () => stub('Swipe Navigation');
+
+// Stories
+export const StoryQuizzes = () => stub('Story Quizzes');
+export const CollaborativeStories = () => stub('Collaborative Stories');
+export const StoryHiding = () => stub('Story Hiding');
+export const HighlightCovers = () => stub('Highlight Covers');
+
+// Messaging
+export const ArchiveChats = () => stub('Archive Chats');
+export const MuteChats = () => stub('Mute Chats');
+export const PinChats = () => stub('Pin Chats');
+export const MessageFolders = () => stub('Message Folders');
+export const SuggestedChats = () => stub('Suggested Chats');
+
+// Video calling
+export const GalleryView = () => stub('Gallery View');
+export const ParticipantManagement = () => stub('Participant Management');
+export const WaitingRoom = () => stub('Waiting Room');
+export const Whiteboard = () => stub('Whiteboard');
+export const BreakoutRooms = () => stub('Breakout Rooms');
+export const Attendance = () => stub('Attendance');
+
+// Community
+export const ForumCreation = () => stub('Forum Creation');
+export const Subforums = () => stub('Subforums');
+export const ThreadPinning = () => stub('Thread Pinning');
+export const ThreadLocking = () => stub('Thread Locking');
+export const ClubCreation = () => stub('Club Creation');
+export const ClubAnalytics = () => stub('Club Analytics');
+
+// Monetization
+export const MembershipsFeature = () => stub('Paid Membership');
+export const TieredMemberships = () => stub('Tiered Memberships');
+export const MembershipBenefits = () => stub('Membership Benefits');
+export const SubscriptionPricing = () => stub('Subscription Pricing');
+export const TipAmounts = () => stub('Tip Amounts');
+export const TipLeaderboards = () => stub('Tip Leaderboards');
+export const PaidVideos = () => stub('Paid Videos');
+export const Paywall = () => stub('Paywall');
+export const SponsorshipRequests = () => stub('Sponsorship Requests');
+
+// AI & content generation
+export const MultilingualChat = () => stub('Multilingual Chat');
+export const ImageUnderstanding = () => stub('Image Understanding');
+export const FileUnderstanding = () => stub('File Understanding');
+export const Brainstorming = () => stub('Brainstorming');
+export const TaskPlanning = () => stub('Task Planning');
+
+// Search
+export const ConversationalSearch = () => stub('Conversational Search');
+export const QueryRefinement = () => stub('Query Refinement');
+export const SearchSummaries = () => stub('Search Summaries');
+export const SearchAnswers = () => stub('Search Answers');
+export const SearchComparisons = () => stub('Search Comparisons');
+export const KnowledgePanels = () => stub('Knowledge Panels');
+
+// Business & services
+export const AppointmentBooking = () => stub('Appointment Booking');
+export const LeadScoring = () => stub('Lead Scoring');
+export const DealManagement = () => stub('Deal Management');
+export const FreelancerProfiles = () => stub('Freelancer Profile');
+export const ProjectManagement = () => stub('Project Invitations');
+export const ProposalTemplates = () => stub('Proposal Templates');
+export const AuctionCreation = () => stub('Auction Creation');
+export const RentalListings = () => stub('Rental Listings');
+
+// Safety & detection
+// NOTE: no detection model is wired up anywhere. The server equivalent
+// (`server/src/features/safety/safety.service.ts`) returns hardcoded
+// `false`/`0` from every method, and
+// `server/src/advanced-features/advanced-features.controller.ts` now reports
+// `deepfakeDetection.supported = false` to match.
+export const SceneDetection = () => stub('Scene Detection');
+export const DeepfakeDetection = () => stub('Dangerous Content Detection');
+export const ImpersonationDetection = () => stub('Impersonation Detection');
+export const FakeAccountDetection = () => stub('Fake Account Detection');
+export const CoordinatedAbuseDetection = () => stub('Coordinated Abuse Detection');
+export const ScamDetection = () => stub('Scam Links');
+export const PhishingDetection = () => stub('Phishing');
+export const FraudDetection = () => stub('Fraud Risk');
+
+// Content moderation
+export const BulkModeration = () => stub('Bulk Moderation');
+export const RolePermissions = () => stub('Role Permissions');
+export const RuleVersioning = () => stub('Rule Versioning');
+export const EscalationPolicies = () => stub('Escalation');
+export const ReputationLevels = () => stub('Reputation Levels');
+
+// Analytics & insights
+export const CreatorAnalytics = () => stub('Audience Retention');
+export const AudienceAnalytics = () => stub('Audience Overlap');
+export const FinancialReports = () => stub('Financial Reports');
+export const RetentionAnalytics = () => stub('Retention');
+export const GrowthPredictions = () => stub('Growth Predictions');
+
+// Advanced
+export const VoiceDubbing = () => stub('Voice Dubbing');
+export const MemoryManagement = () => stub('Memory Retrieval');
+export const TranslationVersions = () => stub('Translation Versions');
+export const AutoCutting = () => stub('Auto Cutting');
+export const SmartReframing = () => stub('Smart Reframing');
+
+/** Every stub, for the (unimplemented) feature-status registry. */
+export const unimplementedFeatures: readonly FeatureStub[] = [
+  AccountSwitching(),
+  AccountDeactivation(),
+  AccountReactivation(),
+  AccountPermissions(),
+  PersonalizationControls(),
+  ProfileLayouts(),
+  ProfileWidgets(),
+  SuggestedProfiles(),
+  PeopleYouMayKnow(),
+  MutualConnections(),
+  NearbyProfiles(),
+  ConnectionSuggestions(),
+  FreshnessRanking(),
+  DiversityControls(),
+  QualitySignals(),
+  NotInterested(),
+  LearningFeed(),
+  HideCreators(),
+  RecommendationControls(),
+  VideoChapters(),
+  Thumbnails(),
+  Playlists(),
+  Premieres(),
+  SpeedControls(),
+  VerticalPlayer(),
+  SwipeNavigation(),
+  StoryQuizzes(),
+  CollaborativeStories(),
+  StoryHiding(),
+  HighlightCovers(),
+  ArchiveChats(),
+  MuteChats(),
+  PinChats(),
+  MessageFolders(),
+  SuggestedChats(),
+  GalleryView(),
+  ParticipantManagement(),
+  WaitingRoom(),
+  Whiteboard(),
+  BreakoutRooms(),
+  Attendance(),
+  ForumCreation(),
+  Subforums(),
+  ThreadPinning(),
+  ThreadLocking(),
+  ClubCreation(),
+  ClubAnalytics(),
+  MembershipsFeature(),
+  TieredMemberships(),
+  MembershipBenefits(),
+  SubscriptionPricing(),
+  TipAmounts(),
+  TipLeaderboards(),
+  PaidVideos(),
+  Paywall(),
+  SponsorshipRequests(),
+  MultilingualChat(),
+  ImageUnderstanding(),
+  FileUnderstanding(),
+  Brainstorming(),
+  TaskPlanning(),
+  ConversationalSearch(),
+  QueryRefinement(),
+  SearchSummaries(),
+  SearchAnswers(),
+  SearchComparisons(),
+  KnowledgePanels(),
+  AppointmentBooking(),
+  LeadScoring(),
+  DealManagement(),
+  FreelancerProfiles(),
+  ProjectManagement(),
+  ProposalTemplates(),
+  AuctionCreation(),
+  RentalListings(),
+  SceneDetection(),
+  DeepfakeDetection(),
+  ImpersonationDetection(),
+  FakeAccountDetection(),
+  CoordinatedAbuseDetection(),
+  ScamDetection(),
+  PhishingDetection(),
+  FraudDetection(),
+  BulkModeration(),
+  RolePermissions(),
+  RuleVersioning(),
+  EscalationPolicies(),
+  ReputationLevels(),
+  CreatorAnalytics(),
+  AudienceAnalytics(),
+  FinancialReports(),
+  RetentionAnalytics(),
+  GrowthPredictions(),
+  VoiceDubbing(),
+  MemoryManagement(),
+  TranslationVersions(),
+  AutoCutting(),
+  SmartReframing(),
+] as const;
+
 export default {
   AccountSwitching,
   AccountDeactivation,

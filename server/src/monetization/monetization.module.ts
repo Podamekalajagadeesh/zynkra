@@ -10,6 +10,7 @@ import { UserGift } from './entities/user-gift.entity';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Comment } from '../comments/entities/comment.entity';
+import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
 import { UsersModule } from '../users/users.module';
 import { PostsModule } from '../posts/posts.module';
 import { CommentsModule } from '../comments/comments.module';
@@ -17,7 +18,7 @@ import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Badge, Gift, UserGift, User, Post, Comment]),
+    TypeOrmModule.forFeature([Badge, Gift, UserGift, User, Post, Comment, LedgerEntry]),
     UsersModule,
     forwardRef(() => PostsModule),
     forwardRef(() => CommentsModule),

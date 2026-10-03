@@ -54,18 +54,17 @@ const VerifyLinkPage = lazy(() =>
 const GroupsPage = lazy(() =>
   import('./pages/groups').then(module => ({ default: module.GroupsPage }))
 );
-const CulturalPreservationCommunitiesPage = lazy(() =>
-  import('./components/cultural-preservation-communities/CulturalPreservationCommunities').then((module) => ({ default: module.CulturalPreservationCommunities }))
-);
-const SkillSharingCommunitiesPage = lazy(() =>
-  import('./components/skill-sharing/SkillSharingCommunities').then((module) => ({ default: module.SkillSharingCommunities }))
-);
-const CrisisResponseCommunitiesPage = lazy(() =>
-  import('./components/crisis-response-communities/CrisisResponseCommunities').then((module) => ({ default: module.CrisisResponseCommunities }))
-);
-const AccessibilityFirstCommunitiesPage = lazy(() =>
-  import('./components/accessibility-first-communities/AccessibilityFirstCommunities').then((module) => ({ default: module.AccessibilityFirstCommunities }))
-);
+// De-routed 2026-09: the skill-sharing, cultural-preservation,
+// crisis-response, and accessibility-first community pages were complete client
+// UIs calling endpoints (`GET /skill-sharing`, …) that no server module has ever
+// implemented. Their fetch failures were swallowed into `console.error`, so a 404
+// rendered as an empty list — indistinguishable from "you have none". They sat in
+// the primary nav, so this was the largest remaining facade in the product.
+//
+// The components are intentionally left on disk. If these are ever built for
+// real, restore the lazy imports, the four routes, and the "Communities" entry in
+// MORE_SECTIONS together — the routes and the nav must never come back without
+// the backend. See ROADMAP.md §7 item 7.
 const ShortsPage = lazy(() => import('./pages/shorts').then((module) => ({ default: module.default })));
 const ShortsEditorPage = lazy(() => import('./components/shorts/ShortsEditor').then((module) => ({ default: module.default })));
 const WalletPage = lazy(() => import('./pages/wallet').then((module) => ({ default: module.WalletPage })));
@@ -80,7 +79,6 @@ const WatchlistPage = lazy(() => import('./pages/watchlist').then((module) => ({
 const MutedUsersPage = lazy(() => import('./pages/muted-users').then((module) => ({ default: module.MutedUsersPage })));
 const DataExportPage = lazy(() => import('./pages/DataExport').then((module) => ({ default: module.default })));
 const SustainabilityPage = lazy(() => import('./pages/sustainability').then((module) => ({ default: module.SustainabilityPage })));
-const BlockchainIdentityPage = lazy(() => import('./pages/blockchain-identity').then((module) => ({ default: module.default })));
 const SearchResultsPage = lazy(() => import('./pages/search').then((module) => ({ default: module.default })));
 const NotificationsPage = lazy(() => import('./pages/notifications').then((module) => ({ default: module.default })));
 const PasskeyManagementPage = lazy(() =>
@@ -122,6 +120,7 @@ const BlockedUsersPage = lazy(() => import('./pages/blocked-users').then((module
 const BookmarkedPostsPage = lazy(() => import('./pages/BookmarkedPostsPage').then((module) => ({ default: module.BookmarkedPostsPage })));
 const SessionsPage = lazy(() => import('./pages/SessionsPage').then((module) => ({ default: module.SessionsPage })));
 const HashtagPage = lazy(() => import('./pages/HashtagPage').then((module) => ({ default: module.HashtagPage })));
+const PlacePage = lazy(() => import('./pages/place').then((module) => ({ default: module.default })));
 const EventsPage = lazy(() => import('./pages/EventsPage').then((module) => ({ default: module.EventsPage })));
 const EventPage = lazy(() => import('./pages/EventPage').then((module) => ({ default: module.default })));
 const DataPrivacyPage = lazy(() => import('./pages/data-privacy').then((module) => ({ default: module.default })));
@@ -178,10 +177,7 @@ const AdvancedFeaturesPage = lazy(() => import('./pages/advanced-features').then
 const OnDeviceLLMPanel = lazy(() => import('./components/on-device-llm/OnDeviceLLMPanel').then((module) => ({ default: module.OnDeviceLLMPanel })));
 const CrisisEventsPage = lazy(() => import('./pages/crisis/CrisisEventsPage').then((module) => ({ default: module.default })));
 const CrisisEventDetailPage = lazy(() => import('./pages/crisis/CrisisEventDetailPage').then((module) => ({ default: module.default })));
-const TokenGatedPage = lazy(() => import('./pages/token-gated').then((module) => ({ default: module.TokenGatedPage })));
-const DaoPage = lazy(() => import('./pages/dao').then((module) => ({ default: module.DaoPage })));
-const SnapMapPage = lazy(() => import('./components/snapmap/SnapMapPage').then((module) => ({ default: module.SnapMapPage })));
-
+const FederationPage = lazy(() => import('./pages/federation').then((module) => ({ default: module.default })));
 
 function RouteLoader() {
   return (
@@ -223,19 +219,11 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
     items: [
       { to: '/threads', label: 'Threads', icon: GitBranch },
       { to: '/local-feed', label: 'Local Feed', icon: MapPin },
+      { to: '/federation', label: 'Federation', icon: Globe },
       { to: '/fitness-segments', label: 'Fitness Segments', icon: Compass },
       { to: '/dating/discover', label: 'Dating', icon: UserPlus },
       { to: '/digital-assets', label: 'Digital Assets', icon: Globe },
       { to: '/devices', label: 'Devices', icon: Bot },
-    ],
-  },
-  {
-    title: 'Communities',
-    items: [
-      { to: '/cultural-preservation-communities', label: 'Cultural Preservation', icon: Building2 },
-      { to: '/skill-sharing', label: 'Skill Sharing', icon: Users },
-      { to: '/crisis-response-communities', label: 'Crisis Response', icon: HandHeart },
-      { to: '/accessibility-first-communities', label: 'Accessibility First', icon: Users },
     ],
   },
   {
@@ -666,6 +654,28 @@ function FollowerSuggestions() {
   );
 }
 
+function NotFoundPage() {
+  return (
+    <PageShell
+      eyebrow="404"
+      title="Page not found"
+      description="This page doesn't exist, or it was removed from the product surface."
+      compact
+    >
+      <div className="surface-soft p-8 text-center">
+        <p className="text-sm text-dark-600 dark:text-light-300">
+          Check the URL, or head back to your feed.
+        </p>
+        <div className="mt-md">
+          <Link to="/">
+            <Button variant="primary">Go home</Button>
+          </Link>
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
 function App() {
   const { isLoggedIn, activeAccount, loading: isLoading } = useAuth();
   const { theme, toggleTheme } = useDarkMode();
@@ -826,6 +836,8 @@ function App() {
                     <Route path="/advanced-features" element={<ProtectedRoute><AdvancedFeaturesPage /></ProtectedRoute>} />
                     <Route path="/ai/on-device" element={<ProtectedRoute><OnDeviceLLMPanel /></ProtectedRoute>} />
                     <Route path="/hashtag/:hashtag" element={<HashtagPage />} />
+                    <Route path="/place/:id" element={<PlacePage />} />
+                    <Route path="/places/:id" element={<PlacePage />} />
                     <Route path="/events" element={<EventsPage />} />
                     <Route path="/events/:id" element={<EventPage />} />
                     <Route path="/liveshopping" element={<LiveShoppingEventsPage />} />
@@ -842,6 +854,7 @@ function App() {
                     <Route path="/marketplace/orders" element={<OrdersPage />} />
                     <Route path="/marketplace/saved" element={<SavedMarketplaceListingsPage />} />
                     <Route path="/explore" element={<ExplorePage />} />
+                    <Route path="/federation" element={<FederationPage />} />
                     <Route path="/articles" element={
                       <ProtectedRoute>
                         <ArticleFeedPage />
@@ -952,34 +965,10 @@ function App() {
                       }
                     />
                     <Route
-                      path="/cultural-preservation-communities"
+                      path="/groups/:id"
                       element={
                         <ProtectedRoute>
-                          <CulturalPreservationCommunitiesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/skill-sharing"
-                      element={
-                        <ProtectedRoute>
-                          <SkillSharingCommunitiesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crisis-response-communities"
-                      element={
-                        <ProtectedRoute>
-                          <CrisisResponseCommunitiesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/accessibility-first-communities"
-                      element={
-                        <ProtectedRoute>
-                          <AccessibilityFirstCommunitiesPage />
+                          <GroupsPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1108,14 +1097,6 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <SustainabilityPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/blockchain-identity"
-                      element={
-                        <ProtectedRoute>
-                          <BlockchainIdentityPage />
                         </ProtectedRoute>
                       }
                     />
@@ -1426,9 +1407,7 @@ function App() {
                     <Route path="/timeline-review" element={<TimelineReviewPage />} />
                     <Route path="/changelog" element={<ChangelogPage />} />
                     <Route path="/timeline-review/settings" element={<TimelineReviewSettingsPage />} />
-                    <Route path="/token-gated" element={<ProtectedRoute><TokenGatedPage /></ProtectedRoute>} />
-                    <Route path="/dao" element={<ProtectedRoute><DaoPage /></ProtectedRoute>} />
-                    <Route path="/snapmap" element={<ProtectedRoute><SnapMapPage /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </Suspense>
               </main>

@@ -27,8 +27,9 @@ import { GroupsService } from '../groups/groups.service';
 import { TimelineReview, ReviewStatus } from '../timeline-review/entities/timeline-review.entity';
 import { TimelineReviewService } from '../timeline-review/timeline-review.service';
 import { ProfileReviewService } from '../tags/profile-review.service';
-import { WebhooksService } from '../webhooks/webhooks.service';
+import {     WebhooksService } from '../webhooks/webhooks.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
+import { PostFederationService } from '../federation/post-federation.service';
 import { User } from '../users/entities/user.entity';
 import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftDto } from './dto/update-draft.dto';
@@ -81,6 +82,7 @@ export class PostsService {
     private readonly visibilityService: VisibilityService,
     private readonly webhooksService: WebhooksService,
     private readonly dataPermissions: DataPermissionsService,
+    private readonly postFederationService: PostFederationService,
   ) {}
 
   async create(
@@ -194,14 +196,12 @@ export class PostsService {
       if (createPostDto.media.length > 4) {
         throw new BadRequestException('Maximum of 4 media items allowed per post.');
       }
-      post.media = createPostDto.media.map((mediaDto, index) => {
-        const media = new Media();
-        media.url = mediaDto.url;
-        media.type = mediaDto.type;
-        media.altText = mediaDto.altText;
-        media.sortOrder = index;
-        return media;
-      });
+      post.media = [];
+      for (const [index, mediaDto] of createPostDto.media.entries()) {
+        post.media.push(
+          await this.attachMediaForPost(mediaDto, user.id, index),
+        );
+      }
     }
 
     if (createPostDto.poll) {
@@ -251,6 +251,13 @@ export class PostsService {
       visibility: savedPost.visibility,
     });
 
+    // Push the post to the author's remote followers. Fire-and-forget and
+    // non-throwing by design: the post is already saved and returned to the
+    // client, and a third-party server being down must never delay or fail it.
+    // Only public, non-encrypted, non-anonymous posts federate — see
+    // PostFederationService for why each exclusion matters.
+    this.postFederationService.federateNewPost(savedPost, user.id);
+
     return savedPost as Post;
   }
 
@@ -268,16 +275,54 @@ export class PostsService {
       isDraft: true,
     });
     if (dto.media) {
-      post.media = dto.media.map((mediaDto, index) => {
-        const media = new Media();
-        media.url = mediaDto.url;
-        media.type = mediaDto.type;
-        media.altText = mediaDto.altText;
-        media.sortOrder = index;
-        return media;
-      });
+      post.media = [];
+      for (const [index, mediaDto] of dto.media.entries()) {
+        post.media.push(
+          await this.attachMediaForPost(mediaDto, userId, index),
+        );
+      }
     }
     return this.postsRepository.save(post);
+  }
+
+  /**
+   * Attach an uploaded media row to a post. Prefers an existing row owned by
+   * the user (by id or URL) so /media/upload + createPost don't duplicate
+   * rows; falls back to creating one owned by the author.
+   */
+  private async attachMediaForPost(
+    mediaDto: { id?: string; url: string; type: 'image' | 'video' | 'audio'; altText?: string },
+    userId: string,
+    index: number,
+  ): Promise<Media> {
+    let media: Media | null = null;
+
+    if (mediaDto.id) {
+      media = await this.mediaRepository.findOne({ where: { id: mediaDto.id } });
+      if (media && media.userId && media.userId !== userId) {
+        throw new ForbiddenException('You do not own this media');
+      }
+    }
+
+    if (!media && mediaDto.url) {
+      media = await this.mediaRepository.findOne({
+        where: { url: mediaDto.url, userId },
+      });
+    }
+
+    if (!media) {
+      media = new Media();
+      media.url = mediaDto.url;
+      media.type = mediaDto.type;
+      media.userId = userId;
+    } else if (!media.userId) {
+      // Claim a legacy unowned row on first attach.
+      media.userId = userId;
+    }
+
+    media.altText = mediaDto.altText ?? media.altText;
+    media.sortOrder = index;
+    return media;
   }
 
   async findDrafts(userId: string): Promise<Post[]> {
@@ -312,28 +357,44 @@ export class PostsService {
       draft.postType = dto.postType;
     }
     if (dto.media !== undefined) {
-      draft.media = dto.media.map((mediaDto, index) => {
-        const media = new Media();
-        media.url = mediaDto.url;
-        media.type = mediaDto.type;
-        media.altText = mediaDto.altText;
-        media.sortOrder = index;
-        return media;
-      });
+      draft.media = [];
+      for (const [index, mediaDto] of dto.media.entries()) {
+        draft.media.push(await this.attachMediaForPost(mediaDto, userId, index));
+      }
     }
     return this.postsRepository.save(draft);
   }
 
   async publishDraft(userId: string, id: string): Promise<Post> {
     const draft = await this.findDraft(userId, id);
+    const media = draft.media ?? [];
+
+    // Detach media before removing the draft. Post.media has cascade:true
+    // (including remove), which would otherwise delete rows the published
+    // post is about to share.
+    draft.media = [];
+    for (const item of media) {
+      item.post = null as unknown as Post;
+    }
+    if (media.length > 0) {
+      await this.mediaRepository.save(media);
+    }
+
     const published = await this.create(
       { userId },
       {
         content: draft.content,
         visibility: draft.visibility,
         postType: draft.postType,
-        ...(draft.media && draft.media.length > 0
-          ? { media: draft.media.map((m) => ({ url: m.url, type: m.type, altText: m.altText })) }
+        ...(media.length > 0
+          ? {
+              media: media.map((m) => ({
+                id: m.id,
+                url: m.url,
+                type: m.type,
+                altText: m.altText,
+              })),
+            }
           : {}),
       },
     );
@@ -346,6 +407,13 @@ export class PostsService {
     const draft = await this.findDraft(userId, id);
     await this.postsRepository.remove(draft);
   }
+
+  // NOTE: there is deliberately no `deletePost` here. An earlier pass in this
+  // session added one, and it was dead code — `posts.controller.ts` calls the
+  // pre-existing `remove(id, user)`, which also handles the admin case and
+  // cleans up reactions/comments/reports. The federated-retraction call now
+  // lives inside `remove`, which is the method that actually runs. Two delete
+  // paths on one resource is how one of them silently stops being used.
 
   async setCollaborators(postId: string, userId: string, dto: SetCollaboratorsDto): Promise<Post> {
     const post = await this.postsRepository.findOne({
@@ -718,7 +786,7 @@ export class PostsService {
     }
 
     const existingReaction = await this.postReactionsRepository.findOne({
-      where: { post: { id: postId }, user: { id: user.id } },
+      where: { post: { id: postId }, user: { id: user.id }, reaction: 'like' },
     });
 
     if (existingReaction) {
@@ -728,23 +796,25 @@ export class PostsService {
     const reaction = this.postReactionsRepository.create({
       post,
       user,
+      reaction: 'like',
     });
     await this.postReactionsRepository.save(reaction);
     await this.reputationService.addReputation(ReputationEvent.POST_LIKED, user);
-    // Add cryptocurrency reward to post author for receiving an interaction
-    await this.reputationService.addReputation(ReputationEvent.INTERACTION_RECEIVED, post.user);
 
     if (post.tags) {
       await this.userInterestsService.recordInteraction(user, post.tags, 'like');
     }
 
-    await this.notificationsService.createNotification(
-      post.user,
-      NotificationType.LIKE,
-      { userId: user.id, postId: post.id }
-    );
+    if (post.user?.id !== user.id) {
+      await this.reputationService.addReputation(ReputationEvent.INTERACTION_RECEIVED, post.user);
+      await this.notificationsService.createNotification(
+        post.user,
+        NotificationType.LIKE,
+        { userId: user.id, postId: post.id },
+      );
+    }
 
-    return this.findOne(postId);
+    return this.findOne(postId, userPayload.userId);
   }
 
   async unlike(postId: string, userPayload: { userId: string }): Promise<Post> {
@@ -759,7 +829,7 @@ export class PostsService {
     }
 
     const existingReaction = await this.postReactionsRepository.findOne({
-      where: { post: { id: postId }, user: { id: user.id } },
+      where: { post: { id: postId }, user: { id: user.id }, reaction: 'like' },
     });
 
     if (existingReaction) {
@@ -769,9 +839,9 @@ export class PostsService {
     return this.findOne(postId, userPayload.userId);
   }
 
-  async share(postId: string, userPayload: { userId: string }): Promise<Post> {
-    const post = await this.findOne(postId, userPayload.userId);
-    const user = await this.usersService.findOneById(userPayload.userId);
+  async share(postId: string, userId: string): Promise<Post> {
+    const post = await this.findOne(postId, userId);
+    const user = await this.usersService.findOneById(userId);
 
     if (!post) {
       throw new Error('Post not found');
@@ -798,7 +868,7 @@ export class PostsService {
       { userId: user.id, postId: post.id }
     );
 
-    return this.findOne(postId, userPayload.userId);
+    return this.findOne(postId, userId);
   }
 
   async update(
@@ -820,6 +890,14 @@ export class PostsService {
       postId: saved.id,
       authorId: saved.user?.id,
     });
+
+    // Peers that received the original Create are still showing the old text.
+    // Without an `Update` an edit is local-only, which is the federation
+    // equivalent of the missing retraction the Delete path had: peers keep a
+    // copy of something the author believes they changed. Fire-and-forget and
+    // non-throwing — the edit is already saved and returned to the client.
+    this.postFederationService.federatePostUpdate(saved, userPayload.userId);
+
     return saved;
   }
 
@@ -833,6 +911,15 @@ export class PostsService {
     }
 
     const { id: postId, user } = post;
+    // Captured before removal, while the relations are still loaded. `remove()`
+    // does not clear them, but relying on that is how federation ends up
+    // retracting a post with `undefined` visibility and silently skipping it.
+    const shouldFederateDeletion =
+      !post.isDraft &&
+      !post.isAnonymous &&
+      !post.isEncrypted &&
+      post.visibility === PostVisibility.PUBLIC;
+
     try {
       // Manually delete related entities
       await this.postReactionsRepository.delete({ post: { id } });
@@ -844,6 +931,19 @@ export class PostsService {
         postId,
         authorId: user?.id,
       });
+
+      // Retract on every peer this post was federated to. Without this, remote
+      // copies outlive the local original indefinitely: the instance could
+      // publish a post federated and then never take it back, which is the one
+      // guarantee federation must not break.
+      //
+      // Fire-and-forget, and only for the author's own deletion. An admin
+      // deleting someone's post must not emit a Delete as that author — the
+      // remote peer verifies the Delete against the creating actor and would
+      // (correctly) refuse it.
+      if (shouldFederateDeletion && post.user.id === userPayload.userId) {
+        this.postFederationService.federatePostDeletion(postId, userPayload.userId);
+      }
     } catch (error) {
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Failed to delete post with id: ${id}`, errorStack);
@@ -879,13 +979,13 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  async repost(postId: string, userPayload: { userId: string }): Promise<Post> {
-    const originalPost = await this.findOne(postId, userPayload.userId);
+  async repost(postId: string, userId: string): Promise<Post> {
+    const originalPost = await this.findOne(postId, userId);
     if (!originalPost) {
       throw new NotFoundException('Original post not found');
     }
 
-    const user = await this.usersService.findOneById(userPayload.userId);
+    const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -918,13 +1018,13 @@ export class PostsService {
     return originalPost;
   }
 
-  async undoRepost(postId: string, userPayload: { userId: string }): Promise<Post> {
-    const originalPost = await this.findOne(postId, userPayload.userId);
+  async undoRepost(postId: string, userId: string): Promise<Post> {
+    const originalPost = await this.findOne(postId, userId);
     if (!originalPost) {
       throw new NotFoundException('Original post not found');
     }
 
-    const user = await this.usersService.findOneById(userPayload.userId);
+    const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }

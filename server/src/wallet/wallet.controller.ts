@@ -8,13 +8,17 @@ import {
   Param,
   Query,
   Session,
+  Res,
   ParseIntPipe,
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 import { WalletService } from './wallet.service';
 import { CryptoPayoutsService } from './crypto-payouts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CsrfGuard, issueCsrfToken } from '../common/csrf/csrf.guard';
 import { ConnectWalletDto } from './dto/connect-wallet.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
 
@@ -24,6 +28,7 @@ export class WalletController {
   constructor(
     private readonly walletService: WalletService,
     private readonly cryptoPayoutsService: CryptoPayoutsService,
+    private readonly configService: ConfigService,
   ) {}
 
   /** Issue a one-time message the wallet must sign before it can be linked. */
@@ -32,9 +37,18 @@ export class WalletController {
     @Req() req,
     @Query('walletAddress') walletAddress: string,
     @Session() session: Record<string, any>,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const nonce = randomBytes(16).toString('hex');
     session.walletLinkNonce = nonce;
+    // The nonce lives in the session, so mint a CSRF token here too — otherwise
+    // a cross-site page could bind an attacker-chosen wallet to a victim's
+    // account by driving this flow in their browser.
+    issueCsrfToken(session, res, {
+      cookieName: this.configService.get<string>('CSRF_COOKIE_NAME', 'zynkra.csrf'),
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      maxAgeMs: 24 * 60 * 60 * 1000,
+    });
     return {
       message: this.walletService.buildLinkMessage(
         req.user.userId,
@@ -44,6 +58,7 @@ export class WalletController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, CsrfGuard)
   @Post('connect')
   async connectWallet(
     @Req() req,

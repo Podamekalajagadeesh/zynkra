@@ -917,7 +917,8 @@ export interface Thread {
 
 export interface Product {
   id: string;
-  title: string;
+  name: string;
+  description?: string;
   price?: number;
   imageUrls?: string[];
 }

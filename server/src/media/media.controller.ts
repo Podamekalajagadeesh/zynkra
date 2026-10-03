@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -34,11 +35,11 @@ export class MediaController {
       },
     }),
   )
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    return this.mediaService.uploadFile(file);
+    return this.mediaService.uploadFile(file, { userId: req.user?.userId });
   }
 
   @Post('upload/image')
@@ -56,6 +57,7 @@ export class MediaController {
   )
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
+    @Request() req,
     @Query('maxWidth') maxWidth?: string,
     @Query('maxHeight') maxHeight?: string,
     @Query('quality') quality?: string,
@@ -64,12 +66,16 @@ export class MediaController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    return this.mediaService.uploadImage(file, {
-      maxWidth: maxWidth ? parseInt(maxWidth, 10) : undefined,
-      maxHeight: maxHeight ? parseInt(maxHeight, 10) : undefined,
-      quality: quality ? parseInt(quality, 10) : undefined,
-      format,
-    });
+    return this.mediaService.uploadImage(
+      file,
+      {
+        maxWidth: maxWidth ? parseInt(maxWidth, 10) : undefined,
+        maxHeight: maxHeight ? parseInt(maxHeight, 10) : undefined,
+        quality: quality ? parseInt(quality, 10) : undefined,
+        format,
+      },
+      { userId: req.user?.userId },
+    );
   }
 
   @Get(':id')
@@ -78,7 +84,8 @@ export class MediaController {
   }
 
   @Delete(':id')
-  async deleteMedia(@Param('id') id: string) {
-    return this.mediaService.deleteMedia(id);
+  async deleteMedia(@Param('id') id: string, @Request() req) {
+    await this.mediaService.deleteMedia(id, req.user?.userId);
+    return { success: true };
   }
 }

@@ -31,7 +31,7 @@ export class CommentsController {
     @Param('postId') postId: string,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    const user = await this.usersService.findOneById(req.user.userId);
+    const user = await this.usersService.findOneById(req.user.userId, ['following']);
     const post = await this.postsService.findOne(postId);
     return this.commentsService.create(
       createCommentDto.content,

@@ -1,11 +1,15 @@
 import { Controller, Post, Body, UseGuards, Req, Get, Param } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { PayoutReconciliationService } from './reconciliation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly payoutReconciliationService: PayoutReconciliationService,
+  ) {}
 
   // ---- Stripe Connect onboarding (creator-facing) ------------------------
 
@@ -43,6 +47,12 @@ export class PaymentsController {
     return this.paymentsService.rejectPayout(id, body?.reason);
   }
 
+  @Post('admin/reconcile')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async runReconciliation() {
+    return this.payoutReconciliationService.reconcilePayouts();
+  }
+
   @Get('payouts')
   @UseGuards(JwtAuthGuard)
   async getPayouts(@Req() req) {
@@ -72,32 +82,59 @@ export class PaymentsController {
     );
   }
 
+  @Post('confirm')
+  @UseGuards(JwtAuthGuard)
+  async confirmPayment(
+    @Req() req,
+    @Body() body: { paymentId: string; paymentMethodId?: string },
+  ) {
+    return this.paymentsService.confirmPayment(
+      body.paymentId,
+      req.user?.userId || req.user?.id,
+      body.paymentMethodId,
+    );
+  }
+
   @Post('process')
   @UseGuards(JwtAuthGuard)
-  async processPayment(@Req() req, @Body() body: { amount: number; currency: string; paymentMethod: string; paymentDetails: any }) {
-    try {
-      const paymentIntent = await this.paymentsService.createPaymentIntent(
-        Math.round(body.amount * 100),
-        body.currency.toLowerCase(),
-      );
-
-      const transaction = await this.paymentsService.processPayment(req.user?.userId || req.user?.id, body.amount, 'manual', {
+  async processPayment(
+    @Req() req,
+    @Body() body: {
+      amount: number;
+      currency: string;
+      paymentMethod?: string;
+      paymentMethodId?: string;
+      paymentDetails?: any;
+    },
+  ) {
+    const paymentMethodId =
+      body.paymentMethodId ??
+      (typeof body.paymentMethod === 'string' && body.paymentMethod.startsWith('pm_')
+        ? body.paymentMethod
+        : undefined);
+    const userId = req.user?.userId || req.user?.id;
+    const transaction = await this.paymentsService.processPayment(
+      userId,
+      body.amount,
+      'manual',
+      {
         currency: body.currency,
-        metadata: { paymentMethod: body.paymentMethod, paymentDetails: body.paymentDetails, paymentIntent },
-      });
+        payerId: userId,
+        metadata: { paymentMethod: body.paymentMethod },
+        paymentMethodId,
+      },
+    );
 
-      return {
-        success: true,
-        paymentId: transaction.paymentId,
-        amount: body.amount,
-        currency: body.currency,
-        status: transaction.status,
-        transaction,
-      };
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      throw new Error('Payment processing failed');
-    }
+    return {
+      success: transaction.success,
+      paymentId: transaction.paymentId,
+      transactionId: transaction.transactionId,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      status: transaction.status,
+      clientSecret: transaction.clientSecret,
+      transaction,
+    };
   }
 
   @Post('demo-poc')

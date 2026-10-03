@@ -17,7 +17,10 @@ services:
       DB_DATABASE: zynkra
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      CDN_BASE_URL: https://cdn.example.com
+      # Local disk media backend (Phase 1). Leave CDN_BASE_URL empty unless
+      # uploads are actually served from a CDN in front of this volume.
+      UPLOAD_DIR: /app/uploads
+      CDN_BASE_URL: ${CDN_BASE_URL:-}
       PROMETHEUS_ENDPOINT: http://prometheus:9090
       BACKUP_BUCKET: backups
       KUBERNETES_NAMESPACE: zynkra-prod
@@ -26,6 +29,8 @@ services:
       DATABASE_SHARDING_ENABLED: true
     ports:
       - '3000:3000'
+    volumes:
+      - uploads-data:/app/uploads
     depends_on:
       - postgres
       - redis
@@ -51,3 +56,4 @@ services:
 
 volumes:
   postgres-data:
+  uploads-data:

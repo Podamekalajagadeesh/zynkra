@@ -1,265 +1,127 @@
 /**
- * Missing Feature Components
- * Placeholder React components for pending features
+ * Unimplemented feature placeholders.
+ *
+ * Every component here renders a placeholder. They are not partial
+ * implementations and there is no work-in-progress behind them — they are
+ * here so the named exports keep resolving.
+ *
+ * The previous wording was "X - Pending Implementation", which implied a
+ * commitment to ship. It also contradicted `../features/missing-features.ts`,
+ * which reported the same features as `status: 'implemented'`. Both now say
+ * the same truthful thing: this does not exist.
+ *
+ * If you find one of these rendered in the product, that is a bug — nothing
+ * should be showing a placeholder to a user. See ROADMAP.md §5.3.
  */
 
 import React from 'react';
 
-// Account Management Components
+/** The single honest rendering for an unbuilt feature. */
+const NotBuilt: React.FC<{ name: string }> = ({ name }) => (
+  <div className="rounded-2xl border border-dashed border-dark-300 bg-dark-50/60 p-4 text-sm text-dark-600 dark:border-dark-600 dark:bg-dark-900/40 dark:text-dark-300">
+    <p className="font-semibold">{name}</p>
+    <p className="mt-1">This feature isn&apos;t built. It isn&apos;t in progress either.</p>
+  </div>
+);
+
+// Account lifecycle. These features ARE real, but not here — use
+// `AuthContext` (switchAccount / addAccount) and `pages/settings.tsx` +
+// `pages/account-status.tsx`. These placeholders implement nothing.
 export const AccountSwitchingComponent: React.FC = () => (
-  <div>Account Switching - Implemented</div>
+  <NotBuilt name="Account Switching" />
 );
-
 export const AccountDeactivationComponent: React.FC = () => (
-  <div>Account Deactivation - Implemented</div>
+  <NotBuilt name="Account Deactivation" />
 );
 
-export const ProfileLayoutsComponent: React.FC = () => (
-  <div>Profile Layouts - Pending Implementation</div>
-);
+// Profile
+export const ProfileLayoutsComponent: React.FC = () => <NotBuilt name="Profile Layouts" />;
+export const ProfileWidgetsComponent: React.FC = () => <NotBuilt name="Profile Widgets" />;
 
-export const ProfileWidgetsComponent: React.FC = () => (
-  <div>Profile Widgets - Pending Implementation</div>
-);
+// Social discovery
+export const SuggestedProfilesComponent: React.FC = () => <NotBuilt name="Suggested Profiles" />;
+export const PeopleYouMayKnowComponent: React.FC = () => <NotBuilt name="People You May Know" />;
+export const MutualConnectionsComponent: React.FC = () => <NotBuilt name="Mutual Connections" />;
+export const NearbyProfilesComponent: React.FC = () => <NotBuilt name="Nearby Profiles" />;
 
-// Social Discovery Components
-export const SuggestedProfilesComponent: React.FC = () => (
-  <div>Suggested Profiles - Pending Implementation</div>
-);
+// Feed & discovery
+export const FreshnessRankingComponent: React.FC = () => <NotBuilt name="Freshness Ranking" />;
+export const DiversityControlsComponent: React.FC = () => <NotBuilt name="Diversity Controls" />;
+export const QualitySignalsComponent: React.FC = () => <NotBuilt name="Quality Signals" />;
+export const LearningFeedComponent: React.FC = () => <NotBuilt name="Learning Feed" />;
+export const HideCreatorsComponent: React.FC = () => <NotBuilt name="Hide Creators" />;
 
-export const PeopleYouMayKnowComponent: React.FC = () => (
-  <div>People You May Know - Pending Implementation</div>
-);
+// Video & media
+export const VideoChaptersComponent: React.FC = () => <NotBuilt name="Video Chapters" />;
+export const PlaylistsComponent: React.FC = () => <NotBuilt name="Playlists" />;
+export const PremiersComponent: React.FC = () => <NotBuilt name="Premieres" />;
+export const VerticalPlayerComponent: React.FC = () => <NotBuilt name="Vertical Player" />;
+export const SwipeNavigationComponent: React.FC = () => <NotBuilt name="Swipe Navigation" />;
 
-export const MutualConnectionsComponent: React.FC = () => (
-  <div>Mutual Connections - Pending Implementation</div>
-);
+// Stories
+export const StoryQuizzesComponent: React.FC = () => <NotBuilt name="Story Quizzes" />;
+export const CollaborativeStoriesComponent: React.FC = () => <NotBuilt name="Collaborative Stories" />;
+export const HighlightCoversComponent: React.FC = () => <NotBuilt name="Highlight Covers" />;
 
-export const NearbyProfilesComponent: React.FC = () => (
-  <div>Nearby Profiles - Pending Implementation</div>
-);
+// Messaging
+export const ArchiveChatsComponent: React.FC = () => <NotBuilt name="Archive Chats" />;
+export const MuteChatsComponent: React.FC = () => <NotBuilt name="Mute Chats" />;
+export const PinChatsComponent: React.FC = () => <NotBuilt name="Pin Chats" />;
+export const MessageFoldersComponent: React.FC = () => <NotBuilt name="Message Folders" />;
 
-// Feed & Discovery Components
-export const FreshnessRankingComponent: React.FC = () => (
-  <div>Freshness Ranking - Pending Implementation</div>
-);
+// Video calling
+export const GalleryViewComponent: React.FC = () => <NotBuilt name="Gallery View" />;
+export const ParticipantManagementComponent: React.FC = () => <NotBuilt name="Participant Management" />;
+export const WaitingRoomComponent: React.FC = () => <NotBuilt name="Waiting Room" />;
+export const WhiteboardComponent: React.FC = () => <NotBuilt name="Whiteboard" />;
+export const BreakoutRoomsComponent: React.FC = () => <NotBuilt name="Breakout Rooms" />;
 
-export const DiversityControlsComponent: React.FC = () => (
-  <div>Diversity Controls - Pending Implementation</div>
-);
+// Community
+export const ForumCreationComponent: React.FC = () => <NotBuilt name="Forum Creation" />;
+export const SubforumsComponent: React.FC = () => <NotBuilt name="Subforums" />;
+export const ThreadPinningComponent: React.FC = () => <NotBuilt name="Thread Pinning" />;
+export const ClubCreationComponent: React.FC = () => <NotBuilt name="Club Creation" />;
+export const ClubAnalyticsComponent: React.FC = () => <NotBuilt name="Club Analytics" />;
 
-export const QualitySignalsComponent: React.FC = () => (
-  <div>Quality Signals - Pending Implementation</div>
-);
+// Monetization
+export const MembershipsComponent: React.FC = () => <NotBuilt name="Paid Membership" />;
+export const SubscriptionPricingComponent: React.FC = () => <NotBuilt name="Subscription Pricing" />;
+export const TipAmountsComponent: React.FC = () => <NotBuilt name="Tip Amounts" />;
+export const TipLeaderboardsComponent: React.FC = () => <NotBuilt name="Tip Leaderboards" />;
+export const PaywallComponent: React.FC = () => <NotBuilt name="Paywall" />;
+export const SponsorshipRequestsComponent: React.FC = () => <NotBuilt name="Sponsorship Requests" />;
 
-export const LearningFeedComponent: React.FC = () => (
-  <div>Learning Feed - Pending Implementation</div>
-);
+// AI
+export const MultilingualChatComponent: React.FC = () => <NotBuilt name="Multilingual Chat" />;
+export const BrainstormingComponent: React.FC = () => <NotBuilt name="Brainstorming" />;
+export const TaskPlanningComponent: React.FC = () => <NotBuilt name="Task Planning" />;
 
-export const HideCreatorsComponent: React.FC = () => (
-  <div>Hide Creators - Pending Implementation</div>
-);
+// Search
+export const ConversationalSearchComponent: React.FC = () => <NotBuilt name="Conversational Search" />;
+export const SearchSummariesComponent: React.FC = () => <NotBuilt name="Search Summaries" />;
+export const SearchAnswersComponent: React.FC = () => <NotBuilt name="Search Answers" />;
+export const KnowledgePanelsComponent: React.FC = () => <NotBuilt name="Knowledge Panels" />;
 
-// Video & Media Components
-export const VideoChaptersComponent: React.FC = () => (
-  <div>Video Chapters - Pending Implementation</div>
-);
+// Business
+export const AppointmentBookingComponent: React.FC = () => <NotBuilt name="Appointment Booking" />;
+export const LeadScoringComponent: React.FC = () => <NotBuilt name="Lead Scoring" />;
+export const FreelancerProfilesComponent: React.FC = () => <NotBuilt name="Freelancer Profile" />;
+export const ProposalTemplatesComponent: React.FC = () => <NotBuilt name="Proposal Templates" />;
+export const AuctionCreationComponent: React.FC = () => <NotBuilt name="Auction Creation" />;
+export const RentalListingsComponent: React.FC = () => <NotBuilt name="Rental Listings" />;
 
-export const PlaylistsComponent: React.FC = () => (
-  <div>Playlists - Pending Implementation</div>
-);
+// Safety. No detection model is wired up on the server either — see
+// `server/src/features/safety/safety.service.ts`, which returns hardcoded
+// false/0 from every method.
+export const DeepfakeDetectionComponent: React.FC = () => <NotBuilt name="Deepfake Detection" />;
+export const ImpersonationDetectionComponent: React.FC = () => <NotBuilt name="Impersonation Detection" />;
+export const FraudDetectionComponent: React.FC = () => <NotBuilt name="Fraud Detection" />;
 
-export const PremiersComponent: React.FC = () => (
-  <div>Premieres - Pending Implementation</div>
-);
+// Analytics
+export const CreatorAnalyticsComponent: React.FC = () => <NotBuilt name="Creator Analytics" />;
+export const FinancialReportsComponent: React.FC = () => <NotBuilt name="Financial Reports" />;
+export const GrowthPredictionsComponent: React.FC = () => <NotBuilt name="Growth Predictions" />;
 
-export const VerticalPlayerComponent: React.FC = () => (
-  <div>Vertical Player - Pending Implementation</div>
-);
-
-export const SwipeNavigationComponent: React.FC = () => (
-  <div>Swipe Navigation - Pending Implementation</div>
-);
-
-// Story Components
-export const StoryQuizzesComponent: React.FC = () => (
-  <div>Story Quizzes - Pending Implementation</div>
-);
-
-export const CollaborativeStoriesComponent: React.FC = () => (
-  <div>Collaborative Stories - Pending Implementation</div>
-);
-
-export const HighlightCoversComponent: React.FC = () => (
-  <div>Highlight Covers - Pending Implementation</div>
-);
-
-// Messaging Components
-export const ArchiveChatsComponent: React.FC = () => (
-  <div>Archive Chats - Pending Implementation</div>
-);
-
-export const MuteChatsComponent: React.FC = () => (
-  <div>Mute Chats - Pending Implementation</div>
-);
-
-export const PinChatsComponent: React.FC = () => (
-  <div>Pin Chats - Pending Implementation</div>
-);
-
-export const MessageFoldersComponent: React.FC = () => (
-  <div>Message Folders - Pending Implementation</div>
-);
-
-// Video Calling Components
-export const GalleryViewComponent: React.FC = () => (
-  <div>Gallery View - Pending Implementation</div>
-);
-
-export const ParticipantManagementComponent: React.FC = () => (
-  <div>Participant Management - Pending Implementation</div>
-);
-
-export const WaitingRoomComponent: React.FC = () => (
-  <div>Waiting Room - Pending Implementation</div>
-);
-
-export const WhiteboardComponent: React.FC = () => (
-  <div>Whiteboard - Pending Implementation</div>
-);
-
-export const BreakoutRoomsComponent: React.FC = () => (
-  <div>Breakout Rooms - Pending Implementation</div>
-);
-
-// Community Components
-export const ForumCreationComponent: React.FC = () => (
-  <div>Forum Creation - Pending Implementation</div>
-);
-
-export const SubforumsComponent: React.FC = () => (
-  <div>Subforums - Pending Implementation</div>
-);
-
-export const ThreadPinningComponent: React.FC = () => (
-  <div>Thread Pinning - Pending Implementation</div>
-);
-
-export const ClubCreationComponent: React.FC = () => (
-  <div>Club Creation - Pending Implementation</div>
-);
-
-export const ClubAnalyticsComponent: React.FC = () => (
-  <div>Club Analytics - Pending Implementation</div>
-);
-
-// Monetization Components
-export const MembershipsComponent: React.FC = () => (
-  <div>Paid Membership - Pending Implementation</div>
-);
-
-export const SubscriptionPricingComponent: React.FC = () => (
-  <div>Subscription Pricing - Pending Implementation</div>
-);
-
-export const TipAmountsComponent: React.FC = () => (
-  <div>Tip Amounts - Pending Implementation</div>
-);
-
-export const TipLeaderboardsComponent: React.FC = () => (
-  <div>Tip Leaderboards - Pending Implementation</div>
-);
-
-export const PaywallComponent: React.FC = () => (
-  <div>Paywall - Pending Implementation</div>
-);
-
-export const SponsorshipRequestsComponent: React.FC = () => (
-  <div>Sponsorship Requests - Pending Implementation</div>
-);
-
-// AI Components
-export const MultilingualChatComponent: React.FC = () => (
-  <div>Multilingual Chat - Pending Implementation</div>
-);
-
-export const BrainstormingComponent: React.FC = () => (
-  <div>Brainstorming - Pending Implementation</div>
-);
-
-export const TaskPlanningComponent: React.FC = () => (
-  <div>Task Planning - Pending Implementation</div>
-);
-
-// Search Components
-export const ConversationalSearchComponent: React.FC = () => (
-  <div>Conversational Search - Pending Implementation</div>
-);
-
-export const SearchSummariesComponent: React.FC = () => (
-  <div>Search Summaries - Pending Implementation</div>
-);
-
-export const SearchAnswersComponent: React.FC = () => (
-  <div>Search Answers - Pending Implementation</div>
-);
-
-export const KnowledgePanelsComponent: React.FC = () => (
-  <div>Knowledge Panels - Pending Implementation</div>
-);
-
-// Business Components
-export const AppointmentBookingComponent: React.FC = () => (
-  <div>Appointment Booking - Pending Implementation</div>
-);
-
-export const LeadScoringComponent: React.FC = () => (
-  <div>Lead Scoring - Pending Implementation</div>
-);
-
-export const FreelancerProfilesComponent: React.FC = () => (
-  <div>Freelancer Profile - Pending Implementation</div>
-);
-
-export const ProposalTemplatesComponent: React.FC = () => (
-  <div>Proposal Templates - Pending Implementation</div>
-);
-
-export const AuctionCreationComponent: React.FC = () => (
-  <div>Auction Creation - Pending Implementation</div>
-);
-
-export const RentalListingsComponent: React.FC = () => (
-  <div>Rental Listings - Pending Implementation</div>
-);
-
-// Safety Components
-export const DeepfakeDetectionComponent: React.FC = () => (
-  <div>Deepfake Detection - Pending Implementation</div>
-);
-
-export const ImpersonationDetectionComponent: React.FC = () => (
-  <div>Impersonation Detection - Pending Implementation</div>
-);
-
-export const FraudDetectionComponent: React.FC = () => (
-  <div>Fraud Detection - Pending Implementation</div>
-);
-
-// Analytics Components
-export const CreatorAnalyticsComponent: React.FC = () => (
-  <div>Creator Analytics - Pending Implementation</div>
-);
-
-export const FinancialReportsComponent: React.FC = () => (
-  <div>Financial Reports - Pending Implementation</div>
-);
-
-export const GrowthPredictionsComponent: React.FC = () => (
-  <div>Growth Predictions - Pending Implementation</div>
-);
-
-// Export all components
 export default {
   AccountSwitchingComponent,
   AccountDeactivationComponent,

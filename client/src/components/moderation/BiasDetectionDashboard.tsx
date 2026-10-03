@@ -111,7 +111,7 @@ export function BiasDetectionDashboard() {
         <div className="flex items-center gap-2">
           <Scale className="h-6 w-6" />
           <h2 className="text-2xl font-bold">Bias Detection & Mitigation</h2>
-          <Badge variant="secondary">AI-Powered</Badge>
+          <Badge variant="secondary">AI-Powered (Preview · Cloud)</Badge>
         </div>
         <Button onClick={runBiasAnalysis} className="gap-2">
           <Shield className="h-4 w-4" />

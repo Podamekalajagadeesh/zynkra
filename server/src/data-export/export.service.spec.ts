@@ -45,6 +45,7 @@ describe('ExportService data permissions', () => {
       emptyRepository(),
       emptyRepository(),
       emptyRepository(),
+      emptyRepository(),
     ];
     const service = Reflect.construct(ExportService, repositories) as ExportService;
 
@@ -80,6 +81,7 @@ describe('ExportService data permissions', () => {
       usersRepository,
       emptyRepository(),
       messagesRepository,
+      emptyRepository(),
       emptyRepository(),
       emptyRepository(),
       emptyRepository(),

@@ -29,12 +29,13 @@ export class SubscriptionsController {
       req.user.userId,
       createSubscriptionDto.creatorId,
       createSubscriptionDto.tier,
+      createSubscriptionDto.paymentMethodId,
     );
   }
 
   @Delete(':id')
-  cancel(@Param('id') id: string) {
-    return this.subscriptionsService.cancelSubscription(id);
+  cancel(@Request() req, @Param('id') id: string) {
+    return this.subscriptionsService.cancelSubscription(id, req.user.userId);
   }
 
   @Get()
@@ -48,8 +49,8 @@ export class SubscriptionsController {
   }
 
   @Get(':id')
-  getSubscription(@Param('id') id: string) {
-    return this.subscriptionsService.getSubscription(id);
+  getSubscription(@Request() req, @Param('id') id: string) {
+    return this.subscriptionsService.getSubscription(id, req.user.userId);
   }
 
   // Subscription tier endpoints

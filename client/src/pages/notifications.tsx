@@ -57,7 +57,7 @@ const NotificationsPage = () => {
             >
               <div>
                 <h3 className="font-bold">AI Smart Summary</h3>
-                <p className="text-sm text-gray-500">Prioritized digest of your notifications</p>
+                <p className="text-sm text-gray-500">Prioritized digest of your notifications (server-side)</p>
               </div>
               <span className="text-sm text-blue-500">{showSmart ? 'Hide' : 'Show'}</span>
             </button>

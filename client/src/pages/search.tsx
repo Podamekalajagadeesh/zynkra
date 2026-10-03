@@ -197,7 +197,7 @@ function SearchResultsPage() {
           onChange={handleImageSearch}
           className="hidden"
         />
-        <Button 
+          <Button 
           onClick={triggerImageUpload}
           variant="secondary"
           className="flex items-center gap-2"
@@ -205,6 +205,7 @@ function SearchResultsPage() {
         >
           {isImageSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
           Reverse Image Search
+          <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
         </Button>
         <Button
           onClick={isVoiceSearchActive ? stopVoiceSearch : startVoiceSearch}
@@ -383,13 +384,13 @@ function SearchResultsPage() {
                   {results.products.map((product) => (
                     <Link
                       key={product.id}
-                      to={`/marketplace/listings/${product.id}`}
+                      to={`/marketplace/products/${product.id}`}
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                       {product.imageUrls?.[0] && (
-                        <img src={product.imageUrls[0]} alt={product.title} className="w-full h-40 object-cover rounded-md mb-2" />
+                        <img src={product.imageUrls[0]} alt={product.name} className="w-full h-40 object-cover rounded-md mb-2" />
                       )}
-                      <p className="font-bold">{product.title}</p>
+                      <p className="font-bold">{product.name}</p>
                       <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
                     </Link>
                   ))}
@@ -406,7 +407,13 @@ function SearchResultsPage() {
 
             {results.imageSearchResults?.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold mb-4">Reverse Image Search Matches</h2>
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-bold">Reverse Image Search Matches</h2>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
+                </div>
+                <p className="mb-3 text-sm text-dark-500 dark:text-dark-400">
+                  Showing recent public image posts — not perceptual reverse-image matching.
+                </p>
                 <PostList posts={results.imageSearchResults} onDelete={handleDelete} />
               </div>
             )}
@@ -525,34 +532,41 @@ function SearchResultsPage() {
           <TabsContent value="products">
             {results.products?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {results.products.map((product) => (
-                  <Link
-                    key={product.id}
-                    to={`/marketplace/listings/${product.id}`}
-                    className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
-                  >
-                    {product.imageUrls?.[0] && (
-                      <img src={product.imageUrls[0]} alt={product.title} className="w-full h-40 object-cover rounded-md mb-2" />
-                    )}
-                    <p className="font-bold">{product.title}</p>
-                    <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
-                  </Link>
-                ))}
+              {results.products.map((product) => (
+                <Link
+                  key={product.id}
+                  to={`/marketplace/products/${product.id}`}
+                  className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
+                >
+                  {product.imageUrls?.[0] && (
+                    <img src={product.imageUrls[0]} alt={product.name} className="w-full h-40 object-cover rounded-md mb-2" />
+                  )}
+                  <p className="font-bold">{product.name}</p>
+                  <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
+                </Link>
+              ))}
               </div>
             ) : (
               <p className="text-dark-500 dark:text-dark-400">No products found.</p>
             )}
           </TabsContent>
 
-          {results.imageSearchResults && (
-            <TabsContent value="reverse-image">
-              {results.imageSearchResults.length > 0 ? (
-                <PostList posts={results.imageSearchResults} onDelete={handleDelete} />
-              ) : (
-                <p className="text-dark-500 dark:text-dark-400">No matching images found.</p>
-              )}
-            </TabsContent>
-          )}
+            {results.imageSearchResults && (
+              <TabsContent value="reverse-image">
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xl font-bold">Image Matches</h2>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
+                </div>
+                <p className="mb-3 text-sm text-dark-500 dark:text-dark-400">
+                  Recent public image posts, not perceptual reverse-image matching.
+                </p>
+                {results.imageSearchResults.length > 0 ? (
+                  <PostList posts={results.imageSearchResults} onDelete={handleDelete} />
+                ) : (
+                  <p className="text-dark-500 dark:text-dark-400">No matching images found.</p>
+                )}
+              </TabsContent>
+            )}
         </Tabs>
       )}
     </PageShell>

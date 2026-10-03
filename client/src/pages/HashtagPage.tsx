@@ -9,7 +9,9 @@ import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 
 export function HashtagPage() {
-  const { tag } = useParams<{ tag: string }>();
+  // Route is /hashtag/:hashtag — match the param name from App.tsx.
+  const { hashtag } = useParams<{ hashtag: string }>();
+  const tag = hashtag;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);

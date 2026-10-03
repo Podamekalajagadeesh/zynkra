@@ -12,10 +12,13 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles) {
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role?.includes(role));
+    // `role` is a scalar enum, so this must be an equality check. A previous
+    // `user.role?.includes(role)` was String.prototype.includes — substring
+    // matching, which would let a hypothetical 'superadmin' satisfy ADMIN.
+    return requiredRoles.some((role) => user?.role === role);
   }
 }

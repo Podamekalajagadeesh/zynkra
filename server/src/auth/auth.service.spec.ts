@@ -225,6 +225,123 @@ describe('AuthService', () => {
     loginApprovalService = module.get(LoginApprovalService) as { createLoginApprovalRequest: jest.Mock };
   });
 
+  // ─── trusted IP addresses ──────────────────────────────────────────────
+
+  describe('trusted IP addresses', () => {
+    const reqFrom = (ip?: string) => ({ ip, socket: { remoteAddress: ip }, headers: { 'user-agent': 'jest' } });
+
+    beforeEach(() => {
+      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.10'] }));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (loginSessionRepo.findOne as jest.Mock).mockResolvedValue(null);
+    });
+
+    it('marks a session from a trusted IP as trusted and not suspicious', async () => {
+      const result = await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('203.0.113.10'),
+      );
+
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(true);
+      expect(saved.suspicious).toBe(false);
+      expect(result).toHaveProperty('access_token');
+    });
+
+    it('does not trust a session from an unlisted IP', async () => {
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('198.51.100.7'),
+      );
+
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(false);
+    });
+
+    it('still evaluates new-device detection for an untrusted IP', async () => {
+      // Regression guard: trust must not short-circuit the suspicious check for
+      // addresses that are not on the list.
+      (loginSessionRepo.findOne as jest.Mock).mockResolvedValue({
+        id: 'old-session',
+        revokedAt: null,
+        ipAddress: '198.51.100.99',
+        deviceName: 'other-device',
+      });
+
+      await expect(
+        service.signIn({ email: 'test@example.com', password: 'pw' } as SignInDto, reqFrom('198.51.100.7')),
+      ).rejects.toThrow(/approval/i);
+    });
+
+    it('strips the IPv4-mapped IPv6 prefix so ::ffff:a matches a', async () => {
+      const saved = await (async () => {
+        await service.signIn(
+          { email: 'test@example.com', password: 'pw' } as SignInDto,
+          reqFrom('::ffff:203.0.113.10'),
+        );
+        return (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      })();
+      expect(saved.isTrusted).toBe(true);
+    });
+
+    it('is not trusted when the user has no trusted list', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: null }));
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('203.0.113.10'),
+      );
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(false);
+    });
+
+    it('is not trusted when the request IP cannot be determined', async () => {
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom(undefined),
+      );
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(false);
+    });
+
+    it('honours a CIDR range, not just exact addresses', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.0/24'] }));
+
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('203.0.113.77'),
+      );
+
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(true);
+    });
+
+    it('does not honour an address outside a trusted CIDR', async () => {
+      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.0/24'] }));
+
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('203.0.114.77'),
+      );
+
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(false);
+    });
+
+    it('ignores a hostname in the trusted list rather than resolving it', async () => {
+      // Resolving a hostname here would let an attacker-controlled DNS record
+      // widen the allowlist, so a hostname entry simply never matches.
+      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['evil.example.com'] }));
+
+      await service.signIn(
+        { email: 'test@example.com', password: 'pw' } as SignInDto,
+        reqFrom('203.0.113.10'),
+      );
+
+      const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
+      expect(saved.isTrusted).toBe(false);
+    });
+  });
+
   // ─── signUp ───────────────────────────────────────────────────────────
 
   describe('signUp', () => {

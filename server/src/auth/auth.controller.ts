@@ -1,13 +1,22 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request, Session, BadRequestException, UnauthorizedException, Get, Delete, Param, Req, Res, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
+import { issueCsrfToken, CsrfGuard } from '../common/csrf/csrf.guard';
 
 import { AuthService } from './auth.service';
 import { CaptchaService } from './captcha.service';
 import { WebauthnService } from './webauthn.service';
-import { BiometricAuthService, BiometricDevice } from './biometric-auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { SignInDto } from './dto/sign-in.dto';
+import {
+  RefreshTokenDto,
+  SignInDto,
+  TwoFactorSetupDto,
+  TwoFactorTokenDto,
+  VerifyCodeDto,
+  VerifyTwoFactorLoginDto,
+} from './dto/sign-in.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MagicLinkRequestDto } from './dto/magic-link-request.dto';
@@ -21,6 +30,17 @@ import { LinkedAccountProvider } from '../features/account-management/entities/l
 const STRICT = { default: { ttl: 60_000, limit: 100 } };
 // Endpoints that send email (signup, resends, password reset) — keep abuse low.
 const EMAIL_SENDING = { default: { ttl: 300_000, limit: 50 } };
+// Token exchange. This endpoint is a pure guessability surface: it takes a
+// refresh token and mints an access token, so it needs its own tight bucket
+// rather than relying on the 300/min global limit. 20/min per IP is generous
+// for a real client (which refreshes at most every few minutes) while making
+// brute-force impractical.
+const TOKEN_EXCHANGE = { default: { ttl: 60_000, limit: 20 } };
+// Redeeming a 6-digit email verification code. There is no per-account attempt
+// counter on that flow, so the throttle is the only thing standing between an
+// attacker and a 1-in-a-million guess; 10/min keeps that search space large
+// while still permitting a fat-fingered user to retry.
+const VERIFICATION_CODE = { default: { ttl: 60_000, limit: 10 } };
 
 @Controller('auth')
 export class AuthController {
@@ -28,10 +48,32 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly captchaService: CaptchaService,
     private readonly webauthnService: WebauthnService,
-    private readonly biometricAuthService: BiometricAuthService,
     private readonly usersService: UsersService,
     private readonly accountLinkingService: AccountLinkingService,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Issue a CSRF token for this browser session.
+   *
+   * The session cookie is the credential behind the WebAuthn challenge, the
+   * SIWE nonce, and the wallet-link nonce, so those routes need a second,
+   * JS-readable factor that a cross-site page cannot copy. Fetch this once after
+   * load and echo the value in the `X-CSRF-Token` header on those POSTs.
+   *
+   * Safe methods and bearer-token requests bypass the check, so this is not
+   * needed for ordinary API calls.
+   */
+  @Throttle(STRICT)
+  @Get('csrf-token')
+  csrfToken(@Session() session: Record<string, any>, @Res({ passthrough: true }) res: Response) {
+    const token = issueCsrfToken(session, res, {
+      cookieName: this.configService.get<string>('CSRF_COOKIE_NAME', 'zynkra.csrf'),
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+      maxAgeMs: 24 * 60 * 60 * 1000,
+    });
+    return { token };
+  }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -115,19 +157,19 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup')
-  async setupTwoFactor(@Request() req) {
-    return this.authService.setup2FA(req.user.userId);
+  async setupTwoFactor(@Request() req, @Body() body: TwoFactorSetupDto) {
+    return this.authService.setup2FA(req.user.userId, body?.token);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/enable')
-  async enableTwoFactor(@Request() req, @Body() body: { token: string }) {
+  async enableTwoFactor(@Request() req, @Body() body: TwoFactorTokenDto) {
     return this.authService.enable2FA(req.user.userId, body.token);
   }
 
   @Throttle(STRICT)
   @Post('2fa/verify')
-  async verifyTwoFactor(@Req() req, @Body() body: { tempToken: string; token: string }) {
+  async verifyTwoFactor(@Req() req, @Body() body: VerifyTwoFactorLoginDto) {
     return this.authService.verify2FALogin(body.tempToken, body.token, req);
   }
 
@@ -139,63 +181,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
-  async disableTwoFactor(@Req() req, @Body() body: { token: string }) {
+  async disableTwoFactor(@Req() req, @Body() body: TwoFactorTokenDto) {
     return this.authService.disable2FA(req.user.userId, body.token);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('biometric/devices')
-  async getBiometricDevices(@Request() req): Promise<BiometricDevice[]> {
-    return this.biometricAuthService.listBiometricDevices(req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('biometric/register')
-  async registerBiometricDevice(
-    @Request() req,
-    @Body() body: { deviceId: string; deviceName?: string; biometricType?: 'fingerprint' | 'face' | 'iris'; biometricData: string },
-  ): Promise<BiometricDevice> {
-    const binary = typeof body.biometricData === 'string'
-      ? Buffer.from(body.biometricData, 'base64')
-      : Buffer.from(body.biometricData ?? []);
-
-    return this.biometricAuthService.registerBiometricDevice(
-      req.user.userId,
-      body.deviceId,
-      body.deviceName || 'Biometric Device',
-      body.biometricType || 'face',
-      binary,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('biometric/challenge')
-  async generateBiometricChallenge(@Request() req) {
-    return this.biometricAuthService.generateBiometricChallenge(req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('biometric/verify')
-  async verifyBiometricChallenge(
-    @Request() req,
-    @Body() body: { challengeId: string; deviceId: string; biometricData: string | Buffer },
-  ) {
-    const binary = typeof body.biometricData === 'string'
-      ? Buffer.from(body.biometricData, 'base64')
-      : Buffer.from(body.biometricData ?? []);
-
-    return this.biometricAuthService.verifyBiometricChallenge(
-      body.challengeId,
-      req.user.userId,
-      body.deviceId,
-      binary,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Delete('biometric/devices/:id')
-  async deleteBiometricDevice(@Request() req, @Param('id') id: string) {
-    return this.biometricAuthService.deleteBiometricDevice(req.user.userId, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -263,6 +250,10 @@ export class AuthController {
     return this.authService.verifyTrustedContactRecovery(body.identifier, body.contactEmail, body.code, req);
   }
 
+  /**
+   * Issues an arithmetic CAPTCHA. This is an anti-bot speed bump, not proof of
+   * a human — the expression is returned to the client, so scripts can solve it.
+   */
   @Throttle(STRICT)
   @Get('captcha')
   captcha() {
@@ -295,10 +286,10 @@ export class AuthController {
     return this.authService.resendVerification(body.email);
   }
 
-  @Throttle(STRICT)
+  @Throttle(VERIFICATION_CODE)
   @Post('verify-code')
   @HttpCode(HttpStatus.OK)
-  verifyByCode(@Req() req, @Body() body: { email: string; code: string }) {
+  verifyByCode(@Req() req, @Body() body: VerifyCodeDto) {
     return this.authService.verifyByCode(body.email, body.code, req);
   }
 
@@ -316,11 +307,17 @@ export class AuthController {
     return this.authService.reactivateAndSignIn(signInDto, req);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Throttle(TOKEN_EXCHANGE)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Request() req) {
-    return this.authService.refreshToken(req.user.userId, req.user.sessionId);
+  async refresh(@Request() req, @Body() body: RefreshTokenDto) {
+    const authorization = req.headers?.authorization;
+    const bearerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+    const token = body?.refresh_token?.trim() || bearerToken;
+    if (!token) {
+      throw new BadRequestException('A refresh token is required.');
+    }
+    return this.authService.refreshFromToken(token);
   }
 
   @Throttle(EMAIL_SENDING)
@@ -379,7 +376,7 @@ export class AuthController {
     return options;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CsrfGuard)
   @Post('webauthn/registration/verify')
   async verifyWebAuthnRegistration(@Request() req, @Body() body, @Session() session: Record<string, any>) {
     return this.webauthnService.verifyRegistration(req.user, body, session.challenge);
@@ -396,6 +393,7 @@ export class AuthController {
     return options;
   }
 
+  @UseGuards(CsrfGuard)
   @Post('webauthn/authentication/verify')
   async verifyWebAuthnAuthentication(@Body() body, @Session() session: Record<string, any>) {
     if (!session.userId || !session.challenge) {

@@ -146,6 +146,7 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-500" />
             <h2 className="text-xl font-bold">AI Content Generator</h2>
+            <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Preview · Cloud</span>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />

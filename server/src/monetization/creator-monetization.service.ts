@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
+import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
+import { PLATFORM_USER_ID, splitRevenue } from '../payments/revenue-split';
 
 export interface SubscriptionTier {
   id: string;
@@ -50,6 +52,7 @@ export interface PayPerView {
 export class CreatorMonetizationService {
   constructor(
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
+    @InjectRepository(LedgerEntry) private readonly ledgerRepo: Repository<LedgerEntry>,
     private readonly walletService: WalletService,
   ) {}
 
@@ -137,14 +140,15 @@ export class CreatorMonetizationService {
     if (amount > 10000) throw new BadRequestException('Maximum tip is $10,000');
     if (fanId === creatorId) throw new BadRequestException('Cannot tip yourself');
 
-    const platformFee = amount * 0.10; // 10% platform fee
-    const creatorEarnings = amount - platformFee;
+    const { platformFee, recipientAmount } = splitRevenue(amount);
+    const creatorEarnings = recipientAmount;
+    const reference = `tip_${fanId}_${creatorId}_${Date.now()}`;
 
     // Debit fan
     await this.walletService.debit(fanId, amount, {
       purpose: 'tip',
       type: 'payout',
-      reference: `tip_${fanId}_${creatorId}_${Date.now()}`,
+      reference,
       metadata: { creatorId, message },
     });
 
@@ -152,9 +156,19 @@ export class CreatorMonetizationService {
     await this.walletService.credit(creatorId, creatorEarnings, {
       purpose: 'tip-received',
       type: 'earning',
-      reference: `tip_${fanId}_${creatorId}_${Date.now()}`,
+      reference,
       metadata: { fanId, message, platformFee },
     });
+
+    // Credit platform (10%) so the fee is a real ledger balance, not a vanishing cut
+    if (platformFee > 0) {
+      await this.walletService.credit(PLATFORM_USER_ID, platformFee, {
+        purpose: 'platform-fee',
+        type: 'earning',
+        reference,
+        metadata: { kind: 'tip', fanId, creatorId },
+      });
+    }
 
     return {
       success: true,
@@ -185,14 +199,15 @@ export class CreatorMonetizationService {
 
     if (fanId === creatorId) throw new BadRequestException('Cannot subscribe to yourself');
 
-    const platformFee = tier.price * 0.10;
-    const creatorEarnings = tier.price - platformFee;
+    const { platformFee, recipientAmount } = splitRevenue(tier.price);
+    const creatorEarnings = recipientAmount;
+    const reference = `sub_${fanId}_${creatorId}_${tierId}_${Date.now()}`;
 
     // Debit fan
     await this.walletService.debit(fanId, tier.price, {
       purpose: 'subscription',
       type: 'payout',
-      reference: `sub_${fanId}_${creatorId}_${tierId}_${Date.now()}`,
+      reference,
       metadata: { creatorId, tierId, interval: tier.interval },
     });
 
@@ -200,9 +215,18 @@ export class CreatorMonetizationService {
     await this.walletService.credit(creatorId, creatorEarnings, {
       purpose: 'subscription-received',
       type: 'earning',
-      reference: `sub_${fanId}_${creatorId}_${tierId}_${Date.now()}`,
+      reference,
       metadata: { fanId, tierId, platformFee },
     });
+
+    if (platformFee > 0) {
+      await this.walletService.credit(PLATFORM_USER_ID, platformFee, {
+        purpose: 'platform-fee',
+        type: 'earning',
+        reference,
+        metadata: { kind: 'subscription', fanId, creatorId, tierId },
+      });
+    }
 
     const nextBillingDate = new Date();
     if (tier.interval === 'monthly') {
@@ -238,14 +262,15 @@ export class CreatorMonetizationService {
     if (price < 0.5) throw new BadRequestException('Minimum price is $0.50');
     if (buyerId === creatorId) throw new BadRequestException('Cannot purchase your own content');
 
-    const platformFee = price * 0.10;
-    const creatorEarnings = price - platformFee;
+    const { platformFee, recipientAmount } = splitRevenue(price);
+    const creatorEarnings = recipientAmount;
+    const reference = `ppv_${buyerId}_${contentId}_${Date.now()}`;
 
     // Debit buyer
     await this.walletService.debit(buyerId, price, {
       purpose: 'pay-per-view',
       type: 'payout',
-      reference: `ppv_${buyerId}_${contentId}_${Date.now()}`,
+      reference,
       metadata: { creatorId, contentType, contentId },
     });
 
@@ -253,9 +278,18 @@ export class CreatorMonetizationService {
     await this.walletService.credit(creatorId, creatorEarnings, {
       purpose: 'pay-per-view-received',
       type: 'earning',
-      reference: `ppv_${buyerId}_${contentId}_${Date.now()}`,
+      reference,
       metadata: { buyerId, contentType, contentId, platformFee },
     });
+
+    if (platformFee > 0) {
+      await this.walletService.credit(PLATFORM_USER_ID, platformFee, {
+        purpose: 'platform-fee',
+        type: 'earning',
+        reference,
+        metadata: { kind: 'pay-per-view', buyerId, creatorId, contentId },
+      });
+    }
 
     return {
       success: true,
@@ -266,22 +300,84 @@ export class CreatorMonetizationService {
   }
 
   /**
-   * Get creator earnings summary.
+   * Get creator earnings summary from the append-only wallet ledger.
    */
   async getCreatorEarnings(creatorId: string) {
     const creator = await this.usersRepo.findOne({ where: { id: creatorId } });
     if (!creator) throw new NotFoundException('Creator not found');
 
+    const entries = await this.ledgerRepo.find({
+      where: { user: { id: creatorId } as User },
+      order: { createdAt: 'DESC' },
+      take: 1000,
+    });
+
+    let lifetimeEarnings = 0;
+    let tipsReceived = 0;
+    let subscriptionsReceived = 0;
+    let payPerViewSales = 0;
+    const payoutHistory: Array<{
+      id: string;
+      amount: number;
+      type: string;
+      purpose: string | null;
+      reference: string | null;
+      createdAt: Date;
+    }> = [];
+
+    for (const entry of entries) {
+      const amount = Number(entry.amount);
+      if (amount > 0 && entry.type === 'earning') {
+        lifetimeEarnings += amount;
+        const purpose = entry.purpose ?? '';
+        if (purpose === 'tip' || purpose === 'tip-received') tipsReceived += amount;
+        else if (purpose === 'subscription' || purpose === 'subscription-received') {
+          subscriptionsReceived += amount;
+        } else if (purpose === 'pay-per-view' || purpose === 'pay-per-view-received') {
+          payPerViewSales += amount;
+        }
+      }
+      if (amount < 0 && entry.type === 'payout') {
+        payoutHistory.push({
+          id: entry.id,
+          amount,
+          type: entry.type,
+          purpose: entry.purpose,
+          reference: entry.reference,
+          createdAt: entry.createdAt,
+        });
+      }
+    }
+
+    // Platform's lifetime cut is the sum of platform-fee credits to the system account
+    // attributed to this creator via metadata — not part of the creator's own ledger.
+    const platformFeeEntries = await this.ledgerRepo.find({
+      where: {
+        user: { id: PLATFORM_USER_ID } as User,
+        purpose: 'platform-fee',
+      },
+      order: { createdAt: 'DESC' },
+      take: 5000,
+    });
+    let platformFees = 0;
+    for (const entry of platformFeeEntries) {
+      const meta = entry.metadata ?? {};
+      if (meta.creatorId === creatorId) {
+        platformFees += Number(entry.amount);
+      }
+    }
+
     return {
-      balance: (creator as any).walletBalance || 0,
+      balance: Number((creator as any).walletBalance || 0),
       currency: 'usd',
-      lifetimeEarnings: 0, // Would calculate from ledger
-      pendingPayouts: 0,
-      payoutHistory: [],
-      tipsReceived: 0,
-      subscriptionsReceived: 0,
-      payPerViewSales: 0,
-      platformFees: 0,
+      lifetimeEarnings: Math.round(lifetimeEarnings * 100) / 100,
+      pendingPayouts: payoutHistory.length,
+      payoutHistory,
+      tipsReceived: Math.round(tipsReceived * 100) / 100,
+      subscriptionsReceived: Math.round(subscriptionsReceived * 100) / 100,
+      payPerViewSales: Math.round(payPerViewSales * 100) / 100,
+      platformFees: Math.round(platformFees * 100) / 100,
+      entryCount: entries.length,
     };
   }
 }

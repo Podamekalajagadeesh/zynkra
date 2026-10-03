@@ -1,9 +1,10 @@
 import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { createHash } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { User } from '../users/entities/user.entity';
 import { BiometricDeviceEntity } from './entities/biometric-device.entity';
+import { BiometricChallengeEntity } from './entities/biometric-challenge.entity';
 
 export interface BiometricDevice {
   id: string;
@@ -28,16 +29,40 @@ export interface BiometricChallenge {
   createdAt: Date;
 }
 
+const CHALLENGE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * @deprecated REMOVED FROM THE RUNNING APP — do not wire this back up.
+ *
+ * This service and the `biometric_devices` / `biometric_challenges` tables were
+ * removed from `auth.module.ts`. Reasons:
+ *
+ *  1. It duplicated what `/auth/webauthn/*` (passkeys) already does correctly,
+ *     on top of `@simplewebauthn/server` with an authenticator store and
+ *     signature counters.
+ *  2. It had **no callers**. The five client wrappers in `lib/api.ts` that would
+ *     have called it had zero importers; passkeys replaced the UI entirely.
+ *  3. It was **broken on a clean database**: `biometric_devices` never had a
+ *     migration, and `synchronize` is off, so those routes could not have worked.
+ *  4. It was not authentication. The "fingerprint" was a SHA-256 of bytes the
+ *     *client* supplied at registration, so the client could always reproduce
+ *     it — the same trust level as re-sending a password. Its verification
+ *     endpoint issued no token and could not start a session.
+ *
+ * The file is left on disk only as a record of the decision. Use
+ * `WebauthnService` for device-bound authentication.
+ */
 @Injectable()
 export class BiometricAuthService {
   private readonly logger = new Logger(BiometricAuthService.name);
-  private readonly biometricChallenges = new Map<string, BiometricChallenge>();
 
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     @InjectRepository(BiometricDeviceEntity)
     private readonly biometricDeviceRepository: Repository<BiometricDeviceEntity>,
+    @InjectRepository(BiometricChallengeEntity)
+    private readonly biometricChallengeRepository: Repository<BiometricChallengeEntity>,
   ) {}
 
   /**
@@ -83,7 +108,12 @@ export class BiometricAuthService {
   }
 
   /**
-   * Verify biometric authentication
+   * Re-confirm possession of a registered device's biometric blob.
+   *
+   * ⚠️  This is NOT biometric authentication. The blob is whatever the client
+   * sent at registration, so the client can always reproduce it — this proves
+   * the same trust level as re-sending a password. See the class docstring, and
+   * use `/auth/webauthn/*` for real device-bound authentication.
    */
   async verifyBiometricAuthentication(
     userId: string,
@@ -114,38 +144,45 @@ export class BiometricAuthService {
   }
 
   /**
-   * Generate a biometric challenge for authentication
+   * Generate a device-verification challenge.
+   *
+   * This is a re-confirmation challenge for an already-authenticated session, not
+   * a login nonce. It is persisted so it survives a restart and is visible to
+   * every instance.
    */
-  async generateBiometricChallenge(userId: string): Promise<{ challengeId: string; challenge: string; expiresIn: number }> {
+  async generateBiometricChallenge(
+    userId: string,
+    deviceId?: string,
+  ): Promise<{ challengeId: string; challenge: string; expiresIn: number }> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`User ${userId} not found`);
     }
 
-    const challenge = this.generateRandomChallenge();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-    const challengeRecord: BiometricChallenge = {
-      id: `chal-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+    // randomBytes, not Math.random(): a predictable challenge is not a challenge.
+    const challenge = randomBytes(32).toString('hex');
+    const record = this.biometricChallengeRepository.create({
+      user: { id: userId } as User,
       userId,
+      deviceId: deviceId ?? '',
       challenge,
-      expiresAt,
       attempts: 0,
       maxAttempts: 3,
-      createdAt: new Date(),
-    };
+      expiresAt: new Date(Date.now() + CHALLENGE_TTL_MS),
+    });
 
-    this.biometricChallenges.set(challengeRecord.id, challengeRecord);
+    const saved = await this.biometricChallengeRepository.save(record);
 
     return {
-      challengeId: challengeRecord.id,
+      challengeId: saved.id,
       challenge,
-      expiresIn: 300, // 5 minutes in seconds
+      expiresIn: 300,
     };
   }
 
   /**
-   * Verify a biometric challenge
+   * Verify a device-verification challenge. Returns a boolean; does NOT issue a
+   * token and does NOT establish a session.
    */
   async verifyBiometricChallenge(
     challengeId: string,
@@ -153,7 +190,9 @@ export class BiometricAuthService {
     deviceId: string,
     biometricData: Buffer,
   ): Promise<{ success: boolean; message: string }> {
-    const challenge = this.biometricChallenges.get(challengeId);
+    const challenge = await this.biometricChallengeRepository.findOne({
+      where: { id: challengeId },
+    });
     if (!challenge) {
       throw new NotFoundException('Challenge not found or expired');
     }
@@ -163,28 +202,32 @@ export class BiometricAuthService {
     }
 
     if (challenge.expiresAt < new Date()) {
-      this.biometricChallenges.delete(challengeId);
+      await this.biometricChallengeRepository.delete(challengeId);
       throw new BadRequestException('Challenge has expired');
     }
 
     if (challenge.attempts >= challenge.maxAttempts) {
-      this.biometricChallenges.delete(challengeId);
+      await this.biometricChallengeRepository.delete(challengeId);
       throw new BadRequestException('Maximum verification attempts exceeded');
     }
 
-    challenge.attempts++;
+    challenge.attempts += 1;
+    await this.biometricChallengeRepository.save(challenge);
 
     const { verified } = await this.verifyBiometricAuthentication(userId, deviceId, biometricData);
 
     if (!verified) {
       if (challenge.attempts >= challenge.maxAttempts) {
-        this.biometricChallenges.delete(challengeId);
+        await this.biometricChallengeRepository.delete(challengeId);
       }
-      return { success: false, message: `Verification failed. ${challenge.maxAttempts - challenge.attempts} attempts remaining.` };
+      return {
+        success: false,
+        message: `Verification failed. ${challenge.maxAttempts - challenge.attempts} attempts remaining.`,
+      };
     }
 
-    this.biometricChallenges.delete(challengeId);
-    return { success: true, message: 'Biometric authentication successful' };
+    await this.biometricChallengeRepository.delete(challengeId);
+    return { success: true, message: 'Device verification successful' };
   }
 
   /**
@@ -262,51 +305,27 @@ export class BiometricAuthService {
     return createHash('sha256').update(data).digest('hex');
   }
 
+  /**
+   * Compare two SHA-256 hex digests.
+   *
+   * This previously accepted anything within 97% Levenshtein similarity. That
+   * rule is meaningful when matching noisy *raw* fingerprint images, but these
+   * are fixed-length hex hashes: with maxLength 64, a threshold of 0.97 permits
+   * a Hamming distance of up to 1, so a hash differing by a single character
+   * verified successfully. Fuzzy matching has no meaning on a digest, so this is
+   * now an exact, constant-time comparison.
+   */
   private compareBiometricFingerprints(fingerprint1: string, fingerprint2: string): boolean {
-    if (fingerprint1 === fingerprint2) {
-      return true;
+    const a = Buffer.from(fingerprint1, 'utf8');
+    const b = Buffer.from(fingerprint2, 'utf8');
+    if (a.length !== b.length) {
+      return false;
     }
-
-    const maxLength = Math.max(fingerprint1.length, fingerprint2.length);
-    if (maxLength === 0) {
-      return true;
+    if (a.length === 0) {
+      // Two empty digests are not a valid registration; refuse rather than pass.
+      return false;
     }
-
-    const distance = this.levenshteinDistance(fingerprint1, fingerprint2);
-    const similarity = 1 - (distance / maxLength);
-    return similarity >= 0.97;
-  }
-
-  private levenshteinDistance(str1: string, str2: string): number {
-    const track = Array(str2.length + 1)
-      .fill(null)
-      .map(() => Array(str1.length + 1).fill(0));
-
-    for (let i = 0; i <= str1.length; i += 1) {
-      track[0][i] = i;
-    }
-
-    for (let j = 0; j <= str2.length; j += 1) {
-      track[j][0] = j;
-    }
-
-    for (let j = 1; j <= str2.length; j += 1) {
-      for (let i = 1; i <= str1.length; i += 1) {
-        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-        track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
-      }
-    }
-
-    return track[str2.length][str1.length];
-  }
-
-  private generateRandomChallenge(length = 32): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return timingSafeEqual(a, b);
   }
 
   private toBiometricDevice(entity: BiometricDeviceEntity): BiometricDevice {

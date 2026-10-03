@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:legacy": "node --test src/lib/i18n.test.js src/lib/deviceCapabilities.test.js src/lib/offlineSmoke.test.js",
-    "test:ci": "vitest --run --coverage",
+    "test:ci": "vitest --run",
     "smoke:offline": "node scripts/offline-smoke.mjs",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",

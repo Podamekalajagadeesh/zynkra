@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Post, PostType, PostVisibility } from '../posts/entities/post.entity';
+import { SubscriptionStatus } from '../subscriptions/entities/subscription.entity';
 import { TrendsService } from '../trends/trends.service';
 import { UserInterestsService } from '../user-interests/user-interests.service';
 import { UsersService } from '../users/users.service';
@@ -9,7 +10,7 @@ import { User } from '../users/entities/user.entity';
 import { SponsoredPostsService } from '../sponsored-posts/sponsored-posts.service';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
-import { SnapMapGateway } from '../snapmap/snapmap.gateway';
+import { LocationService } from '../snapmap/location.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
@@ -34,7 +35,7 @@ export class FeedService {
     private readonly sponsoredPostsService: SponsoredPostsService,
     private readonly bookmarksService: BookmarksService,
     private readonly storiesService: StoriesService,
-    private readonly snapMapGateway: SnapMapGateway,
+    private readonly locationService: LocationService,
     private readonly trendsService: TrendsService,
     private readonly visibilityService: VisibilityService,
     private readonly dataPermissions: DataPermissionsService,
@@ -60,10 +61,12 @@ export class FeedService {
   }
 
   async getLocalFeed(user: User, radiusKm: number = 50): Promise<(Post & { distance?: number })[]> {
-    // Get current user's location from SnapMap gateway's in-memory storage
-    // @ts-expect-error - Access private userLocations map from SnapMapGateway (we can refactor to share location service later)
-    const userLocation = this.snapMapGateway.userLocations?.get(user.id);
-    
+    // Read the user's shared location through LocationService. This previously
+    // reached into `SnapMapGateway`'s private `userLocations` map via
+    // `@ts-expect-error`, so renaming or reshaping that private field would
+    // break the local feed at runtime with no compile-time signal.
+    const userLocation = this.locationService.getLocation(user.id);
+
     if (!userLocation) {
       // If user hasn't shared location, return empty or fallback to location from user profile
       return [];
@@ -71,6 +74,7 @@ export class FeedService {
 
     // Get all public posts with their places (locations) - exclude profile-only posts from local feed
     const postsWithPlaces = await this.postsRepository.find({
+      where: { isDraft: false },
       relations: ['user', 'reactions', 'comments', 'tags', 'place'],
       order: { createdAt: 'DESC' },
     }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts));
@@ -120,14 +124,15 @@ export class FeedService {
 
   async getForYouFeed(user: User): Promise<(Post & { isAd?: boolean })[]> {
     if (user) {
-      await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
       const controls = normalizePersonalizationControls(user.personalizationControls);
       if (user.personalization === false || !controls.feedPersonalization) {
         return this.getChronologicalFeed(user);
       }
+      await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
     }
     const [publicPosts, userInterests, followingIds] = await Promise.all([
       this.postsRepository.find({
+        where: { isDraft: false },
         relations: ['user', 'reactions', 'comments', 'tags'],
       }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
       user ? (this.userInterestsService?.getInterests?.(user) ?? Promise.resolve([])) : Promise.resolve([]),
@@ -228,6 +233,8 @@ export class FeedService {
       }
     }
 
+    interleavedOrganicFeed.push(...followedHashtagFeedPosts, ...remainingFeedPosts);
+
     if (adPosts.length === 0) {
       return interleavedOrganicFeed;
     }
@@ -248,11 +255,13 @@ export class FeedService {
       }
     }
 
+    interleavedFeed.push(...adPosts);
     return interleavedFeed;
   }
 
   async getChronologicalFeed(user: User): Promise<Post[]> {
     const posts = await this.postsRepository.find({
+      where: { isDraft: false },
       order: { createdAt: 'DESC' },
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
@@ -270,6 +279,7 @@ export class FeedService {
 
     const [publicPosts, userInterests, followingIds] = await Promise.all([
       this.postsRepository.find({
+        where: { isDraft: false },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
       }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
@@ -365,25 +375,52 @@ export class FeedService {
     }
   }
 
-  async getShortsFeed(user: User): Promise<Post[]> {
-    const videoPosts = await this.postsRepository.find({
-      where: {
-        visibility: PostVisibility.PUBLIC,
-        postType: PostType.REEL,
-      },
-      relations: ['user', 'reactions', 'comments', 'tags'],
-    }).then((posts) => this.visibilityService.filterVisiblePosts(user?.id ?? null, posts));
+  async getShortsFeed(user: User, limit: number = 50): Promise<Post[]> {
+    if (!user) {
+      return [];
+    }
+    const controls = normalizePersonalizationControls(user.personalizationControls);
+    const canPersonalize =
+      user.personalization !== false &&
+      controls.feedPersonalization &&
+      (await this.dataPermissions.has(user.id, DataPermission.PERSONALIZATION));
+    const videoPosts = await this.postsRepository
+      .find({
+        where: {
+          visibility: PostVisibility.PUBLIC,
+          postType: In([PostType.REEL, PostType.SHORTS]),
+          isDraft: false,
+        },
+        order: { createdAt: 'DESC' },
+        take: Math.min(Math.max(limit, 1), 100),
+        relations: ['user', 'reactions', 'comments', 'tags'],
+      })
+      .then((posts) => this.visibilityService.filterVisiblePosts(user.id, posts));
 
-    const userInterests = await this.userInterestsService.getInterests(user);
+    const blockedKeywords = (user.blockedKeywords || []).map((keyword) => keyword.toLowerCase());
+    const blockedHashtags = (user.blockedHashtags || []).map((hashtag) => hashtag.toLowerCase());
+    const blockedContentTypes = (user.blockedContentTypes || []).map((type) => type.toLowerCase());
+    const filteredPosts = videoPosts.filter((post) => {
+      const postType = (post.postType || '').toString().toLowerCase();
+      if (blockedContentTypes.includes(postType)) return false;
+      const hashtags = (post.tags || []).map((tag) => tag.name.toLowerCase());
+      if (hashtags.some((hashtag) => blockedHashtags.includes(hashtag))) return false;
+      const content = (post.content || '').toLowerCase();
+      return !blockedKeywords.some((keyword) => content.includes(keyword));
+    });
 
-    const scoredPosts = videoPosts.map(post => {
+    const userInterests = canPersonalize
+      ? await this.userInterestsService.getInterests(user)
+      : [];
+
+    const scoredPosts = filteredPosts.map((post) => {
       const score = this.calculatePostScore(post, userInterests);
       return { ...post, score };
     });
 
-    scoredPosts.sort((a, b) => (b as any).score - (a as any).score);
+    scoredPosts.sort((a, b) => b.score - a.score);
 
-    return scoredPosts;
+    return scoredPosts.slice(0, limit);
   }
 
   async getFavoritesFeed(user: User): Promise<Post[]> {
@@ -393,7 +430,7 @@ export class FeedService {
     const bookmarks = await this.bookmarksService.findAll(user);
     return this.visibilityService.filterVisiblePostsForViewer(
       user.id,
-      bookmarks.map(bookmark => bookmark.post),
+      bookmarks.map((bookmark) => bookmark.post).filter((post) => post && !post.isDraft),
     );
   }
 
@@ -411,6 +448,7 @@ export class FeedService {
 
     const posts = await this.postsRepository.find({
       where: {
+        isDraft: false,
         user: { id: In(followingIds) },
       },
       order: { createdAt: 'DESC' },
@@ -427,9 +465,15 @@ export class FeedService {
       return [];
     }
 
-    // Get all subscribed creator IDs (for Subscriptions feed - creators the user is subscribed to)
-    const subscriptions = user.subscriptions || [];
-    const subscribedCreatorIds = subscriptions.map(sub => sub.creator.id);
+    const now = Date.now();
+    const subscribedCreatorIds = (user.subscriptions || [])
+      .filter(
+        (subscription) =>
+          subscription.status === SubscriptionStatus.ACTIVE &&
+          (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now),
+      )
+      .map((subscription) => subscription.creator?.id)
+      .filter((id): id is string => !!id);
     
     if (subscribedCreatorIds.length === 0) {
       return [];
@@ -437,6 +481,7 @@ export class FeedService {
 
     const posts = await this.postsRepository.find({
       where: {
+        isDraft: false,
         user: { id: In(subscribedCreatorIds) },
       },
       order: { createdAt: 'DESC' },
@@ -509,7 +554,7 @@ export class FeedService {
   async getTrendingFeed(user: User, limit: number = 20): Promise<(Post & { trendScore?: number; matchedTrends?: string[] })[]> {
     const [posts, trends] = await Promise.all([
       this.postsRepository.find({
-        where: { visibility: PostVisibility.PUBLIC },
+        where: { visibility: PostVisibility.PUBLIC, isDraft: false },
         relations: ['user', 'reactions', 'comments', 'tags'],
         order: { createdAt: 'DESC' },
       }).then((found) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found)),
@@ -542,11 +587,13 @@ export class FeedService {
   }
 
   async getExploreFeed(user: User, category?: string) {
+    // Posts store media in the `media` table (no posts.imageUrls column).
     const qb = this.postsRepository
       .createQueryBuilder('post')
       .where('post.visibility = :visibility', { visibility: PostVisibility.PUBLIC })
-      .andWhere('post.imageUrls IS NOT NULL')
-      .andWhere('array_length(post.imageUrls, 1) > 0')
+      .andWhere('post.isDraft = false')
+      .innerJoin('post.media', 'exploreMedia')
+      .andWhere('exploreMedia.type = :mediaType', { mediaType: 'image' })
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')
@@ -598,8 +645,9 @@ export class FeedService {
     const posts = await this.postsRepository
       .createQueryBuilder('post')
       .where('post.visibility = :visibility', { visibility: PostVisibility.PUBLIC })
-      .andWhere('post.imageUrls IS NOT NULL')
-      .andWhere('array_length(post.imageUrls, 1) > 0')
+      .andWhere('post.isDraft = false')
+      .innerJoin('post.media', 'visualMedia')
+      .andWhere('visualMedia.type = :mediaType', { mediaType: 'image' })
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')

@@ -20,7 +20,7 @@ describe('E2E smoke workflow', () => {
       providers: [
         {
           provide: ConfigService,
-          useValue: new ConfigService(),
+          useValue: new ConfigService({ MOBILE_DEMO_ENDPOINTS_ENABLED: 'true' }),
         },
         {
           provide: AuthService,

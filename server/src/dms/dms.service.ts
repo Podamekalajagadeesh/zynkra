@@ -74,6 +74,17 @@ export class DmsService {
       if (other) await this.assertCanMessage(user, other);
     }
 
+    // Never leak readable text into an encrypted thread via forwarding.
+    if (
+      conversation.isEncrypted &&
+      !!originalMessage.content?.trim() &&
+      !DmsService.isE2eeEnvelope(originalMessage.content)
+    ) {
+      throw new BadRequestException(
+        'This conversation is end-to-end encrypted. Forwarded messages must be encrypted envelopes.',
+      );
+    }
+
     const message = this.messagesRepository.create({
       sender: user,
       conversation,
@@ -205,11 +216,16 @@ export class DmsService {
     }
 
     if (participants.length === 2 && !name) {
-      // One-to-one conversation
+      // One-to-one conversation. E2EE is enabled when both parties have published
+      // identity keys (uploaded by the browser Signal client at login). The server
+      // then rejects readable plaintext and only stores ciphertext envelopes.
+      const bothHaveKeys =
+        !!starter.publicKey &&
+        recipients.every((recipient) => !!recipient.publicKey);
       const conversation = this.conversationsRepository.create({
         participants,
         type: ConversationType.ONE_TO_ONE,
-        isEncrypted: true,
+        isEncrypted: bothHaveKeys,
       });
       return this.conversationsRepository.save(conversation);
     } else {
@@ -252,6 +268,27 @@ export class DmsService {
     if (conversation.type === ConversationType.ONE_TO_ONE) {
       const other = conversation.participants.find((p) => p.id !== sender.id);
       if (other) await this.assertCanMessage(sender, other);
+    }
+
+    const hasText = !!sendMessageDto.content?.trim();
+    const isEnvelope = DmsService.isE2eeEnvelope(sendMessageDto.content ?? null);
+
+    // Encrypted threads only accept ciphertext envelopes — never readable text.
+    if (conversation.isEncrypted && hasText && !isEnvelope) {
+      throw new BadRequestException(
+        'This conversation is end-to-end encrypted. Messages must be sent as encrypted envelopes.',
+      );
+    }
+
+    // Progressively upgrade a legacy 1:1 thread to E2EE once both parties have
+    // identity keys and the sender starts using the encrypted envelope. Plaintext
+    // sends to a not-yet-upgraded thread keep working (backward compatible).
+    if (conversation.type === ConversationType.ONE_TO_ONE && !conversation.isEncrypted) {
+      const other = conversation.participants.find((p) => p.id !== sender.id);
+      if (isEnvelope && !!sender.publicKey && (!other || !!other.publicKey)) {
+        conversation.isEncrypted = true;
+        await this.conversationsRepository.save(conversation);
+      }
     }
 
     let replyTo: Message | undefined;
@@ -408,7 +445,7 @@ export class DmsService {
     await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
-      relations: ['sender'],
+      relations: ['sender', 'conversation'],
     });
 
     if (!message) {
@@ -417,6 +454,17 @@ export class DmsService {
 
     if (message.sender.id !== user.id) {
       throw new UnauthorizedException('You can only edit your own messages.');
+    }
+
+    // Edits on an encrypted thread must be edited ciphertext, never plaintext.
+    if (
+      message.conversation?.isEncrypted &&
+      !!content?.trim() &&
+      !DmsService.isE2eeEnvelope(content)
+    ) {
+      throw new BadRequestException(
+        'This conversation is end-to-end encrypted. Edits must be encrypted envelopes.',
+      );
     }
 
     message.content = content;
@@ -525,6 +573,28 @@ export class DmsService {
     7 * 24 * 60 * 60, // 7 days
     90 * 24 * 60 * 60, // 90 days
   ];
+
+  /**
+   * True if a message body is an E2EE envelope produced by the browser Signal
+   * client ({type: number, body: base64, version: 1}) — mirrors the exact shape
+   * written by client/src/services/e2ee.service.ts. The server treats such
+   * envelopes as opaque: it stores them verbatim and can never decrypt them.
+   */
+  private static isE2eeEnvelope(content: string | null | undefined): boolean {
+    if (!content) return false;
+    try {
+      const parsed = JSON.parse(content);
+      return (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        typeof parsed.type === 'number' &&
+        typeof parsed.body === 'string' &&
+        parsed.body.length > 0
+      );
+    } catch {
+      return false;
+    }
+  }
 
   async setMessageTtl(
     user: User,

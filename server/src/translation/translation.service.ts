@@ -11,11 +11,20 @@ export class TranslationService {
   private readonly logger = new Logger(TranslationService.name);
   private readonly deeplApiKey: string | undefined;
   private readonly libreUrl: string | undefined;
+  private readonly maxCacheEntries: number;
+
+  /**
+   * Insertion-ordered LRU. A plain `Map` with no eviction is an unbounded leak:
+   * every distinct (text, source, target) triple is retained for the life of the
+   * process, and the text is attacker-supplied, so a client could exhaust heap
+   * by translating unique strings.
+   */
   private readonly translationCache: Map<string, string> = new Map();
 
   constructor(private readonly configService: ConfigService) {
     this.deeplApiKey = this.configService.get<string>('DEEPL_API_KEY');
     this.libreUrl = this.configService.get<string>('LIBRETRANSLATE_URL', 'https://libretranslate.com');
+    this.maxCacheEntries = this.configService.get<number>('TRANSLATION_CACHE_MAX_ENTRIES', 1000);
   }
 
   /**
@@ -67,7 +76,7 @@ export class TranslationService {
 
     // Check cache
     const cacheKey = `${text}:${sourceLang}:${targetLang}`;
-    const cached = this.translationCache.get(cacheKey);
+    const cached = this.cacheGet(cacheKey);
     if (cached) {
       return { translatedText: cached, provider: 'cache' };
     }
@@ -76,7 +85,7 @@ export class TranslationService {
     if (this.deeplApiKey) {
       try {
         const result = await this.translateWithDeepL(text, sourceLang, targetLang);
-        this.translationCache.set(cacheKey, result.translatedText);
+        this.cacheSet(cacheKey, result.translatedText);
         return result;
       } catch (error) {
         this.logger.warn('DeepL translation failed, trying fallback:', error);
@@ -86,12 +95,44 @@ export class TranslationService {
     // Fallback to LibreTranslate
     try {
       const result = await this.translateWithLibre(text, sourceLang, targetLang);
-      this.translationCache.set(cacheKey, result.translatedText);
+      this.cacheSet(cacheKey, result.translatedText);
       return result;
     } catch (error) {
       this.logger.error('All translation providers failed:', error);
       return { translatedText: text, provider: 'original' };
     }
+  }
+
+  /** Reads a cache entry, refreshing its recency. */
+  private cacheGet(key: string): string | undefined {
+    const value = this.translationCache.get(key);
+    if (value === undefined) {
+      return undefined;
+    }
+    // Re-insert so the Map's insertion order stays least→most recently used.
+    this.translationCache.delete(key);
+    this.translationCache.set(key, value);
+    return value;
+  }
+
+  /** Writes a cache entry, evicting the least recently used when full. */
+  private cacheSet(key: string, value: string): void {
+    if (this.translationCache.has(key)) {
+      this.translationCache.delete(key);
+    }
+    this.translationCache.set(key, value);
+    while (this.translationCache.size > this.maxCacheEntries) {
+      const oldest = this.translationCache.keys().next();
+      if (oldest.done) {
+        break;
+      }
+      this.translationCache.delete(oldest.value);
+    }
+  }
+
+  /** Current cache occupancy — exposed for metrics and tests. */
+  getCacheSize(): number {
+    return this.translationCache.size;
   }
 
   /**

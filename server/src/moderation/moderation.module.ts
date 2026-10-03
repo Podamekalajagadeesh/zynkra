@@ -9,6 +9,7 @@ import { BiasDetectionService } from './services/bias-detection.service';
 import { AdvancedModerationService } from './advanced-moderation.service';
 import { ModerationQueueItemEntity } from './entities/moderation-queue-item.entity';
 import { ContentFlagEntity } from './entities/content-flag.entity';
+import { ModerationMitigationEntity } from './entities/moderation-mitigation.entity';
 import { NeuralThoughtFlagEntity } from './entities/neural-thought-flag.entity';
 
 @Module({
@@ -16,6 +17,7 @@ import { NeuralThoughtFlagEntity } from './entities/neural-thought-flag.entity';
     TypeOrmModule.forFeature([
       ModerationQueueItemEntity,
       ContentFlagEntity,
+      ModerationMitigationEntity,
       NeuralThoughtFlagEntity
     ])
   ],

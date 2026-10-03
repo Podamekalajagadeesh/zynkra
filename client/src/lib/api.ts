@@ -311,6 +311,37 @@ export const getTrendingHeatmapData = async (timeRange: string = '24h', region: 
   return response.data;
 };
 
+const CSRF_COOKIE_NAME = 'zynkra.csrf';
+
+/** Read the CSRF token the server mirrors into a JS-readable cookie. */
+export function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${CSRF_COOKIE_NAME}=([^;]*)`),
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Fetch a CSRF token for this session.
+ *
+ * Only the session-cookie-authenticated routes need this (WebAuthn
+ * verification, SIWE verify, wallet connect). Bearer-token requests and safe
+ * methods bypass the server's check, so ordinary API calls need nothing.
+ */
+export const primeCsrfToken = async (): Promise<string | null> => {
+  const existing = getCsrfToken();
+  if (existing) return existing;
+  try {
+    const response = await api.get('/auth/csrf-token');
+    return response.data?.token ?? getCsrfToken();
+  } catch {
+    // Non-fatal: only the session-cookie flows need the token, and those will
+    // surface their own error if it is genuinely required.
+    return null;
+  }
+};
+
 api.interceptors.request.use((config) => {
   const token = getAuthToken();
 
@@ -318,6 +349,16 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   } else if (config.headers) {
     delete config.headers.Authorization;
+  }
+
+  // Echo the CSRF token on unsafe methods so session-authenticated POSTs pass
+  // the server's double-submit check.
+  const method = (config.method ?? 'get').toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const csrf = getCsrfToken();
+    if (csrf) {
+      config.headers['X-CSRF-Token'] = csrf;
+    }
   }
 
   return config;
@@ -397,6 +438,7 @@ const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 const resolveAvatarUrl = (value?: string): string => {
   if (!value) return '';
   if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  if (value.startsWith('/')) return `${API_BASE_URL}${value}`;
   return `${IPFS_GATEWAY}${value}`;
 };
 
@@ -895,49 +937,13 @@ export const removeBrainwaveDevice = async (deviceId: string) => {
   return response.data as { message: string };
 };
 
-export const getBiometricDevices = async () => {
-  const response = await api.get('/auth/biometric/devices');
-  return response.data as Array<{
-    id: string;
-    userId: string;
-    deviceId: string;
-    deviceName: string;
-    biometricType: 'fingerprint' | 'face' | 'iris';
-    enabled: boolean;
-    lastUsedAt: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-};
-
-export const registerBiometricDevice = async (payload: {
-  deviceId: string;
-  deviceName?: string;
-  biometricType?: 'fingerprint' | 'face' | 'iris';
-  biometricData: string;
-}) => {
-  const response = await api.post('/auth/biometric/register', payload);
-  return response.data as { id: string; deviceName: string; deviceId: string; biometricType: string };
-};
-
-export const generateBiometricChallenge = async () => {
-  const response = await api.post('/auth/biometric/challenge');
-  return response.data as { challengeId: string; challenge: string; expiresIn: number };
-};
-
-export const verifyBiometricChallenge = async (payload: {
-  challengeId: string;
-  deviceId: string;
-  biometricData: string;
-}) => {
-  const response = await api.post('/auth/biometric/verify', payload);
-  return response.data as { success: boolean; message: string };
-};
-
-export const removeBiometricDevice = async (deviceId: string) => {
-  const response = await api.delete(`/auth/biometric/devices/${deviceId}`);
-  return response.data as { success: boolean; message: string };
-};
+// The `/auth/biometric/*` endpoints were removed from the server. They were
+// never called from anywhere in this client — passkeys replaced them — and on
+// the server they duplicated `/auth/webauthn/*` without ever working on a clean
+// database. Use `getPasskeys` / `deletePasskey` and `components/WebAuthn.tsx`
+// instead. The five removed wrappers were:
+//   getBiometricDevices, registerBiometricDevice, generateBiometricChallenge,
+//   verifyBiometricChallenge, removeBiometricDevice
 
 export const getRecoveryOptions = async (identifier: string) => {
   const response = await api.get('/auth/recovery/options', { params: { identifier } });
@@ -1037,29 +1043,13 @@ export const getMyFollowing = async (): Promise<UserProfile[]> => {
 };
 
 const uploadPostMedia = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await api.post('/uploads', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data.url as string;
+  const { url } = await uploadMedia(file);
+  return url;
 };
 
 const uploadMessageMedia = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await api.post('/uploads', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-
-  return response.data.url as string;
+  const { url } = await uploadMedia(file);
+  return url;
 };
 
 import { AutoTag } from '../lib/types';
@@ -1090,14 +1080,19 @@ export const createPost = async (
 ) => {
   const mediaPayload = await Promise.all(
     media.map(async (mediaFile) => {
-      // The server DTO accepts real {url, type} records, not base64 data URLs.
-      const { url } = await uploadMedia(mediaFile.file);
+      // Upload first so the server can attach the owned media row by id.
+      const uploaded = await uploadMedia(mediaFile.file);
       const type = mediaFile.file.type.startsWith('video/')
         ? 'video'
         : mediaFile.file.type.startsWith('audio/')
           ? 'audio'
           : 'image';
-      return { url, type, altText: mediaFile.altText };
+      return {
+        id: uploaded.id,
+        url: uploaded.url,
+        type,
+        altText: mediaFile.altText,
+      };
     }),
   );
 
@@ -1366,6 +1361,29 @@ export const reverseImageSearch = async (imageFile: File) => {
   return response.data;
 };
 
+export const getPlace = async (placeId: string) => {
+  const response = await api.get(`/places/${placeId}`);
+  return response.data as {
+    id: string;
+    name: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    posts?: Post[];
+  };
+};
+
+export const getPlacePosts = async (placeId: string, page = 1, limit = 20) => {
+  const response = await api.get(`/places/${placeId}/posts`, { params: { page, limit } });
+  return response.data as {
+    data: Post[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
 export const getReelById = async (reelId: string) => {
   const response = await api.get(`/reels/${reelId}`);
   return response.data;
@@ -1451,7 +1469,29 @@ export const uploadMedia = async (file: File) => {
     },
   });
 
-  return response.data as { url: string };
+  return response.data as { id: string; url: string; type?: string };
+};
+
+/**
+ * Resolve a stored media path to a fetchable URL. Relative /uploads/… paths
+ * are prefixed with the API origin so they work when the client and API
+ * are on different hosts. Absolute/http(s)/data/blob URLs pass through.
+ */
+export const resolveMediaUrl = (value?: string | null): string => {
+  if (!value) return '';
+  if (
+    value.startsWith('http://') ||
+    value.startsWith('https://') ||
+    value.startsWith('data:') ||
+    value.startsWith('blob:') ||
+    value.startsWith('ipfs://')
+  ) {
+    return value;
+  }
+  if (value.startsWith('/')) {
+    return `${API_BASE_URL}${value}`;
+  }
+  return value;
 };
 
 export const sendMessage = async (
@@ -2299,8 +2339,13 @@ export const deletePage = async (pageId: string) => {
 
 
 
-export const createSubscription = async (creatorId: string, tier: string) => {
-  const response = await api.post('/subscriptions', { creatorId, tier });
+export const createSubscription = async (creatorId: string, tier: string, paymentMethodId?: string) => {
+  const response = await api.post('/subscriptions', { creatorId, tier, paymentMethodId });
+  return response.data;
+};
+
+export const confirmPayment = async (paymentId: string, paymentMethodId?: string) => {
+  const response = await api.post('/payments/confirm', { paymentId, paymentMethodId });
   return response.data;
 };
 
@@ -2383,8 +2428,8 @@ export const deleteSubscriptionBundle = async (bundleId: string) => {
   return response.data;
 };
 
-export const purchaseSubscriptionBundle = async (bundleId: string) => {
-  const response = await api.post(`/subscription-bundles/${bundleId}/purchase`);
+export const purchaseSubscriptionBundle = async (bundleId: string, paymentMethodId?: string) => {
+  const response = await api.post(`/subscription-bundles/${bundleId}/purchase`, { paymentMethodId });
   return response.data;
 };
 
@@ -3634,3 +3679,154 @@ export const submitModerationAppeal = async (
   });
   return response.data;
 };
+
+// ---- Federation (ActivityPub) ---------------------------------------------
+//
+// The timeline read model is `federated_posts` on the server: a *separate* table
+// from local posts, holding inbound remote content. That is deliberate — remote
+// statuses have no local `User` row, so they cannot become local posts without
+// corrupting follower counts and moderation for every account on the instance.
+// The practical consequence for this client: a remote item's `id` is a full
+// ActivityPub URL, not a UUID, and it is not interchangeable with a local post
+// id. Do not pass one to a local endpoint.
+
+/** One remote post, normalized by the server away from its storage shape. */
+export interface FederatedTimelineItem {
+  id: string;
+  content: string;
+  publishedAt: string;
+  inReplyToId: string | null;
+  mediaUrls: string[];
+  mentions: string[];
+  tags: string[];
+  likeCount: number;
+  shareCount: number;
+  isFederated: true;
+  author: {
+    actorId: string;
+    username: string;
+    name: string | null;
+    avatarUrl: string | null;
+  } | null;
+  instance: {
+    domain: string;
+    baseUrl: string;
+    software: string | null;
+  } | null;
+}
+
+export interface FederatedTimeline {
+  items: FederatedTimelineItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export interface FederationDeliveryResult {
+  domain?: string;
+  delivered: boolean;
+  skipped?: boolean;
+  attempts?: number;
+  status?: number;
+  reason?: string;
+  retryable?: boolean;
+}
+
+/**
+ * The outcome of one outbound activity.
+ *
+ * `skipped` is **not** failure — the server deliberately emits nothing for
+ * several legitimate cases ("already federated a Like", "this was never
+ * federated so there is nothing to undo"). A client that treats every
+ * non-delivery as an error, or that flips its button on a skipped response,
+ * will tell the user something the server did not do.
+ */
+export interface FederationReport {
+  activityId: string;
+  requested: number;
+  delivered: number;
+  failed: number;
+  results: FederationDeliveryResult[];
+  skipped?: boolean;
+  reason?: string;
+}
+
+export interface FederationStats {
+  totalInstances: number;
+  activeInstances: number;
+  totalRemoteUsers: number;
+  totalRemotePosts: number;
+  localDomain: string;
+  localBaseUrl: string;
+  federationEnabled: boolean;
+}
+
+const federationAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
+/**
+ * Remote posts, newest first.
+ *
+ * Public by design: the server applies blocks and mutes when a token is
+ * supplied and serves the unfiltered public feed when it is not.
+ */
+export const getFederatedTimeline = async (params?: {
+  limit?: number;
+  offset?: number;
+  includeMuted?: boolean;
+}): Promise<FederatedTimeline> => {
+  const response = await api.get<FederatedTimeline>('/federation/timeline', { params });
+  return response.data;
+};
+
+export const getFederationStats = async (): Promise<FederationStats> => {
+  const response = await api.get<FederationStats>('/federation/stats');
+  return response.data;
+};
+
+/** Like a remote post. Delivered to the author of the object, not to followers. */
+export const likeFederatedPost = async (activityId: string): Promise<FederationReport> => {
+  const response = await api.post<FederationReport>(
+    '/federation/likes',
+    { activityId },
+    { headers: federationAuthHeaders() },
+  );
+  return response.data;
+};
+
+/** Undo a federated like, referencing the exact activity the peer received. */
+export const unlikeFederatedPost = async (activityId: string): Promise<FederationReport> => {
+  const response = await api.post<FederationReport>(
+    '/federation/likes/undo',
+    { activityId },
+    { headers: federationAuthHeaders() },
+  );
+  return response.data;
+};
+
+/** Boost a remote post. */
+export const announceFederatedPost = async (activityId: string): Promise<FederationReport> => {
+  const response = await api.post<FederationReport>(
+    '/federation/announces',
+    { activityId },
+    { headers: federationAuthHeaders() },
+  );
+  return response.data;
+};
+
+/** Retract a boost. */
+export const undoAnnounceFederatedPost = async (activityId: string): Promise<FederationReport> => {
+  const response = await api.post<FederationReport>(
+    '/federation/announces/undo',
+    { activityId },
+    { headers: federationAuthHeaders() },
+  );
+  return response.data;
+};
+

@@ -1,6 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MoreThan, IsNull, Repository } from 'typeorm';
 import { SecurityAuditService } from '../../security-audit/security-audit.service';
-import { SecurityEventSeverity, SecurityEventType } from '../../security-audit/entities/security-audit.entity';
+import {
+  SecurityAuditLog,
+  SecurityEventType,
+  SecurityEventSeverity,
+} from '../../security-audit/entities/security-audit.entity';
+import { User } from '../../users/entities/user.entity';
+import { Authenticator } from '../../auth/entities/authenticator.entity';
+import { LoginSession } from '../../auth/entities/login-session.entity';
+import { isValidIpOrCidr } from '../../common/ip';
 
 export interface SecuritySetting {
   accountId: string;
@@ -39,13 +49,37 @@ export interface SecurityAuditLog {
   metadata?: Record<string, any>;
 }
 
+/**
+ * Controls this service still tracks in an in-process `Map` and that therefore
+ * do not survive a restart, are not shared across instances, and are enforced
+ * by nothing. They are reported rather than presented as real protection —
+ * see the note on `getSecurityRiskAssessment`.
+ */
+export const NOT_ENFORCED_CONTROLS = [
+  'biometricAuthentication (the /auth/biometric/* surface was removed; use passkeys)',
+  // Note: the per-account `sessionTimeout`/`sessionTimeoutMinutes` values here
+  // are still not enforced. There is now a real server-side idle timeout, but it
+  // is a single deployment-wide setting (SESSION_IDLE_TIMEOUT_MINUTES), not a
+  // per-user preference.
+  'sessionTimeout / sessionTimeoutMinutes (per-user values are not enforced; the deployment-wide SESSION_IDLE_TIMEOUT_MINUTES is)',
+  'verifyNewDevices',
+  'loginApprovalsEnabled',
+  'securityLevel',
+] as const;
+
 @Injectable()
 export class SecuritySettingsService {
   private readonly logger = new Logger(SecuritySettingsService.name);
   private readonly securitySettings = new Map<string, SecuritySetting>();
   private readonly securityLogs = new Map<string, SecurityAuditLog[]>();
 
-  constructor(private readonly securityAuditService?: SecurityAuditService) {}
+  constructor(
+    private readonly securityAuditService?: SecurityAuditService,
+    @InjectRepository(User) private readonly usersRepository?: Repository<User>,
+    @InjectRepository(Authenticator) private readonly authenticatorsRepository?: Repository<Authenticator>,
+    @InjectRepository(SecurityAuditLog) private readonly auditRepository?: Repository<SecurityAuditLog>,
+    @InjectRepository(LoginSession) private readonly loginSessionsRepository?: Repository<LoginSession>,
+  ) {}
 
   private mapEventType(eventType: string): SecurityEventType {
     const normalized = eventType.toLowerCase();
@@ -86,17 +120,41 @@ export class SecuritySettingsService {
   }
 
   /**
-   * Get security settings for an account
+   * Get security settings for an account.
+   *
+   * ⚠️  The returned object mixes two very different things:
+   *
+   *  - Fields that reflect **real persisted state** — `twoFactorAuthentication`,
+   *    `recoveryCodesEnabled`, `emailVerified` are read from the `User` row, and
+   *    `passkeysEnabled` is true when the user has registered at least one
+   *    authenticator.
+   *  - Fields that are **held only in this service's in-process Map** and are
+   *    enforced by nothing: `sessionTimeout`, `verifyNewDevices`,
+   *    `trustedIpAddresses`, `loginApprovalsEnabled`, `securityLevel`, and
+   *    `biometricAuthentication`. They do not survive a restart, are not shared
+   *    across instances, and no request path consults them.
+   *
+   * `notEnforced` names the second group so a caller can tell the difference.
+   * Setting a flag in the second group does not make the account safer.
    */
-  async getSecuritySettings(accountId: string): Promise<SecuritySetting> {
-    let settings = this.securitySettings.get(accountId);
+  async getSecuritySettings(accountId: string): Promise<SecuritySetting & { notEnforced: readonly string[] }> {
+    const stored = this.securitySettings.get(accountId) ?? this.createDefaultSettings(accountId);
+    this.securitySettings.set(accountId, stored);
 
-    if (!settings) {
-      settings = this.createDefaultSettings(accountId);
-      this.securitySettings.set(accountId, settings);
-    }
+    // Overlay the real state so the response is not lying about 2FA.
+    const user = await this.usersRepository?.findOne({ where: { id: accountId } });
+    const passkeyCount = user
+      ? await this.authenticatorsRepository?.count({ where: { user: { id: accountId } } })
+      : undefined;
 
-    return settings;
+    return {
+      ...stored,
+      twoFactorAuthentication: user?.twoFactorEnabled ?? stored.twoFactorAuthentication,
+      recoveryCodesEnabled: Boolean(user?.recoveryCodeHashes?.length),
+      passkeysEnabled: (passkeyCount ?? 0) > 0,
+      trustedIpAddresses: user?.trustedIpAddresses ?? stored.trustedIpAddresses,
+      notEnforced: NOT_ENFORCED_CONTROLS,
+    };
   }
 
   /**
@@ -205,42 +263,48 @@ export class SecuritySettingsService {
   }
 
   /**
-   * Add trusted IP address
+   * Add a trusted IP address.
+   *
+   * Persisted to `User.trustedIpAddresses`, not to this service's in-process
+   * map. A sign-in from a trusted address skips the new-device /
+   * suspicious-login prompt (`AuthService.isTrustedIp`). Previously the list was
+   * memory-only and consulted by nothing, so this endpoint was cosmetic.
    */
   async addTrustedIpAddress(accountId: string, ipAddress: string): Promise<{ success: boolean; trustedIps: string[] }> {
-    const settings = await this.getSecuritySettings(accountId);
-
     if (!this.isValidIpAddress(ipAddress)) {
       throw new BadRequestException('Invalid IP address format');
     }
 
-    if (!settings.trustedIpAddresses.includes(ipAddress)) {
-      settings.trustedIpAddresses.push(ipAddress);
-      settings.updatedAt = new Date();
-      this.securitySettings.set(accountId, settings);
+    const user = await this.usersRepository?.findOne({ where: { id: accountId } });
+    if (!user) {
+      throw new NotFoundException('Account not found');
+    }
 
+    const current = user.trustedIpAddresses ?? [];
+    if (!current.includes(ipAddress)) {
+      user.trustedIpAddresses = [...current, ipAddress];
+      await this.usersRepository!.save(user);
       this.recordSecurityAuditLog(accountId, 'trusted_ip_added', 'success', `Trusted IP added: ${ipAddress}`, { ipAddress });
     }
 
-    return { success: true, trustedIps: settings.trustedIpAddresses };
+    return { success: true, trustedIps: user.trustedIpAddresses ?? [] };
   }
 
-  /**
-   * Remove trusted IP address
-   */
+  /** Remove a trusted IP address. */
   async removeTrustedIpAddress(accountId: string, ipAddress: string): Promise<{ success: boolean; trustedIps: string[] }> {
-    const settings = await this.getSecuritySettings(accountId);
+    const user = await this.usersRepository?.findOne({ where: { id: accountId } });
+    if (!user) {
+      throw new NotFoundException('Account not found');
+    }
 
-    const index = settings.trustedIpAddresses.indexOf(ipAddress);
-    if (index > -1) {
-      settings.trustedIpAddresses.splice(index, 1);
-      settings.updatedAt = new Date();
-      this.securitySettings.set(accountId, settings);
-
+    const current = user.trustedIpAddresses ?? [];
+    if (current.includes(ipAddress)) {
+      user.trustedIpAddresses = current.filter((ip) => ip !== ipAddress);
+      await this.usersRepository!.save(user);
       this.recordSecurityAuditLog(accountId, 'trusted_ip_removed', 'success', `Trusted IP removed: ${ipAddress}`, { ipAddress });
     }
 
-    return { success: true, trustedIps: settings.trustedIpAddresses };
+    return { success: true, trustedIps: user.trustedIpAddresses ?? [] };
   }
 
   private mapAuditStatus(severity: SecurityEventSeverity): 'success' | 'failed' | 'warning' {
@@ -433,46 +497,103 @@ export class SecuritySettingsService {
   }
 
   /**
-   * Get security risk assessment
+   * Security posture, computed from **real persisted state**.
+   *
+   * This previously read `settings.twoFactorAuthentication` from the in-process
+   * map above, which nothing outside this file ever wrote to — while the actual
+   * 2FA state lives on the `User` record. The result was an actively harmful
+   * false negative: a user who *had* enabled 2FA was told to enable it and lost
+   * 25 risk points, because the map was empty. Same for passkeys (counted from
+   * `authenticators` now) and failed logins (counted from `security_audit_logs`
+   * now, instead of a `Map` that was always empty).
+   *
+   * Only signals with a real backing store are scored. Anything this service
+   * still tracks in memory is reported under `notEnforced` rather than being
+   * presented as a real control.
    */
-  async getSecurityRiskAssessment(accountId: string): Promise<{ accountId: string; riskLevel: 'low' | 'medium' | 'high'; score: number; recommendations: string[] }> {
-    const settings = await this.getSecuritySettings(accountId);
-    const logs = this.securityLogs.get(accountId) || [];
+  async getSecurityRiskAssessment(accountId: string): Promise<{
+    accountId: string;
+    riskLevel: 'low' | 'medium' | 'high';
+    score: number;
+    recommendations: string[];
+    signals: Record<string, boolean | number>;
+    notEnforced: string[];
+  }> {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [user, passkeyCount, failedLogins, liveSessions] = await Promise.all([
+      this.usersRepository?.findOne({ where: { id: accountId } }) ?? Promise.resolve(null),
+      this.authenticatorsRepository?.count({ where: { user: { id: accountId } } }) ?? Promise.resolve(0),
+      this.auditRepository?.count({
+        where: {
+          userId: accountId,
+          eventType: SecurityEventType.LOGIN_FAILED,
+          createdAt: MoreThan(weekAgo),
+        },
+      }) ?? Promise.resolve(0),
+      // A revoked session still exists in the table, so count only the open ones.
+      this.loginSessionsRepository?.count({
+        where: { user: { id: accountId }, revokedAt: IsNull() },
+      }) ?? Promise.resolve(0),
+    ]);
+
+    const signals: Record<string, boolean | number> = {
+      emailVerified: user?.emailVerified ?? false,
+      twoFactorEnabled: user?.twoFactorEnabled ?? false,
+      recoveryCodesGenerated: Boolean(user?.recoveryCodeHashes?.length),
+      passkeyCount,
+      failedLoginsLast7Days: failedLogins,
+      activeSessions: liveSessions,
+      trustedIpCount: user?.trustedIpAddresses?.length ?? 0,
+    };
 
     let score = 100;
     const recommendations: string[] = [];
 
-    // Check 2FA
-    if (!settings.twoFactorAuthentication) {
+    if (!user) {
+      return {
+        accountId,
+        riskLevel: 'high',
+        score: 0,
+        recommendations: ['Account not found.'],
+        signals,
+        notEnforced: NOT_ENFORCED_CONTROLS,
+      };
+    }
+
+    if (!user.emailVerified) {
+      score -= 20;
+      recommendations.push('Verify your email address to secure account recovery');
+    }
+
+    if (!user.twoFactorEnabled) {
       score -= 25;
       recommendations.push('Enable two-factor authentication for enhanced security');
     }
 
-    // Check biometric
-    if (!settings.biometricAuthentication) {
-      score -= 10;
-      recommendations.push('Consider enabling biometric authentication');
-    }
-
-    // Check login notifications
-    if (!settings.loginNotifications) {
+    if (passkeyCount === 0) {
       score -= 5;
-      recommendations.push('Enable login notifications to monitor account access');
+      recommendations.push('Register a passkey for phishing-resistant sign-in');
     }
 
-    // Check for failed login attempts
-    const failedLogins = logs.filter(log => log.eventType.includes('login') && log.status === 'failed').length;
+    if (!user.recoveryCodeHashes?.length) {
+      score -= 5;
+      recommendations.push('Generate recovery codes in case you lose access to 2FA');
+    }
+
     if (failedLogins > 5) {
       score -= 15;
-      recommendations.push(`High number of failed login attempts detected (${failedLogins})`);
+      recommendations.push(
+        `${failedLogins} failed sign-in attempts in the last 7 days — review your account security`,
+      );
     }
 
-    // Check session timeout
-    if (!settings.sessionTimeout) {
-      score -= 10;
-      recommendations.push('Enable session timeout for better security');
+    if (liveSessions > 10) {
+      score -= 5;
+      recommendations.push(`${liveSessions} active sessions — revoke the ones you do not recognise`);
     }
 
+    score = Math.max(0, score);
     const riskLevel = score >= 80 ? 'low' : score >= 50 ? 'medium' : 'high';
 
     return {
@@ -480,6 +601,8 @@ export class SecuritySettingsService {
       riskLevel,
       score,
       recommendations,
+      signals,
+      notEnforced: NOT_ENFORCED_CONTROLS,
     };
   }
 
@@ -509,10 +632,9 @@ export class SecuritySettingsService {
   }
 
   private isValidIpAddress(ip: string): boolean {
-    // Basic IP validation (IPv4 and IPv6)
-    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}([0-9a-fA-F]{0,4})$/;
-
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip);
+    // Delegates to the shared parser, which is strict where the previous
+    // regexes were not: the old IPv4 pattern accepted `999.999.999.999`, and
+    // neither pattern accepted a CIDR range. Hostnames are rejected.
+    return isValidIpOrCidr(ip);
   }
 }

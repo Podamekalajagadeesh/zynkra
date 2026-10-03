@@ -13,27 +13,48 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StoriesService } from './stories.service';
+import { MediaService } from '../media/media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
 
 @Controller('stories')
 export class StoriesController {
-  constructor(private readonly storiesService: StoriesService) {}
+  constructor(
+    private readonly storiesService: StoriesService,
+    private readonly mediaService: MediaService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  create(@UploadedFile() file, @Request() req, @Body() createStoryDto: CreateStoryDto) {
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 50 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (/^(image|video)\//.test(file.mimetype || '')) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Story media must be an image or video'), false);
+        }
+      },
+    }),
+  )
+  async create(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Request() req,
+    @Body() createStoryDto: CreateStoryDto,
+  ) {
     if (file) {
-      // In a real app, you'd upload the file to a cloud storage service
-      // and get a URL back. For now, we'll just use a placeholder.
-      createStoryDto.mediaUrl = `http://localhost:3000/uploads/${file.filename}`;
+      const uploaded = await this.mediaService.uploadFile(file, {
+        userId: req.user.userId,
+        subdir: 'stories',
+      });
+      createStoryDto.mediaUrl = uploaded.url;
     }
 
     if (typeof createStoryDto.elements === 'string') {
       createStoryDto.elements = this.parseElements(createStoryDto.elements);
     }
-    
+
     if (typeof createStoryDto.backgroundOptions === 'string') {
       createStoryDto.backgroundOptions = JSON.parse(createStoryDto.backgroundOptions);
     }

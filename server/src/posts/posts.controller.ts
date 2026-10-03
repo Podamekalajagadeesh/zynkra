@@ -140,13 +140,13 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Post('repost/:id')
   repost(@Param('id') id: string, @Request() req) {
-    return this.postsService.repost(id, req.user.id);
+    return this.postsService.repost(id, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id/pin')
   togglePin(@Param('id') id: string, @Request() req) {
-    return this.postsService.togglePin(id, req.user.id);
+    return this.postsService.togglePin(id, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -181,12 +181,12 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id/repost')
   undoRepost(@Param('id') id: string, @Request() req) {
-    return this.postsService.undoRepost(id, req.user);
+    return this.postsService.undoRepost(id, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/share')
   share(@Param('id') id: string, @Request() req) {
-    return this.postsService.share(id, req.user);
+    return this.postsService.share(id, req.user.userId);
   }
 }

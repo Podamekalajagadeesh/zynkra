@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WifiOff, Wifi, Image as ImageIcon, MonitorOff } from 'lucide-react';
+import { resolveMediaUrl } from '../lib/api';
 
 interface LowBandwidthMediaProps {
   src: string;
@@ -23,16 +24,19 @@ const getConnectionInfo = () => {
 };
 
 export function LowBandwidthMedia({
-  src,
+  src: rawSrc,
   alt = 'Media content',
   type = 'image',
   className = '',
-  poster,
+  poster: rawPoster,
   controls = false,
-  captionsUrl,
+  captionsUrl: rawCaptionsUrl,
   fallbackText = 'This media is hidden because your connection is limited.',
   forceTextOnly = false,
 }: LowBandwidthMediaProps) {
+  const src = resolveMediaUrl(rawSrc);
+  const poster = resolveMediaUrl(rawPoster);
+  const captionsUrl = resolveMediaUrl(rawCaptionsUrl) || undefined;
   const [shouldLoad, setShouldLoad] = useState(false);
   const [showTextOnly, setShowTextOnly] = useState(false);
 

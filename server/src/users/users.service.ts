@@ -6,14 +6,14 @@ import { webcrypto, randomBytes } from 'crypto';
 import { User, ProfilePrivacy } from './entities/user.entity';
 import { FollowRequest, FollowRequestStatus } from './entities/follow-request.entity';
 import { Poke } from './entities/poke.entity';
-import { Post } from '../posts/entities/post.entity';
+import { Post, PostVisibility } from '../posts/entities/post.entity';
 import { Role } from './roles.enum';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { NotificationSettingsDto } from './dto/notification-settings.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { StorageService } from '../storage/storage.service';
-import { createWriteStream, existsSync, mkdirSync } from 'fs';
+import { MediaService } from '../media/media.service';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 import { LifeEvent } from './entities/life-event.entity';
@@ -27,6 +27,108 @@ import { LoginSession } from '../auth/entities/login-session.entity';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
 import { DEFAULT_PERSONALIZATION_CONTROLS, normalizePersonalizationControls } from './personalization-controls';
+
+export function toPublicUserResponse(user: User | null | undefined): Record<string, any> | null {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: user.displayName,
+    pronouns: user.pronouns,
+    avatar: user.avatar,
+    bio: user.bio,
+    location: user.location,
+    website: user.website,
+    nftPfpUrl: user.nftPfpUrl,
+    nftPfpContractAddress: user.nftPfpContractAddress,
+    nftPfpTokenId: user.nftPfpTokenId,
+    verified: user.verified,
+    accountType: user.accountType,
+    isProfessional: user.isProfessional,
+    categoryLabel: user.categoryLabel,
+    profileAccentColor: user.profileAccentColor,
+    profileThemeColor: user.profileThemeColor,
+    profileTheme: user.profileTheme,
+    profileBioFont: user.profileBioFont,
+    relationshipStatus: user.relationshipStatus,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    followerCount: user.followers?.length,
+    followingCount: user.following?.length,
+    posts: user.posts
+      ?.filter((post) => !post.isDraft && post.visibility === PostVisibility.PUBLIC)
+      .map((post) => ({
+        id: post.id,
+        content: post.content,
+        createdAt: post.createdAt,
+        visibility: post.visibility,
+        media: post.media?.map((media) => ({
+          id: media.id,
+          url: media.url,
+          type: media.type,
+          altText: media.altText,
+        })),
+      })),
+  };
+}
+
+export function toSearchUserResponse(
+  user: User,
+  includeEmail = false,
+): Record<string, any> {
+  const response = toPublicUserResponse(user) as Record<string, any>;
+  if (includeEmail && user.email) {
+    response.email = user.email;
+  }
+  return response;
+}
+
+export function toSelfUserResponse(user: User): Record<string, any> {
+  return {
+    ...(toPublicUserResponse(user) as Record<string, any>),
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    role: user.role,
+    accountType: user.accountType,
+    verified: user.verified,
+    verificationStatus: user.verificationStatus,
+    status: user.status,
+    banned: user.banned,
+    emailVerified: user.emailVerified,
+    postVisibility: user.postVisibility,
+    friendRequestPrivacy: user.friendRequestPrivacy,
+    emailSearchPrivacy: user.emailSearchPrivacy,
+    commentPrivacy: user.commentPrivacy,
+    tagPrivacy: user.tagPrivacy,
+    messagePrivacy: user.messagePrivacy,
+    showOnlineStatus: user.showOnlineStatus,
+    showLastSeenTimestamp: user.showLastSeenTimestamp,
+    readReceipts: user.readReceipts,
+    contactDiscovery: user.contactDiscovery,
+    personalization: user.personalization,
+    adPersonalization: user.adPersonalization,
+    personalizationControls: normalizePersonalizationControls(user.personalizationControls),
+    profilePrivacy: user.profilePrivacy,
+    screenshotProtection: user.screenshotProtection,
+    birthDate: user.birthDate,
+    birthDateVerifiedAt: user.birthDateVerifiedAt,
+    notificationSettings: user.notificationSettings,
+    accountPreferences: user.accountPreferences,
+    accountPermissions: user.accountPermissions,
+    accountDataPermissions: user.accountDataPermissions,
+    accountSecuritySettings: user.accountSecuritySettings,
+    twoFactorEnabled: user.twoFactorEnabled,
+    walletAddress: user.walletAddress,
+    walletBalance: user.walletBalance,
+    isGuest: user.isGuest,
+    isAnonymous: user.isAnonymous,
+    following: user.following?.map((following) => toPublicUserResponse(following)),
+    followers: user.followers?.map((follower) => toPublicUserResponse(follower)),
+  };
+}
 
 @Injectable()
 export class UsersService {
@@ -45,11 +147,46 @@ export class UsersService {
     private readonly loginSessionsRepository: Repository<LoginSession>,
     private readonly notificationsService: NotificationsService,
     private readonly storageService: StorageService,
+    private readonly mediaService: MediaService,
     private readonly webhooksService: WebhooksService,
     private readonly dataPermissions: DataPermissionsService,
     @Optional()
     private readonly dataSource?: DataSource,
   ) {}
+
+  private getProfileUpdateData(updateUserDto: UpdateUserDto): Partial<User> {
+    const allowedFields = [
+      'username',
+      'displayName',
+      'pronouns',
+      'bio',
+      'location',
+      'website',
+      'profileHeaderImageUrl',
+      'profileThemeColor',
+      'profileTheme',
+      'profileBioFont',
+      'categoryLabel',
+    ] as const;
+    const updateData: Record<string, any> = {};
+
+    for (const field of allowedFields) {
+      const value = updateUserDto[field];
+      if (value !== undefined) {
+        updateData[field] = value;
+      }
+    }
+
+    if (updateUserDto.avatarUrl !== undefined) {
+      updateData.avatar = updateUserDto.avatarUrl;
+    }
+
+    if (updateUserDto.profileHeaderImageUrl !== undefined) {
+      updateData.header = updateUserDto.profileHeaderImageUrl;
+    }
+
+    return updateData as Partial<User>;
+  }
 
   async updateFaceRecognition(
     userId: string,
@@ -76,35 +213,25 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async updateAvatar(userId: string, file: any): Promise<User> {
+  async updateAvatar(userId: string, file: Express.Multer.File): Promise<User> {
     await this.dataPermissions.require(userId, DataPermission.PROFILE);
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const uploadDir = join(process.cwd(), 'uploads', 'avatars');
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    if (!file.mimetype?.startsWith('image/')) {
+      throw new BadRequestException('Avatar must be an image');
     }
 
-    const fileName = `${userId}-${Date.now()}-${file.originalname}`;
-    const filePath = join(uploadDir, fileName);
-
-    return new Promise((resolve, reject) => {
-      const stream = createWriteStream(filePath);
-      stream.on('finish', async () => {
-        const avatarUrl = `/uploads/avatars/${fileName}`;
-        user.avatar = avatarUrl;
-        await this.usersRepository.save(user);
-        resolve(user);
-      });
-      stream.on('error', (error) => {
-        reject(error);
-      });
-      stream.write(file.buffer);
-      stream.end();
+    const result = await this.mediaService.uploadFile(file, {
+      userId,
+      subdir: 'avatars',
     });
+    user.avatar = result.url;
+    return this.usersRepository.save(user);
   }
 
   async updateProfile(
@@ -128,21 +255,17 @@ export class UsersService {
     }
 
     if (avatar) {
-      const avatarUrl = await this.storageService.upload(avatar.buffer);
-      user.avatar = avatarUrl;
+      if (!avatar.mimetype?.startsWith('image/')) {
+        throw new BadRequestException('Avatar must be an image');
+      }
+      const uploaded = await this.mediaService.uploadFile(avatar, {
+        userId,
+        subdir: 'avatars',
+      });
+      user.avatar = uploaded.url;
     }
 
-    Object.assign(user, updateUserDto);
-
-    if (updateUserDto.profileTheme) {
-      user.profileTheme = updateUserDto.profileTheme;
-    }
-    if (updateUserDto.profileThemeColor) {
-      user.profileThemeColor = updateUserDto.profileThemeColor;
-    }
-    if (updateUserDto.profileBioFont) {
-      user.profileBioFont = updateUserDto.profileBioFont;
-    }
+    Object.assign(user, this.getProfileUpdateData(updateUserDto));
 
     const saved = await this.usersRepository.save(user);
     void this.webhooksService.dispatchEvent('user.updated', {
@@ -397,18 +520,7 @@ export class UsersService {
       }
     }
 
-    const updateData = Object.fromEntries(
-      Object.entries(updateUserDto).filter(([, value]) => value !== undefined),
-    );
-
-    if (updateUserDto.avatarUrl) {
-      updateData.avatar = updateUserDto.avatarUrl;
-    }
-
-    if (updateUserDto.profileHeaderImageUrl) {
-      updateData.profileHeaderImageUrl = updateUserDto.profileHeaderImageUrl;
-      updateData.header = updateUserDto.profileHeaderImageUrl;
-    }
+    const updateData = this.getProfileUpdateData(updateUserDto) as Record<string, any>;
 
     if (Object.keys(updateData).length === 0) {
       return user;

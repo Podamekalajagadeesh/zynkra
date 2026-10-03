@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import io, { type Socket } from 'socket.io-client';
 import { api, API_BASE_URL } from '../lib/api';
+import { getAuthToken } from '../lib/auth-storage';
 import { useAuth } from '../hooks/useAuth';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -136,8 +137,12 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
 
   useEffect(() => {
     if (user && !socket) {
+      // The server derives identity from this JWT (and validates the backing
+      // login session). Previously the socket passed `query: { userId }` and the
+      // server trusted it, so any client could subscribe to another user's
+      // notification stream by guessing their id.
       const newSocket = io(`${API_BASE_URL.replace(/\/$/, '')}/notifications`, {
-        query: { userId: user.id },
+        auth: { token: getAuthToken() },
       });
 
       setSocket(newSocket);

@@ -13,6 +13,6 @@ export class ReactionsController {
     @Param('id') postId: string,
     @Body('reaction') reaction: string,
   ) {
-    return this.reactionsService.addReaction(req.user.id, postId, reaction);
+    return this.reactionsService.addReaction(req.user.userId, postId, reaction);
   }
 }

@@ -81,14 +81,17 @@ export class CommentsService {
   ): Promise<Comment> {
     let parent: Comment | null = null;
     if (parentId) {
-      parent = await this.commentsRepository.findOne({ where: { id: parentId } });
+      parent = await this.commentsRepository.findOne({
+        where: { id: parentId },
+        relations: ['user'],
+      });
       if (parent?.isLocked) {
         throw new UnauthorizedException('Cannot reply to a locked comment');
       }
     }
 
     // Check comment privacy settings
-    const postOwner = await this.usersService.findOneById(post.user.id);
+    const postOwner = await this.usersService.findOneById(post.user.id, ['following']);
     if (postOwner && postOwner.id !== user.id) { // Skip check if user is commenting on their own post
       // Blocks (either direction) trump comment privacy settings.
       if (await this.visibilityService.isBlockedEither(user.id, postOwner.id)) {

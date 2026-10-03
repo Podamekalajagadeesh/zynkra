@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Req, Res } from '@nestjs/common';
+﻿import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
 import { Request, Response } from 'express';
@@ -14,6 +14,17 @@ type MobilePost = {
 
 @Controller()
 export class AppController {
+  /**
+   * In-memory demo feed used by the Expo prototype (mobile/App.tsx).
+   *
+   * This is NOT real data: it is two hardcoded posts in a process-local array,
+   * and `POST /mobile/posts` accepted an unauthenticated write. It must never
+   * be reachable in production, so it is gated behind an explicit opt-in that
+   * defaults to off.
+   *
+   * TODO: point mobile/ at the real authenticated feed and delete this entirely
+   * (see ROADMAP.md §7 — the mobile client is a prototype, not a shipped app).
+   */
   private readonly mobileFeed: MobilePost[] = [
     {
       id: 'mobile-1',
@@ -38,6 +49,12 @@ export class AppController {
     private readonly authService: AuthService,
   ) {}
 
+  private assertMobileDemoEnabled(): void {
+    if (this.configService.get<string>('MOBILE_DEMO_ENDPOINTS_ENABLED', 'false') !== 'true') {
+      throw new NotFoundException();
+    }
+  }
+
   @Get()
   rootRedirect(@Res() res: Response) {
     const clientUrl = this.configService.get<string>('CLIENT_URL', 'http://localhost:5173');
@@ -55,6 +72,7 @@ export class AppController {
 
   @Get('mobile/feed')
   getMobileFeed() {
+    this.assertMobileDemoEnabled();
     return this.mobileFeed.slice(0, 20);
   }
 
@@ -63,6 +81,7 @@ export class AppController {
   createMobilePost(
     @Body() body: { content?: string; author?: string; handle?: string },
   ) {
+    this.assertMobileDemoEnabled();
     const content = body?.content?.trim();
     if (!content) {
       throw new BadRequestException('content is required');

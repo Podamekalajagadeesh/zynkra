@@ -12,8 +12,11 @@
 6. [Direct Messages](#direct-messages)
 7. [Feed](#feed)
 8. [Follows](#follows)
-9. [Error Handling](#error-handling)
-10. [Rate Limiting](#rate-limiting)
+9. [Media / Uploads](#media--uploads)
+10. [Search](#search)
+11. [Payments, Wallet & Payouts](#payments-wallet--payouts)
+12. [Error Handling](#error-handling)
+13. [Rate Limiting](#rate-limiting)
 
 ---
 
@@ -515,8 +518,7 @@ Content-Type: application/json
 
 {
   "recipientId": "user-456",
-  "content": "Hi there! 👋",
-  "isEncrypted": true
+  "content": "Hi there! 👋"
 }
 ```
 
@@ -526,12 +528,15 @@ Content-Type: application/json
   "id": "message-001",
   "senderId": "user-123",
   "recipientId": "user-456",
-  "content": "encrypted_content_here",
-  "isEncrypted": true,
+  "content": "Hi there! 👋",
   "isRead": false,
   "createdAt": "2024-07-04T12:00:00Z"
 }
 ```
+
+> **Note:** `content` is stored as received. For 1:1 conversations the client may encrypt
+> before send (Signal Protocol); the server does not enforce E2EE. Group messages are
+> currently plaintext server-side (transport uses TLS).
 
 ### Get Conversation
 ```http
@@ -753,6 +758,145 @@ Authorization: Bearer <token>
 
 ---
 
+## Media / Uploads
+
+Local-disk backend (`UPLOAD_DIR`, default `./uploads`). Files are served at
+`GET /uploads/…`. Optional `CDN_BASE_URL` rewrites public URLs to a CDN origin.
+
+Client flow for posts: upload first → pass `{ id, url, type }` to `POST /posts`.
+
+### Upload media (posts, DMs, general)
+```http
+POST /media/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file=<binary>
+```
+
+**Limits:** image ≤ 10MB, video ≤ 100MB, audio ≤ 20MB. Only `image/*`, `video/*`, `audio/*`.
+
+**Response (201)**:
+```json
+{
+  "id": "media-uuid",
+  "url": "/uploads/images/a1b2….jpg",
+  "type": "image",
+  "width": 1920,
+  "height": 1080,
+  "size": 245000,
+  "mimeType": "image/jpeg"
+}
+```
+
+### Upload processed image (resize/optimize via sharp)
+```http
+POST /media/upload/image?maxWidth=2048&quality=85&format=webp
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file=<binary>
+```
+
+### Upload avatar
+```http
+POST /users/me/avatar
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file=<binary>   # image/*, ≤ 5MB
+```
+
+Also available via `PATCH /users/profile` with FormData field `avatar`.
+
+### Upload story media
+```http
+POST /stories
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file=<binary>   # image/* or video/*, ≤ 50MB
+```
+
+### Delete owned media
+```http
+DELETE /media/:id
+Authorization: Bearer <token>
+```
+
+---
+
+## Search
+
+Postgres full-text search over users, posts, hashtags, places, groups, events, and products.
+Uses `searchVector` tsvector columns (GIN-indexed) with `websearch_to_tsquery` + `ts_rank`,
+plus ILIKE fallback for partial matches. All endpoints require a JWT.
+
+### Basic search
+```http
+GET /search?q=hello world
+Authorization: Bearer <token>
+```
+
+**Response (200)**:
+```json
+{
+  "users": [],
+  "posts": [],
+  "hashtags": [],
+  "places": [],
+  "groups": [],
+  "events": [],
+  "products": []
+}
+```
+
+### Advanced search (filter by type)
+```http
+GET /search/advanced?q=hello&type=posts&sort=relevance&limit=20&offset=0
+Authorization: Bearer <token>
+```
+
+- `type`: `users` | `posts` | `hashtags` | `places` | `groups` | `events` | `products`
+- `sort` (posts): `relevance` | `date` | `popularity`
+
+### Follow-up search
+```http
+POST /search/follow-up
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "previousQuery": "cats", "followUpQuery": "videos" }
+```
+
+### Web search (DuckDuckGo Instant Answer)
+```http
+GET /search/web?q=nestjs
+Authorization: Bearer <token>
+```
+
+### Reverse image search (Preview)
+```http
+POST /search/reverse-image
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+image=<binary>
+```
+
+Returns recent public posts that have images. Perceptual/ML reverse-image matching is **not** implemented.
+
+### Image + text search
+```http
+POST /search/image-text?q=cats
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+image=<binary>
+```
+
+---
+
 ## Error Handling
 
 ### Error Response Format
@@ -828,66 +972,129 @@ Authorization: Bearer <token>
 
 ## Rate Limiting
 
-API calls are rate-limited to prevent abuse:
+A single global limiter runs on every HTTP request, keyed **per IP address**:
 
 ```
-- 100 requests per minute per user
-- 10 requests per second per user
+- 300 requests per minute per IP
 ```
 
-Rate limit headers:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1625404800
-```
+Sensitive endpoints declare stricter `@Throttle` overrides:
+- auth routes (signup, signin, 2FA, passkeys, recovery, session approval): **100/min**
+- email-sending routes (forgot-password, magic-link, verification resend): **50 per 5 min**
+- AI content routes: **30/min**; AI chat: **15/min**
+
+WebSocket namespaces are **not** rate limited — the throttler guard is a no-op for
+non-HTTP execution contexts. Abuse control on sockets is left to the gateway.
+
+There are **no `X-RateLimit-*` response headers**; the limiter only returns `429`
+when a bucket is exhausted.
+
+Per-endpoint buckets (in addition to the global 300/min):
+
+| Route | Limit |
+|---|---|
+| `POST /auth/refresh` | 20/min (token exchange) |
+| `POST /auth/verify-code` | 10/min (6-digit code redemption) |
+| auth signin / signup / 2FA / passkeys / recovery | 100/min |
+| email-sending routes | 50 per 5 min |
+| `POST /ai/content/*` | 30/min; AI chat 15/min |
 
 If exceeded:
 ```json
 {
   "statusCode": 429,
-  "message": "Too Many Requests",
-  "error": "Rate limit exceeded. Try again after 60 seconds"
+  "message": "ThrottlerException: Too Many Requests"
 }
 ```
 
 ---
 
+## CSRF Protection
+
+Most routes authenticate with a **bearer token**, which a browser does not attach
+automatically — so they are not CSRF-able and need nothing extra.
+
+Three flows are authenticated *only* by the session cookie, and therefore require a
+CSRF token:
+
+| Route | Session value it protects |
+|---|---|
+| `POST /auth/webauthn/registration/verify` | WebAuthn registration challenge |
+| `POST /auth/webauthn/authentication/verify` | WebAuthn authentication challenge |
+| `POST /siwe/verify` | SIWE nonce |
+| `POST /wallet/connect` | wallet-link nonce |
+
+**Get a token** from any of:
+
+```
+GET /auth/csrf-token     → { "token": "<64 hex chars>" }
+GET /siwe/nonce          → sets the X-CSRF-Token response header
+GET /wallet/connect/challenge  → sets the X-CSRF-Token response header
+```
+
+The token is also mirrored into a **JS-readable** cookie (`zynkra.csrf` by default),
+which is safe — a cross-site page cannot read another origin's cookies.
+
+**Send it back** on the unsafe request:
+
+```bash
+curl -X POST http://localhost:3000/siwe/verify \
+  -H 'Content-Type: application/json' \
+  -H 'X-CSRF-Token: <token>' \
+  -c cookies.txt -b cookies.txt \
+  -d '{"message":"...","signature":"..."}'
+```
+
+Requests with an `Authorization: Bearer ...` header, and `GET`/`HEAD`/`OPTIONS`,
+skip the check. A missing or wrong token returns `403`. Set
+`CSRF_PROTECTION_ENABLED=false` to disable.
+
+---
+
+---
+
 ## WebSocket Events (Real-Time)
 
-Connect to WebSocket at `ws://localhost:3000`:
+### Authentication (required)
+
+Every Socket.IO namespace except the public read-only ones (`/trends`) requires an
+access token in the handshake. Identity is derived from the verified JWT and the
+backing `LoginSession` — **never** from a client-supplied `userId`. Sockets whose
+token is missing, expired, or whose session has been revoked are disconnected on
+connect, so `POST /auth/signout` also invalidates live sockets.
+
+```typescript
+import { io } from 'socket.io-client'
+
+const socket = io('http://localhost:3000/notifications', {
+  auth: { token: accessToken },   // or headers: { Authorization: `Bearer ${accessToken}` }
+})
+```
+
+Handshake errors surface as a `connect_error` with
+`"Unauthorized"` / `"Invalid token"`.
 
 ### Emit Events
 ```typescript
-// Send message in real-time
-socket.emit('message:send', {
-  recipientId: 'user-456',
-  content: 'Hello!'
-})
+// Notifications namespace
+socket.emit('user-online')                       // activity/presence
 
-// Like a post
-socket.emit('post:like', {
-  postId: 'post-789'
-})
+// LiveKit gateway — identity comes from the socket, not the payload
+socket.emit('join-stream', { roomName, isHost: true })
+socket.emit('leave-stream', { roomName })
 ```
 
 ### Listen for Events
 ```typescript
-// Receive new message
-socket.on('message:received', (data) => {
-  console.log(data)
-})
-
-// See when user is typing
-socket.on('user:typing', (data) => {
-  console.log(`${data.username} is typing...`)
-})
-
-// Get real-time post likes
-socket.on('post:liked', (data) => {
-  console.log(`${data.user.username} liked your post`)
-})
+socket.on('notification', (n) => { /* this user's notifications only */ })
+socket.on('stream-token', ({ token, roomName }) => { /* LiveKit access token */ })
+socket.on('participant-joined', ({ userId }) => {})
+socket.on('user-status-updated', (s) => {})
 ```
+
+> Note: the emit/listen examples above reflect the gateways that are actually
+> implemented. `message:send`, `post:like`, `message:received`, `user:typing`
+> and `post:liked` are **not** currently emitted by any gateway.
 
 ---
 
@@ -914,6 +1121,62 @@ curl -X POST http://localhost:3000/api/posts \
 
 ### Using Thunder Client (VS Code)
 Install the Thunder Client extension and import endpoints from examples above.
+
+---
+
+## Payments, Wallet & Payouts
+
+Money moves only when `PAYMENTS_ENABLED=true` and `STRIPE_SECRET_KEY` is set.
+Creator revenue uses a **90/10 split** (creator / platform) enforced in
+`payments/revenue-split.ts` on every tip, subscription, and pay-per-view path.
+Balances and history live in the append-only wallet ledger (`GET /wallet/ledger`).
+
+### Wallet
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/wallet/balance` | JWT | Current `walletBalance` |
+| GET | `/wallet/ledger?limit=` | JWT | Signed ledger entries (newest first) |
+
+### Creator earnings & monetization
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/creator/earnings` | JWT | Ledger-derived earnings summary |
+| GET | `/creator/dashboard` | JWT | Dashboard + `creatorSplit: 90` |
+| GET | `/creator/tiers` | public | Default subscription tiers |
+| POST | `/creator/tip` | JWT | Wallet tip `{ creatorId, amount, message? }` |
+| POST | `/creator/subscribe` | JWT | Wallet subscription `{ creatorId, tierId }` |
+| POST | `/creator/pay-per-view` | JWT | Wallet PPV purchase |
+
+### Stripe Connect & payouts
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/payments/connect/status` | JWT | Connect mode / `payoutsEnabled` |
+| POST | `/payments/connect/onboard` | JWT | Express account onboarding link → `/earnings` |
+| GET | `/payments/payouts` | JWT | Creator payout history |
+| POST | `/payments/payouts/request` | JWT | Debit wallet → payout (`{ amount, purpose? }`) |
+| POST | `/payments/payouts/schedule` | JWT | Debit now, release at `{ dueAt }` |
+| GET | `/payments/admin/payouts/pending` | JWT+Admin | Manual queue |
+| POST | `/payments/admin/payouts/:id/approve` | JWT+Admin | Mark paid + emit event |
+| POST | `/payments/admin/payouts/:id/reject` | JWT+Admin | Refund wallet, mark rejected |
+
+### Stripe webhook
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/webhooks/stripe` | Stripe signature | Raw body + `stripe-signature` header |
+
+Handled event types (state-based idempotent — replay is a no-op):
+- `payment_intent.succeeded` — credit recipient net + platform fee once
+- `payment_intent.payment_failed` / `canceled` — never regress a succeeded txn
+- `transfer.paid` / `transfer.failed` — finalize or reverse a payout
+- `charge.refunded` — reverse recipient + platform credits once
+- `account.updated` — sync Connect `payoutsEnabled`
+
+Env: `STRIPE_WEBHOOK_SECRET` (required for signature verification),
+`STRIPE_CONNECT_ENABLED` (optional; `false` forces the manual payout queue).
 
 ---
 

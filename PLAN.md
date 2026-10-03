@@ -38,7 +38,7 @@ A full-stack, decentralized social media platform combining features from **ever
 | DMs | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Group Chat | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Voice/Video Calls | ✅ | ✅ | ✅ | ✅ | ✅ |
-| E2EE | 🔄 | ✅ | 🔄 | ❌ | ❌ |
+| E2EE (1:1 text) | ✅ | ✅ | 🔄 | ❌ | ❌ |
 | Screen Sharing | ✅ | — | — | ✅ | — |
 
 ### 3. Monetization
@@ -60,9 +60,9 @@ A full-stack, decentralized social media platform combining features from **ever
 |---------|:------:|:------:|:-------:|:---------------:|
 | Groups | ✅ | ✅ | ✅ | ✅ |
 | Events | ✅ | — | ✅ | ✅ |
-| DAO Governance | ✅ | — | — | — |
+| DAO Governance | ❌ cut | — | — | — |
 | Fundraisers | ✅ | — | — | ✅ |
-| Nonprofits | ✅ | — | — | ✅ |
+| Nonprofits | ❌ cut | — | — | ✅ |
 
 ### 5. Decentralization
 
@@ -70,8 +70,8 @@ A full-stack, decentralized social media platform combining features from **ever
 |---------|:------:|:--------:|:-------:|:-----:|
 | ActivityPub Federation | ✅ | ✅ | — | — |
 | IPFS Storage | ✅ | — | — | — |
-| Blockchain Identity | ✅ | — | — | ✅ |
-| Self-Sovereign ID | ✅ | — | — | ✅ |
+| Blockchain Identity (SIWE wallet sign-in) | ✅ | — | — | ✅ |
+| Self-Sovereign ID | ❌ cut | — | — | ✅ |
 | Data Export | ✅ | ✅ | ✅ | ✅ |
 | Self-Hostable | ✅ | ✅ | — | ✅ |
 
@@ -79,7 +79,7 @@ A full-stack, decentralized social media platform combining features from **ever
 
 | Feature | Zynkra | Signal | X | Meta |
 |---------|:------:|:------:|:-:|:----:|
-| E2EE DMs | 🔄 | ✅ | ❌ | ❌ |
+| E2EE DMs (1:1 text) | ✅ | ✅ | ❌ | ❌ |
 | Zero Data Collection | ✅ | ✅ | ❌ | ❌ |
 | 2FA | ✅ | ✅ | ✅ | ✅ |
 | Passkeys | ✅ | — | — | ✅ |
@@ -92,15 +92,15 @@ A full-stack, decentralized social media platform combining features from **ever
 |---------|:------:|----------|
 | Offline-First | ✅ | Infrastructure |
 | 90/10 Creator Revenue | ✅ | Monetization |
-| Blockchain Identity | ✅ | Identity |
+| Blockchain Identity | ✅ (SIWE wallet sign-in) | Identity |
 | IPFS Content Storage | ✅ | Storage |
-| DAO Governance | ✅ | Communities |
-| Token-Gated Content | ✅ | Web3 |
+| ~~DAO Governance~~ | ❌ cut — was facade | Communities |
+| ~~Token-Gated Content~~ | ❌ cut — was facade | Web3 |
+| ~~Snap Map~~ | ❌ cut — in-process `Map`s, never persisted | Discovery |
 | Full Data Export | ✅ | Portability |
 | E-Ink Reader Mode | ✅ | Accessibility |
 | Spatial Audio | ✅ | Media |
 | Low Bandwidth Mode | ✅ | Accessibility |
-| Snap Map | ✅ | Discovery |
 | Sustainability Tracking | ✅ | Wellness |
 | Crisis Support | ✅ | Safety |
 | Ethical AI Guardrails | ✅ | AI |
@@ -116,19 +116,22 @@ These are advantages competitors **cannot copy** because their business models d
 |---|-----------|---------------------------|
 | 1 | **90/10 Revenue Split** | Their ad businesses require taking more from creators |
 | 2 | **Zero Data Collection** | Meta/X/Google ARE advertising companies — data is their product |
-| 3 | **Full E2EE** | They need to scan messages for ad targeting |
+| 3 | **E2EE (1:1 DMs)** | They need to scan messages for ad targeting |
 | 4 | **IPFS Content Storage** | They want to control, moderate, and delete content |
-| 5 | **DAO Community Governance** | They want corporate control over communities |
-| 6 | **Blockchain Identity** | They want to own and monetize your identity |
-| 7 | **Token-Gated Content** | They don't have Web3 infrastructure |
+| 5 | ~~**DAO Community Governance**~~ | ❌ Cut — never built, so nothing to defend |
+| 6 | **Blockchain Identity (SIWE)** | They want to own and monetize your identity |
+| 7 | ~~**Token-Gated Content**~~ | ❌ Cut — never built, so nothing to defend |
 | 8 | **Offline-First** | They want you dependent on their servers |
 | 9 | **ActivityPub Federation** | They want walled gardens to lock users in |
 | 10 | **Self-Hostable** | They want centralized platform control |
 | 11 | **Full Data Export** | They want lock-in to prevent churn |
 | 12 | **No Ads** | Their entire business IS advertising |
 | 13 | **Open Source** | They keep their code closed for competitive advantage |
-| 14 | **Self-Sovereign Identity** | They profit from identity lock-in |
+| 14 | ~~**Self-Sovereign Identity**~~ | ❌ Cut — replaced by wallet-sign auth, which is 90% of it |
 | 15 | **Zero Platform Censorship** | They must moderate to satisfy advertisers |
+
+Three of the fifteen were never real, and are struck through rather than quietly deleted so the
+gap is visible. ROADMAP.md §6 explains the cut.
 
 ---
 
@@ -163,12 +166,16 @@ zynkra/
 
 ## Development Status
 
-### ✅ Complete (98%)
+### Development status (honest baseline — see ROADMAP.md for full assessment)
+Overall completeness toward a trustworthy product: **~25%** (breadth looks higher; depth, mocks, and tests lag).
+
+#### ✅ Load-bearing (real)
 - Core social: posts, comments, reactions, feeds, search
 - Authentication: JWT, OAuth, Passkeys, 2FA, SIWE
-- Messaging: DMs, group chat, real-time presence
-- **E2EE: Full Signal Protocol (X3DH + Double Ratchet)** ✅
-- **Federation: Full ActivityPub outbound (HTTP Signatures)** ✅
+- Messaging: DMs, group chat, real-time presence — **1:1 DMs are E2EE (ciphertext-only at rest)**
+- Payments + Wallet: Stripe Connect, ledger (best subsystem)
+- **E2EE: Signal Protocol, 1:1 text — server stores ciphertext only and rejects plaintext once both parties publish keys; group/media/modmail are not E2EE** ✅
+- **Federation: ActivityPub outbound with HTTP Signatures (when `FEDERATION_ENABLED=true`); Mastodon interop untested** ✅ ⚠️
 - **Wallet Connect + Blockchain Payouts (USDC on Base/Polygon/Arbitrum)** ✅
 - **Offline Sync Engine (IndexedDB + Service Worker + Background Sync)** ✅
 - Content: stories, reels, live streaming, polls, notes
@@ -180,14 +187,14 @@ zynkra/
 - **In-app Checkout + Escrow + Product Reviews** ✅
 - Monetization: subscriptions, tipping, earnings, creator tiers
 - Communities: groups, events, fundraisers
-- **DAO Governance (proposals, voting, quorum, execution, treasury)** ✅
-- **Token-Gated Content (multi-chain, tiered access: basic/premium/vip/whale)** ✅
-- Web3: crypto wallet, NFTs, token system, SIWE
-- Decentralization: IPFS, data export, blockchain identity
-- Discovery: explore, trends, hashtags, snap map
+- ~~DAO Governance~~ / ~~Token-Gated Content~~ / ~~in-app token system~~ / ~~snap map~~ — ❌ **cut**;
+  they were facade, not features. See ROADMAP.md §6.
+- Web3: crypto wallet, NFTs, SIWE wallet-sign auth (no in-app token)
+- Decentralization: IPFS, data export, blockchain identity (SIWE)
+- Discovery: explore, trends, hashtags
 - Privacy: 2FA, passkeys, screenshot protection, sessions
-- **AI: On-Device LLM (WebLLM, runs 100% in browser, zero data leaves device)** ✅
-- AI: chatbot, copilot, sentiment analysis
+- **On-Device LLM (WebLLM panel) — Preview** ⚠️ (works via WebGPU; not the default AI path — most AI features use OpenRouter cloud)
+- **AI chatbot / copilot / content tools — Preview (OpenRouter cloud API, not on-device)** ⚠️
 - **AI Moderation (spam, harassment, hate speech, NSFW, personal attacks)** ✅
 - **Real-time Translation (DeepL + LibreTranslate + auto-detect, 26 languages)** ✅
 - **Smart Notification AI (priority filtering + digest)** ✅
@@ -208,10 +215,14 @@ zynkra/
 ## Priority Roadmap
 
 ### Phase 1: Complete Core Advantages
-1. Finish E2EE encryption (Signal Protocol)
-2. Complete ActivityPub federation (outbound)
-3. Wallet connect + blockchain payouts
-4. Offline sync engine
+1. ~~Finish server-enforced E2EE for DMs~~ ✅ Done for 1:1 text (ciphertext-only storage,
+   plaintext rejected, legacy threads upgraded on first encrypted send). Remaining: DM media,
+   groups, key rotation — ROADMAP.md Phase 3.
+2. Verify ActivityPub federation interop against a real Mastodon instance — **the one item here
+   still open**, and it needs a live instance, not code.
+3. ~~Wallet connect + blockchain payouts~~ ✅ (USDC on Base/Polygon/Arbitrum; Arbitrum address
+   corrected and pinned by a test; gated behind `CRYPTO_PAYOUTS_ENABLED=false`)
+4. ~~Offline sync engine~~ ✅ (IndexedDB queue + Service Worker; not yet conflict-resolving)
 
 ### Phase 2: Content Dominance
 5. Long-form articles + editor
@@ -225,10 +236,10 @@ zynkra/
 11. Product reviews
 
 ### Phase 4: AI Supremacy
-12. On-device private LLM
+12. On-device private LLM (Preview panel exists; promote to default path)
 13. Real-time translation
 14. Smart notification filtering
-15. AI content creation tools
+15. AI content creation tools (currently OpenRouter cloud — Preview)
 
 ---
 
@@ -236,18 +247,27 @@ zynkra/
 
 | Metric | Count |
 |--------|-------|
-| Backend Modules | 83 |
-| Frontend Pages | 79 |
+| Backend feature directories | 105 |
+| ...of which load-bearing (works end-to-end) | ~20 |
+| ...of which Preview (visible, shallow) | ~12 |
+| ...of which facade stubs (`src/features/*`, unregistered) | 64 |
+| Frontend page files/dirs | 128 |
 | Frontend Components | 100+ |
 | React Contexts | 5 |
 | Custom Hooks | 16 |
-| Services | 7 |
 | Package Manager | npm |
 | Database | PostgreSQL 14+ |
 | Real-time | Socket.io + LiveKit |
 | Decentralized Storage | IPFS |
-| Blockchain | Ethereum / Polygon |
+| Blockchain | Ethereum / Polygon (payouts only) |
 | Federation | ActivityPub |
+
+> The old version of this table said "Backend Modules: 83" and "Frontend Pages: 79." Both were
+> inflated: they counted stub directories and never-registered modules as shipped features, and
+> the real directory counts are *higher* (105 / 128). Counting directories is the problem — it
+> makes `healthcare/` or `government-services/` look like a working feature when it is one
+> `console.log` stub and no route. The ~20 load-bearing figure is the one that matters, and it
+> is far below what the raw counts suggest.
 
 ---
 
