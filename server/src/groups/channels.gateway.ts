@@ -7,7 +7,8 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, ConfigService } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { WsAuthService } from '../common/ws-auth/ws-auth.service';
 import { WsRateLimiter } from '../common/ws-auth/ws-rate-limiter';
 import { applyWsCors } from '../common/ws-auth/ws-cors';

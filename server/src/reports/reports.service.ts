@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Report } from './entities/report.entity';
@@ -40,7 +40,7 @@ export class ReportsService {
       relations: ['reporter', 'post', 'post.user'],
     });
     if (!report) {
-      throw new Error('Report not found');
+      throw new NotFoundException('Report not found');
     }
     return report;
   }

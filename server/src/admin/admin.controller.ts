@@ -1,20 +1,62 @@
-import { Body, Controller, Get, NotFoundException, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminService } from './admin.service';
 import { ChangelogService } from './changelog.service';
 import { CreateChangelogEntryDto } from './dto/create-changelog-entry.dto';
 import { CreateSandboxEnvironmentDto } from './dto/create-sandbox-environment.dto';
 import { UpdateSandboxEnvironmentDto } from './dto/update-sandbox-environment.dto';
 import { SandboxEnvironmentsService } from './sandbox-environments.service';
 
+const MAX_REPORT_PAGE_SIZE = 100;
+
 @Controller('admin')
 export class AdminController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly adminService: AdminService,
     private readonly changelogService: ChangelogService,
     private readonly sandboxEnvironmentsService: SandboxEnvironmentsService,
   ) {}
+
+  @Get('reports')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  listReports(
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    return this.adminService.getReports(this.parsePageSize(take), this.parsePageSize(skip));
+  }
+
+  @Get('reports/:id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  getReport(@Param('id') id: string) {
+    return this.adminService.getReport(id);
+  }
+
+  @Delete('reports/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  dismissReport(@Param('id') id: string) {
+    return this.adminService.dismissReport(id);
+  }
+
+  @Delete('posts/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  deletePost(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.adminService.deletePost(id, user.userId);
+  }
+
+  private parsePageSize(value?: string): number {
+    const parsed = Number.parseInt(value ?? '', 10);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return 0;
+    }
+    return Math.min(parsed, MAX_REPORT_PAGE_SIZE);
+  }
 
   @Post('users/:id/ban')
   @UseGuards(JwtAuthGuard, AdminGuard)

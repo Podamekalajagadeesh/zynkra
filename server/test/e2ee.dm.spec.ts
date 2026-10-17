@@ -110,7 +110,11 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
     };
 
     const messagesRepository = {
-      findOne: jest.fn(async () => null),
+      // Must actually resolve by id: `updateMessage` looks the message up
+      // before it can reach the E2EE check. This used to be a hardcoded
+      // `async () => null`, so the plaintext-edit tests short-circuited on
+      // NotFoundException and never exercised the rejection at all.
+      findOne: jest.fn(async ({ where }: any) => messages.find((m) => m.id === where?.id) ?? null),
       find: jest.fn(async ({ where }: any) => {
         const conditions = Array.isArray(where) ? where : [where];
         return messages.filter((m) =>
@@ -121,7 +125,10 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
       }),
       create: jest.fn((value: any) => value),
       save: jest.fn(async (value: Message) => {
-        messages.push(value);
+        if (!value.id) value.id = `msg-${messages.length + 1}`;
+        const idx = messages.findIndex((m) => m.id === value.id);
+        if (idx >= 0) messages[idx] = value;
+        else messages.push(value);
         return value;
       }),
     };

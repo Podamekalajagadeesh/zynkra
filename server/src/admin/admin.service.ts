@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReportsService } from '../reports/reports.service';
 import { PostsService } from '../posts/posts.service';
 
@@ -17,12 +17,16 @@ export class AdminService {
     return this.reportsService.findOne(id);
   }
 
-  async deletePost(id: string) {
+  async deletePost(id: string, actingAdminId: string) {
     const post = await this.postsService.findOne(id);
     if (!post) {
-      throw new Error('Post not found');
+      throw new NotFoundException('Post not found');
     }
-    await this.postsService.remove(id, { userId: 'admin', role: 'admin' });
+    // AdminGuard has already established the caller holds the admin role;
+    // PostsService.remove checks that role, and the real id keeps the audit
+    // trail honest instead of attributing the delete to the literal string
+    // 'admin'.
+    await this.postsService.remove(id, { userId: actingAdminId, role: 'admin' });
   }
 
   async dismissReport(id: string) {

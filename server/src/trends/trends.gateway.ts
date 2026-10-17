@@ -1,4 +1,5 @@
-import { Logger, ConfigService } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
   OnGatewayConnection,

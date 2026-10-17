@@ -6,7 +6,8 @@ import {
   OnGatewayDisconnect,
   OnGatewayInit,
 } from '@nestjs/websockets';
-import { Logger, ConfigService } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { LiveshoppingService } from './liveshopping.service';
 import { WsAuthService } from '../common/ws-auth/ws-auth.service';

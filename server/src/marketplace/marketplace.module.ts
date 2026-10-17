@@ -7,6 +7,7 @@ import { CommerceService } from './commerce.service';
 import { CommerceController } from './commerce.controller';
 import { Transaction } from './entities/transaction.entity';
 import { Rating } from './entities/rating.entity';
+import { MarketplaceListing } from './entities/listing.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductReview } from './entities/product-review.entity';
 import { EscrowTransaction } from './entities/escrow.entity';
@@ -29,7 +30,7 @@ import { Order } from './entities/order.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Transaction, Rating, ProductVariant, User,
+      Transaction, Rating, ProductVariant, User, MarketplaceListing,
       ProductReview, EscrowTransaction, CheckoutSession, Product,
       Warehouse, InventoryStock, InventoryReservation, Shipment, ReturnRequest, Supplier, DemandForecast, Order,
     ]),

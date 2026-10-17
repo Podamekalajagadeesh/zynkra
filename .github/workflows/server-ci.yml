@@ -109,6 +109,12 @@ jobs:
       - name: Core loop tests (real Postgres)
         working-directory: server
         run: npm run test:core-db
+      - name: Marketplace listings + admin reports tests
+        working-directory: server
+        # `/marketplace/listings` and `/admin/reports` were called by the client
+        # but had no server route (and `AdminService` was not even a registered
+        # provider). These specs pin the routes and their auth rules.
+        run: npm run test:admin-marketplace
       - name: Money path tests
         working-directory: server
         run: npx jest --runInBand --runTestsByPath test/money-path.test.ts test/payments.payouts.spec.ts test/payments.webhooks.spec.ts test/payments.reconciliation.spec.ts

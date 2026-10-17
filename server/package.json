@@ -23,6 +23,7 @@
     "test:money": "jest --runInBand --runTestsByPath test/money-path.test.ts test/payments.payouts.spec.ts test/payments.webhooks.spec.ts test/payments.reconciliation.spec.ts",
     "test:qa": "jest --runInBand --runTestsByPath test/qa-smoke.test.ts test/e2e-smoke.test.ts",
     "test:claims": "jest --runInBand --runTestsByPath test/e2ee.dm.spec.ts test/data-export.portability.spec.ts test/federation-wellknown.spec.ts",
+    "test:admin-marketplace": "jest --runInBand --runTestsByPath test/marketplace-listings.spec.ts test/admin-reports.spec.ts",
     "test:federation": "jest --runInBand src/federation",
     "test:integration": "jest --runInBand --testPathIgnorePatterns=/src/",
     "test:coverage": "jest --runInBand --coverage --testPathIgnorePatterns=/test/",
