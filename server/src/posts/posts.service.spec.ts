@@ -375,6 +375,64 @@ describe('PostsService', () => {
     });
   });
 
+  // ─── findPostsByUserId ────────────────────────────────────────────────
+
+  describe('findPostsByUserId', () => {
+    it('scopes the database query to the requested author only', async () => {
+      const authorId = 'author-22';
+      postsRepo.find.mockResolvedValue([]);
+
+      await service.findPostsByUserId(authorId, 'viewer-9');
+
+      expect(postsRepo.find).toHaveBeenCalledTimes(1);
+      // Exactly the author filter — the viewer must never narrow (or widen)
+      // the query itself; it only reaches the visibility filter below.
+      expect(postsRepo.find.mock.calls[0][0].where).toEqual({ user: { id: authorId } });
+    });
+
+    it('re-scopes the query when a different author is requested', async () => {
+      postsRepo.find.mockResolvedValue([]);
+
+      await service.findPostsByUserId('author-a', 'viewer-9');
+      await service.findPostsByUserId('author-b', 'viewer-9');
+
+      expect(postsRepo.find.mock.calls[0][0].where).toEqual({ user: { id: 'author-a' } });
+      expect(postsRepo.find.mock.calls[1][0].where).toEqual({ user: { id: 'author-b' } });
+    });
+
+    it('returns only the posts the visibility filter allows the viewer to see', async () => {
+      const authorId = 'author-22';
+      const author = makeUser({ id: authorId });
+      const publicPost = makePost({ id: 'post-public', user: author });
+      const friendsPost = makePost({ id: 'post-friends', visibility: PostVisibility.FRIENDS, user: author });
+      postsRepo.find.mockResolvedValue([publicPost, friendsPost]);
+      // VisibilityService contract: a friends-only post is not visible to a
+      // viewer who is not mutual friends with the author, so it is dropped.
+      visibilityService.filterVisiblePostsForViewer.mockImplementation(async (_viewer, posts) =>
+        posts.filter((post) => post.visibility === PostVisibility.PUBLIC),
+      );
+
+      const result = await service.findPostsByUserId(authorId, 'viewer-9');
+
+      // Every fetched post reaches the filter with the caller's viewer id…
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith('viewer-9', [
+        publicPost,
+        friendsPost,
+      ]);
+      // …and only the filter's verdict decides the response.
+      expect(result.map((post) => post.id)).toEqual(['post-public']);
+      expect(result).not.toEqual(expect.arrayContaining([friendsPost]));
+    });
+
+    it('treats an anonymous request (no viewer) as a null viewer for visibility filtering', async () => {
+      postsRepo.find.mockResolvedValue([]);
+
+      await service.findPostsByUserId('author-22');
+
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, []);
+    });
+  });
+
   // ─── like / unlike ────────────────────────────────────────────────────
 
   describe('like', () => {
