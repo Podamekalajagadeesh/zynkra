@@ -9,6 +9,7 @@ import { SponsoredPostsService } from '../sponsored-posts/sponsored-posts.servic
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
 import { SnapMapGateway } from '../snapmap/snapmap.gateway';
+import { LocationService } from '../snapmap/location.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { User } from '../users/entities/user.entity';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
@@ -57,6 +58,7 @@ describe('FeedService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FeedService,
+        { provide: LocationService, useValue: { getLocation: jest.fn() } },
         {
           provide: getRepositoryToken(Post),
           useValue: {

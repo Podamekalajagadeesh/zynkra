@@ -131,6 +131,7 @@ describe('WsAuthService', () => {
     });
 
     it('scopes the session lookup to the token subject', async () => {
+      jwtService.verify.mockReturnValue(validPayload());
       await service.authenticate(makeSocket({ auth: { token: 'jwt' } }));
       expect(sessionsRepo.findOne).toHaveBeenCalledWith({
         where: { id: 'sess-1', user: { id: 'u1' } },
@@ -141,6 +142,7 @@ describe('WsAuthService', () => {
 
   describe('principal', () => {
     it('exposes role so gateways can make authorization decisions', async () => {
+      jwtService.verify.mockReturnValue(validPayload());
       sessionsRepo.findOne.mockResolvedValue({
         ...liveSession,
         user: { ...liveSession.user, role: 'admin' },

@@ -174,7 +174,7 @@ describe('Data export portability — transactional import', () => {
     const result = await service.importFromJson('me', payload as ExportData);
 
     expect(result.skippedConversations).toBe(2);
-    expect(result.importedConversations).toBe(0);
+    expect(result.conversations).toBe(0);
     expect(result.messages).toBe(0);
     expect(store.messages).toHaveLength(0);
     expect(store.conversations).toHaveLength(0);

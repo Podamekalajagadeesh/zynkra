@@ -7,7 +7,14 @@ import { GqlAuthGuard } from './gql-jwt-auth.guard';
 const AUDIENCE = 'zynkra-api';
 
 function gqlContext(req: any) {
-  return { getContext: () => ({ req }), getType: () => 'graphql' } as unknown as ExecutionContext;
+  return {
+    // GqlExecutionContext.create reads the raw resolver tuple: [root, args, ctx, info].
+    getArgs: () => [null, {}, { req }, {}],
+    getClass: () => class {},
+    getHandler: () => () => undefined,
+    getContext: () => ({ req }),
+    getType: () => 'graphql',
+  } as unknown as ExecutionContext;
 }
 
 const liveSession = { id: 'sess-1', revokedAt: null, user: { id: 'u1', email: 'a@b.c', role: 'user' } };
@@ -71,6 +78,7 @@ describe('GqlAuthGuard', () => {
   });
 
   it('rejects a revoked session', async () => {
+    jwtService.verify.mockReturnValue(payload());
     sessionsRepo.findOne.mockResolvedValue({ ...liveSession, revokedAt: new Date() });
     await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
       /Session is missing or expired/i,
@@ -78,6 +86,7 @@ describe('GqlAuthGuard', () => {
   });
 
   it('rejects a banned user', async () => {
+    jwtService.verify.mockReturnValue(payload());
     sessionsRepo.findOne.mockResolvedValue({ ...liveSession, user: { ...liveSession.user, banned: true } });
     await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
       /Account is inactive/i,

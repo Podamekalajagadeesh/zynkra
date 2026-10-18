@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { PostsService } from './posts.service';
+import { PostFederationService } from '../federation/post-federation.service';
 import { Post, PostVisibility } from './entities/post.entity';
 import { PostReaction } from './entities/post-reaction.entity';
 import { UsersService } from '../users/users.service';
@@ -82,6 +83,14 @@ describe('PostsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PostsService,
+        {
+          provide: PostFederationService,
+          useValue: {
+            federateNewPost: jest.fn(),
+            federatePostUpdate: jest.fn(),
+            federatePostDeletion: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), delete: jest.fn(), increment: jest.fn(), count: jest.fn(), createQueryBuilder: jest.fn() } },
         { provide: getRepositoryToken(PostReaction), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn(), delete: jest.fn(), count: jest.fn() } },
         { provide: getRepositoryToken(Comment), useValue: { delete: jest.fn(), count: jest.fn() } },

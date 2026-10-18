@@ -8,6 +8,7 @@ import { FollowRequest } from './entities/follow-request.entity';
 import { Poke } from './entities/poke.entity';
 import { Post } from '../posts/entities/post.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MediaService } from '../media/media.service';
 import { StorageService } from '../storage/storage.service';
 import { LifeEvent } from './entities/life-event.entity';
 import { WebhooksService } from '../webhooks/webhooks.service';
@@ -54,6 +55,10 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        {
+          provide: MediaService,
+          useValue: { uploadFile: jest.fn().mockResolvedValue({ url: '/uploads/avatars/updated.jpg' }) },
+        },
         {
           provide: getRepositoryToken(User),
           useValue: {
@@ -265,7 +270,7 @@ describe('UsersService', () => {
       usersRepo.findOne.mockResolvedValue(user);
       usersRepo.save.mockResolvedValue(user);
 
-      const mockFile = { buffer: Buffer.from('fake-image'), originalname: 'avatar.jpg' };
+      const mockFile = { buffer: Buffer.from('fake-image'), originalname: 'avatar.jpg', mimetype: 'image/jpeg' };
 
       const result = await service.updateProfile(user.id, {} as any, mockFile);
 

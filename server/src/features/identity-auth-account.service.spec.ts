@@ -33,7 +33,7 @@ describe('AccountManagementService', () => {
     const service = new AccountManagementService(undefined, userRepository as any);
 
     const defaults = await service.getDataPermissions('user-44');
-    expect(defaults.dataPermissions).toEqual(['profile', 'posts', 'settings']);
+    expect(defaults.dataPermissions).toEqual(['profile', 'posts', 'settings', 'personalization']);
 
     const updated = await service.updateDataPermissions('user-44', ['profile', 'analytics', 'profile']);
     expect(updated.dataPermissions).toEqual(['profile', 'analytics']);

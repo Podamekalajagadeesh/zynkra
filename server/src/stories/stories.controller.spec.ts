@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
+import { MediaService } from '../media/media.service';
 
 describe('StoriesController', () => {
   let controller: StoriesController;
@@ -17,6 +18,12 @@ describe('StoriesController', () => {
             trackView: jest.fn(),
             getViews: jest.fn(),
             delete: jest.fn(),
+          },
+        },
+        {
+          provide: MediaService,
+          useValue: {
+            uploadFile: jest.fn(),
           },
         },
       ],

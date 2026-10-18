@@ -9,6 +9,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { PagesService } from '../pages/pages.service';
 import { AccountManagementService } from '../features/account-management/account-management.service';
+import { VisibilityService } from '../common/visibility/visibility.service';
 
 function makeMockUser(overrides = {}) {
   return {
@@ -31,6 +32,7 @@ describe('UsersController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
+        { provide: VisibilityService, useValue: { canViewActivity: jest.fn().mockResolvedValue(true) } },
         {
           provide: UsersService,
           useValue: {
@@ -256,7 +258,15 @@ describe('UsersController', () => {
       usersService.findByUsername.mockResolvedValue(user as any);
 
       const result = await controller.findByUsername({ user: { userId: 'viewer' } }, 'testuser');
-      expect(result).toBe(user);
+      expect(result).toMatchObject({
+        id: user.id,
+        username: 'testuser',
+        displayName: 'Test User',
+        avatar: '/uploads/avatars/test.jpg',
+        bio: 'A test user',
+      });
+      // The public profile DTO must never leak the account email.
+      expect(result).not.toHaveProperty('email');
     });
   });
 

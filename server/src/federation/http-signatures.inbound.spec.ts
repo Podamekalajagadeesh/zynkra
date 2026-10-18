@@ -225,8 +225,9 @@ describe('verifyRequestSignature', () => {
   });
 
   it('rejects a body carrying a Digest that was not signed', () => {
-    const parsed = service.parseSignatureHeader(headers.Signature);
     const unsignedDigest = { ...headers, Signature: headers.Signature.replace(' date digest', ' date') };
+    // The parsed header must come from the signature actually on the request.
+    const parsed = service.parseSignatureHeader(unsignedDigest.Signature);
 
     const result = service.verifyRequestSignature({
       method: 'POST',
@@ -461,7 +462,7 @@ describe('fetchActorPublicKey', () => {
 
     await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice');
 
-    expect(getSpy.mock.calls[0][1].maxRedirects).toBe(0);
+    expect((getSpy.mock.calls[0][1] as any).maxRedirects).toBe(0);
   });
 
   it('returns null when the actor has no usable public key', async () => {

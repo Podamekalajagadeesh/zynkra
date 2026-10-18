@@ -31,7 +31,11 @@ function makeFile(overrides: Partial<Express.Multer.File> = {}): Express.Multer.
     encoding: '7bit',
     mimetype: 'image/jpeg',
     size: 1024,
-    buffer: Buffer.from('fake-image-bytes'),
+    // A real 1x1 PNG: sharp validates image payloads before reading metadata.
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    ),
     destination: '',
     filename: '',
     path: '',

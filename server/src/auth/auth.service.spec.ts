@@ -231,9 +231,13 @@ describe('AuthService', () => {
     const reqFrom = (ip?: string) => ({ ip, socket: { remoteAddress: ip }, headers: { 'user-agent': 'jest' } });
 
     beforeEach(() => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.10'] }));
+      usersService.findByEmail.mockResolvedValue(
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.10'] }),
+      );
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (loginSessionRepo.findOne as jest.Mock).mockResolvedValue(null);
+      (loginSessionRepo.create as jest.Mock).mockImplementation((entity: any) => entity);
+      (loginSessionRepo.save as jest.Mock).mockImplementation((entity: any) => entity);
     });
 
     it('marks a session from a trusted IP as trusted and not suspicious', async () => {
@@ -270,7 +274,10 @@ describe('AuthService', () => {
 
       await expect(
         service.signIn({ email: 'test@example.com', password: 'pw' } as SignInDto, reqFrom('198.51.100.7')),
-      ).rejects.toThrow(/approval/i);
+      ).resolves.toMatchObject({
+        loginApprovalRequired: true,
+        message: expect.stringMatching(/approval/i),
+      });
     });
 
     it('strips the IPv4-mapped IPv6 prefix so ::ffff:a matches a', async () => {
@@ -285,7 +292,7 @@ describe('AuthService', () => {
     });
 
     it('is not trusted when the user has no trusted list', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: null }));
+      usersService.findByEmail.mockResolvedValue(makeUser({ emailVerified: true, trustedIpAddresses: null }));
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
         reqFrom('203.0.113.10'),
@@ -304,7 +311,9 @@ describe('AuthService', () => {
     });
 
     it('honours a CIDR range, not just exact addresses', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.0/24'] }));
+      usersService.findByEmail.mockResolvedValue(
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] }),
+      );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
@@ -316,7 +325,9 @@ describe('AuthService', () => {
     });
 
     it('does not honour an address outside a trusted CIDR', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['203.0.113.0/24'] }));
+      usersService.findByEmail.mockResolvedValue(
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] }),
+      );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
@@ -330,7 +341,9 @@ describe('AuthService', () => {
     it('ignores a hostname in the trusted list rather than resolving it', async () => {
       // Resolving a hostname here would let an attacker-controlled DNS record
       // widen the allowlist, so a hostname entry simply never matches.
-      usersService.findByEmail.mockResolvedValue(makeUser({ trustedIpAddresses: ['evil.example.com'] }));
+      usersService.findByEmail.mockResolvedValue(
+        makeUser({ emailVerified: true, trustedIpAddresses: ['evil.example.com'] }),
+      );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
@@ -1159,7 +1172,11 @@ describe('AuthService', () => {
       expect(result.access_token).toBe('jwt-token');
       expect(loginSessionRepo.update).toHaveBeenCalledWith('s1', { lastSeenAt: expect.any(Date) });
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: user.id, email: user.email, sid: 's1' },
+        { sub: user.id, email: user.email, sid: 's1', typ: 'access', aud: 'zynkra-api' },
+        expect.anything(),
+      );
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        { sub: user.id, sid: 's1', typ: 'refresh', aud: 'zynkra-api' },
         expect.anything(),
       );
     });

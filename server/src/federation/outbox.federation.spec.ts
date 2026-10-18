@@ -39,6 +39,7 @@ type Harness = {
   outboxRows: any[];
   /** Rows the ledger lookup returns. */
   outboxLookup: any[];
+  httpSignaturesService: any;
 };
 
 function createService(
@@ -133,6 +134,7 @@ function createService(
     outboxRepository,
     outboxRows,
     outboxLookup,
+    httpSignaturesService,
   };
 }
 

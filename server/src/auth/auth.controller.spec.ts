@@ -204,9 +204,9 @@ describe('AuthController', () => {
     it('POST /auth/2fa/setup', async () => {
       authService.setup2FA.mockResolvedValue({ secret: 'ABC123', otpauthUrl: 'otpauth://totp/...' });
 
-      const result = await controller.setupTwoFactor({ user: { userId: 'user-1' } });
+      const result = await controller.setupTwoFactor({ user: { userId: 'user-1' } }, {});
 
-      expect(authService.setup2FA).toHaveBeenCalledWith('user-1');
+      expect(authService.setup2FA).toHaveBeenCalledWith('user-1', undefined);
       expect(result.otpauthUrl).toContain('otpauth://');
     });
 
@@ -219,7 +219,10 @@ describe('AuthController', () => {
     });
 
     it('POST /auth/2fa/verify', async () => {
-      authService.verify2FALogin.mockResolvedValue({ access_token: 'jwt-token' });
+      authService.verify2FALogin.mockResolvedValue({
+        access_token: 'jwt-token',
+        refresh_token: 'refresh-token',
+      });
 
       const result = await controller.verifyTwoFactor({} as any, { tempToken: 'temp', token: '123456' });
 
