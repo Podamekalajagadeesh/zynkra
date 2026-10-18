@@ -68,6 +68,13 @@ export class ReputationService {
     const cryptoEarned = points * 0.001;
     reputation.earnedCryptocurrency = Number(reputation.earnedCryptocurrency) + cryptoEarned;
 
+    // Save the reputation row BEFORE building the log. `create()` snapshots
+    // the relation object it is given, and for a brand-new row the generated
+    // `id` only exists after `save()` — building the log first captured a
+    // copy without an id, and `save(log)` then crashed with
+    // UpdateValuesMissingError while trying to update reputation_log.reputation.
+    await this.reputationRepository.save(reputation);
+
     const log = this.reputationLogRepository.create({
       reputation,
       event,
@@ -75,7 +82,6 @@ export class ReputationService {
       cryptocurrencyEarned: cryptoEarned
     });
 
-    await this.reputationRepository.save(reputation);
     await this.reputationLogRepository.save(log);
   }
 }

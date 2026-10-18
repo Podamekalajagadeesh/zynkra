@@ -13,7 +13,9 @@ export class ReputationLog {
   @Column({ type: 'enum', enum: ReputationEvent })
   event: ReputationEvent;
 
-  @Column()
+  // numeric(10,2), not the default integer: INTERACTION_RECEIVED awards 0.5
+  // points and an integer column rejects it (see migration 1792325581000).
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   points: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
