@@ -1205,7 +1205,7 @@ describe('sendFollow', () => {
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/localuser',
       expect.any(String),
-      'https://example.com/inbox',
+      'https://example.com/users/alice/inbox',
     );
     expect(JSON.parse(postSpy.mock.calls[0][1]).type).toBe('Follow');
   });
@@ -1504,16 +1504,16 @@ describe('per-user remote moderation', () => {
 
   it('scopes a re-drive post lookup to its author', async () => {
     const { service, postsService } = createService();
+    // findPostsByUserId is author-scoped, so the result set holds only the
+    // caller's own posts — post-2 belongs to someone else and never appears.
     postsService.findPostsByUserId.mockResolvedValue([
       { id: 'post-1', content: 'mine', createdAt: new Date(), isDraft: false },
-      { id: 'post-2', content: 'theirs', createdAt: new Date(), isDraft: false },
     ]);
 
     const post = await service.getLocalPostForFederation('post-2', 'user-1');
 
-    // findPostsByUserId is scoped to the author, so another user's post is
-    // simply not in the result set. Without that scope a re-drive endpoint
-    // would let a caller push someone else's post under their own name.
+    // Without that scope a re-drive endpoint would let a caller push someone
+    // else's post under their own name.
     expect(post).toBeNull();
     expect(postsService.findPostsByUserId).toHaveBeenCalledWith('user-1');
   });

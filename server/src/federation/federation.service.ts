@@ -948,7 +948,7 @@ export class FederationService implements OnModuleInit {
     const outcome = await this.deliverToInbox(
       { baseUrl: new URL(targetUser.inboxUrl).origin },
       followActivity,
-      { actorUsername },
+      { actorUsername, inboxUrl: targetUser.inboxUrl },
     );
 
     if (!outcome.delivered) {

@@ -139,7 +139,7 @@ export class MediaService {
     const cdnBase = (this.configService.get('CDN_BASE_URL') || '').replace(/\/+$/, '');
     const normalized = relativePath.replace(/^\/+/, '');
     if (cdnBase) {
-      return `${cdnBase}/${normalized}`;
+      return `${cdnBase}/uploads/${normalized}`;
     }
     return `/uploads/${normalized}`;
   }
