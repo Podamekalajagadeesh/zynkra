@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, IsNull, Repository } from 'typeorm';
 import { SecurityAuditService } from '../../security-audit/security-audit.service';
 import {
-  SecurityAuditLog,
+  SecurityAuditLog as SecurityAuditLogEntity,
   SecurityEventType,
   SecurityEventSeverity,
 } from '../../security-audit/entities/security-audit.entity';
@@ -77,7 +77,8 @@ export class SecuritySettingsService {
     private readonly securityAuditService?: SecurityAuditService,
     @InjectRepository(User) private readonly usersRepository?: Repository<User>,
     @InjectRepository(Authenticator) private readonly authenticatorsRepository?: Repository<Authenticator>,
-    @InjectRepository(SecurityAuditLog) private readonly auditRepository?: Repository<SecurityAuditLog>,
+    @InjectRepository(SecurityAuditLogEntity)
+    private readonly auditRepository?: Repository<SecurityAuditLogEntity>,
     @InjectRepository(LoginSession) private readonly loginSessionsRepository?: Repository<LoginSession>,
   ) {}
 
@@ -517,7 +518,7 @@ export class SecuritySettingsService {
     score: number;
     recommendations: string[];
     signals: Record<string, boolean | number>;
-    notEnforced: string[];
+    notEnforced: readonly string[];
   }> {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 

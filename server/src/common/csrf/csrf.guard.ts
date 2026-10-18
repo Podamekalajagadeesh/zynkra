@@ -138,7 +138,10 @@ export class CsrfGuard implements CanActivate {
  */
 export function issueCsrfToken(
   session: Record<string, any>,
-  res: { cookie?: Function; setHeader?: Function },
+  res: {
+    cookie?: (name: string, value: string, options: Record<string, unknown>) => unknown;
+    setHeader?: (name: string, value: string) => unknown;
+  },
   options: { cookieName: string; secure: boolean; maxAgeMs: number },
 ): string {
   let token = session.csrfToken;

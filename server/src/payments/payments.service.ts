@@ -742,7 +742,10 @@ export class PaymentsService {
     return payout;
   }
 
-  private serializePayout(payout: Payout, extra: Record<string, any> = {}) {
+  private serializePayout(
+    payout: Payout,
+    extra: Record<string, any> = {},
+  ): Record<string, any> & { mode?: string } {
     return {
       success: payout.status !== 'failed' && payout.status !== 'rejected',
       status: payout.status,

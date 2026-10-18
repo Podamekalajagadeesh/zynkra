@@ -1,5 +1,5 @@
-import { Resolver, Query, Args, ObjectType, Field, ID, Context, UseGuards } from '@nestjs/graphql';
-import { NotFoundException } from '@nestjs/common';
+import { Resolver, Query, Args, ObjectType, Field, ID, Context } from '@nestjs/graphql';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { VisibilityService } from '../../common/visibility/visibility.service';
 import { GqlAuthGuard } from '../guards/gql-jwt-auth.guard';

@@ -61,7 +61,9 @@ export class LocationService {
 
   setPrivacy(
     userId: string,
-    settings: Omit<LocationPrivacy, 'userId' | 'expiresAt'>,
+    settings: Omit<LocationPrivacy, 'userId' | 'expiresAt' | 'selectedFriendIds'> & {
+      selectedFriendIds?: string[];
+    },
   ): LocationPrivacy {
     const privacy: LocationPrivacy = {
       ...settings,

@@ -1,5 +1,5 @@
-import { Resolver, Query, Args, ObjectType, Field, ID, Int, Context, UseGuards } from '@nestjs/graphql';
-import { NotFoundException } from '@nestjs/common';
+import { Resolver, Query, Args, ObjectType, Field, ID, Int, Context } from '@nestjs/graphql';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { PostsService } from '../../posts/posts.service';
 import { PostVisibility } from '../../posts/entities/post.entity';
 import { VisibilityService } from '../../common/visibility/visibility.service';

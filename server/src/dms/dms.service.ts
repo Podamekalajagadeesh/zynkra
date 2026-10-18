@@ -229,12 +229,14 @@ export class DmsService {
       });
       return this.conversationsRepository.save(conversation);
     } else {
-      // Group conversation
+      // Group conversation — E2EE is one-to-one only, so mark it explicitly
+      // as plaintext instead of relying on the column default.
       const conversation = this.conversationsRepository.create({
         participants,
         name,
         owner: starter,
         type: ConversationType.GROUP,
+        isEncrypted: false,
       });
       return this.conversationsRepository.save(conversation);
     }

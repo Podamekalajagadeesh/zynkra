@@ -1,7 +1,6 @@
+import featureRegistryData from './index.json';
+
 export const totalFeatureCount = 3836;
-const featureRegistryData = require('./index.json') as {
-  systems?: Record<string, { slug?: string }>;
-};
 
 export const featureRegistrySummary = featureRegistryData;
 

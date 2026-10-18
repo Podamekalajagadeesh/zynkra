@@ -1,7 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
-import type { SessionData, Store, SessionCallback } from 'express-session';
+import { Store } from 'express-session';
+import type { SessionData } from 'express-session';
+
+type SessionCallback = (err?: any, session?: SessionData | null) => void;
 
 interface StoredRow {
   sess: SessionData;

@@ -42,7 +42,10 @@ export class CollaborationGateway
    * missing its subject, or the socket is over its message budget — every
    * handler below bails on undefined.
    */
-  private actorId(client: Socket, payload?: { postId?: string; sessionId?: string }): string | undefined {
+  private actorId(
+    client: Socket,
+    payload?: { postId?: string; sessionId?: string } & Record<string, any>,
+  ): string | undefined {
     const userId = client.data.userId as string | undefined;
     if (!userId) return undefined;
     if (payload && !payload.postId && !payload.sessionId) return undefined;

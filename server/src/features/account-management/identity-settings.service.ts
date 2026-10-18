@@ -67,7 +67,7 @@ export class IdentitySettingsService {
   }
 
   async updateIdentitySettings(userId: string, updateDto: UpdateIdentitySettingsDto): Promise<IdentitySettings> {
-    let settings = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
+    const settings = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
 
     if (!settings) {
       return this.createIdentitySettings(userId, updateDto);

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Session, Req, Logger, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Session, Req, Res, Logger, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { SiweMessage, generateNonce } from 'siwe';
 import { Request } from 'express';
 import { UsersService } from '../users/users.service';

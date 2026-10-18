@@ -45,7 +45,11 @@ export class WsRateLimiter {
    * consecutive times, so callers do not handle that case.
    */
   allow(
-    client: { id: string; emit?: Function; disconnect?: Function },
+    client: {
+      id: string;
+      emit?: (event: string, payload: { message: string }) => unknown;
+      disconnect?: (close?: boolean) => unknown;
+    },
     userId: string | undefined,
   ): boolean {
     const key = client.id;
@@ -78,7 +82,10 @@ export class WsRateLimiter {
     return false;
   }
 
-  private emitError(client: { emit?: Function }, message: string): void {
+  private emitError(
+    client: { emit?: (event: string, payload: { message: string }) => unknown },
+    message: string,
+  ): void {
     try {
       client.emit?.('error', { message });
     } catch {
