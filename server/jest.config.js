@@ -16,6 +16,13 @@ transform: {
     } }],
   },
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  moduleNameMapper: {
+    // archiver@8 is ESM-only, but Jest runs this repo's suites as CommonJS on
+    // CI's Node 20, where require()ing it aborts the whole suite at import
+    // time. A load-only stand-in lives at test/jest-mocks/archiver.js — read
+    // its header before touching this entry.
+    '^archiver$': '<rootDir>/test/jest-mocks/archiver.js',
+  },
   // `/src/federation/` used to be listed here. Note this entry was mostly inert:
   // every npm script passes `--testPathIgnorePatterns` (`test:unit` and
   // `test:coverage` with `/test/`, `test:integration` with `/src/`), and a CLI

@@ -101,7 +101,6 @@ interface StoreMessage {
   id: Id;
   content: string;
   sender: StoreUser;
-  conversation: StoreConversation;
   createdAt: Date;
   deletedAt?: Date | null;
 }
@@ -327,8 +326,11 @@ function buildUsersMock(store: Store) {
       if (!target) throw new NotFoundException('User not found');
       if (!store.isFollowing(followerId, targetId)) {
         store.follows.push({ followerId, followingId: targetId });
-        follower?.following?.push(target);
-        target.followers?.push(follower as StoreUser);
+        // NOTE: deliberately no back-references on `follower.following` /
+        // `target.followers`. `store.follows` is the source of truth (TypeORM's
+        // join table in production), and pushing both sides links the shared
+        // store instances into a cycle that later response serialization
+        // (`JSON.stringify` of a feed post's `user`) cannot handle.
         store.notify(targetId, NotificationType.FOLLOW, { userId: followerId });
       }
       return undefined;
@@ -623,7 +625,9 @@ function buildDmsMock(store: Store) {
         id: store.nextId('msg'),
         content: dto.content ?? '',
         sender,
-        conversation,
+        // No `conversation` back-reference: `conversation.messages` already
+        // holds this message, and a two-way link makes the pair unserializable
+        // (`JSON.stringify` hits the cycle) whenever the response embeds both.
         createdAt: new Date(),
         deletedAt: null,
       };
@@ -1062,7 +1066,7 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
     expect(aliceConvs.body[0].lastMessage?.content).toContain('Hey Alice');
 
     const aliceMsgs = await request(http)
-      .get(`/dms/${conversationId}/messages`)
+      .get(`/dms/conversations/${conversationId}/messages`)
       .set('Authorization', `Bearer ${aliceToken}`);
     expect(aliceMsgs.status).toBe(200);
     expect(aliceMsgs.body).toHaveLength(1);

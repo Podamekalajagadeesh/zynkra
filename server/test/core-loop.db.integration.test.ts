@@ -27,7 +27,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { join } from 'path';
+import { join, sep } from 'path';
+import { readdirSync } from 'fs';
 import { tmpdir } from 'os';
 import request from 'supertest';
 
@@ -39,6 +40,8 @@ import { CommentsModule } from '../src/comments/comments.module';
 import { ReactionsModule } from '../src/reactions/reactions.module';
 import { DmsModule } from '../src/dms/dms.module';
 import { NotificationsModule } from '../src/notifications/notifications.module';
+import { CommonModule } from '../src/common/common.module';
+import { VisibilityModule } from '../src/common/visibility/visibility.module';
 
 import { User } from '../src/users/entities/user.entity';
 import { Post } from '../src/posts/entities/post.entity';
@@ -49,6 +52,33 @@ import {
 } from '../src/notifications/entities/notification.entity';
 import { Conversation } from '../src/dms/entities/conversation.entity';
 import { Message } from '../src/dms/entities/message.entity';
+
+/**
+ * Every @Entity class in src/ except the `src/features/verification` facade:
+ * those five files duplicate the real `verification_requests` /
+ * `verification_appeals` tables (with a `varchar` requestId against the real
+ * uuid one) while being registered nowhere in app.module.ts — loading them
+ * makes TypeORM's synchronize abort with a FK type mismatch. Everything else
+ * must be present: User's relation graph reaches most of the schema, and
+ * account-management under src/features/ IS wired into the real app.
+ */
+function collectEntityFiles(): string[] {
+  const entities: string[] = [];
+  const skip = `${join(__dirname, '..', 'src', 'features', 'verification')}${sep}`;
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (full.startsWith(skip)) continue;
+        walk(full);
+      } else if (entry.name.endsWith('.entity.ts')) {
+        entities.push(full);
+      }
+    }
+  };
+  walk(join(__dirname, '..', 'src'));
+  return entities;
+}
 
 const PG_PORT = 55432;
 const PG_USER = 'postgres';
@@ -107,12 +137,27 @@ beforeAll(async () => {
         username: PG_USER,
         password: PG_PASSWORD,
         database: PG_DATABASE,
+        // Full schema, not just the entities of the eight imported modules:
+        // `autoLoadEntities` alone cannot work here — User's relation graph
+        // reaches ~60 entity types (Badge, MarketplaceListing, DatingProfile,
+        // UserGift, …) whose owning modules this focused test does not
+        // import, and TypeORM refuses to build metadata with dangling
+        // relation targets ("Entity metadata for Comment#awards was not
+        // found"). collectEntityFiles() walks the full src/ tree.
+        entities: collectEntityFiles(),
         autoLoadEntities: true,
         synchronize: true,
         logging: false,
         retryAttempts: 10,
         retryDelay: 500,
       }),
+      // @Global() shared providers (WsAuthService etc.) — AppModule imports it
+      // for exactly this reason, and without it the module graph under test
+      // cannot resolve SnapMapGateway (reached via FeedModule → SnapMapModule).
+      CommonModule,
+      // The other @Global() module; AppModule imports both, DmsService etc.
+      // inject VisibilityService assuming global availability.
+      VisibilityModule,
       NotificationsModule,
       UsersModule,
       AuthModule,
