@@ -414,7 +414,7 @@ export class FeedService {
       : [];
 
     const scoredPosts = filteredPosts.map((post) => {
-      const score = this.calculatePostScore(post, userInterests);
+      const { score } = this.calculatePostScore(post, userInterests);
       return { ...post, score };
     });
 

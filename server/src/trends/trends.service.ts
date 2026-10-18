@@ -139,7 +139,7 @@ export class TrendsService {
   }
 
   async getTrendHistory(tag: string, days: number = 30): Promise<Trend | null> {
-    const normalizedTag = tag?.trim().toLowerCase();
+    const normalizedTag = tag?.trim().toLowerCase().replace(/^#/, '');
     if (!normalizedTag) return null;
 
     const rangeInDays = Number.isFinite(days) && days > 0 ? days : 30;

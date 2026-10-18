@@ -324,22 +324,30 @@ Return valid JSON ONLY with this exact shape:
 
     const where = cutoff ? MoreThan(cutoff) : undefined;
     const [total, flagged, removed, appealed, systemBias] = await Promise.all([
-      this.moderationQueueRepository.count(where ? { createdAt: where } : {}),
+      this.moderationQueueRepository.count(where ? { where: { createdAt: where } } : {}),
       this.moderationQueueRepository.count({
-        ...(where ? { createdAt: where } : {}),
-        status: 'pending',
+        where: {
+          ...(where ? { createdAt: where } : {}),
+          status: 'pending',
+        },
       }),
       this.moderationQueueRepository.count({
-        ...(where ? { createdAt: where } : {}),
-        status: 'removed',
+        where: {
+          ...(where ? { createdAt: where } : {}),
+          status: 'removed',
+        },
       }),
       this.moderationQueueRepository.count({
-        ...(where ? { createdAt: where } : {}),
-        status: 'appealed',
+        where: {
+          ...(where ? { createdAt: where } : {}),
+          status: 'appealed',
+        },
       }),
       this.moderationQueueRepository.count({
-        ...(where ? { createdAt: where } : {}),
-        contentType: 'system',
+        where: {
+          ...(where ? { createdAt: where } : {}),
+          contentType: 'system',
+        },
       }),
     ]);
 
