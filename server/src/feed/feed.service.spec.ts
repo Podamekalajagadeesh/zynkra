@@ -13,6 +13,7 @@ import { LocationService } from '../snapmap/location.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { User } from '../users/entities/user.entity';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
+import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 
 function makeUser(overrides: Partial<User> = {}): User {
   const u = new User();
@@ -53,6 +54,10 @@ describe('FeedService', () => {
   let userInterestsService: jest.Mocked<UserInterestsService>;
   let usersService: jest.Mocked<UsersService>;
   let trendsService: jest.Mocked<TrendsService>;
+  let locationService: jest.Mocked<LocationService>;
+  let dataPermissions: jest.Mocked<DataPermissionsService>;
+  let bookmarksService: jest.Mocked<BookmarksService>;
+  let storiesService: jest.Mocked<StoriesService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -78,11 +83,23 @@ describe('FeedService', () => {
             }),
           },
         },
-        { provide: UserInterestsService, useValue: { getInterests: jest.fn().mockResolvedValue([]) } },
-        { provide: UsersService, useValue: { findFollowingIds: jest.fn().mockResolvedValue([]) } },
+        {
+          provide: UserInterestsService,
+          useValue: { getInterests: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            findFollowingIds: jest.fn().mockResolvedValue([]),
+            getBlockedUsers: jest.fn().mockResolvedValue([]),
+          },
+        },
         { provide: SponsoredPostsService, useValue: {} },
         { provide: BookmarksService, useValue: { findAll: jest.fn().mockResolvedValue([]) } },
-        { provide: StoriesService, useValue: {} },
+        {
+          provide: StoriesService,
+          useValue: { findActiveStoriesForUser: jest.fn().mockResolvedValue([]) },
+        },
         { provide: SnapMapGateway, useValue: { userLocations: new Map() } },
         { provide: TrendsService, useValue: { getTrending: jest.fn().mockResolvedValue([]) } },
         {
@@ -108,6 +125,10 @@ describe('FeedService', () => {
     userInterestsService = module.get(UserInterestsService) as jest.Mocked<UserInterestsService>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     trendsService = module.get(TrendsService) as jest.Mocked<TrendsService>;
+    locationService = module.get(LocationService) as jest.Mocked<LocationService>;
+    dataPermissions = module.get(DataPermissionsService) as jest.Mocked<DataPermissionsService>;
+    bookmarksService = module.get(BookmarksService) as jest.Mocked<BookmarksService>;
+    storiesService = module.get(StoriesService) as jest.Mocked<StoriesService>;
   });
 
   // ─── getChronologicalFeed ─────────────────────────────────────────────
@@ -120,12 +141,12 @@ describe('FeedService', () => {
 
       const result = await service.getChronologicalFeed(makeUser());
       expect(result).toHaveLength(2);
-       expect(postsRepo.find).toHaveBeenCalledWith(
-         expect.objectContaining({
-           where: { isDraft: false },
-           relations: ['user', 'reactions', 'comments', 'tags'],
-         }),
-       );
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { isDraft: false },
+          relations: ['user', 'reactions', 'comments', 'tags'],
+        })
+      );
 
       expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith('user-1', posts);
     });
@@ -249,7 +270,7 @@ describe('FeedService', () => {
         expect.objectContaining({
           where: expect.objectContaining({ isDraft: false, postType: expect.anything() }),
           take: 50,
-        }),
+        })
       );
       expect(visibilityService.filterVisiblePosts).toHaveBeenCalledWith('user-1', [reel, shorts]);
     });
@@ -404,7 +425,11 @@ describe('FeedService', () => {
         subscriptions: [
           { status: 'active', creator: { id: 'creator-1' } },
           { status: 'canceled', creator: { id: 'creator-2' } },
-          { status: 'active', expiresAt: new Date(Date.now() - 1000), creator: { id: 'creator-3' } },
+          {
+            status: 'active',
+            expiresAt: new Date(Date.now() - 1000),
+            creator: { id: 'creator-3' },
+          },
         ] as any,
       });
       const posts = [makePost({ id: 'sub-post' })];
@@ -417,7 +442,7 @@ describe('FeedService', () => {
       const criteria = postsRepo.find.mock.calls[0][0].where;
       expect(criteria.user.id._value).toEqual(['creator-1']);
       expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ user: expect.anything() }) }),
+        expect.objectContaining({ where: expect.objectContaining({ user: expect.anything() }) })
       );
     });
   });
@@ -441,6 +466,800 @@ describe('FeedService', () => {
       const result = await service.getVisualDiscoveryFeed(makeUser(), undefined, 0);
       expect(result).toHaveProperty('posts');
       expect(result).toHaveProperty('hasMore');
+    });
+
+    it('defaults skip to zero and passes a null viewer when the id is missing', async () => {
+      const result = await service.getVisualDiscoveryFeed(makeUser({ id: undefined as any }));
+
+      expect(result).toEqual({ posts: [], hasMore: false });
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, []);
+    });
+  });
+
+  // ─── getLocalFeed ────────────────────────────────────────────────────
+
+  describe('getLocalFeed', () => {
+    it('returns an empty feed when the user has not shared a location', async () => {
+      (locationService.getLocation as jest.Mock).mockReturnValue(undefined);
+
+      const result = await service.getLocalFeed(makeUser());
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('returns nearby posts sorted by distance, applying blocked-content filters', async () => {
+      const user = makeUser({
+        blockedKeywords: ['spoiler'],
+        blockedHashtags: ['politics'],
+        blockedContentTypes: ['reel'],
+      });
+      (locationService.getLocation as jest.Mock).mockReturnValue({
+        userId: 'user-1',
+        latitude: 1,
+        longitude: 1,
+        lastUpdated: new Date(),
+      });
+
+      const closest = makePost({ id: 'closest', place: { latitude: 1.01, longitude: 1 } as any });
+      const withTagsOk = makePost({
+        id: 'withTagsOk',
+        place: { latitude: 1.02, longitude: 1 } as any,
+        tags: [{ id: 't1', name: 'sunset' } as any],
+      });
+      const noTagsNoContent = makePost({
+        id: 'noTagsNoContent',
+        content: undefined as any,
+        tags: undefined as any,
+        place: { latitude: 1.03, longitude: 1 } as any,
+      });
+      const elevenKm = makePost({ id: 'elevenKm', place: { latitude: 1.05, longitude: 1 } as any });
+      const farAway = makePost({ id: 'farAway', place: { latitude: 5, longitude: 5 } as any });
+      const noPlace = makePost({ id: 'noPlace' });
+      const blockedType = makePost({
+        id: 'blockedType',
+        postType: PostType.REEL,
+        place: { latitude: 1.04, longitude: 1 } as any,
+      });
+      const blockedTag = makePost({
+        id: 'blockedTag',
+        tags: [{ id: 't2', name: 'Politics' } as any],
+        place: { latitude: 1.04, longitude: 1 } as any,
+      });
+      const blockedWord = makePost({
+        id: 'blockedWord',
+        content: 'Total spoiler ahead',
+        place: { latitude: 1.04, longitude: 1 } as any,
+      });
+
+      postsRepo.find.mockResolvedValue([
+        closest,
+        withTagsOk,
+        noTagsNoContent,
+        elevenKm,
+        farAway,
+        noPlace,
+        blockedType,
+        blockedTag,
+        blockedWord,
+      ]);
+
+      const result = await service.getLocalFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual([
+        'closest',
+        'withTagsOk',
+        'noTagsNoContent',
+        'elevenKm',
+      ]);
+      expect(result[0].distance).toBeCloseTo(1.11, 1);
+      expect(result.every((p) => (p.distance ?? 0) <= 50)).toBe(true);
+      expect(postsRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { isDraft: false } })
+      );
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(Array)
+      );
+    });
+
+    it('honours a custom radius and defaults block lists to empty', async () => {
+      const user = makeUser({
+        blockedKeywords: undefined as any,
+        blockedHashtags: undefined as any,
+        blockedContentTypes: undefined as any,
+      });
+      (locationService.getLocation as jest.Mock).mockReturnValue({
+        userId: 'user-1',
+        latitude: 1,
+        longitude: 1,
+        lastUpdated: new Date(),
+      });
+      const inside = makePost({ id: 'inside', place: { latitude: 1.01, longitude: 1 } as any });
+      const outside = makePost({ id: 'outside', place: { latitude: 1.04, longitude: 1 } as any });
+      postsRepo.find.mockResolvedValue([inside, outside]);
+
+      const result = await service.getLocalFeed(user, 3);
+
+      expect(result.map((p) => p.id)).toEqual(['inside']);
+    });
+
+    it('passes a null viewer when the user id is missing', async () => {
+      (locationService.getLocation as jest.Mock).mockReturnValue({
+        userId: undefined,
+        latitude: 1,
+        longitude: 1,
+        lastUpdated: new Date(),
+      });
+      const post = makePost({ id: 'nearby', place: { latitude: 1.01, longitude: 1 } as any });
+      postsRepo.find.mockResolvedValue([post]);
+
+      const result = await service.getLocalFeed(makeUser({ id: undefined as any }));
+
+      expect(result.map((p) => p.id)).toEqual(['nearby']);
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(
+        null,
+        expect.any(Array)
+      );
+    });
+
+    it('excludes posts whose place latitude or longitude is exactly 0 (current truthiness check)', async () => {
+      (locationService.getLocation as jest.Mock).mockReturnValue({
+        userId: 'user-1',
+        latitude: 10,
+        longitude: 10,
+        lastUpdated: new Date(),
+      });
+      const onEquator = makePost({ id: 'onEquator', place: { latitude: 0, longitude: 5 } as any });
+      const nearby = makePost({ id: 'nearby', place: { latitude: 10.01, longitude: 10 } as any });
+      postsRepo.find.mockResolvedValue([onEquator, nearby]);
+
+      const result = await service.getLocalFeed(makeUser());
+
+      expect(result.map((p) => p.id)).toEqual(['nearby']);
+    });
+  });
+
+  // ─── getForYouFeed — scoring / interleaving / follows ────────────────
+
+  describe('getForYouFeed (scoring and interleaving)', () => {
+    it('interleaves followed-hashtag and remaining suggestions after organic chunks', async () => {
+      const user = makeUser({
+        followedHashtags: [{ id: 'h1', name: 'Tech' } as any],
+        blockedKeywords: undefined as any,
+      });
+      const org1 = makePost({ id: 'org1', user: makeUser({ id: 'friend-1' }) });
+      const org2 = makePost({ id: 'org2', user: makeUser({ id: 'friend-2' }) });
+      const hash1 = makePost({ id: 'hash1', tags: [{ id: 't1', name: 'Tech' } as any] });
+      const hash2 = makePost({ id: 'hash2', tags: [{ id: 't2', name: 'tech' } as any] });
+      const rem1 = makePost({ id: 'rem1' });
+      const rem2 = makePost({ id: 'rem2' });
+      const all = [org1, org2, hash1, hash2, rem1, rem2];
+      postsRepo.find.mockResolvedValue(all);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue(['friend-1', 'friend-2']);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['org1', 'org2', 'hash1', 'hash2', 'rem1', 'rem2']);
+      expect(result.every((p) => p.isAd === false)).toBe(true);
+      expect(result.every((p) => Array.isArray((p as any).algorithmReasons))).toBe(true);
+    });
+
+    it('drops posts whose content type is blocked', async () => {
+      const user = makeUser({
+        blockedContentTypes: ['reel'],
+        followedHashtags: undefined as any,
+      });
+      const reel = makePost({ id: 'reel', postType: PostType.REEL });
+      const text = makePost({ id: 'text', postType: PostType.POST });
+      postsRepo.find.mockResolvedValue([reel, text]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue([]);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['text']);
+    });
+
+    it('returns only hashtag and suggested posts when there are no organic posts', async () => {
+      const user = makeUser({ followedHashtags: [{ id: 'h1', name: 'Tech' } as any] });
+      const hash = makePost({ id: 'hash', tags: [{ id: 't1', name: 'Tech' } as any] });
+      const rem = makePost({ id: 'rem' });
+      postsRepo.find.mockResolvedValue([hash, rem]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue([]);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['hash', 'rem']);
+    });
+
+    it('falls back to the chronological feed when personalization is disabled at the account level', async () => {
+      const user = makeUser({ personalization: false });
+      const posts = [makePost({ id: 'newest' }), makePost({ id: 'older' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result).toEqual(posts);
+      expect(dataPermissions.require).not.toHaveBeenCalled();
+      expect(userInterestsService.getInterests).not.toHaveBeenCalled();
+    });
+
+    it('propagates personalization permission errors before loading posts', async () => {
+      dataPermissions.require.mockRejectedValueOnce(new Error('personalization disabled'));
+
+      await expect(service.getForYouFeed(makeUser())).rejects.toThrow('personalization disabled');
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('tolerates missing interest and following lookups', async () => {
+      (userInterestsService as any).getInterests = undefined;
+      (usersService as any).findFollowingIds = undefined;
+      postsRepo.find.mockResolvedValue([]);
+
+      const result = await service.getForYouFeed(makeUser());
+
+      expect(result).toEqual([]);
+    });
+
+    it('tolerates missing block lists and posts without tags', async () => {
+      const user = makeUser({
+        followedHashtags: [{ id: 'h1', name: 'Tech' } as any],
+        blockedKeywords: undefined as any,
+        blockedHashtags: undefined as any,
+        blockedContentTypes: undefined as any,
+      });
+      const noTags = makePost({ id: 'no-tags', tags: undefined as any });
+      const withTags = makePost({ id: 'with-tags', tags: [{ id: 't1', name: 'Tech' } as any] });
+      postsRepo.find.mockResolvedValue([noTags, withTags]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue([]);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['with-tags', 'no-tags']);
+    });
+
+    it('filters content when the blocked-keyword list contains a nullish entry', async () => {
+      const user = makeUser({ blockedKeywords: [null as any] });
+      const withType = makePost({ id: 'with-type', postType: undefined as any, content: 'hello' });
+      const withoutContent = makePost({ id: 'without-content', content: undefined as any });
+      const withoutTags = makePost({ id: 'without-tags', tags: undefined as any, content: 'more' });
+      const namelessTag = makePost({ id: 'nameless-tag', tags: [{} as any], content: 'stuff' });
+      postsRepo.find.mockResolvedValue([withType, withoutContent, withoutTags, namelessTag]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue([]);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['without-content']);
+    });
+
+    it('stops interleaving once the suggestion queues are drained', async () => {
+      const user = makeUser({ followedHashtags: [{ id: 'h1', name: 'Tech' } as any] });
+      const orgs = ['o1', 'o2', 'o3', 'o4'].map((id) =>
+        makePost({ id, user: makeUser({ id: `f-${id}` }) })
+      );
+      const suggestion = makePost({ id: 's1', tags: [{ id: 't1', name: 'Tech' } as any] });
+      postsRepo.find.mockResolvedValue([...orgs, suggestion]);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue(['f-o1', 'f-o2', 'f-o3', 'f-o4']);
+
+      const result = await service.getForYouFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['o1', 'o2', 'o3', 's1', 'o4']);
+    });
+  });
+
+  // ─── getRecommendedFeed — deep scoring ───────────────────────────────
+
+  describe('getRecommendedFeed (deep scoring)', () => {
+    it('scores posts by interests, follows and hashtag matches while applying blocks', async () => {
+      const user = makeUser({
+        followedHashtags: [{ id: 'ht1', name: 'Tech' } as any],
+        blockedKeywords: ['spoiler'],
+        blockedHashtags: ['politics'],
+        blockedContentTypes: ['reel'],
+      });
+      const posts = [
+        makePost({
+          id: 'p-interest-id',
+          user: makeUser({ id: 'friend-1' }),
+          tags: [{ id: 't1', name: 'Coding' } as any],
+        }),
+        makePost({ id: 'p-interest-name', tags: [{ id: 't9', name: 'Design' } as any] }),
+        makePost({ id: 'p-hashtag', tags: [{ id: 't5', name: 'Tech' } as any] }),
+        makePost({ id: 'p-blocked-tag', tags: [{ id: 't7', name: 'Politics' } as any] }),
+        makePost({ id: 'p-blocked-word', content: 'Major spoiler alert' }),
+        makePost({ id: 'p-blocked-type', postType: PostType.REEL }),
+        makePost({ id: 'p-plain', content: undefined as any, tags: undefined as any }),
+        makePost({
+          id: 'p-untagged',
+          user: undefined as any,
+          tags: [{ id: 'x', name: 'unrelated' } as any],
+          content: 'plain text',
+        }),
+        makePost({ id: 'p-zero', tags: [{ id: 't3', name: 'zero' } as any] }),
+      ];
+      postsRepo.find.mockResolvedValue(posts);
+      userInterestsService.getInterests.mockResolvedValue([
+        { tag: { id: 't1', name: 'Coding' }, score: 4 } as any,
+        { tag: { id: 't2', name: 'design' }, score: 2 } as any,
+        { tag: { id: 't3', name: 'zero' }, score: 0 } as any,
+      ]);
+      usersService.findFollowingIds.mockResolvedValue(['friend-1']);
+
+      const result = await service.getRecommendedFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual([
+        'p-interest-id',
+        'p-interest-name',
+        'p-hashtag',
+        'p-plain',
+        'p-untagged',
+        'p-zero',
+      ]);
+      expect(result[0].recommendationScore).toBeGreaterThan(result[1].recommendationScore!);
+      expect(result[1].recommendationScore).toBeGreaterThan(result[2].recommendationScore!);
+      expect(result[0].algorithmReasons).toEqual(
+        expect.arrayContaining(['Matches your interests in Coding', 'From someone you follow'])
+      );
+      expect(result[2].algorithmReasons).toContain('Related to a topic you follow');
+      expect(result[2].algorithmReasons).not.toContain('From someone you follow');
+      expect(result[3].algorithmReasons).toContain('Broad discovery mix');
+      expect(result[4].algorithmReasons).toContain('New creator suggestion');
+      expect(dataPermissions.require).toHaveBeenCalledWith(
+        'user-1',
+        DataPermission.PERSONALIZATION
+      );
+    });
+
+    it('uses chronological posts when the personalization flag is disabled', async () => {
+      const user = makeUser({ personalization: false });
+      const posts = [makePost({ id: 'a' }), makePost({ id: 'b' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getRecommendedFeed(user, 1);
+
+      expect(result).toEqual([posts[0]]);
+      expect(dataPermissions.require).not.toHaveBeenCalled();
+    });
+
+    it('propagates personalization permission errors', async () => {
+      dataPermissions.require.mockRejectedValueOnce(new Error('no personalization'));
+
+      await expect(service.getRecommendedFeed(makeUser(), 5)).rejects.toThrow('no personalization');
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('applies default block lists and tolerates a missing viewer id', async () => {
+      const user = makeUser({
+        id: undefined as any,
+        blockedKeywords: undefined as any,
+        blockedHashtags: undefined as any,
+        blockedContentTypes: undefined as any,
+        followedHashtags: undefined as any,
+      });
+      const posts = [makePost({ id: 'p1', postType: undefined as any })];
+      postsRepo.find.mockResolvedValue(posts);
+      userInterestsService.getInterests.mockResolvedValue([]);
+      usersService.findFollowingIds.mockResolvedValue([]);
+
+      const result = await service.getRecommendedFeed(user, 5);
+
+      expect(result.map((p) => p.id)).toEqual(['p1']);
+      expect(dataPermissions.require).toHaveBeenCalledWith(
+        undefined,
+        DataPermission.PERSONALIZATION
+      );
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, posts);
+    });
+  });
+
+  // ─── getShortsFeed — blocks, clamps, scoring ─────────────────────────
+
+  describe('getShortsFeed (blocks and scoring)', () => {
+    it('applies hashtag/content-type blocks and scores with interests and engagement', async () => {
+      const user = makeUser({
+        blockedKeywords: undefined as any,
+        blockedHashtags: ['Spoiler-Tag'],
+        blockedContentTypes: ['reel'],
+      });
+      const reel = makePost({ id: 'reel', postType: PostType.REEL });
+      const blockedTag = makePost({
+        id: 'blocked-tag',
+        tags: [{ id: 't8', name: 'spoiler-tag' } as any],
+      });
+      const music = makePost({
+        id: 'music',
+        tags: [{ id: 't1', name: 'music' } as any],
+        comments: Array.from({ length: 12 }, (_, i) => ({ id: `c${i}` }) as any),
+        reactions: Array.from({ length: 25 }, (_, i) => ({ id: `r${i}` }) as any),
+        shareCount: 3,
+      });
+      const plain = makePost({
+        id: 'plain',
+        reactions: undefined as any,
+        comments: undefined as any,
+      });
+      const orphan = makePost({ id: 'orphan', user: undefined as any, tags: undefined as any });
+      const unmatched = makePost({ id: 'unmatched', tags: [{ id: 'zz', name: 'cooking' } as any] });
+      const noType = makePost({
+        id: 'no-type',
+        postType: undefined as any,
+        tags: undefined as any,
+        content: undefined as any,
+      });
+
+      postsRepo.find.mockResolvedValue([reel, blockedTag, music, plain, orphan, unmatched, noType]);
+      userInterestsService.getInterests.mockResolvedValue([
+        { tag: { id: 't1', name: 'music' }, score: 3 } as any,
+      ]);
+
+      const result = await service.getShortsFeed(user, 200);
+
+      expect(result.map((p) => p.id)).toEqual(['music', 'plain', 'orphan', 'unmatched', 'no-type']);
+      expect(postsRepo.find).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }));
+      expect(dataPermissions.has).toHaveBeenCalledWith('user-1', DataPermission.PERSONALIZATION);
+    });
+
+    it('clamps a non-positive limit to one take and skips interests when permission is missing', async () => {
+      const user = makeUser({
+        blockedKeywords: undefined as any,
+        blockedHashtags: undefined as any,
+        blockedContentTypes: undefined as any,
+      });
+      dataPermissions.has.mockResolvedValue(false);
+      postsRepo.find.mockResolvedValue([]);
+
+      await service.getShortsFeed(user, 0);
+
+      expect(postsRepo.find).toHaveBeenCalledWith(expect.objectContaining({ take: 1 }));
+      expect(userInterestsService.getInterests).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── getFavoritesFeed (edge paths) ───────────────────────────────────
+
+  describe('getFavoritesFeed (edge paths)', () => {
+    it('returns an empty list for anonymous viewers', async () => {
+      const result = await service.getFavoritesFeed(null as any);
+
+      expect(result).toEqual([]);
+      expect(bookmarksService.findAll).not.toHaveBeenCalled();
+    });
+
+    it('keeps only non-draft bookmarked posts', async () => {
+      const user = makeUser();
+      bookmarksService.findAll.mockResolvedValue([
+        { post: makePost({ id: 'kept' }) },
+        { post: null },
+        { post: makePost({ id: 'draft', isDraft: true }) },
+        { post: makePost({ id: 'kept2', isDraft: false }) },
+      ] as any);
+
+      const result = await service.getFavoritesFeed(user);
+
+      expect(result.map((p) => p.id)).toEqual(['kept', 'kept2']);
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(
+        'user-1',
+        expect.any(Array)
+      );
+    });
+  });
+
+  // ─── getFriendsFeed (edge paths) ─────────────────────────────────────
+
+  describe('getFriendsFeed (edge paths)', () => {
+    it('returns an empty list for anonymous viewers', async () => {
+      const result = await service.getFriendsFeed(null as any);
+
+      expect(result).toEqual([]);
+      expect(usersService.findFollowingIds).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty list when the user follows nobody', async () => {
+      const result = await service.getFriendsFeed(makeUser());
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('falls back to an empty following list when the lookup yields nothing', async () => {
+      (usersService as any).findFollowingIds = undefined;
+
+      const result = await service.getFriendsFeed(makeUser());
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── getSubscriptionsFeed (edge paths) ───────────────────────────────
+
+  describe('getSubscriptionsFeed (edge paths)', () => {
+    it('returns an empty list for anonymous viewers', async () => {
+      const result = await service.getSubscriptionsFeed(null as any);
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty list when no subscription yields a creator id', async () => {
+      const user = makeUser({
+        subscriptions: [
+          { status: 'canceled', creator: { id: 'creator-1' } },
+          { status: 'expired', creator: { id: 'creator-2' } },
+          { status: 'active', creator: undefined },
+        ] as any,
+      });
+
+      const result = await service.getSubscriptionsFeed(user);
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty list when the user has no subscriptions at all', async () => {
+      const result = await service.getSubscriptionsFeed(makeUser());
+
+      expect(result).toEqual([]);
+      expect(postsRepo.find).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── getStoryFeed ────────────────────────────────────────────────────
+
+  describe('getStoryFeed', () => {
+    it('returns an empty list for anonymous viewers', async () => {
+      const result = await service.getStoryFeed(null as any);
+
+      expect(result).toEqual([]);
+      expect(usersService.getBlockedUsers).not.toHaveBeenCalled();
+      expect(storiesService.findActiveStoriesForUser).not.toHaveBeenCalled();
+    });
+
+    it('filters out stories from blocked users', async () => {
+      const user = makeUser();
+      usersService.getBlockedUsers.mockResolvedValue([makeUser({ id: 'blocked-1' })]);
+      storiesService.findActiveStoriesForUser.mockResolvedValue([
+        { id: 's1', user: { id: 'user-1' } },
+        { id: 's2', user: { id: 'blocked-1' } },
+        { id: 's3', user: { id: 'user-2' } },
+      ] as any);
+
+      const result = await service.getStoryFeed(user);
+
+      expect(result.map((s: any) => s.id)).toEqual(['s1', 's3']);
+      expect(usersService.getBlockedUsers).toHaveBeenCalledWith('user-1');
+      expect(storiesService.findActiveStoriesForUser).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  // ─── getTrendingFeed (sorting) ───────────────────────────────────────
+
+  describe('getTrendingFeed (sorting)', () => {
+    it('filters and ranks multiple trend-matching and discussed posts', async () => {
+      const hot = makePost({
+        id: 'hot',
+        tags: [{ id: 't1', name: 'tech' } as any],
+        comments: [{ id: 'c1' } as any, { id: 'c2' } as any, { id: 'c3' } as any],
+      });
+      const warm = makePost({ id: 'warm', tags: [{ id: 't2', name: 'ai' } as any] });
+      const discussed = makePost({
+        id: 'discussed',
+        comments: [{ id: 'c4' } as any, { id: 'c5' } as any],
+      });
+      postsRepo.find.mockResolvedValue([warm, discussed, hot]);
+      trendsService.getTrending.mockResolvedValue([{ tag: '#tech' } as any, { tag: '#ai' } as any]);
+
+      const result = await service.getTrendingFeed(null, 10);
+
+      expect(result.map((p) => p.id)).toEqual(['hot', 'warm', 'discussed']);
+      expect(result[0].matchedTrends).toEqual(['tech']);
+      expect(result[2].matchedTrends).toEqual([]);
+      expect(result[2].trendScore).toBeGreaterThan(0);
+    });
+
+    it('handles missing trends, untagged posts and a default limit', async () => {
+      trendsService.getTrending.mockResolvedValue(undefined as any);
+      const untagged = makePost({
+        id: 'untagged',
+        tags: undefined as any,
+        comments: [{ id: 'a' } as any, { id: 'b' } as any],
+      });
+      postsRepo.find.mockResolvedValue([untagged]);
+
+      const result = await service.getTrendingFeed(null);
+
+      expect(result.map((p) => p.id)).toEqual(['untagged']);
+      expect(result[0].matchedTrends).toEqual([]);
+      expect(trendsService.getTrending).toHaveBeenCalledWith(20, 7);
+    });
+  });
+
+  // ─── getExploreFeed (category filtering) ─────────────────────────────
+
+  describe('getExploreFeed (category filtering)', () => {
+    it('filters by a known category keyword and flags a full page', async () => {
+      const qb = postsRepo.createQueryBuilder();
+      (qb.getMany as jest.Mock).mockResolvedValue(
+        Array.from({ length: 30 }, (_, i) => makePost({ id: `p${i}` }))
+      );
+
+      const result = await service.getExploreFeed(makeUser(), 'nature');
+
+      expect(qb.andWhere).toHaveBeenCalledWith('tags.name IN (:...keywords)', {
+        keywords: ['nature', 'outdoors', 'wildlife', 'forest', 'ocean', 'mountain', 'sunset'],
+      });
+      expect(result.posts).toHaveLength(30);
+      expect(result.hasMore).toBe(true);
+    });
+
+    it('ignores an unknown category', async () => {
+      const qb = postsRepo.createQueryBuilder();
+
+      const result = await service.getExploreFeed(makeUser(), 'nonexistent');
+
+      expect(qb.andWhere).not.toHaveBeenCalledWith(
+        'tags.name IN (:...keywords)',
+        expect.anything()
+      );
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('passes a null viewer when the user id is missing', async () => {
+      const result = await service.getExploreFeed(makeUser({ id: undefined as any }));
+
+      expect(result.posts).toEqual([]);
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, []);
+    });
+  });
+
+  // ─── getExploreCategories ────────────────────────────────────────────
+
+  describe('getExploreCategories', () => {
+    it('returns curated categories with counts and trending keywords', async () => {
+      trendsService.getTrending.mockResolvedValue([
+        { tag: '#nature' } as any,
+        { tag: '#outdoors' } as any,
+        { tag: '#wildlife' } as any,
+        { tag: '#forest' } as any,
+        { tag: '#travel' } as any,
+      ]);
+      const qb = postsRepo.createQueryBuilder();
+      (qb.getCount as jest.Mock).mockResolvedValue(42);
+
+      const result = await service.getExploreCategories();
+
+      expect(result.categories).toHaveLength(5);
+      expect(result.categories[0]).toEqual({
+        id: 'nature',
+        name: 'Nature',
+        count: 42,
+        trending: ['nature', 'outdoors', 'wildlife'],
+      });
+      expect(result.categories[1]).toEqual(
+        expect.objectContaining({ id: 'travel', name: 'Travel', trending: ['travel'] })
+      );
+      expect(result.categories[2]).toEqual(
+        expect.objectContaining({ id: 'food', name: 'Food', trending: [] })
+      );
+      expect(result.categories[3]).toEqual(
+        expect.objectContaining({ id: 'art', name: 'Art', trending: [] })
+      );
+      expect(result.categories[4]).toEqual(
+        expect.objectContaining({ id: 'fashion', name: 'Fashion', trending: [] })
+      );
+      expect(trendsService.getTrending).toHaveBeenCalledWith(25);
+    });
+  });
+
+  // ─── getVisualCategories ─────────────────────────────────────────────
+
+  describe('getVisualCategories', () => {
+    it('returns the static visual category catalogue', async () => {
+      const result = await service.getVisualCategories();
+
+      expect(result.categories).toHaveLength(8);
+      expect(result.categories.map((c) => c.id)).toEqual([
+        'nature',
+        'travel',
+        'food',
+        'art',
+        'fashion',
+        'animals',
+        'architecture',
+        'photography',
+      ]);
+      expect(result.categories[0]).toEqual(
+        expect.objectContaining({ name: 'Nature & Landscapes', postCount: 1250 })
+      );
+      expect(result.categories[5]).toEqual(
+        expect.objectContaining({ name: 'Animals & Pets', imageUrl: expect.any(String) })
+      );
+    });
+  });
+
+  // ─── getFeed (remaining views and clamping) ──────────────────────────
+
+  describe('getFeed (remaining views and clamping)', () => {
+    it('returns subscriptions feed view', async () => {
+      const user = makeUser({
+        subscriptions: [{ status: 'active', creator: { id: 'creator-1' } }] as any,
+      });
+      const posts = [makePost({ id: 'sub-1' })];
+      postsRepo.find.mockResolvedValue(posts);
+
+      const result = await service.getFeed(user, { view: 'subscriptions', limit: 5 });
+
+      expect(result.map((p) => p.id)).toEqual(['sub-1']);
+    });
+
+    it('returns favorites feed view', async () => {
+      const user = makeUser();
+      bookmarksService.findAll.mockResolvedValue([{ post: makePost({ id: 'fav-1' }) }] as any);
+
+      const result = await service.getFeed(user, { view: 'favorites' });
+
+      expect(result.map((p) => p.id)).toEqual(['fav-1']);
+    });
+
+    it('returns trending feed view for anonymous viewers', async () => {
+      const post = makePost({ id: 't-1', tags: [{ id: 'x', name: 'tech' } as any] });
+      postsRepo.find.mockResolvedValue([post]);
+      trendsService.getTrending.mockResolvedValue([{ tag: '#tech' } as any]);
+
+      const result = await service.getFeed(null as any, { view: 'trending', limit: 5 });
+
+      expect(result.map((p) => p.id)).toEqual(['t-1']);
+    });
+
+    it('applies default options when none are given', async () => {
+      postsRepo.find.mockResolvedValue([]);
+
+      const result = await service.getFeed(makeUser());
+
+      expect(result).toEqual([]);
+    });
+
+    it('clamps a non-positive limit to one post', async () => {
+      const posts = [makePost({ id: 'a' }), makePost({ id: 'b' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getFeed(makeUser(), { view: 'chronological', limit: -3 });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('treats a zero limit as the default page size', async () => {
+      const posts = [makePost({ id: 'a' }), makePost({ id: 'b' }), makePost({ id: 'c' })];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getFeed(makeUser(), { view: 'chronological', limit: 0 });
+
+      expect(result).toHaveLength(3);
+    });
+  });
+
+  // ─── getChronologicalFeed (anonymous) ────────────────────────────────
+
+  describe('getChronologicalFeed (anonymous)', () => {
+    it('passes a null viewer for logged-out users', async () => {
+      const posts = [makePost()];
+      postsRepo.find.mockResolvedValue(posts);
+      visibilityService.filterVisiblePostsForViewer.mockResolvedValue(posts);
+
+      const result = await service.getChronologicalFeed(null as any);
+
+      expect(result).toHaveLength(1);
+      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, posts);
     });
   });
 });
