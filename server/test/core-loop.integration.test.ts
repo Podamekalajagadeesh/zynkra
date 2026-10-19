@@ -24,7 +24,6 @@ import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
 import { CaptchaService } from '../src/auth/captcha.service';
 import { WebauthnService } from '../src/auth/webauthn.service';
-import { BiometricAuthService } from '../src/auth/biometric-auth.service';
 import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
 import { AccountManagementService } from '../src/features/account-management/account-management.service';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
@@ -760,16 +759,6 @@ async function buildCoreLoopApp() {
           getPasskeys: jest.fn(),
           deletePasskey: jest.fn(),
           updateAuthenticatorCounter: jest.fn(),
-        },
-      },
-      {
-        provide: BiometricAuthService,
-        useValue: {
-          listBiometricDevices: jest.fn(async () => []),
-          registerBiometricDevice: jest.fn(),
-          generateBiometricChallenge: jest.fn(),
-          verifyBiometricChallenge: jest.fn(),
-          deleteBiometricDevice: jest.fn(),
         },
       },
       {
