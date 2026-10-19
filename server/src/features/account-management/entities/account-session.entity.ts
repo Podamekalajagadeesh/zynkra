@@ -1,13 +1,27 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../../users/entities/user.entity';
 
 @Entity('account_sessions')
-@Index(['accountId', 'status'])
+@Index('IDX_account_sessions_account_status', ['accountId', 'status'])
 export class AccountSessionEntity {
   @PrimaryColumn({ type: 'varchar', length: 100 })
   id: string;
 
   @Column({ type: 'uuid' })
   accountId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'accountId' })
+  user: User;
 
   @Column({ type: 'varchar', length: 120 })
   deviceName: string;

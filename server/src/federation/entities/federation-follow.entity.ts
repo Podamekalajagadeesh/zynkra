@@ -23,16 +23,16 @@ import { RemoteUser } from './remote-user.entity';
  * it, because the remote side is now told a state exists that we do not hold.
  */
 @Entity('federation_follows')
-@Unique(['localUser', 'remoteUser'])
+@Index('IDX_federation_follows_local_user', ['localUser'])
+@Index('IDX_federation_follows_remote_user', ['remoteUser'])
+@Unique('UQ_federation_follows_pair', ['localUser', 'remoteUser'])
 export class FederationFollow {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index()
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   localUser: User;
 
-  @Index()
   @ManyToOne(() => RemoteUser, { onDelete: 'CASCADE' })
   remoteUser: RemoteUser;
 

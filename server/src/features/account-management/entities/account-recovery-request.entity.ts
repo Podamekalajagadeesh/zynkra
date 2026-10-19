@@ -4,7 +4,7 @@ import { User } from '../../../users/entities/user.entity';
 export type AccountRecoveryRequestStatus = 'pending' | 'approved' | 'rejected';
 
 @Entity('account_recovery_requests')
-@Index(['accountId', 'createdAt'])
+@Index('IDX_account_recovery_account_created', ['accountId', 'createdAt'])
 export class AccountRecoveryRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;

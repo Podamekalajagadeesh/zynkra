@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   Index,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 /**
  * An auditable record of a bias-mitigation strategy being applied.
@@ -15,7 +18,7 @@ import {
  * instance. This makes the action durable and reviewable.
  */
 @Entity('moderation_mitigations')
-@Index(['appliedAt'])
+@Index('idx_moderation_mitigations_applied_at', ['appliedAt'])
 export class ModerationMitigationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -28,7 +31,11 @@ export class ModerationMitigationEntity {
   @Column({ type: 'uuid', nullable: true })
   appliedById: string | null;
 
-  @Column({ type: 'timestamp' })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'appliedById' })
+  appliedBy: User | null;
+
+  @Column({ type: 'timestamp', default: () => 'now()' })
   appliedAt: Date;
 
   @CreateDateColumn({ type: 'timestamp' })

@@ -44,9 +44,9 @@ export class ReturnRequest {
   @Column({ type: 'text', nullable: true })
   resolution?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

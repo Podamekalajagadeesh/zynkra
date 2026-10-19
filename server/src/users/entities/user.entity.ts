@@ -297,7 +297,7 @@ export class User {
   trustedIpAddresses: string[] | null;
 
   @Exclude()
-  @Column({ type: 'timestamp with time zone', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   recoveryCodesGeneratedAt: Date | null;
 
   @Exclude()
@@ -309,7 +309,7 @@ export class User {
   trustedRecoveryCodeHash: string | null;
 
   @Exclude()
-  @Column({ type: 'timestamp with time zone', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   trustedRecoveryCodeExpiresAt: Date | null;
 
   @Exclude()

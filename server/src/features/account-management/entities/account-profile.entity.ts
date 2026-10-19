@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -17,12 +18,13 @@ export enum AccountProfileType {
 }
 
 @Entity('account_profiles')
-@Index(['accountId', 'isPrimary'])
+@Index('IDX_account_profiles_account_primary', ['accountId', 'isPrimary'])
 export class AccountProfileEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'accountId' })
   user: User;
 
   @Column('uuid')

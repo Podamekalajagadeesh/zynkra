@@ -18,10 +18,10 @@ export class Tip {
   @Column('decimal')
   amount: number;
 
-  @Column({ type: 'varchar', length: 10, default: 'usd' })
+  @Column({ type: 'varchar', default: 'usd' })
   currency: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   method: string;
 
   @Column()

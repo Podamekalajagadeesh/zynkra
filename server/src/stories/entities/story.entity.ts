@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Index,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
@@ -20,6 +21,7 @@ export enum StoryAudience {
 }
 
 @Entity('stories')
+@Index('IDX_stories_customAudienceId', ['customAudienceId'])
 export class Story {
   @PrimaryGeneratedColumn('uuid')
   id: string;

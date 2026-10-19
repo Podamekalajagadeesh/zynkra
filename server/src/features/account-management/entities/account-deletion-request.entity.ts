@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { User } from '../../../users/entities/user.entity';
 
 @Entity('account_deletion_requests')
 @Index('IDX_account_deletion_requests_account_status', ['accountId', 'status'])
@@ -15,6 +18,10 @@ export class AccountDeletionRequest {
 
   @Column('uuid')
   accountId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'accountId' })
+  user: User;
 
   @Column({ type: 'varchar', length: 40 })
   reason: string;

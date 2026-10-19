@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, Primary
 import { User } from '../../../users/entities/user.entity';
 
 @Entity('account_history')
-@Index(['userId', 'createdAt'])
+@Index('IDX_account_history_user_created', ['userId', 'createdAt'])
 export class AccountHistoryEntity {
   @PrimaryColumn({ type: 'varchar', length: 80 })
   id: string;

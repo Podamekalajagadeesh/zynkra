@@ -24,6 +24,6 @@ export class DemandForecast {
   @Column({ type: 'int' })
   basedOnDays: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 }

@@ -31,6 +31,7 @@ import { User } from '../../users/entities/user.entity';
  */
 @Entity('federation_outbox')
 @Index('IDX_federation_outbox_object', ['objectId', 'activityType'])
+@Index('IDX_federation_outbox_local_user', ['localUser'])
 export class FederationOutbox {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -48,7 +49,6 @@ export class FederationOutbox {
   activityType: string;
 
   /** The local author of the activity. */
-  @Index()
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   localUser: User;
 

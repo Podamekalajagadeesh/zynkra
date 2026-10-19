@@ -16,7 +16,7 @@ import { User } from '../../users/entities/user.entity';
  * be verified on another, and every challenge was lost on restart.
  */
 @Entity('captcha_challenges')
-@Index(['expiresAt'])
+@Index('idx_captcha_challenges_expires_at', ['expiresAt'])
 export class CaptchaChallengeEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

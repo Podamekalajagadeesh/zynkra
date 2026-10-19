@@ -54,9 +54,9 @@ export class Shipment {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   events: Array<Record<string, unknown>>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }
