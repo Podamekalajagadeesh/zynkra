@@ -651,7 +651,7 @@ export class ExportService {
         }
       }
 
-      const followingUsernames = (canImport(DataPermission.PROFILE) ? data.follows?.following : [])
+      const followingUsernames = (canImport(DataPermission.PROFILE) ? data.follows?.following ?? [] : [])
         .map((f: any) => f.username)
         .filter(Boolean) as string[];
       if (followingUsernames.length > 0) {
