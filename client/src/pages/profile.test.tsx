@@ -188,7 +188,9 @@ describe('ProfilePage', () => {
     renderProfilePage();
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Verified account')).toBeInTheDocument();
+      // VerificationBadge (icon-only mode) exposes its description via the
+      // title attribute; there is no aria-label to query by.
+      expect(screen.getByTitle('Identity verified')).toBeInTheDocument();
     });
   });
 
