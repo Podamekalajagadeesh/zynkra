@@ -39,4 +39,21 @@ transform: {
   // `.js` file is still on disk and still uncollected — it should be deleted.
   // See ROADMAP.md §3 (Phase 4) and §7 item 6.
   coverageReporters: ['text', 'lcov', 'json-summary'],
+  // The coverage gate. Enforced natively by `npm run test:coverage` (the
+  // Server CI `test-unit` job runs exactly that command), so a regression
+  // fails the same step that collects coverage — no separate threshold
+  // script to drift out of sync. Metrics are the global percentages Jest
+  // computes; the numbers sit just under the measured baseline of
+  // lines 75.91 / statements 74.88 / functions 55.38 / branches 62.40
+  // (verified identical on CI's Node 20 and Node 26), leaving ~1.5pt of
+  // tolerance while locking in the gains over the previous ad-hoc 50% bar.
+  // Raise these together with the coverage, never to make a red run green.
+  coverageThreshold: {
+    global: {
+      lines: 75,
+      statements: 74,
+      functions: 54,
+      branches: 61,
+    },
+  },
 };

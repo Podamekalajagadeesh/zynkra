@@ -69,28 +69,13 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm ci
-      - name: Unit tests with coverage
+      - name: Unit tests with coverage (threshold enforced by jest.config.js)
         working-directory: server
+        # `coverageThreshold` in jest.config.js makes this step the coverage
+        # gate itself: it fails if lines/statements/functions/branches drop
+        # below the configured minimums. It supersedes the inline
+        # coverage-summary.json check that used to live here.
         run: npm run test:coverage
-      - name: Enforce coverage threshold
-        working-directory: server
-        run: |
-          node -e "
-          const fs = require('fs');
-          const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
-          const thresholds = { lines: 50, functions: 50, branches: 50, statements: 50 };
-          let failed = false;
-          for (const [metric, threshold] of Object.entries(thresholds)) {
-            const actual = coverage.total[metric].pct;
-            if (actual < threshold) {
-              console.error('❌ Coverage ' + metric + ': ' + actual + '% < ' + threshold + '%');
-              failed = true;
-            } else {
-              console.log('✅ Coverage ' + metric + ': ' + actual + '% >= ' + threshold + '%');
-            }
-          }
-          if (failed) process.exit(1);
-          "
       - name: Federation specs (signing, inbound verification, SSRF guards)
         working-directory: server
         # Standalone because the inbound-verification suite generates RSA keys
