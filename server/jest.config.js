@@ -36,7 +36,8 @@ transform: {
   // now takes 8, so it could not have passed as written. It is now
   // `federation.service.spec.ts`, ported to Jest, joined by
   // `http-signatures.service.spec.ts`. The exclusion is removed; the obsolete
-  // `.js` file is still on disk and still uncollected — it should be deleted.
+  // `.js` file has been deleted along with the superseded `.js` tests under
+  // `test/` and the redundant CommonJS twins under `src/memories/`.
   // See ROADMAP.md §3 (Phase 4) and §7 item 6.
   coverageReporters: ['text', 'lcov', 'json-summary'],
   // The coverage gate. Enforced natively by `npm run test:coverage` (the

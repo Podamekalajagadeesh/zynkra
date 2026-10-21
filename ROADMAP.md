@@ -699,15 +699,19 @@ the *"universal / user-owned"* story true and can proceed in parallel by differe
    where `test:unit` and CI pick them up. The original assertions were traced against the
    current implementation before being carried over (all still hold) and the scoring bands,
    truncation limits, and defaults — previously untested — are now pinned.
-    ⏳ Still open: the four superseded `.js` files need deleting (I cannot remove files in this
-    environment); `server/src/memories/` also carries a redundant CommonJS `.js` beside every
-    `.ts` (`deepfake-detection`, `documentary-builder`, `memory-projects`). ⚠️ **This was
-    previously recorded as a build hazard and that was wrong.** `tsconfig.json` does not set
-    `allowJs` (so it defaults to `false` and `tsc` ignores the `.js` files entirely) and
-    `nest-cli.json` declares no `assets`, so nothing copies them into `dist/` either. They
-    are dead code, not a collision risk, and `moduleFileExtensions` lists `ts` before `js`, so
-    resolution picks the `.ts`. Low severity — but they should still be deleted, and the
-    reason is dead weight, not build safety.
+    ✅ **Deletions done.** The four superseded `.js` files, `federation.service.test.js`, and
+    the redundant CommonJS twins in `server/src/memories/` (`deepfake-detection`,
+    `documentary-builder`, `memory-projects`) are deleted. `memory-projects.test.ts` — a
+    `node:test` file whose ESM `import.meta` could never compile under ts-jest (it was collected
+    by `test:integration` but always failed to load) — was ported to Jest as
+    `src/memories/memory-projects.spec.ts`, where `test:unit` and CI collect it, and the broken
+    original removed. ⚠️ For the record, this was previously recorded as a build hazard and
+    that was wrong: `tsconfig.json` does not set
+    `allowJs` (so it defaults to `false` and `tsc` ignored the `.js` files entirely) and
+    `nest-cli.json` declares no `assets`, so nothing copied them into `dist/` either. They
+    were dead code, not a collision risk, and `moduleFileExtensions` lists `ts` before `js`, so
+    resolution picked the `.ts`. The reason for deleting them was dead weight, not build
+    safety — and now they are gone.
     ✅ **Federation is no longer uncovered.** `jest.config.js` listed `/src/federation/` in
     `testPathIgnorePatterns`, but that entry was **inert**: every npm script passes
     `--testPathIgnorePatterns` (`test:unit` and `test:coverage` with `/test/`,
@@ -771,14 +775,14 @@ the *"universal / user-owned"* story true and can proceed in parallel by differe
     revert: fix the spec or the code, but do not silence it. Expect the E2EE suite to pass
     (it was written carefully against the current `DmsService`); treat the other two as
     genuinely unproven until they go green.
-    ⏳ Also still open: `federation.service.test.js` remains on disk (uncollected, since
-    `testMatch` ignores `.js`) and should be deleted. The superseded `.js` test files
-    (`immersive-learning`, `archive-library`, `deepfake-detection`, `memory-documentary`) are
-    obsolete for the same reason `federation.service.test.js` is, and need deleting. The 64 stub
-    directories under `server/src/features/*` (each a `console.log`, never registered) are dead
-    weight. `e2e-smoke`/`qa-smoke` only cover `AppController` — they never boot `AppModule` or
-    touch the database. I have no file-delete capability in this environment (no shell, no
-    delete tool), so every one of these deletions is a manual step.
+    ✅ **The file deletions this passage used to beg for are done** (previous sessions had no
+    shell to remove files with): `federation.service.test.js`, the four superseded `.js` test
+    files (`immersive-learning`, `archive-library`, `deepfake-detection`, `memory-documentary`),
+    and the three CommonJS twins in `src/memories/` are all gone. Still open, and now the only
+    items of this kind left: the 64 stub directories under `server/src/features/*` (each a
+    `console.log`, never registered) are dead weight awaiting a delete decision; and
+    `e2e-smoke`/`qa-smoke` only cover `AppController` — they never boot `AppModule` or
+    touch the database.
     ✅ **The headline counts are no longer inflated.** `PLAN.md` advertised "Backend Modules: 83"
     and "Frontend Pages: 79" in a table titled "By The Numbers." The actual counts are **105
     feature directories and 128 page files** — so the docs were wrong in the *flattering*
