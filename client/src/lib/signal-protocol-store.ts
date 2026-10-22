@@ -262,7 +262,19 @@ export function createSignalProtocolStore(userId: string): SignalProtocolStore {
     },
 
     async removeAllSessions(identifier: string): Promise<void> {
-      await storeClear('sessions');
+      // Sessions are keyed by SignalProtocolAddress (`${userId}.${deviceId}`).
+      // Drop every session belonging to THAT peer — the exact address plus any
+      // sibling device of the same name — and never other peers' sessions
+      // (a storeClear here used to wipe the whole table, destroying every
+      // conversation the moment one peer rotated keys).
+      const dot = identifier.lastIndexOf('.');
+      const peerPrefix = dot === -1 ? `${identifier}.` : `${identifier.slice(0, dot)}.`;
+      const all = await readAllRecords<SessionRecord>('sessions');
+      for (const row of all) {
+        if (row.identifier === identifier || row.identifier.startsWith(peerPrefix)) {
+          await storeDelete('sessions', row.identifier);
+        }
+      }
     },
 
     // Legacy alias for put — required by some library versions
