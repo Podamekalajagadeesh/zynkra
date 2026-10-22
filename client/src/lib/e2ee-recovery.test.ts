@@ -4,6 +4,8 @@
  * The package carries session ratchet records: if these are corrupted or the
  * wrong passphrase decrypts them, restored history is garbage. Tests pin the
  * roundtrip, both failure modes, and structural validation.
+ *
+ * @vitest-environment node
  */
 import { describe, it, expect } from 'vitest';
 import {

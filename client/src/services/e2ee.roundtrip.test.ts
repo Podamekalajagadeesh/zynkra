@@ -16,6 +16,8 @@
  *    continues — bob decrypts under the new identity,
  *  - offline tolerance: an unreachable identity endpoint keeps, not breaks,
  *    an existing session.
+ *
+ * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
