@@ -3,14 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { api } from '../../lib/api';
 import { StatsCards } from '../../components/brand-collabs/StatsCards';
 import { CreateBrandModal } from '../../components/brand-collabs/CreateBrandModal';
 import { CreateOpportunityModal } from '../../components/brand-collabs/CreateOpportunityModal';
 import { OpportunitiesList } from '../../components/brand-collabs/OpportunitiesList';
 import { MyApplicationsList } from '../../components/brand-collabs/MyApplicationsList';
-import { CollabTrackingModal, CollabROIDashboard } from '../../components/brand-collabs/CollabTrackingModal';
+import {
+  CollabTrackingModal,
+  CollabROIDashboard,
+} from '../../components/brand-collabs/CollabTrackingModal';
 
 interface Brand {
   id: string;
@@ -135,11 +144,11 @@ export function BrandCollabsDashboardPage() {
       if (categoryFilter) params.append('category', categoryFilter);
       if (minBudgetFilter) params.append('minBudget', minBudgetFilter);
       if (maxBudgetFilter) params.append('maxBudget', maxBudgetFilter);
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       const response = await api.get(url);
       setOpportunities(response.data);
     } catch (error) {
@@ -157,10 +166,19 @@ export function BrandCollabsDashboardPage() {
   };
 
   const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
-  const categories = ['Fashion', 'Technology', 'Lifestyle', 'Beauty', 'Fitness', 'Food & Beverage', 'Travel', 'Gaming'];
+  const categories = [
+    'Fashion',
+    'Technology',
+    'Lifestyle',
+    'Beauty',
+    'Fitness',
+    'Food & Beverage',
+    'Travel',
+    'Gaming',
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -176,10 +194,12 @@ export function BrandCollabsDashboardPage() {
           <Button onClick={() => setShowCreateOpportunity(true)} disabled={brands.length === 0}>
             Post Opportunity
           </Button>
-          <Button onClick={() => {
-            setSelectedCollab(null);
-            setShowTrackCollab(true);
-          }}>
+          <Button
+            onClick={() => {
+              setSelectedCollab(null);
+              setShowTrackCollab(true);
+            }}
+          >
             Track New Collab
           </Button>
         </div>
@@ -211,8 +231,10 @@ export function BrandCollabsDashboardPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All categories</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat.toLowerCase()}>{cat}</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat.toLowerCase()}>
+                        {cat}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -245,15 +267,20 @@ export function BrandCollabsDashboardPage() {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                 <div className="text-4xl mb-4">🏷️</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No brands registered yet</h3>
-                <p className="text-gray-600 mb-4">Register your brand to start posting collaboration opportunities.</p>
+                <p className="text-gray-600 mb-4">
+                  Register your brand to start posting collaboration opportunities.
+                </p>
                 <Button onClick={() => setShowCreateBrand(true)}>Register Your First Brand</Button>
               </div>
             ) : (
               <div>
                 <h3 className="text-xl font-semibold mb-4">Your Brands ({brands.length})</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {brands.map(brand => (
-                    <div key={brand.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                  {brands.map((brand) => (
+                    <div
+                      key={brand.id}
+                      className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+                    >
                       <h4 className="font-semibold text-gray-900">{brand.name}</h4>
                     </div>
                   ))}

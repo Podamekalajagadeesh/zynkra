@@ -8,6 +8,6 @@ import { User } from '../users/entities/user.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Post, User])],
   providers: [CollaborationGateway, CollaborationService],
-  exports: [CollaborationService]
+  exports: [CollaborationService],
 })
 export class CollaborationModule {}

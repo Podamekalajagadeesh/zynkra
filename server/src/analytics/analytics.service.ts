@@ -35,18 +35,24 @@ export class AnalyticsService {
     private readonly followsRepository: Repository<Follow>,
     @InjectRepository(Subscription)
     private readonly subscriptionsRepository: Repository<Subscription>,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
   ) {}
 
   async getAnalytics(userId: string) {
     await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
-    const user = await this.usersRepository.findOne({ where: { id: userId }, relations: ['followers', 'following'] });
-    const posts = await this.postsRepository.find({ where: { user: { id: userId } }, relations: ['comments'] });
-    
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['followers', 'following'],
+    });
+    const posts = await this.postsRepository.find({
+      where: { user: { id: userId } },
+      relations: ['comments'],
+    });
+
     // Get all products owned by the user
     const userProducts = await this.productsRepository.find({ where: { sellerId: userId } });
-    const productIds = userProducts.map(p => p.id);
-    
+    const productIds = userProducts.map((p) => p.id);
+
     // Get all completed orders for the user's products
     const orders = await this.ordersRepository.find({
       where: {
@@ -54,27 +60,27 @@ export class AnalyticsService {
       },
       relations: ['items', 'items.product', 'items.productVariant'],
     });
-    
+
     // Calculate social commerce analytics
-    const completedOrders = orders.filter(order => 
-      order.items.some(item => productIds.includes(item.product?.id))
+    const completedOrders = orders.filter((order) =>
+      order.items.some((item) => productIds.includes(item.product?.id))
     );
-    
+
     const totalRevenue = completedOrders.reduce((acc, order) => acc + Number(order.total), 0);
     const totalOrders = completedOrders.length;
-    
+
     // Get unique customers
-    const customerIds = [...new Set(completedOrders.map(order => order.customerId))];
+    const customerIds = [...new Set(completedOrders.map((order) => order.customerId))];
     const uniqueCustomers = customerIds.length;
-    
+
     // Calculate conversion tracking (if we had product views stored with post IDs, we'd use that here)
     // For now, calculate monthly trends
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    
+
     const recentOrders = await this.ordersRepository.find({
       where: {
         createdAt: Between(thirtyDaysAgo, new Date()),
@@ -85,20 +91,20 @@ export class AnalyticsService {
       },
       relations: ['items'],
     });
-    
+
     const monthlyRevenue = recentOrders.reduce((acc, order) => acc + Number(order.total), 0);
     const monthlyOrders = recentOrders.length;
-    
+
     // Product performance
-    const productPerformance = userProducts.map(product => {
-      const productOrders = orders.filter(order => 
-        order.items.some(item => item.product?.id === product.id && order.status === 'delivered')
+    const productPerformance = userProducts.map((product) => {
+      const productOrders = orders.filter((order) =>
+        order.items.some((item) => item.product?.id === product.id && order.status === 'delivered')
       );
       const productRevenue = productOrders.reduce((acc, order) => {
-        const item = order.items.find(i => i.product?.id === product.id);
+        const item = order.items.find((i) => i.product?.id === product.id);
         return acc + (item ? Number(item.price) * item.quantity : 0);
       }, 0);
-      
+
       return {
         productId: product.id,
         productName: product.name,
@@ -106,13 +112,16 @@ export class AnalyticsService {
         revenue: productRevenue,
       };
     });
-    
+
     // Calculate customer insights
     const customerAnalytics = {
       totalCustomers: uniqueCustomers,
-      repeatCustomers: customerIds.length > 0 ? customerIds.filter(customerId => 
-        orders.filter(order => order.customerId === customerId).length > 1
-      ).length : 0,
+      repeatCustomers:
+        customerIds.length > 0
+          ? customerIds.filter(
+              (customerId) => orders.filter((order) => order.customerId === customerId).length > 1
+            ).length
+          : 0,
       averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
     };
 
@@ -123,11 +132,11 @@ export class AnalyticsService {
       relations: ['reactions'],
     });
     totalLikes = postsWithReactions.reduce((acc, post) => acc + post.reactions.length, 0);
-    
+
     const totalComments = posts.reduce((acc, post) => acc + post.comments.length, 0);
     const tips = await this.tipsRepository.find({ where: { to: { id: userId } } });
     const totalTips = tips.reduce((acc, tip) => acc + Number(tip.amount), 0);
-    
+
     // Subscriptions revenue
     const subscriptions = await this.subscriptionsRepository.find({
       where: {
@@ -146,7 +155,7 @@ export class AnalyticsService {
         viewedAt: Between(sixtyDaysAgo, new Date()),
       },
     });
-    
+
     const lastThirtyDaysProfileViews = await this.pageViewsRepository.count({
       where: {
         userId: userId,
@@ -154,7 +163,7 @@ export class AnalyticsService {
         viewedAt: Between(thirtyDaysAgo, new Date()),
       },
     });
-    
+
     const totalPostImpressions = await this.pageViewsRepository.count({
       where: {
         creatorId: userId,
@@ -162,7 +171,7 @@ export class AnalyticsService {
         viewedAt: Between(sixtyDaysAgo, new Date()),
       },
     });
-    
+
     const lastThirtyDaysPostImpressions = await this.pageViewsRepository.count({
       where: {
         creatorId: userId,
@@ -170,12 +179,12 @@ export class AnalyticsService {
         viewedAt: Between(thirtyDaysAgo, new Date()),
       },
     });
-    
+
     // Calculate engagement rate
     const totalEngagements = totalLikes + totalComments;
     const totalReach = lastThirtyDaysProfileViews + lastThirtyDaysPostImpressions;
     const engagementRate = totalReach > 0 ? (totalEngagements / totalReach) * 100 : 0;
-    
+
     // Calculate follower growth
     const currentFollowers = user.followers.length;
     const thirtyDaysAgoFollowers = await this.followsRepository.count({
@@ -185,16 +194,17 @@ export class AnalyticsService {
       },
     });
     const followerGrowth = currentFollowers - thirtyDaysAgoFollowers;
-    const followerGrowthRate = thirtyDaysAgoFollowers > 0 ? (followerGrowth / thirtyDaysAgoFollowers) * 100 : 0;
-    
+    const followerGrowthRate =
+      thirtyDaysAgoFollowers > 0 ? (followerGrowth / thirtyDaysAgoFollowers) * 100 : 0;
+
     // Calculate audience insights: demographics, active times, location data
     const followers = await this.usersRepository.find({
       where: {
-        id: In(user.followers.map(f => f.id)),
+        id: In(user.followers.map((f) => f.id)),
       },
       select: ['location', 'lastSeenAt', 'id'],
     });
-    
+
     // Location breakdown
     const locationData = followers.reduce((acc, follower) => {
       if (follower.location) {
@@ -202,7 +212,7 @@ export class AnalyticsService {
       }
       return acc;
     }, {});
-    
+
     // Active times breakdown (hour of day)
     const activeTimes = followers.reduce((acc, follower) => {
       if (follower.lastSeenAt) {
@@ -250,7 +260,8 @@ export class AnalyticsService {
         repeatCustomers: customerAnalytics.repeatCustomers,
         averageOrderValue: customerAnalytics.averageOrderValue,
         productPerformance,
-        conversionRate: postsWithReactions.length > 0 ? (totalOrders / postsWithReactions.length) * 100 : 0,
+        conversionRate:
+          postsWithReactions.length > 0 ? (totalOrders / postsWithReactions.length) * 100 : 0,
       },
     };
   }
@@ -289,7 +300,7 @@ export class AnalyticsService {
 
   private estimatePostEmissions(
     type: 'video' | 'image' | 'audio' | 'text',
-    views: number,
+    views: number
   ): { total: number; offset: number; score: number } {
     const f = AnalyticsService.CARBON_FACTORS;
     const t = AnalyticsService.TYPICAL_CONTENT[type];
@@ -327,12 +338,8 @@ export class AnalyticsService {
     };
   }
 
-  private estimateEmissionsForPostType(
-    postType: string,
-    views: number,
-  ): number {
-    const type =
-      postType === 'reel' || postType === 'shorts' ? 'video' : 'image';
+  private estimateEmissionsForPostType(postType: string, views: number): number {
+    const type = postType === 'reel' || postType === 'shorts' ? 'video' : 'image';
     return this.estimatePostEmissions(type, views).total;
   }
 
@@ -349,7 +356,20 @@ export class AnalyticsService {
       order: { createdAt: 'DESC' },
     });
 
-    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthLabels = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const now = new Date();
     const monthly = new Map<string, { emissions: number; offset: number }>();
     for (let i = 11; i >= 0; i--) {
@@ -407,7 +427,12 @@ export class AnalyticsService {
         id: 'first-post',
         name: 'First Step',
         description: 'Created your first piece of content',
-        unlockedAt: posts.length > 0 ? (user.createdAt ? new Date(user.createdAt).toISOString() : nowIso) : null,
+        unlockedAt:
+          posts.length > 0
+            ? user.createdAt
+              ? new Date(user.createdAt).toISOString()
+              : nowIso
+            : null,
       },
       {
         id: 'eco-warrior',
@@ -453,7 +478,7 @@ export class AnalyticsService {
   }
 
   private async computeSustainabilityRank(
-    userId: string,
+    userId: string
   ): Promise<{ userRank: number; totalUsers: number }> {
     const rows = await this.postsRepository
       .createQueryBuilder('post')

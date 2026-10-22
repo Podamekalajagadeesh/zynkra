@@ -66,11 +66,13 @@ const exportPayload = () => ({
 
 let tmpRoot: string;
 
-const makeService = (opts: {
-  config?: Record<string, string | number>;
-  exportRepo?: Repo;
-  scheduleRepo?: Repo;
-} = {}) => {
+const makeService = (
+  opts: {
+    config?: Record<string, string | number>;
+    exportRepo?: Repo;
+    scheduleRepo?: Repo;
+  } = {}
+) => {
   const exportRepo = opts.exportRepo ?? makeRepo();
   const scheduleRepo = opts.scheduleRepo ?? makeRepo();
   const configMap: Record<string, any> = {
@@ -81,7 +83,7 @@ const makeService = (opts: {
   };
   const config = {
     get: jest.fn((key: string, fallback?: unknown) =>
-      key in configMap ? configMap[key] : fallback,
+      key in configMap ? configMap[key] : fallback
     ),
   };
   const exportService = {
@@ -95,7 +97,7 @@ const makeService = (opts: {
     exportRepo as any,
     scheduleRepo as any,
     exportService as any,
-    config as any,
+    config as any
   );
   return { service, exportRepo, scheduleRepo, config, exportService, dirs: configMap };
 };
@@ -153,14 +155,18 @@ describe('DataExportService manual export (private storage)', () => {
     exportRepo.findOne.mockImplementation((args: any) =>
       Promise.resolve(
         args.where.id === 'exp-1' && args.where.user.id === 'owner'
-          ? { id: 'exp-1', status: DataExportStatus.COMPLETED, fileUrl: '/data-export/archive/exp-1' }
-          : null,
-      ),
+          ? {
+              id: 'exp-1',
+              status: DataExportStatus.COMPLETED,
+              fileUrl: '/data-export/archive/exp-1',
+            }
+          : null
+      )
     );
 
     await expect(service.getArchivePath('owner', 'exp-1')).resolves.toBe(zipPath);
     await expect(service.getArchivePath('stranger', 'exp-1')).rejects.toBeInstanceOf(
-      NotFoundException,
+      NotFoundException
     );
   });
 
@@ -205,7 +211,7 @@ describe('DataExportService schedule', () => {
   it('rejects intervals outside the allowed set', async () => {
     const { service } = makeService();
     await expect(
-      service.updateSchedule('user-1', { enabled: true, intervalDays: 3 }),
+      service.updateSchedule('user-1', { enabled: true, intervalDays: 3 })
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(ALLOWED_EXPORT_INTERVALS).toEqual([7, 14, 30, 90]);
   });
@@ -263,17 +269,13 @@ describe('DataExportService.runScheduledExports (hourly cron)', () => {
     const { service, scheduleRepo } = makeService();
     const row = dueSchedule();
     scheduleRepo.find.mockResolvedValue([row]);
-    const createSpy = jest
-      .spyOn(service, 'create')
-      .mockResolvedValue({ id: 'exp-9' } as any);
+    const createSpy = jest.spyOn(service, 'create').mockResolvedValue({ id: 'exp-9' } as any);
 
     await service.runScheduledExports();
 
     expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }), 'scheduled');
     expect(row.lastExportAt).toBeInstanceOf(Date);
-    expect(
-      nearOffset(new Date(row.nextExportAt!).getTime(), 30 * 86_400_000),
-    ).toBe(true);
+    expect(nearOffset(new Date(row.nextExportAt!).getTime(), 30 * 86_400_000)).toBe(true);
     expect(scheduleRepo.save).toHaveBeenCalledWith(row);
   });
 

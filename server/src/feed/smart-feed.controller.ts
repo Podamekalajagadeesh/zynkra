@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SmartFeedService } from './smart-feed.service';
 import { TranslationService } from '../translation/translation.service';
@@ -7,7 +17,7 @@ import { TranslationService } from '../translation/translation.service';
 export class SmartFeedController {
   constructor(
     private readonly smartFeedService: SmartFeedService,
-    private readonly translationService: TranslationService,
+    private readonly translationService: TranslationService
   ) {}
 
   /**
@@ -48,7 +58,7 @@ export class SmartFeedController {
     @Req() req,
     @Query('algorithm') algorithm?: string,
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.smartFeedService.generateFeed(req.user.userId || req.user.id, {
       algorithm,

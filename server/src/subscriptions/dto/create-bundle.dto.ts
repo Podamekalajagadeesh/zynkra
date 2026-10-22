@@ -1,4 +1,13 @@
-import { IsString, IsNotEmpty, IsNumber, IsPositive, IsOptional, IsArray, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsOptional,
+  IsArray,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateBundleDto {
   @IsString()

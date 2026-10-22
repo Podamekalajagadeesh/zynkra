@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
-import { 
-  AlertDialog, 
-  AlertDialogContent, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from './ui/alert-dialog';
 import { CreateCollectionForm } from './CreateCollectionForm';
 import * as apiFunctions from '../lib/api';
@@ -21,11 +20,7 @@ interface AddToCollectionModalProps {
   onClose: () => void;
 }
 
-export const AddToCollectionModal = ({
-  postId,
-  isOpen,
-  onClose,
-}: AddToCollectionModalProps) => {
+export const AddToCollectionModal = ({ postId, isOpen, onClose }: AddToCollectionModalProps) => {
   const [collections, setCollections] = useState<Collection[]>([]);
 
   useEffect(() => {

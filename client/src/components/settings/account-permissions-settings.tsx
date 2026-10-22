@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { ACCOUNT_PERMISSIONS, AccountPermission, getAccountPermissions, updateAccountPermissions } from '../../lib/api';
+import {
+  ACCOUNT_PERMISSIONS,
+  AccountPermission,
+  getAccountPermissions,
+  updateAccountPermissions,
+} from '../../lib/api';
 import { Switch } from '../ui/switch';
 
 export function AccountPermissionsSettings() {

@@ -37,16 +37,24 @@ const TimelineReviewPage = () => {
 
   if (isLoading) {
     return (
-      <PageShell title="Timeline Review" description="Review posts before they appear on your timeline.">
+      <PageShell
+        title="Timeline Review"
+        description="Review posts before they appear on your timeline."
+      >
         Loading...
       </PageShell>
     );
   }
 
   return (
-    <PageShell title="Timeline Review" description="Review posts before they appear on your timeline.">
+    <PageShell
+      title="Timeline Review"
+      description="Review posts before they appear on your timeline."
+    >
       <h1 className="text-2xl font-bold">Timeline Review</h1>
-      <p className="text-dark-500">Review posts you're tagged in before they appear on your timeline.</p>
+      <p className="text-dark-500">
+        Review posts you're tagged in before they appear on your timeline.
+      </p>
 
       <div className="mt-6 space-y-4">
         {reviews.length === 0 && <p>No items to review.</p>}

@@ -6,7 +6,9 @@ import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from './news
 import { User } from '../users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Newsletter, NewsletterSubscriber, NewsletterSubscription, User])],
+  imports: [
+    TypeOrmModule.forFeature([Newsletter, NewsletterSubscriber, NewsletterSubscription, User]),
+  ],
   controllers: [NewslettersController],
   providers: [NewslettersService],
   exports: [NewslettersService],

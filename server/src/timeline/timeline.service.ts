@@ -12,7 +12,7 @@ export class TimelineService {
   constructor(
     @InjectRepository(TimelineReview)
     private readonly timelineReviewRepository: Repository<TimelineReview>,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   async getPendingReview(userId: string): Promise<TimelineReview[]> {
@@ -23,7 +23,7 @@ export class TimelineService {
   }
 
   async approvePost(reviewId: string): Promise<TimelineReview> {
-    const review = await this.timelineReviewRepository.findOne({where: {id: reviewId}});
+    const review = await this.timelineReviewRepository.findOne({ where: { id: reviewId } });
     if (review) {
       review.status = TimelineReviewStatus.APPROVED;
       return this.timelineReviewRepository.save(review);
@@ -31,7 +31,7 @@ export class TimelineService {
   }
 
   async hidePost(reviewId: string): Promise<TimelineReview> {
-    const review = await this.timelineReviewRepository.findOne({where: {id: reviewId}});
+    const review = await this.timelineReviewRepository.findOne({ where: { id: reviewId } });
     if (review) {
       review.status = TimelineReviewStatus.HIDDEN;
       return this.timelineReviewRepository.save(review);

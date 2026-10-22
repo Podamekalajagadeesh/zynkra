@@ -40,7 +40,9 @@ const DonationDrivePage = () => {
       }
     };
     fetchDrive();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const handleDonate = async () => {
@@ -85,7 +87,10 @@ const DonationDrivePage = () => {
   if (error || !drive) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <Link to="/donation-drives" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline mb-4">
+        <Link
+          to="/donation-drives"
+          className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline mb-4"
+        >
           <ArrowLeft size={14} /> All Donation Drives
         </Link>
         <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-800 dark:bg-red-950/30">
@@ -106,24 +111,21 @@ const DonationDrivePage = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <Link to="/donation-drives" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline mb-6">
+      <Link
+        to="/donation-drives"
+        className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline mb-6"
+      >
         <ArrowLeft size={14} /> All Donation Drives
       </Link>
 
       {/* Hero / Image */}
       {drive.imageUrl && (
         <div className="mb-6 rounded-xl overflow-hidden">
-          <img
-            src={drive.imageUrl}
-            alt={drive.title}
-            className="w-full h-48 object-cover"
-          />
+          <img src={drive.imageUrl} alt={drive.title} className="w-full h-48 object-cover" />
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mb-2 text-dark-900 dark:text-white">
-        {drive.title}
-      </h1>
+      <h1 className="text-2xl font-bold mb-2 text-dark-900 dark:text-white">{drive.title}</h1>
 
       {/* Meta info */}
       <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-dark-500">
@@ -146,15 +148,11 @@ const DonationDrivePage = () => {
             <span className="text-sm font-medium text-dark-600 dark:text-dark-300">
               ${raised.toLocaleString()} raised
             </span>
-            <span className="text-sm text-dark-500">
-              Goal: ${goal.toLocaleString()}
-            </span>
+            <span className="text-sm text-dark-500">Goal: ${goal.toLocaleString()}</span>
           </div>
           <Progress value={progress} className="h-3 mb-3" />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-dark-400">
-              {Math.round(progress)}% funded
-            </span>
+            <span className="text-xs text-dark-400">{Math.round(progress)}% funded</span>
             <span className="text-xs text-dark-400">
               {donations.length} donation{donations.length !== 1 ? 's' : ''}
             </span>
@@ -164,9 +162,7 @@ const DonationDrivePage = () => {
 
       {/* Description */}
       {drive.description && (
-        <p className="text-dark-600 dark:text-dark-300 mb-6 leading-relaxed">
-          {drive.description}
-        </p>
+        <p className="text-dark-600 dark:text-dark-300 mb-6 leading-relaxed">{drive.description}</p>
       )}
 
       {/* Donate button */}
@@ -192,7 +188,9 @@ const DonationDrivePage = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                      {(donation.donor?.displayName || donation.donor?.username || '?')[0].toUpperCase()}
+                      {(donation.donor?.displayName ||
+                        donation.donor?.username ||
+                        '?')[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -222,12 +220,12 @@ const DonationDrivePage = () => {
 
       {/* Donate modal */}
       <Modal isOpen={showDonate} onClose={() => setShowDonate(false)}>
-        <h2 className="text-lg font-bold text-dark-900 dark:text-white mb-4">
-          Make a Donation
-        </h2>
+        <h2 className="text-lg font-bold text-dark-900 dark:text-white mb-4">Make a Donation</h2>
         <div className="space-y-4">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 font-medium">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 font-medium">
+              $
+            </span>
             <Input
               type="number"
               placeholder="Amount"

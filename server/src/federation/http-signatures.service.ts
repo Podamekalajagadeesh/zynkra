@@ -73,7 +73,7 @@ export class HttpSignaturesService {
   constructor(
     @InjectRepository(InstanceKey)
     private readonly instanceKeyRepository: Repository<InstanceKey>,
-    private readonly configService?: ConfigService,
+    private readonly configService?: ConfigService
   ) {}
 
   /**
@@ -140,7 +140,7 @@ export class HttpSignaturesService {
         (err, publicKey, privateKey) => {
           if (err) reject(err);
           else resolve({ privateKey, publicKey });
-        },
+        }
       );
     });
   }
@@ -169,7 +169,7 @@ export class HttpSignaturesService {
     path: string,
     host: string,
     body: string | null,
-    actorKeyId: string,
+    actorKeyId: string
   ): {
     signatureHeader: string;
     digestHeader: string | null;
@@ -223,11 +223,7 @@ export class HttpSignaturesService {
    * @param body - The JSON request body as a string
    * @param inboxUrl - The target inbox URL
    */
-  getSignedPostHeaders(
-    actorUrl: string,
-    body: string,
-    inboxUrl: string,
-  ): Record<string, string> {
+  getSignedPostHeaders(actorUrl: string, body: string, inboxUrl: string): Record<string, string> {
     const url = new URL(inboxUrl);
     const path = url.pathname;
     const host = url.hostname + (url.port ? `:${url.port}` : '');
@@ -238,15 +234,15 @@ export class HttpSignaturesService {
       path,
       host,
       body,
-      keyId,
+      keyId
     );
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/activity+json',
-      'Host': host,
-      'Date': dateHeader,
-      'Signature': signatureHeader,
-      'Accept': 'application/activity+json, application/ld+json',
+      Host: host,
+      Date: dateHeader,
+      Signature: signatureHeader,
+      Accept: 'application/activity+json, application/ld+json',
     };
 
     if (digestHeader) {
@@ -356,7 +352,7 @@ export class HttpSignaturesService {
         'sha256',
         Buffer.from(lines.join('\n'), 'utf8'),
         publicKeyPem,
-        Buffer.from(parsed.signature, 'base64'),
+        Buffer.from(parsed.signature, 'base64')
       );
     } catch (error) {
       return { valid: false, reason: `signature verification threw: ${(error as Error).message}` };
@@ -436,28 +432,19 @@ export class HttpSignaturesService {
   /**
    * Get signed headers for a GET request (used for fetching remote actors, etc.)
    */
-  getSignedGetHeaders(
-    actorUrl: string,
-    targetUrl: string,
-  ): Record<string, string> {
+  getSignedGetHeaders(actorUrl: string, targetUrl: string): Record<string, string> {
     const url = new URL(targetUrl);
     const path = url.pathname + url.search;
     const host = url.hostname + (url.port ? `:${url.port}` : '');
     const keyId = `${actorUrl}#main-key`;
 
-    const { signatureHeader, dateHeader } = this.signRequest(
-      'GET',
-      path,
-      host,
-      null,
-      keyId,
-    );
+    const { signatureHeader, dateHeader } = this.signRequest('GET', path, host, null, keyId);
 
     return {
-      'Host': host,
-      'Date': dateHeader,
-      'Signature': signatureHeader,
-      'Accept': 'application/activity+json, application/ld+json',
+      Host: host,
+      Date: dateHeader,
+      Signature: signatureHeader,
+      Accept: 'application/activity+json, application/ld+json',
     };
   }
 }

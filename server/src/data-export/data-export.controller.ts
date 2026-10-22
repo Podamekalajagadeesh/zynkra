@@ -1,5 +1,16 @@
-
-import { Controller, Post, UseGuards, Request, Get, Delete, Param, Res, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Get,
+  Delete,
+  Param,
+  Res,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,17 +28,13 @@ export class DataExportController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('data-export/archive/:id')
-  async downloadArchive(
-    @Request() req,
-    @Param('id') id: string,
-    @Res() res: Response,
-  ) {
+  async downloadArchive(@Request() req, @Param('id') id: string, @Res() res: Response) {
     const userId = req.user.userId || req.user.id;
     const filePath = await this.dataExportService.getArchivePath(userId, id);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="zynkra-export-${new Date().toISOString().split('T')[0]}.zip"`,
+      `attachment; filename="zynkra-export-${new Date().toISOString().split('T')[0]}.zip"`
     );
     createReadStream(filePath).pipe(res);
   }

@@ -3,13 +3,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { InfrastructureService } from './infrastructure.service';
 import { BackupService } from './backup.service';
-import { CreatePlatformIncidentDto, CreatePlatformMaintenanceDto, UpdatePlatformIncidentDto, UpdatePlatformMaintenanceDto } from './dto/platform-status.dto';
+import {
+  CreatePlatformIncidentDto,
+  CreatePlatformMaintenanceDto,
+  UpdatePlatformIncidentDto,
+  UpdatePlatformMaintenanceDto,
+} from './dto/platform-status.dto';
 
 @Controller('infrastructure')
 export class InfrastructureController {
   constructor(
     private readonly infrastructureService: InfrastructureService,
-    private readonly backupService: BackupService,
+    private readonly backupService: BackupService
   ) {}
 
   @Get('health')

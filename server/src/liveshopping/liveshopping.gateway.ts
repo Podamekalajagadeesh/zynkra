@@ -27,7 +27,7 @@ export class LiveshoppingGateway
     private readonly liveshoppingService: LiveshoppingService,
     private readonly wsAuth: WsAuthService,
     private readonly configService: ConfigService,
-    private readonly rateLimiter: WsRateLimiter,
+    private readonly rateLimiter: WsRateLimiter
   ) {}
 
   afterInit(server: Server) {
@@ -86,7 +86,12 @@ export class LiveshoppingGateway
   @SubscribeMessage('start-flash-sale')
   async handleStartFlashSale(
     client: Socket,
-    data: { eventId: string; productId: string; durationMinutes: number; discountPercentage: number },
+    data: {
+      eventId: string;
+      productId: string;
+      durationMinutes: number;
+      discountPercentage: number;
+    }
   ) {
     if (!this.mayAct(client, data?.eventId)) return;
     const { eventId, productId, durationMinutes, discountPercentage } = data;

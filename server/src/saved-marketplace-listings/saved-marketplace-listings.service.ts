@@ -12,13 +12,10 @@ export class SavedMarketplaceListingsService {
     @InjectRepository(SavedMarketplaceListing)
     private savedMarketplaceListingsRepository: Repository<SavedMarketplaceListing>,
     @InjectRepository(MarketplaceListing)
-    private marketplaceListingsRepository: Repository<MarketplaceListing>,
+    private marketplaceListingsRepository: Repository<MarketplaceListing>
   ) {}
 
-  async create(
-    createSavedMarketplaceListingDto: CreateSavedMarketplaceListingDto,
-    user: User,
-  ) {
+  async create(createSavedMarketplaceListingDto: CreateSavedMarketplaceListingDto, user: User) {
     const listing = await this.marketplaceListingsRepository.findOne({
       where: { id: createSavedMarketplaceListingDto.listingId },
     });

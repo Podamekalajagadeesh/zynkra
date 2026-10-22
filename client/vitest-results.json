@@ -14,10 +14,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation renders Add Poll button",
           "status": "passed",
           "title": "renders Add Poll button",
@@ -25,10 +22,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation shows poll form when Add Poll is clicked",
           "status": "passed",
           "title": "shows poll form when Add Poll is clicked",
@@ -36,10 +30,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation hides poll form when Remove Poll is clicked",
           "status": "passed",
           "title": "hides poll form when Remove Poll is clicked",
@@ -47,10 +38,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation adds a new option when Add Option is clicked",
           "status": "passed",
           "title": "adds a new option when Add Option is clicked",
@@ -58,10 +46,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation sends poll data on submit",
           "status": "passed",
           "title": "sends poll data on submit",
@@ -69,10 +54,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation sends null poll when not added",
           "status": "passed",
           "title": "sends null poll when not added",
@@ -80,10 +62,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm poll creation"
-          ],
+          "ancestorTitles": ["", "CreatePostForm poll creation"],
           "fullName": " CreatePostForm poll creation updates question input when typing",
           "status": "passed",
           "title": "updates question input when typing",
@@ -100,10 +79,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts renders the form with textarea",
           "status": "passed",
           "title": "renders the form with textarea",
@@ -111,10 +87,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts allows typing text content",
           "status": "passed",
           "title": "allows typing text content",
@@ -122,10 +95,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts disables submit button when content is empty",
           "status": "passed",
           "title": "disables submit button when content is empty",
@@ -133,10 +103,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts enables submit button when content is typed",
           "status": "passed",
           "title": "enables submit button when content is typed",
@@ -144,10 +111,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts creates a text post on submit",
           "status": "passed",
           "title": "creates a text post on submit",
@@ -155,10 +119,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts handles API error gracefully",
           "status": "passed",
           "title": "handles API error gracefully",
@@ -166,10 +127,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts submits with trimmed content",
           "status": "passed",
           "title": "submits with trimmed content",
@@ -177,10 +135,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePostForm - text posts"
-          ],
+          "ancestorTitles": ["", "CreatePostForm - text posts"],
           "fullName": " CreatePostForm - text posts renders visibility selector",
           "status": "passed",
           "title": "renders visibility selector",
@@ -197,10 +152,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost renders the create post form with textarea",
           "status": "passed",
           "title": "renders the create post form with textarea",
@@ -208,10 +160,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost renders all action buttons",
           "status": "passed",
           "title": "renders all action buttons",
@@ -219,10 +168,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost allows typing content in textarea",
           "status": "passed",
           "title": "allows typing content in textarea",
@@ -230,10 +176,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost allows typing activity",
           "status": "passed",
           "title": "allows typing activity",
@@ -241,10 +184,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost shows validation warning when submitting empty text post",
           "status": "passed",
           "title": "shows validation warning when submitting empty text post",
@@ -252,10 +192,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost submits a text post with content",
           "status": "passed",
           "title": "submits a text post with content",
@@ -263,10 +200,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost calls navigate after successful post creation",
           "status": "passed",
           "title": "calls navigate after successful post creation",
@@ -274,10 +208,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost opens sticker modal when GIF button clicked",
           "status": "passed",
           "title": "opens sticker modal when GIF button clicked",
@@ -285,10 +216,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost opens tag friends modal when Tag People clicked",
           "status": "passed",
           "title": "opens tag friends modal when Tag People clicked",
@@ -296,10 +224,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost opens AI generator when AI Generate clicked",
           "status": "passed",
           "title": "opens AI generator when AI Generate clicked",
@@ -307,10 +232,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost opens podcast recorder when Podcast clicked",
           "status": "passed",
           "title": "opens podcast recorder when Podcast clicked",
@@ -318,10 +240,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost closes dialog when X button clicked",
           "status": "passed",
           "title": "closes dialog when X button clicked",
@@ -329,10 +248,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreatePost"
-          ],
+          "ancestorTitles": ["", "CreatePost"],
           "fullName": " CreatePost handles API error gracefully",
           "status": "passed",
           "title": "handles API error gracefully",
@@ -349,10 +265,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows shows loading state initially",
           "status": "passed",
           "title": "shows loading state initially",
@@ -360,10 +273,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows renders mutual follows after loading",
           "status": "passed",
           "title": "renders mutual follows after loading",
@@ -371,10 +281,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows renders nothing when no mutual follows",
           "status": "passed",
           "title": "renders nothing when no mutual follows",
@@ -382,10 +289,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows displays +X more when more than 5 mutuals",
           "status": "passed",
           "title": "displays +X more when more than 5 mutuals",
@@ -393,10 +297,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows renders links to user profiles",
           "status": "passed",
           "title": "renders links to user profiles",
@@ -404,10 +305,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "MutualFollows"
-          ],
+          "ancestorTitles": ["", "MutualFollows"],
           "fullName": " MutualFollows handles API error gracefully",
           "status": "passed",
           "title": "handles API error gracefully",
@@ -424,10 +322,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders the editor title",
           "status": "passed",
           "title": "renders the editor title",
@@ -435,10 +330,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders filter presets",
           "status": "passed",
           "title": "renders filter presets",
@@ -446,10 +338,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders adjustment sliders",
           "status": "passed",
           "title": "renders adjustment sliders",
@@ -457,10 +346,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders AI tools section",
           "status": "passed",
           "title": "renders AI tools section",
@@ -468,10 +354,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor calls onClose when close button clicked",
           "status": "passed",
           "title": "calls onClose when close button clicked",
@@ -479,10 +362,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders save button",
           "status": "passed",
           "title": "renders save button",
@@ -490,10 +370,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders reset button",
           "status": "passed",
           "title": "renders reset button",
@@ -501,10 +378,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor renders the preview image with correct src",
           "status": "passed",
           "title": "renders the preview image with correct src",
@@ -512,10 +386,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PhotoEditor"
-          ],
+          "ancestorTitles": ["", "PhotoEditor"],
           "fullName": " PhotoEditor shows current adjustment values",
           "status": "passed",
           "title": "shows current adjustment values",
@@ -532,10 +403,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "Poll component"
-          ],
+          "ancestorTitles": ["", "Poll component"],
           "fullName": " Poll component renders the poll question",
           "status": "passed",
           "title": "renders the poll question",
@@ -543,10 +411,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Poll component"
-          ],
+          "ancestorTitles": ["", "Poll component"],
           "fullName": " Poll component renders all options as buttons",
           "status": "passed",
           "title": "renders all options as buttons",
@@ -554,10 +419,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Poll component"
-          ],
+          "ancestorTitles": ["", "Poll component"],
           "fullName": " Poll component renders a single option",
           "status": "passed",
           "title": "renders a single option",
@@ -565,10 +427,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Poll component"
-          ],
+          "ancestorTitles": ["", "Poll component"],
           "fullName": " Poll component renders empty options without crashing",
           "status": "passed",
           "title": "renders empty options without crashing",
@@ -585,10 +444,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting renders the poll question",
           "status": "passed",
           "title": "renders the poll question",
@@ -596,10 +452,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting renders options as buttons when user has not voted",
           "status": "passed",
           "title": "renders options as buttons when user has not voted",
@@ -607,10 +460,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting shows percentage bars when user has voted",
           "status": "passed",
           "title": "shows percentage bars when user has voted",
@@ -618,10 +468,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting shows 0% when totalVotes is 0",
           "status": "passed",
           "title": "shows 0% when totalVotes is 0",
@@ -629,10 +476,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting calls voteOnPoll when clicking an option button",
           "status": "passed",
           "title": "calls voteOnPoll when clicking an option button",
@@ -640,10 +484,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting shows success toast after voting",
           "status": "passed",
           "title": "shows success toast after voting",
@@ -651,10 +492,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting shows error toast when vote fails",
           "status": "passed",
           "title": "shows error toast when vote fails",
@@ -662,10 +500,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "PostCard poll rendering and voting"
-          ],
+          "ancestorTitles": ["", "PostCard poll rendering and voting"],
           "fullName": " PostCard poll rendering and voting does not render poll section when post has no poll",
           "status": "passed",
           "title": "does not render poll section when post has no poll",
@@ -682,10 +517,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders nothing when isOpen is false",
           "status": "passed",
           "title": "renders nothing when isOpen is false",
@@ -693,10 +525,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders the modal when isOpen is true",
           "status": "passed",
           "title": "renders the modal when isOpen is true",
@@ -704,10 +533,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal shows display name in title",
           "status": "passed",
           "title": "shows display name in title",
@@ -715,10 +541,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal shows fallback title when no displayName",
           "status": "passed",
           "title": "shows fallback title when no displayName",
@@ -726,10 +549,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal displays the profile URL",
           "status": "passed",
           "title": "displays the profile URL",
@@ -737,10 +557,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders close button",
           "status": "passed",
           "title": "renders close button",
@@ -748,10 +565,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal calls onClose when close button is clicked",
           "status": "passed",
           "title": "calls onClose when close button is clicked",
@@ -759,10 +573,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal calls onClose when backdrop is clicked",
           "status": "passed",
           "title": "calls onClose when backdrop is clicked",
@@ -770,10 +581,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders copy link button",
           "status": "passed",
           "title": "renders copy link button",
@@ -781,10 +589,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders download button after QR code generates",
           "status": "passed",
           "title": "renders download button after QR code generates",
@@ -792,10 +597,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfileQrModal"
-          ],
+          "ancestorTitles": ["", "ProfileQrModal"],
           "fullName": " ProfileQrModal renders QR image after generation",
           "status": "passed",
           "title": "renders QR image after generation",
@@ -812,10 +614,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext starts with empty accounts and not logged in",
           "status": "passed",
           "title": "starts with empty accounts and not logged in",
@@ -823,10 +622,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext addAccount adds a new account and makes it active",
           "status": "passed",
           "title": "addAccount adds a new account and makes it active",
@@ -834,10 +630,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext addAccount persists to localStorage",
           "status": "passed",
           "title": "addAccount persists to localStorage",
@@ -845,10 +638,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext switchAccount changes the active account",
           "status": "passed",
           "title": "switchAccount changes the active account",
@@ -856,10 +646,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext logout removes the active account and switches to next",
           "status": "passed",
           "title": "logout removes the active account and switches to next",
@@ -867,10 +654,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext logout clears all accounts and marks as logged out",
           "status": "passed",
           "title": "logout clears all accounts and marks as logged out",
@@ -878,10 +662,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext addAccount updates existing account with same ID",
           "status": "passed",
           "title": "addAccount updates existing account with same ID",
@@ -889,10 +670,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "AuthContext"
-          ],
+          "ancestorTitles": ["", "AuthContext"],
           "fullName": " AuthContext setUser updates the active account user data",
           "status": "passed",
           "title": "setUser updates the active account user data",
@@ -909,10 +687,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "signUp API helper"
-          ],
+          "ancestorTitles": ["", "signUp API helper"],
           "fullName": " signUp API helper sends POST to /auth/signup and returns the response",
           "status": "passed",
           "title": "sends POST to /auth/signup and returns the response",
@@ -920,10 +695,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "signUp API helper"
-          ],
+          "ancestorTitles": ["", "signUp API helper"],
           "fullName": " signUp API helper throws on 409 conflict (duplicate email)",
           "status": "passed",
           "title": "throws on 409 conflict (duplicate email)",
@@ -931,10 +703,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "signUp API helper"
-          ],
+          "ancestorTitles": ["", "signUp API helper"],
           "fullName": " signUp API helper throws on 400 validation error",
           "status": "passed",
           "title": "throws on 400 validation error",
@@ -942,10 +711,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "signUp API helper"
-          ],
+          "ancestorTitles": ["", "signUp API helper"],
           "fullName": " signUp API helper sends correct request body",
           "status": "passed",
           "title": "sends correct request body",
@@ -953,10 +719,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "signUp API helper"
-          ],
+          "ancestorTitles": ["", "signUp API helper"],
           "fullName": " signUp API helper sends correct Content-Type header",
           "status": "passed",
           "title": "sends correct Content-Type header",
@@ -964,10 +727,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper sends POST to /auth/signin and returns access_token",
           "status": "passed",
           "title": "sends POST to /auth/signin and returns access_token",
@@ -975,10 +735,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper sends correct request body with email",
           "status": "passed",
           "title": "sends correct request body with email",
@@ -986,10 +743,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper sends correct request body with username",
           "status": "passed",
           "title": "sends correct request body with username",
@@ -997,10 +751,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper throws on 401 invalid credentials",
           "status": "passed",
           "title": "throws on 401 invalid credentials",
@@ -1008,10 +759,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper throws on 401 unverified email",
           "status": "passed",
           "title": "throws on 401 unverified email",
@@ -1019,10 +767,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "login API helper"
-          ],
+          "ancestorTitles": ["", "login API helper"],
           "fullName": " login API helper returns 2FA response when 2FA is enabled",
           "status": "passed",
           "title": "returns 2FA response when 2FA is enabled",
@@ -1030,10 +775,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "setAuthToken"
-          ],
+          "ancestorTitles": ["", "setAuthToken"],
           "fullName": " setAuthToken stores the token in sessionStorage by default (not remembered) and sets the header",
           "status": "passed",
           "title": "stores the token in sessionStorage by default (not remembered) and sets the header",
@@ -1041,10 +783,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "setAuthToken"
-          ],
+          "ancestorTitles": ["", "setAuthToken"],
           "fullName": " setAuthToken stores the token in localStorage when remembered",
           "status": "passed",
           "title": "stores the token in localStorage when remembered",
@@ -1052,10 +791,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "setAuthToken"
-          ],
+          "ancestorTitles": ["", "setAuthToken"],
           "fullName": " setAuthToken removes the token from both stores when called with null",
           "status": "passed",
           "title": "removes the token from both stores when called with null",
@@ -1063,10 +799,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getLoginSessions"
-          ],
+          "ancestorTitles": ["", "getLoginSessions"],
           "fullName": " getLoginSessions fetches login sessions",
           "status": "passed",
           "title": "fetches login sessions",
@@ -1074,10 +807,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "forgotPassword API helper"
-          ],
+          "ancestorTitles": ["", "forgotPassword API helper"],
           "fullName": " forgotPassword API helper sends POST to /auth/forgot-password and returns success message",
           "status": "passed",
           "title": "sends POST to /auth/forgot-password and returns success message",
@@ -1085,10 +815,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "forgotPassword API helper"
-          ],
+          "ancestorTitles": ["", "forgotPassword API helper"],
           "fullName": " forgotPassword API helper sends correct request body",
           "status": "passed",
           "title": "sends correct request body",
@@ -1096,10 +823,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "forgotPassword API helper"
-          ],
+          "ancestorTitles": ["", "forgotPassword API helper"],
           "fullName": " forgotPassword API helper throws on 400 invalid email",
           "status": "passed",
           "title": "throws on 400 invalid email",
@@ -1107,10 +831,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "resetPassword API helper"
-          ],
+          "ancestorTitles": ["", "resetPassword API helper"],
           "fullName": " resetPassword API helper sends POST to /auth/reset-password and returns success",
           "status": "passed",
           "title": "sends POST to /auth/reset-password and returns success",
@@ -1118,10 +839,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "resetPassword API helper"
-          ],
+          "ancestorTitles": ["", "resetPassword API helper"],
           "fullName": " resetPassword API helper sends correct request body",
           "status": "passed",
           "title": "sends correct request body",
@@ -1129,10 +847,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "resetPassword API helper"
-          ],
+          "ancestorTitles": ["", "resetPassword API helper"],
           "fullName": " resetPassword API helper throws on 401 expired token",
           "status": "passed",
           "title": "throws on 401 expired token",
@@ -1140,10 +855,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "resetPassword API helper"
-          ],
+          "ancestorTitles": ["", "resetPassword API helper"],
           "fullName": " resetPassword API helper throws on 400 short password",
           "status": "passed",
           "title": "throws on 400 short password",
@@ -1151,10 +863,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "resendVerification API helper"
-          ],
+          "ancestorTitles": ["", "resendVerification API helper"],
           "fullName": " resendVerification API helper sends POST to /auth/resend-verification",
           "status": "passed",
           "title": "sends POST to /auth/resend-verification",
@@ -1171,10 +880,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "getArticleFeed API helper"
-          ],
+          "ancestorTitles": ["", "getArticleFeed API helper"],
           "fullName": " getArticleFeed API helper fetches paginated articles",
           "status": "passed",
           "title": "fetches paginated articles",
@@ -1182,10 +888,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getArticleFeed API helper"
-          ],
+          "ancestorTitles": ["", "getArticleFeed API helper"],
           "fullName": " getArticleFeed API helper fetches articles with tag filter",
           "status": "passed",
           "title": "fetches articles with tag filter",
@@ -1193,10 +896,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getArticleFeed API helper"
-          ],
+          "ancestorTitles": ["", "getArticleFeed API helper"],
           "fullName": " getArticleFeed API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1204,10 +904,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getArticleBySlug API helper"
-          ],
+          "ancestorTitles": ["", "getArticleBySlug API helper"],
           "fullName": " getArticleBySlug API helper fetches article by slug",
           "status": "passed",
           "title": "fetches article by slug",
@@ -1215,10 +912,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getArticleBySlug API helper"
-          ],
+          "ancestorTitles": ["", "getArticleBySlug API helper"],
           "fullName": " getArticleBySlug API helper throws on 404",
           "status": "passed",
           "title": "throws on 404",
@@ -1235,10 +929,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "auth-storage"
-          ],
+          "ancestorTitles": ["", "auth-storage"],
           "fullName": " auth-storage defaults to NOT remembered when the flag is unset",
           "status": "passed",
           "title": "defaults to NOT remembered when the flag is unset",
@@ -1246,10 +937,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "auth-storage"
-          ],
+          "ancestorTitles": ["", "auth-storage"],
           "fullName": " auth-storage stores remembered tokens in localStorage and clears sessionStorage",
           "status": "passed",
           "title": "stores remembered tokens in localStorage and clears sessionStorage",
@@ -1257,10 +945,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "auth-storage"
-          ],
+          "ancestorTitles": ["", "auth-storage"],
           "fullName": " auth-storage stores unremembered tokens in sessionStorage and clears localStorage",
           "status": "passed",
           "title": "stores unremembered tokens in sessionStorage and clears localStorage",
@@ -1268,10 +953,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "auth-storage"
-          ],
+          "ancestorTitles": ["", "auth-storage"],
           "fullName": " auth-storage clears both stores when set to null",
           "status": "passed",
           "title": "clears both stores when set to null",
@@ -1279,10 +961,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "auth-storage"
-          ],
+          "ancestorTitles": ["", "auth-storage"],
           "fullName": " auth-storage falls back to the inactive store when the active store is empty",
           "status": "passed",
           "title": "falls back to the inactive store when the active store is empty",
@@ -1299,10 +978,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "blockUser API helper"
-          ],
+          "ancestorTitles": ["", "blockUser API helper"],
           "fullName": " blockUser API helper sends POST to /users/:id/block",
           "status": "passed",
           "title": "sends POST to /users/:id/block",
@@ -1310,10 +986,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "blockUser API helper"
-          ],
+          "ancestorTitles": ["", "blockUser API helper"],
           "fullName": " blockUser API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1321,10 +994,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "unblockUser API helper"
-          ],
+          "ancestorTitles": ["", "unblockUser API helper"],
           "fullName": " unblockUser API helper sends DELETE to /users/:id/block",
           "status": "passed",
           "title": "sends DELETE to /users/:id/block",
@@ -1332,10 +1002,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "unblockUser API helper"
-          ],
+          "ancestorTitles": ["", "unblockUser API helper"],
           "fullName": " unblockUser API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1343,10 +1010,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getBlockedUsers API helper"
-          ],
+          "ancestorTitles": ["", "getBlockedUsers API helper"],
           "fullName": " getBlockedUsers API helper fetches blocked users list",
           "status": "passed",
           "title": "fetches blocked users list",
@@ -1354,10 +1018,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getBlockedUsers API helper"
-          ],
+          "ancestorTitles": ["", "getBlockedUsers API helper"],
           "fullName": " getBlockedUsers API helper returns empty array when no blocked users",
           "status": "passed",
           "title": "returns empty array when no blocked users",
@@ -1374,10 +1035,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "addBookmark API helper"
-          ],
+          "ancestorTitles": ["", "addBookmark API helper"],
           "fullName": " addBookmark API helper sends POST to /bookmarks",
           "status": "passed",
           "title": "sends POST to /bookmarks",
@@ -1385,10 +1043,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "addBookmark API helper"
-          ],
+          "ancestorTitles": ["", "addBookmark API helper"],
           "fullName": " addBookmark API helper sends POST without collectionId",
           "status": "passed",
           "title": "sends POST without collectionId",
@@ -1396,10 +1051,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "removeBookmark API helper"
-          ],
+          "ancestorTitles": ["", "removeBookmark API helper"],
           "fullName": " removeBookmark API helper sends DELETE to /bookmarks/:postId",
           "status": "passed",
           "title": "sends DELETE to /bookmarks/:postId",
@@ -1407,10 +1059,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getBookmarks API helper"
-          ],
+          "ancestorTitles": ["", "getBookmarks API helper"],
           "fullName": " getBookmarks API helper fetches bookmarks list",
           "status": "passed",
           "title": "fetches bookmarks list",
@@ -1418,10 +1067,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createCollection API helper"
-          ],
+          "ancestorTitles": ["", "createCollection API helper"],
           "fullName": " createCollection API helper sends POST to /collections",
           "status": "passed",
           "title": "sends POST to /collections",
@@ -1429,10 +1075,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getCollections API helper"
-          ],
+          "ancestorTitles": ["", "getCollections API helper"],
           "fullName": " getCollections API helper fetches collections list",
           "status": "passed",
           "title": "fetches collections list",
@@ -1440,10 +1083,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateCollection API helper"
-          ],
+          "ancestorTitles": ["", "updateCollection API helper"],
           "fullName": " updateCollection API helper sends PATCH to /collections/:id",
           "status": "passed",
           "title": "sends PATCH to /collections/:id",
@@ -1451,10 +1091,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "deleteCollection API helper"
-          ],
+          "ancestorTitles": ["", "deleteCollection API helper"],
           "fullName": " deleteCollection API helper sends DELETE to /collections/:id",
           "status": "passed",
           "title": "sends DELETE to /collections/:id",
@@ -1471,10 +1108,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "getCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "getCloseFriends API helper"],
           "fullName": " getCloseFriends API helper fetches the close friends list",
           "status": "passed",
           "title": "fetches the close friends list",
@@ -1482,10 +1116,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "getCloseFriends API helper"],
           "fullName": " getCloseFriends API helper returns empty array when no close friends",
           "status": "passed",
           "title": "returns empty array when no close friends",
@@ -1493,10 +1124,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "getCloseFriends API helper"],
           "fullName": " getCloseFriends API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1504,10 +1132,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "updateCloseFriends API helper"],
           "fullName": " updateCloseFriends API helper sends PUT to /users/me/close-friends with IDs",
           "status": "passed",
           "title": "sends PUT to /users/me/close-friends with IDs",
@@ -1515,10 +1140,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "updateCloseFriends API helper"],
           "fullName": " updateCloseFriends API helper sends empty array to remove all close friends",
           "status": "passed",
           "title": "sends empty array to remove all close friends",
@@ -1526,10 +1148,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateCloseFriends API helper"
-          ],
+          "ancestorTitles": ["", "updateCloseFriends API helper"],
           "fullName": " updateCloseFriends API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1546,10 +1165,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "followUser API helper"
-          ],
+          "ancestorTitles": ["", "followUser API helper"],
           "fullName": " followUser API helper sends POST to /users/:id/follow and returns response",
           "status": "passed",
           "title": "sends POST to /users/:id/follow and returns response",
@@ -1557,10 +1173,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "followUser API helper"
-          ],
+          "ancestorTitles": ["", "followUser API helper"],
           "fullName": " followUser API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1568,10 +1181,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "unfollowUser API helper"
-          ],
+          "ancestorTitles": ["", "unfollowUser API helper"],
           "fullName": " unfollowUser API helper sends DELETE to /users/:id/follow and returns response",
           "status": "passed",
           "title": "sends DELETE to /users/:id/follow and returns response",
@@ -1579,10 +1189,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "follow request API helpers"
-          ],
+          "ancestorTitles": ["", "follow request API helpers"],
           "fullName": " follow request API helpers sendFollowRequest sends POST to /users/:id/follow-request",
           "status": "passed",
           "title": "sendFollowRequest sends POST to /users/:id/follow-request",
@@ -1590,10 +1197,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "follow request API helpers"
-          ],
+          "ancestorTitles": ["", "follow request API helpers"],
           "fullName": " follow request API helpers getFollowRequests fetches pending requests",
           "status": "passed",
           "title": "getFollowRequests fetches pending requests",
@@ -1601,10 +1205,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "follow request API helpers"
-          ],
+          "ancestorTitles": ["", "follow request API helpers"],
           "fullName": " follow request API helpers acceptFollowRequest sends POST",
           "status": "passed",
           "title": "acceptFollowRequest sends POST",
@@ -1612,10 +1213,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "follow request API helpers"
-          ],
+          "ancestorTitles": ["", "follow request API helpers"],
           "fullName": " follow request API helpers denyFollowRequest sends POST",
           "status": "passed",
           "title": "denyFollowRequest sends POST",
@@ -1623,10 +1221,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getFollowSuggestions API helper"
-          ],
+          "ancestorTitles": ["", "getFollowSuggestions API helper"],
           "fullName": " getFollowSuggestions API helper fetches follow suggestions",
           "status": "passed",
           "title": "fetches follow suggestions",
@@ -1634,10 +1229,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getFollowers API helper"
-          ],
+          "ancestorTitles": ["", "getFollowers API helper"],
           "fullName": " getFollowers API helper fetches followers list for a user",
           "status": "passed",
           "title": "fetches followers list for a user",
@@ -1645,10 +1237,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getFollowers API helper"
-          ],
+          "ancestorTitles": ["", "getFollowers API helper"],
           "fullName": " getFollowers API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1656,10 +1245,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getUserFollowing API helper"
-          ],
+          "ancestorTitles": ["", "getUserFollowing API helper"],
           "fullName": " getUserFollowing API helper fetches following list for a user",
           "status": "passed",
           "title": "fetches following list for a user",
@@ -1667,10 +1253,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getUserFollowing API helper"
-          ],
+          "ancestorTitles": ["", "getUserFollowing API helper"],
           "fullName": " getUserFollowing API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1678,10 +1261,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMyFollowers API helper"
-          ],
+          "ancestorTitles": ["", "getMyFollowers API helper"],
           "fullName": " getMyFollowers API helper fetches current user followers",
           "status": "passed",
           "title": "fetches current user followers",
@@ -1689,10 +1269,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMyFollowing API helper"
-          ],
+          "ancestorTitles": ["", "getMyFollowing API helper"],
           "fullName": " getMyFollowing API helper fetches the current user following list",
           "status": "passed",
           "title": "fetches the current user following list",
@@ -1700,10 +1277,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMyFollowing API helper"
-          ],
+          "ancestorTitles": ["", "getMyFollowing API helper"],
           "fullName": " getMyFollowing API helper returns empty array when not following anyone",
           "status": "passed",
           "title": "returns empty array when not following anyone",
@@ -1711,10 +1285,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMyFollowing API helper"
-          ],
+          "ancestorTitles": ["", "getMyFollowing API helper"],
           "fullName": " getMyFollowing API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1722,10 +1293,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "removeFollower API helper"
-          ],
+          "ancestorTitles": ["", "removeFollower API helper"],
           "fullName": " removeFollower API helper sends DELETE to /users/followers/:id and returns response",
           "status": "passed",
           "title": "sends DELETE to /users/followers/:id and returns response",
@@ -1733,10 +1301,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "removeFollower API helper"
-          ],
+          "ancestorTitles": ["", "removeFollower API helper"],
           "fullName": " removeFollower API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1744,10 +1309,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMutualFollows API helper"
-          ],
+          "ancestorTitles": ["", "getMutualFollows API helper"],
           "fullName": " getMutualFollows API helper fetches mutual follows between two users",
           "status": "passed",
           "title": "fetches mutual follows between two users",
@@ -1755,10 +1317,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getMutualFollows API helper"
-          ],
+          "ancestorTitles": ["", "getMutualFollows API helper"],
           "fullName": " getMutualFollows API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1766,10 +1325,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "blockUser API helper"
-          ],
+          "ancestorTitles": ["", "blockUser API helper"],
           "fullName": " blockUser API helper sends POST to /users/:id/block and returns response",
           "status": "passed",
           "title": "sends POST to /users/:id/block and returns response",
@@ -1777,10 +1333,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "blockUser API helper"
-          ],
+          "ancestorTitles": ["", "blockUser API helper"],
           "fullName": " blockUser API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1788,10 +1341,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "unblockUser API helper"
-          ],
+          "ancestorTitles": ["", "unblockUser API helper"],
           "fullName": " unblockUser API helper sends DELETE to /users/:id/block and returns response",
           "status": "passed",
           "title": "sends DELETE to /users/:id/block and returns response",
@@ -1799,10 +1349,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "unblockUser API helper"
-          ],
+          "ancestorTitles": ["", "unblockUser API helper"],
           "fullName": " unblockUser API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1810,10 +1357,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "close friends API helpers"
-          ],
+          "ancestorTitles": ["", "close friends API helpers"],
           "fullName": " close friends API helpers fetches close friends list",
           "status": "passed",
           "title": "fetches close friends list",
@@ -1821,10 +1365,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "close friends API helpers"
-          ],
+          "ancestorTitles": ["", "close friends API helpers"],
           "fullName": " close friends API helpers updates close friends list",
           "status": "passed",
           "title": "updates close friends list",
@@ -1832,10 +1373,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "close friends API helpers"
-          ],
+          "ancestorTitles": ["", "close friends API helpers"],
           "fullName": " close friends API helpers throws on error when fetching close friends",
           "status": "passed",
           "title": "throws on error when fetching close friends",
@@ -1852,10 +1390,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "Notes API"
-          ],
+          "ancestorTitles": ["", "Notes API"],
           "fullName": " Notes API creates a note",
           "status": "passed",
           "title": "creates a note",
@@ -1863,10 +1398,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Notes API"
-          ],
+          "ancestorTitles": ["", "Notes API"],
           "fullName": " Notes API fetches following notes",
           "status": "passed",
           "title": "fetches following notes",
@@ -1874,10 +1406,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Notes API"
-          ],
+          "ancestorTitles": ["", "Notes API"],
           "fullName": " Notes API fetches a user note",
           "status": "passed",
           "title": "fetches a user note",
@@ -1885,10 +1414,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Notes API"
-          ],
+          "ancestorTitles": ["", "Notes API"],
           "fullName": " Notes API deletes a note",
           "status": "passed",
           "title": "deletes a note",
@@ -1905,10 +1431,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "voteOnPoll API helper"
-          ],
+          "ancestorTitles": ["", "voteOnPoll API helper"],
           "fullName": " voteOnPoll API helper sends POST to /polls/:pollOptionId/vote",
           "status": "passed",
           "title": "sends POST to /polls/:pollOptionId/vote",
@@ -1916,10 +1439,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "voteOnPoll API helper"
-          ],
+          "ancestorTitles": ["", "voteOnPoll API helper"],
           "fullName": " voteOnPoll API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -1927,10 +1447,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "voteOnPoll API helper"
-          ],
+          "ancestorTitles": ["", "voteOnPoll API helper"],
           "fullName": " voteOnPoll API helper throws when poll option not found",
           "status": "passed",
           "title": "throws when poll option not found",
@@ -1938,10 +1455,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createPost with poll"
-          ],
+          "ancestorTitles": ["", "createPost with poll"],
           "fullName": " createPost with poll sends poll data in request body",
           "status": "passed",
           "title": "sends poll data in request body",
@@ -1949,10 +1463,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createPost with poll"
-          ],
+          "ancestorTitles": ["", "createPost with poll"],
           "fullName": " createPost with poll sends undefined poll when null",
           "status": "passed",
           "title": "sends undefined poll when null",
@@ -1960,10 +1471,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createPost with poll"
-          ],
+          "ancestorTitles": ["", "createPost with poll"],
           "fullName": " createPost with poll throws on error with poll data",
           "status": "passed",
           "title": "throws on error with poll data",
@@ -1980,10 +1488,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "createPost API helper"
-          ],
+          "ancestorTitles": ["", "createPost API helper"],
           "fullName": " createPost API helper sends POST to /posts and returns the post",
           "status": "passed",
           "title": "sends POST to /posts and returns the post",
@@ -1991,10 +1496,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createPost API helper"
-          ],
+          "ancestorTitles": ["", "createPost API helper"],
           "fullName": " createPost API helper throws on 401 unauthorized",
           "status": "passed",
           "title": "throws on 401 unauthorized",
@@ -2002,10 +1504,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "createPost API helper"
-          ],
+          "ancestorTitles": ["", "createPost API helper"],
           "fullName": " createPost API helper throws on 400 validation error",
           "status": "passed",
           "title": "throws on 400 validation error",
@@ -2013,10 +1512,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updatePost API helper"
-          ],
+          "ancestorTitles": ["", "updatePost API helper"],
           "fullName": " updatePost API helper sends PATCH to /posts/:id and returns the updated post",
           "status": "passed",
           "title": "sends PATCH to /posts/:id and returns the updated post",
@@ -2024,10 +1520,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "deletePost API helper"
-          ],
+          "ancestorTitles": ["", "deletePost API helper"],
           "fullName": " deletePost API helper sends DELETE to /posts/:id",
           "status": "passed",
           "title": "sends DELETE to /posts/:id",
@@ -2035,10 +1528,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "deletePost API helper"
-          ],
+          "ancestorTitles": ["", "deletePost API helper"],
           "fullName": " deletePost API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -2046,10 +1536,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getPosts API helper"
-          ],
+          "ancestorTitles": ["", "getPosts API helper"],
           "fullName": " getPosts API helper fetches posts from feed",
           "status": "passed",
           "title": "fetches posts from feed",
@@ -2057,10 +1544,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getShortsFeed API helper"
-          ],
+          "ancestorTitles": ["", "getShortsFeed API helper"],
           "fullName": " getShortsFeed API helper fetches shorts feed",
           "status": "passed",
           "title": "fetches shorts feed",
@@ -2068,10 +1552,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getShortsFeed API helper"
-          ],
+          "ancestorTitles": ["", "getShortsFeed API helper"],
           "fullName": " getShortsFeed API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -2088,10 +1569,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "getProfile API helper"
-          ],
+          "ancestorTitles": ["", "getProfile API helper"],
           "fullName": " getProfile API helper fetches the current user profile",
           "status": "passed",
           "title": "fetches the current user profile",
@@ -2099,10 +1577,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getProfile API helper"
-          ],
+          "ancestorTitles": ["", "getProfile API helper"],
           "fullName": " getProfile API helper attaches posts to the profile",
           "status": "passed",
           "title": "attaches posts to the profile",
@@ -2110,10 +1585,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getProfile API helper"
-          ],
+          "ancestorTitles": ["", "getProfile API helper"],
           "fullName": " getProfile API helper returns profile with empty posts when user has no ID",
           "status": "passed",
           "title": "returns profile with empty posts when user has no ID",
@@ -2121,10 +1593,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getProfile API helper"
-          ],
+          "ancestorTitles": ["", "getProfile API helper"],
           "fullName": " getProfile API helper throws on API error",
           "status": "passed",
           "title": "throws on API error",
@@ -2132,10 +1601,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getUserProfile API helper"
-          ],
+          "ancestorTitles": ["", "getUserProfile API helper"],
           "fullName": " getUserProfile API helper fetches a user profile by ID",
           "status": "passed",
           "title": "fetches a user profile by ID",
@@ -2143,10 +1609,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getUserProfile API helper"
-          ],
+          "ancestorTitles": ["", "getUserProfile API helper"],
           "fullName": " getUserProfile API helper sends pagination params",
           "status": "passed",
           "title": "sends pagination params",
@@ -2154,10 +1617,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getUserProfile API helper"
-          ],
+          "ancestorTitles": ["", "getUserProfile API helper"],
           "fullName": " getUserProfile API helper throws on 404 not found",
           "status": "passed",
           "title": "throws on 404 not found",
@@ -2165,10 +1625,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateProfile API helper"
-          ],
+          "ancestorTitles": ["", "updateProfile API helper"],
           "fullName": " updateProfile API helper sends PATCH to /users/profile with FormData",
           "status": "passed",
           "title": "sends PATCH to /users/profile with FormData",
@@ -2176,10 +1633,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateProfile API helper"
-          ],
+          "ancestorTitles": ["", "updateProfile API helper"],
           "fullName": " updateProfile API helper accepts FormData payloads for profile updates",
           "status": "passed",
           "title": "accepts FormData payloads for profile updates",
@@ -2187,10 +1641,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "updateProfile API helper"
-          ],
+          "ancestorTitles": ["", "updateProfile API helper"],
           "fullName": " updateProfile API helper throws on API error",
           "status": "passed",
           "title": "throws on API error",
@@ -2207,10 +1658,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "getReelById API helper"
-          ],
+          "ancestorTitles": ["", "getReelById API helper"],
           "fullName": " getReelById API helper fetches a reel by id",
           "status": "passed",
           "title": "fetches a reel by id",
@@ -2218,10 +1666,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "shareReel API helper"
-          ],
+          "ancestorTitles": ["", "shareReel API helper"],
           "fullName": " shareReel API helper sends POST to /reels/:id/share",
           "status": "passed",
           "title": "sends POST to /reels/:id/share",
@@ -2229,10 +1674,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "trackReelView API helper"
-          ],
+          "ancestorTitles": ["", "trackReelView API helper"],
           "fullName": " trackReelView API helper sends POST to /reels/:id/view",
           "status": "passed",
           "title": "sends POST to /reels/:id/view",
@@ -2240,10 +1682,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getReelInsights API helper"
-          ],
+          "ancestorTitles": ["", "getReelInsights API helper"],
           "fullName": " getReelInsights API helper fetches reel insights",
           "status": "passed",
           "title": "fetches reel insights",
@@ -2251,10 +1690,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getReelEffects API helper"
-          ],
+          "ancestorTitles": ["", "getReelEffects API helper"],
           "fullName": " getReelEffects API helper fetches reel effects",
           "status": "passed",
           "title": "fetches reel effects",
@@ -2262,10 +1698,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getReelSuggestions API helper"
-          ],
+          "ancestorTitles": ["", "getReelSuggestions API helper"],
           "fullName": " getReelSuggestions API helper fetches reel suggestions",
           "status": "passed",
           "title": "fetches reel suggestions",
@@ -2282,10 +1715,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "getStories API helper"
-          ],
+          "ancestorTitles": ["", "getStories API helper"],
           "fullName": " getStories API helper fetches stories list",
           "status": "passed",
           "title": "fetches stories list",
@@ -2293,10 +1723,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getStories API helper"
-          ],
+          "ancestorTitles": ["", "getStories API helper"],
           "fullName": " getStories API helper throws on error",
           "status": "passed",
           "title": "throws on error",
@@ -2304,10 +1731,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "addStoryReaction API helper"
-          ],
+          "ancestorTitles": ["", "addStoryReaction API helper"],
           "fullName": " addStoryReaction API helper sends POST to /stories/:id/react",
           "status": "passed",
           "title": "sends POST to /stories/:id/react",
@@ -2315,10 +1739,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "addStoryReply API helper"
-          ],
+          "ancestorTitles": ["", "addStoryReply API helper"],
           "fullName": " addStoryReply API helper sends POST to /stories/:id/reply",
           "status": "passed",
           "title": "sends POST to /stories/:id/reply",
@@ -2326,10 +1747,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "trackStoryView API helper"
-          ],
+          "ancestorTitles": ["", "trackStoryView API helper"],
           "fullName": " trackStoryView API helper sends POST to /stories/:id/view",
           "status": "passed",
           "title": "sends POST to /stories/:id/view",
@@ -2337,10 +1755,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "getStoryViews API helper"
-          ],
+          "ancestorTitles": ["", "getStoryViews API helper"],
           "fullName": " getStoryViews API helper fetches story views",
           "status": "passed",
           "title": "fetches story views",
@@ -2357,10 +1772,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage renders profile form fields",
           "status": "passed",
           "title": "renders profile form fields",
@@ -2368,10 +1780,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage renders verification section",
           "status": "passed",
           "title": "renders verification section",
@@ -2379,10 +1788,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage renders theme selector",
           "status": "passed",
           "title": "renders theme selector",
@@ -2390,10 +1796,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage pre-populates fields with user data",
           "status": "passed",
           "title": "pre-populates fields with user data",
@@ -2401,10 +1804,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage submits form data on save",
           "status": "passed",
           "title": "submits form data on save",
@@ -2412,10 +1812,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EditProfilePage"
-          ],
+          "ancestorTitles": ["", "EditProfilePage"],
           "fullName": " EditProfilePage handles form submission error gracefully",
           "status": "passed",
           "title": "handles form submission error gracefully",
@@ -2432,10 +1829,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "EmailVerificationPage"
-          ],
+          "ancestorTitles": ["", "EmailVerificationPage"],
           "fullName": " EmailVerificationPage renders without crashing with a token",
           "status": "passed",
           "title": "renders without crashing with a token",
@@ -2443,10 +1837,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EmailVerificationPage"
-          ],
+          "ancestorTitles": ["", "EmailVerificationPage"],
           "fullName": " EmailVerificationPage renders without crashing without a token",
           "status": "passed",
           "title": "renders without crashing without a token",
@@ -2454,10 +1845,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EmailVerificationPage"
-          ],
+          "ancestorTitles": ["", "EmailVerificationPage"],
           "fullName": " EmailVerificationPage shows error when no token is provided in URL",
           "status": "passed",
           "title": "shows error when no token is provided in URL",
@@ -2465,10 +1853,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "EmailVerificationPage"
-          ],
+          "ancestorTitles": ["", "EmailVerificationPage"],
           "fullName": " EmailVerificationPage shows \"Verifying your email...\" as initial title",
           "status": "passed",
           "title": "shows \"Verifying your email...\" as initial title",
@@ -2485,10 +1870,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ForgotPasswordPage"
-          ],
+          "ancestorTitles": ["", "ForgotPasswordPage"],
           "fullName": " ForgotPasswordPage renders email input and submit button",
           "status": "passed",
           "title": "renders email input and submit button",
@@ -2496,10 +1878,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ForgotPasswordPage"
-          ],
+          "ancestorTitles": ["", "ForgotPasswordPage"],
           "fullName": " ForgotPasswordPage renders a link back to login",
           "status": "passed",
           "title": "renders a link back to login",
@@ -2507,10 +1886,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ForgotPasswordPage"
-          ],
+          "ancestorTitles": ["", "ForgotPasswordPage"],
           "fullName": " ForgotPasswordPage shows success confirmation after submitting valid email",
           "status": "passed",
           "title": "shows success confirmation after submitting valid email",
@@ -2518,10 +1894,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ForgotPasswordPage"
-          ],
+          "ancestorTitles": ["", "ForgotPasswordPage"],
           "fullName": " ForgotPasswordPage shows error on API failure",
           "status": "passed",
           "title": "shows error on API failure",
@@ -2529,10 +1902,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ForgotPasswordPage"
-          ],
+          "ancestorTitles": ["", "ForgotPasswordPage"],
           "fullName": " ForgotPasswordPage shows loading state while submitting",
           "status": "passed",
           "title": "shows loading state while submitting",
@@ -2549,10 +1919,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage renders login form with identifier and password fields",
           "status": "passed",
           "title": "renders login form with identifier and password fields",
@@ -2560,10 +1927,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage renders forgot password link",
           "status": "passed",
           "title": "renders forgot password link",
@@ -2571,10 +1935,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage renders sign up link",
           "status": "passed",
           "title": "renders sign up link",
@@ -2582,10 +1943,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage renders tab navigation (Password, Recovery, Passkey, Wallet)",
           "status": "passed",
           "title": "renders tab navigation (Password, Recovery, Passkey, Wallet)",
@@ -2593,10 +1951,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows error when submitting with empty fields",
           "status": "passed",
           "title": "shows error when submitting with empty fields",
@@ -2604,10 +1959,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage calls login API and sets token on success",
           "status": "passed",
           "title": "calls login API and sets token on success",
@@ -2615,10 +1967,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows error on invalid credentials",
           "status": "passed",
           "title": "shows error on invalid credentials",
@@ -2626,10 +1975,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows error on unverified email",
           "status": "passed",
           "title": "shows error on unverified email",
@@ -2637,10 +1983,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows generic error on network failure",
           "status": "passed",
           "title": "shows generic error on network failure",
@@ -2648,10 +1991,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows 2FA form when login returns twoFactorEnabled",
           "status": "passed",
           "title": "shows 2FA form when login returns twoFactorEnabled",
@@ -2659,10 +1999,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage renders a remember me checkbox and includes rememberMe in the signin payload",
           "status": "passed",
           "title": "renders a remember me checkbox and includes rememberMe in the signin payload",
@@ -2670,10 +2007,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage sends a magic link request from the password tab",
           "status": "passed",
           "title": "sends a magic link request from the password tab",
@@ -2681,10 +2015,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "LoginPage"
-          ],
+          "ancestorTitles": ["", "LoginPage"],
           "fullName": " LoginPage shows the Face ID / Fingerprint biometric button in the passkey tab",
           "status": "passed",
           "title": "shows the Face ID / Fingerprint biometric button in the passkey tab",
@@ -2701,10 +2032,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage shows loading skeleton while fetching profile",
           "status": "passed",
           "title": "shows loading skeleton while fetching profile",
@@ -2712,10 +2040,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage fetches own profile when no userId in params",
           "status": "passed",
           "title": "fetches own profile when no userId in params",
@@ -2723,10 +2048,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays user display name from own profile",
           "status": "passed",
           "title": "displays user display name from own profile",
@@ -2734,10 +2056,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays username with @ prefix",
           "status": "passed",
           "title": "displays username with @ prefix",
@@ -2745,10 +2064,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays verified badge when user is verified",
           "status": "passed",
           "title": "displays verified badge when user is verified",
@@ -2756,10 +2072,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays user bio",
           "status": "passed",
           "title": "displays user bio",
@@ -2767,10 +2080,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage fetches other user profile when userId is provided",
           "status": "passed",
           "title": "fetches other user profile when userId is provided",
@@ -2778,10 +2088,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays other user display name",
           "status": "passed",
           "title": "displays other user display name",
@@ -2789,10 +2096,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage fetches mutual follows for other user profile",
           "status": "passed",
           "title": "fetches mutual follows for other user profile",
@@ -2800,10 +2104,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays following count",
           "status": "passed",
           "title": "displays following count",
@@ -2811,10 +2112,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays followers count",
           "status": "passed",
           "title": "displays followers count",
@@ -2822,10 +2120,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage displays follower names in the follower list",
           "status": "passed",
           "title": "displays follower names in the follower list",
@@ -2833,10 +2128,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage shows the following list when the Following stat is clicked",
           "status": "passed",
           "title": "shows the following list when the Following stat is clicked",
@@ -2844,10 +2136,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ProfilePage"
-          ],
+          "ancestorTitles": ["", "ProfilePage"],
           "fullName": " ProfilePage handles profile fetch error gracefully",
           "status": "passed",
           "title": "handles profile fetch error gracefully",
@@ -2864,10 +2153,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage renders new password and confirm password fields",
           "status": "passed",
           "title": "renders new password and confirm password fields",
@@ -2875,10 +2161,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage shows error when passwords do not match",
           "status": "passed",
           "title": "shows error when passwords do not match",
@@ -2886,10 +2169,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage shows success and navigates to login after reset",
           "status": "passed",
           "title": "shows success and navigates to login after reset",
@@ -2897,10 +2177,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage shows error on invalid/expired token",
           "status": "passed",
           "title": "shows error on invalid/expired token",
@@ -2908,10 +2185,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage shows generic error on network failure",
           "status": "passed",
           "title": "shows generic error on network failure",
@@ -2919,10 +2193,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ResetPasswordPage"
-          ],
+          "ancestorTitles": ["", "ResetPasswordPage"],
           "fullName": " ResetPasswordPage shows loading state while submitting",
           "status": "passed",
           "title": "shows loading state while submitting",
@@ -2939,10 +2210,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage renders the sign-up form with all fields",
           "status": "passed",
           "title": "renders the sign-up form with all fields",
@@ -2950,10 +2218,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage renders the Google sign-up button",
           "status": "passed",
           "title": "renders the Google sign-up button",
@@ -2961,10 +2226,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage renders the passkey registration button",
           "status": "passed",
           "title": "renders the passkey registration button",
@@ -2972,10 +2234,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage renders a link to the login page",
           "status": "passed",
           "title": "renders a link to the login page",
@@ -2983,10 +2242,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage shows error when submitting with empty fields",
           "status": "passed",
           "title": "shows error when submitting with empty fields",
@@ -2994,10 +2250,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage shows error when password is shorter than 8 characters",
           "status": "passed",
           "title": "shows error when password is shorter than 8 characters",
@@ -3005,10 +2258,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage shows success message and switches to \"check your email\" view on success",
           "status": "passed",
           "title": "shows success message and switches to \"check your email\" view on success",
@@ -3016,10 +2266,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage shows error message when API returns 409 conflict",
           "status": "passed",
           "title": "shows error message when API returns 409 conflict",
@@ -3027,10 +2274,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "SignUpPage"
-          ],
+          "ancestorTitles": ["", "SignUpPage"],
           "fullName": " SignUpPage shows generic error when network fails",
           "status": "passed",
           "title": "shows generic error when network fails",
@@ -3047,10 +2291,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "VerifyLinkPage"
-          ],
+          "ancestorTitles": ["", "VerifyLinkPage"],
           "fullName": " VerifyLinkPage shows an error when no token is in the URL",
           "status": "passed",
           "title": "shows an error when no token is in the URL",
@@ -3058,10 +2299,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "VerifyLinkPage"
-          ],
+          "ancestorTitles": ["", "VerifyLinkPage"],
           "fullName": " VerifyLinkPage verifies the magic link and signs the user in on success",
           "status": "passed",
           "title": "verifies the magic link and signs the user in on success",
@@ -3069,10 +2307,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "VerifyLinkPage"
-          ],
+          "ancestorTitles": ["", "VerifyLinkPage"],
           "fullName": " VerifyLinkPage shows an error state for an invalid or expired link",
           "status": "passed",
           "title": "shows an error state for an invalid or expired link",
@@ -3089,10 +2324,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "CreateNote"
-          ],
+          "ancestorTitles": ["", "CreateNote"],
           "fullName": " CreateNote renders the create note form",
           "status": "passed",
           "title": "renders the create note form",
@@ -3100,10 +2332,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreateNote"
-          ],
+          "ancestorTitles": ["", "CreateNote"],
           "fullName": " CreateNote calls onClose when Cancel clicked",
           "status": "passed",
           "title": "calls onClose when Cancel clicked",
@@ -3111,10 +2340,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreateNote"
-          ],
+          "ancestorTitles": ["", "CreateNote"],
           "fullName": " CreateNote creates a note on submit",
           "status": "passed",
           "title": "creates a note on submit",
@@ -3122,10 +2348,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "CreateNote"
-          ],
+          "ancestorTitles": ["", "CreateNote"],
           "fullName": " CreateNote does not submit empty content",
           "status": "passed",
           "title": "does not submit empty content",
@@ -3142,10 +2365,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ViewNote"
-          ],
+          "ancestorTitles": ["", "ViewNote"],
           "fullName": " ViewNote renders the note content",
           "status": "passed",
           "title": "renders the note content",
@@ -3153,10 +2373,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ViewNote"
-          ],
+          "ancestorTitles": ["", "ViewNote"],
           "fullName": " ViewNote shows the user ID and timestamp",
           "status": "passed",
           "title": "shows the user ID and timestamp",
@@ -3164,10 +2381,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ViewNote"
-          ],
+          "ancestorTitles": ["", "ViewNote"],
           "fullName": " ViewNote calls onClose when X button clicked",
           "status": "passed",
           "title": "calls onClose when X button clicked",
@@ -3184,10 +2398,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "ShortsPlayer"
-          ],
+          "ancestorTitles": ["", "ShortsPlayer"],
           "fullName": " ShortsPlayer renders a video element for each short",
           "status": "passed",
           "title": "renders a video element for each short",
@@ -3195,10 +2406,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ShortsPlayer"
-          ],
+          "ancestorTitles": ["", "ShortsPlayer"],
           "fullName": " ShortsPlayer sets correct video sources",
           "status": "passed",
           "title": "sets correct video sources",
@@ -3206,10 +2414,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ShortsPlayer"
-          ],
+          "ancestorTitles": ["", "ShortsPlayer"],
           "fullName": " ShortsPlayer renders empty when no shorts",
           "status": "passed",
           "title": "renders empty when no shorts",
@@ -3217,10 +2422,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "ShortsPlayer"
-          ],
+          "ancestorTitles": ["", "ShortsPlayer"],
           "fullName": " ShortsPlayer each video has loop attribute",
           "status": "passed",
           "title": "each video has loop attribute",
@@ -3237,10 +2439,7 @@
     {
       "assertionResults": [
         {
-          "ancestorTitles": [
-            "",
-            "Avatar component"
-          ],
+          "ancestorTitles": ["", "Avatar component"],
           "fullName": " Avatar component renders a circle with an initial when no children",
           "status": "passed",
           "title": "renders a circle with an initial when no children",
@@ -3248,10 +2447,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Avatar component"
-          ],
+          "ancestorTitles": ["", "Avatar component"],
           "fullName": " Avatar component renders children when provided",
           "status": "passed",
           "title": "renders children when provided",
@@ -3259,10 +2455,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Avatar component"
-          ],
+          "ancestorTitles": ["", "Avatar component"],
           "fullName": " Avatar component applies custom className and size",
           "status": "passed",
           "title": "applies custom className and size",
@@ -3270,10 +2463,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Avatar component"
-          ],
+          "ancestorTitles": ["", "Avatar component"],
           "fullName": " Avatar component renders with children inside aria-hidden container",
           "status": "passed",
           "title": "renders with children inside aria-hidden container",
@@ -3281,10 +2471,7 @@
           "failureMessages": []
         },
         {
-          "ancestorTitles": [
-            "",
-            "Avatar component"
-          ],
+          "ancestorTitles": ["", "Avatar component"],
           "fullName": " Avatar component renders AvatarImage correctly",
           "status": "passed",
           "title": "renders AvatarImage correctly",

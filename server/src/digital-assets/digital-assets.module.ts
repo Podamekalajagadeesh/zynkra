@@ -7,11 +7,7 @@ import { IpfsModule } from '../ipfs/ipfs.module';
 import { FederationModule } from '../federation/federation.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([DigitalAsset]),
-    IpfsModule,
-    FederationModule,
-  ],
+  imports: [TypeOrmModule.forFeature([DigitalAsset]), IpfsModule, FederationModule],
   controllers: [DigitalAssetsController],
   providers: [DigitalAssetsService],
   exports: [DigitalAssetsService],

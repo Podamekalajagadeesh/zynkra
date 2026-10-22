@@ -67,7 +67,7 @@ export class MediaService {
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(Media)
-    private readonly mediaRepository: Repository<Media>,
+    private readonly mediaRepository: Repository<Media>
   ) {
     this.uploadDir = resolve(this.configService.get('UPLOAD_DIR', './uploads'));
     this.ensureUploadDir();
@@ -99,7 +99,7 @@ export class MediaService {
 
     if (file.size > limits[type]) {
       throw new BadRequestException(
-        `File too large. Maximum size for ${type}: ${limits[type] / 1024 / 1024}MB`,
+        `File too large. Maximum size for ${type}: ${limits[type] / 1024 / 1024}MB`
       );
     }
   }
@@ -151,7 +151,7 @@ export class MediaService {
 
   async uploadFile(
     file: Express.Multer.File,
-    context: MediaUploadContext = {},
+    context: MediaUploadContext = {}
   ): Promise<MediaUploadResult> {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -211,7 +211,7 @@ export class MediaService {
   async uploadImage(
     file: Express.Multer.File,
     options: ImageProcessingOptions = {},
-    context: MediaUploadContext = {},
+    context: MediaUploadContext = {}
   ): Promise<MediaUploadResult> {
     if (!file) {
       throw new BadRequestException('No file provided');
@@ -221,12 +221,7 @@ export class MediaService {
       throw new BadRequestException('File must be an image');
     }
 
-    const {
-      maxWidth = 2048,
-      maxHeight = 2048,
-      quality = 85,
-      format = 'webp',
-    } = options;
+    const { maxWidth = 2048, maxHeight = 2048, quality = 85, format = 'webp' } = options;
 
     const sharp = this.loadSharp();
     if (!sharp) {
@@ -293,7 +288,7 @@ export class MediaService {
       }
       writeFileSync(
         join(thumbDir, `thumb_${filename.replace(/\.[^.]+$/, '.jpg')}`),
-        thumbnailBuffer,
+        thumbnailBuffer
       );
     } catch (error) {
       console.warn('Failed to generate thumbnail:', error);
@@ -337,13 +332,10 @@ export class MediaService {
           const thumbPath = join(
             this.uploadDir,
             'thumbnails',
-            `thumb_${basename.replace(/\.[^.]+$/, '.jpg')}`,
+            `thumb_${basename.replace(/\.[^.]+$/, '.jpg')}`
           );
           const root = resolve(this.uploadDir);
-          if (
-            (thumbPath === root || thumbPath.startsWith(root + sep)) &&
-            existsSync(thumbPath)
-          ) {
+          if ((thumbPath === root || thumbPath.startsWith(root + sep)) && existsSync(thumbPath)) {
             unlinkSync(thumbPath);
           }
         }

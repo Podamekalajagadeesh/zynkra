@@ -21,7 +21,7 @@ import { CreateStoryDto } from './dto/create-story.dto';
 export class StoriesController {
   constructor(
     private readonly storiesService: StoriesService,
-    private readonly mediaService: MediaService,
+    private readonly mediaService: MediaService
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -36,12 +36,12 @@ export class StoriesController {
           cb(new BadRequestException('Story media must be an image or video'), false);
         }
       },
-    }),
+    })
   )
   async create(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Request() req,
-    @Body() createStoryDto: CreateStoryDto,
+    @Body() createStoryDto: CreateStoryDto
   ) {
     if (file) {
       const uploaded = await this.mediaService.uploadFile(file, {

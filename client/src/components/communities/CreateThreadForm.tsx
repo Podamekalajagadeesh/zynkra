@@ -116,7 +116,9 @@ export const CreateThreadForm = ({ community, onCreateThread }: CreateThreadForm
             />
             <span className="text-sm">Mark as Megathread (pinned announcement)</span>
           </label>
-          <Button type="submit" className="w-full">Post Thread</Button>
+          <Button type="submit" className="w-full">
+            Post Thread
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

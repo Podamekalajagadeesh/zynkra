@@ -32,10 +32,10 @@ export class IpfsController {
           new MaxFileSizeValidator({ maxSize: 100 * 1024 * 1024 }), // 100MB max
           new FileTypeValidator({ fileType: '.(png|jpeg|jpg|gif|mp4|webm|pdf|doc|docx)' }),
         ],
-      }),
+      })
     )
     file: Express.Multer.File,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ): Promise<{ cid: string; url: string }> {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -59,13 +59,19 @@ export class IpfsController {
   }
 
   @Post(':cid/pin')
-  async pinFile(@Param('cid') cid: string, @CurrentUser() user: User): Promise<{ success: boolean }> {
+  async pinFile(
+    @Param('cid') cid: string,
+    @CurrentUser() user: User
+  ): Promise<{ success: boolean }> {
     await this.ipfsService.pinFile(cid);
     return { success: true };
   }
 
   @Delete(':cid')
-  async unpinFile(@Param('cid') cid: string, @CurrentUser() user: User): Promise<{ success: boolean }> {
+  async unpinFile(
+    @Param('cid') cid: string,
+    @CurrentUser() user: User
+  ): Promise<{ success: boolean }> {
     await this.ipfsService.unpinFile(cid);
     return { success: true };
   }

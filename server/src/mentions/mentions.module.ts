@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Mention } from './mention.entity';
@@ -11,7 +10,11 @@ import { Comment } from '../comments/entities/comment.entity';
 import { SentimentModule } from '../sentiment/sentiment.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Mention, User, Post, Comment]), NotificationsModule, SentimentModule],
+  imports: [
+    TypeOrmModule.forFeature([Mention, User, Post, Comment]),
+    NotificationsModule,
+    SentimentModule,
+  ],
   controllers: [MentionsController],
   providers: [MentionsService],
   exports: [MentionsService],

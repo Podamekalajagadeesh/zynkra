@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { VerificationService } from './verification.service';
@@ -58,29 +49,20 @@ export class VerificationController {
   @UseGuards(AdminGuard)
   @Get('pending')
   async pending(@Query('take') take?: string, @Query('skip') skip?: string) {
-    return this.verificationService.listPending(
-      take ? +take : 20,
-      skip ? +skip : 0,
-    );
+    return this.verificationService.listPending(take ? +take : 20, skip ? +skip : 0);
   }
 
   @UseGuards(AdminGuard)
   @Post(':id/review')
-  async review(
-    @Request() req,
-    @Param('id') id: string,
-    @Body() dto: ReviewVerificationRequestDto,
-  ) {
-    return this.verificationService.review(
-      id,
-      req.user.userId,
-      dto.decision,
-      dto.reviewNote,
-    );
+  async review(@Request() req, @Param('id') id: string, @Body() dto: ReviewVerificationRequestDto) {
+    return this.verificationService.review(id, req.user.userId, dto.decision, dto.reviewNote);
   }
 
   @Post('appeals')
-  async submitAppeal(@Request() req, @Body() body: { requestId: string; appealDto: SubmitVerificationAppealDto }) {
+  async submitAppeal(
+    @Request() req,
+    @Body() body: { requestId: string; appealDto: SubmitVerificationAppealDto }
+  ) {
     return this.verificationService.submitAppeal(req.user.userId, body.requestId, body.appealDto);
   }
 
@@ -108,13 +90,31 @@ export class VerificationController {
 
   @UseGuards(AdminGuard)
   @Post('admin/appeals/:appealId/approve')
-  async approveAppeal(@Request() req, @Param('appealId') appealId: string, @Body() dto: ReviewVerificationAppealDto) {
-    return this.verificationService.reviewAppeal(appealId, req.user.userId, VerificationAppealStatus.APPROVED, dto.notes);
+  async approveAppeal(
+    @Request() req,
+    @Param('appealId') appealId: string,
+    @Body() dto: ReviewVerificationAppealDto
+  ) {
+    return this.verificationService.reviewAppeal(
+      appealId,
+      req.user.userId,
+      VerificationAppealStatus.APPROVED,
+      dto.notes
+    );
   }
 
   @UseGuards(AdminGuard)
   @Post('admin/appeals/:appealId/reject')
-  async rejectAppeal(@Request() req, @Param('appealId') appealId: string, @Body() dto: ReviewVerificationAppealDto) {
-    return this.verificationService.reviewAppeal(appealId, req.user.userId, VerificationAppealStatus.REJECTED, dto.notes);
+  async rejectAppeal(
+    @Request() req,
+    @Param('appealId') appealId: string,
+    @Body() dto: ReviewVerificationAppealDto
+  ) {
+    return this.verificationService.reviewAppeal(
+      appealId,
+      req.user.userId,
+      VerificationAppealStatus.REJECTED,
+      dto.notes
+    );
   }
 }

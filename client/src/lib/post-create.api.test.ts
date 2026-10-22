@@ -4,7 +4,9 @@ import { server } from '../mocks/server';
 
 // Mock the offlineSync module
 vi.mock('./offlineSync', () => ({
-  enqueueOfflineOperation: vi.fn().mockResolvedValue({ id: 'offline-1', createdAt: new Date().toISOString() }),
+  enqueueOfflineOperation: vi
+    .fn()
+    .mockResolvedValue({ id: 'offline-1', createdAt: new Date().toISOString() }),
 }));
 
 // Mock navigator.onLine

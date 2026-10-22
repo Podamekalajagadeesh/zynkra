@@ -21,7 +21,7 @@ vi.mock('@privacyresearch/libsignal-protocol-typescript', () => ({
   SignalProtocolAddress: class {
     constructor(
       private readonly userId: string,
-      private readonly deviceId: number,
+      private readonly deviceId: number
     ) {}
     toString(): string {
       return `${this.userId}.${this.deviceId}`;
@@ -41,7 +41,7 @@ type TestableService = {
   ensureFreshSession: (id: string) => Promise<void>;
   establishSession: (id: string) => Promise<void>;
   getRotationEvents: (
-    since?: string,
+    since?: string
   ) => Promise<
     Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
   >;
@@ -72,9 +72,7 @@ beforeEach(() => {
 describe('E2EEService.ensureFreshSession', () => {
   it('establishes a session when none exists', async () => {
     const service = setupService(null);
-    const spy = vi
-      .spyOn(service, 'establishSession')
-      .mockResolvedValue(undefined);
+    const spy = vi.spyOn(service, 'establishSession').mockResolvedValue(undefined);
 
     await service.ensureFreshSession('peer-1');
 
@@ -85,13 +83,9 @@ describe('E2EEService.ensureFreshSession', () => {
 
   it('tears down and rebuilds when the peer identity rotated', async () => {
     const service = setupService('existing-session-json');
-    const spy = vi
-      .spyOn(service, 'establishSession')
-      .mockResolvedValue(undefined);
+    const spy = vi.spyOn(service, 'establishSession').mockResolvedValue(undefined);
     mockApiGet.mockResolvedValue({ data: { publicKey: 'ROTATED-KEY' } });
-    mockGetPeerIdentityKey.mockResolvedValue(
-      new Uint8Array([1, 2, 3]).buffer,
-    );
+    mockGetPeerIdentityKey.mockResolvedValue(new Uint8Array([1, 2, 3]).buffer);
 
     await service.ensureFreshSession('peer-1');
 
@@ -101,13 +95,9 @@ describe('E2EEService.ensureFreshSession', () => {
 
   it('keeps the session when identities match', async () => {
     const service = setupService('existing-session-json');
-    const spy = vi
-      .spyOn(service, 'establishSession')
-      .mockResolvedValue(undefined);
+    const spy = vi.spyOn(service, 'establishSession').mockResolvedValue(undefined);
     mockApiGet.mockResolvedValue({ data: { publicKey: CACHED_B64 } });
-    mockGetPeerIdentityKey.mockResolvedValue(
-      new Uint8Array([1, 2, 3]).buffer,
-    );
+    mockGetPeerIdentityKey.mockResolvedValue(new Uint8Array([1, 2, 3]).buffer);
 
     await service.ensureFreshSession('peer-1');
 
@@ -128,9 +118,7 @@ describe('E2EEService.ensureFreshSession', () => {
 
   it('keeps the session when the identity endpoint is unreachable', async () => {
     const service = setupService('existing-session-json');
-    const spy = vi
-      .spyOn(service, 'establishSession')
-      .mockResolvedValue(undefined);
+    const spy = vi.spyOn(service, 'establishSession').mockResolvedValue(undefined);
     mockApiGet.mockRejectedValue(new Error('network down'));
 
     await service.ensureFreshSession('peer-1');
@@ -141,9 +129,7 @@ describe('E2EEService.ensureFreshSession', () => {
 
   it('keeps the session when nothing is cached yet (first check)', async () => {
     const service = setupService('existing-session-json');
-    const spy = vi
-      .spyOn(service, 'establishSession')
-      .mockResolvedValue(undefined);
+    const spy = vi.spyOn(service, 'establishSession').mockResolvedValue(undefined);
     mockApiGet.mockResolvedValue({ data: { publicKey: 'ANY-KEY' } });
     mockGetPeerIdentityKey.mockResolvedValue(null);
 
@@ -169,15 +155,13 @@ describe('E2EEService.getRotationEvents', () => {
     const since = '2026-01-01T00:00:00.000Z';
     await service.getRotationEvents(since);
     expect(api.get).toHaveBeenCalledWith(
-      `/keys/rotation-events?since=${encodeURIComponent(since)}`,
+      `/keys/rotation-events?since=${encodeURIComponent(since)}`
     );
   });
 
   it('throws when E2EE is not initialized', async () => {
     const service = getE2EEService() as unknown as TestableService;
     service.store = null;
-    await expect(service.getRotationEvents()).rejects.toThrow(
-      'E2EE not initialized',
-    );
+    await expect(service.getRotationEvents()).rejects.toThrow('E2EE not initialized');
   });
 });

@@ -58,7 +58,9 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @Matches(/^#([0-9a-f]{3}){1,2}$/i, { message: 'profileThemeColor must be a valid hex color code' })
+  @Matches(/^#([0-9a-f]{3}){1,2}$/i, {
+    message: 'profileThemeColor must be a valid hex color code',
+  })
   @Transform(emptyToUndefined)
   profileThemeColor?: string;
 
@@ -79,5 +81,4 @@ export class UpdateUserDto {
   @Length(2, 50)
   @Transform(emptyToUndefined)
   categoryLabel?: string;
-
 }

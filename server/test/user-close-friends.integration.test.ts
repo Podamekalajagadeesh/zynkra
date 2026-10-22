@@ -21,27 +21,65 @@ import { User } from '../src/users/entities/user.entity';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    follow: jest.fn(), unfollow: jest.fn(), getFollowers: jest.fn(),
-    block: jest.fn(), unblock: jest.fn(), getBlockedUsers: jest.fn(),
-    findOneById: jest.fn(), updateProfile: jest.fn(), update: jest.fn(),
-    updateAvatar: jest.fn(), findByUsername: jest.fn(), findOneWithPosts: jest.fn(),
-    search: jest.fn(), updatePrivacy: jest.fn(),
-    createFollowRequest: jest.fn(), acceptFollowRequest: jest.fn(), denyFollowRequest: jest.fn(),
+    follow: jest.fn(),
+    unfollow: jest.fn(),
+    getFollowers: jest.fn(),
+    block: jest.fn(),
+    unblock: jest.fn(),
+    getBlockedUsers: jest.fn(),
+    findOneById: jest.fn(),
+    updateProfile: jest.fn(),
+    update: jest.fn(),
+    updateAvatar: jest.fn(),
+    findByUsername: jest.fn(),
+    findOneWithPosts: jest.fn(),
+    search: jest.fn(),
+    updatePrivacy: jest.fn(),
+    createFollowRequest: jest.fn(),
+    acceptFollowRequest: jest.fn(),
+    denyFollowRequest: jest.fn(),
     findMutualFollows: jest.fn(),
-    getCloseFriends: jest.fn(), updateCloseFriends: jest.fn(),
+    getCloseFriends: jest.fn(),
+    updateCloseFriends: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [UsersController],
     providers: [
-    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
-    { provide: AccountManagementService, useValue: {} },
+      {
+        provide: VisibilityService,
+        useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) },
+      },
+      { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: { ...defaultService, ...overrides } },
       { provide: PagesService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -59,11 +97,11 @@ async function buildApp(overrides: Record<string, jest.Mock> = {}) {
 describe('GET /users/me/close-friends', () => {
   it('returns 200 with close friends list', async () => {
     const { app, usersService, token } = await buildApp();
-    usersService.getCloseFriends.mockResolvedValue([
-      { id: 'friend-1', username: 'alice' },
-    ] as any);
+    usersService.getCloseFriends.mockResolvedValue([{ id: 'friend-1', username: 'alice' }] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/me/close-friends').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/me/close-friends')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     expect(r.body[0].username).toBe('alice');
@@ -74,7 +112,9 @@ describe('GET /users/me/close-friends', () => {
     const { app, usersService, token } = await buildApp();
     usersService.getCloseFriends.mockResolvedValue([]);
 
-    const r = await request(app.getHttpServer()).get('/users/me/close-friends').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/me/close-friends')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(0);
     await app.close();
@@ -91,7 +131,9 @@ describe('GET /users/me/close-friends', () => {
 describe('PUT /users/me/close-friends', () => {
   it('returns 200 when updated', async () => {
     const { app, usersService, token } = await buildApp();
-    usersService.updateCloseFriends.mockResolvedValue({ closeFriends: [{ id: 'friend-1' }] } as any);
+    usersService.updateCloseFriends.mockResolvedValue({
+      closeFriends: [{ id: 'friend-1' }],
+    } as any);
 
     const r = await request(app.getHttpServer())
       .put('/users/me/close-friends')

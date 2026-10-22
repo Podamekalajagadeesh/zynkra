@@ -15,16 +15,14 @@ import { applyWsCors } from '../common/ws-auth/ws-cors';
 
 // CORS is applied in afterInit, not the decorator — see ws-cors.ts.
 @WebSocketGateway()
-export class LiveKitGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class LiveKitGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(LiveKitGateway.name);
 
   constructor(
     private readonly liveKitService: LiveKitService,
     private readonly wsAuth: WsAuthService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   afterInit(server: Server) {

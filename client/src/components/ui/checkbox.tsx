@@ -3,7 +3,10 @@ import { Check } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
+export interface CheckboxProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'type' | 'onChange'
+> {
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
 }
@@ -17,8 +20,8 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             'inline-flex h-5 w-5 items-center justify-center rounded border border-dark-300 bg-white text-white transition-colors',
             checked && 'border-primary-600 bg-primary-600',
             disabled && 'cursor-not-allowed opacity-50',
-            className,
-          ),
+            className
+          )
         )}
       >
         <input
@@ -33,7 +36,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         {checked && <Check size={14} strokeWidth={3} />}
       </label>
     );
-  },
+  }
 );
 
 Checkbox.displayName = 'Checkbox';

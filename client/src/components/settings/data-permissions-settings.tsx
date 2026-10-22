@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Database } from 'lucide-react';
 import { toast } from 'sonner';
-import { DATA_PERMISSIONS, DataPermission, getDataPermissions, updateDataPermissions } from '../../lib/api';
+import {
+  DATA_PERMISSIONS,
+  DataPermission,
+  getDataPermissions,
+  updateDataPermissions,
+} from '../../lib/api';
 import { Switch } from '../ui/switch';
 
 export function DataPermissionsSettings() {
@@ -48,7 +53,8 @@ export function DataPermissionsSettings() {
           Data Permissions
         </p>
         <p className="text-sm text-dark-500 dark:text-dark-400">
-          Choose which categories account features may use. Changes are saved immediately and apply to future data exports; they do not delete stored data.
+          Choose which categories account features may use. Changes are saved immediately and apply
+          to future data exports; they do not delete stored data.
         </p>
       </div>
       <div className="divide-y divide-dark-200 rounded-xl border border-dark-200 bg-white/85 dark:divide-dark-700 dark:border-dark-700 dark:bg-dark-900/70">

@@ -11,7 +11,7 @@ const Priority = {
   MUTE: 'mute',
 } as const;
 
-type PriorityLevel = typeof Priority[keyof typeof Priority];
+type PriorityLevel = (typeof Priority)[keyof typeof Priority];
 
 /**
  * AI-powered notification filtering and prioritization.
@@ -37,32 +37,62 @@ export class AiNotificationsService {
 
     // CRITICAL: Security and account
     if (type === 'security_alert' || type === 'login_new_device' || type === 'password_changed') {
-      return { priority: 'critical', category: 'security', shouldNotify: true, reason: 'Security event' };
+      return {
+        priority: 'critical',
+        category: 'security',
+        shouldNotify: true,
+        reason: 'Security event',
+      };
     }
 
     // CRITICAL: Payments
     if (type === 'payment_received' || type === 'payout_processed' || type === 'payout_failed') {
-      return { priority: 'critical', category: 'payment', shouldNotify: true, reason: 'Payment event' };
+      return {
+        priority: 'critical',
+        category: 'payment',
+        shouldNotify: true,
+        reason: 'Payment event',
+      };
     }
 
     // HIGH: Direct messages
     if (type === 'dm_received' || type === 'message') {
-      return { priority: 'high', category: 'message', shouldNotify: true, reason: 'Direct message' };
+      return {
+        priority: 'high',
+        category: 'message',
+        shouldNotify: true,
+        reason: 'Direct message',
+      };
     }
 
     // HIGH: Replies and mentions
     if (type === 'reply' || type === 'mention') {
-      return { priority: 'high', category: 'interaction', shouldNotify: true, reason: 'Direct engagement' };
+      return {
+        priority: 'high',
+        category: 'interaction',
+        shouldNotify: true,
+        reason: 'Direct engagement',
+      };
     }
 
     // MEDIUM: Follow requests
     if (type === 'follow_request') {
-      return { priority: 'medium', category: 'social', shouldNotify: true, reason: 'Follow request' };
+      return {
+        priority: 'medium',
+        category: 'social',
+        shouldNotify: true,
+        reason: 'Follow request',
+      };
     }
 
     // MEDIUM: Reactions on your content
     if (type === 'reaction' || type === 'like') {
-      return { priority: 'medium', category: 'engagement', shouldNotify: true, reason: 'Content engagement' };
+      return {
+        priority: 'medium',
+        category: 'engagement',
+        shouldNotify: true,
+        reason: 'Content engagement',
+      };
     }
 
     // LOW: New followers (non-request)
@@ -77,11 +107,21 @@ export class AiNotificationsService {
 
     // MUTE: System, promotional, marketing
     if (type === 'system' || type === 'promo' || type === 'marketing' || type === 'newsletter') {
-      return { priority: 'mute', category: 'system', shouldNotify: false, reason: 'System/promotional notification' };
+      return {
+        priority: 'mute',
+        category: 'system',
+        shouldNotify: false,
+        reason: 'System/promotional notification',
+      };
     }
 
     // Default: medium
-    return { priority: 'medium', category: 'other', shouldNotify: true, reason: 'General notification' };
+    return {
+      priority: 'medium',
+      category: 'other',
+      shouldNotify: true,
+      reason: 'General notification',
+    };
   }
 
   /**
@@ -101,11 +141,21 @@ export class AiNotificationsService {
       const enriched = { ...notification, ...rest };
 
       switch (priority) {
-        case 'critical': result.critical.push(enriched); break;
-        case 'high': result.high.push(enriched); break;
-        case 'medium': result.medium.push(enriched); break;
-        case 'low': result.low.push(enriched); break;
-        case 'mute': result.muted.push(enriched); break;
+        case 'critical':
+          result.critical.push(enriched);
+          break;
+        case 'high':
+          result.high.push(enriched);
+          break;
+        case 'medium':
+          result.medium.push(enriched);
+          break;
+        case 'low':
+          result.low.push(enriched);
+          break;
+        case 'mute':
+          result.muted.push(enriched);
+          break;
       }
     }
 
@@ -128,15 +178,11 @@ export class AiNotificationsService {
 
     const topCategories = Array.from(
       new Set(
-        [...filtered.critical, ...filtered.high, ...filtered.medium]
-          .map((n: any) => n.category)
+        [...filtered.critical, ...filtered.high, ...filtered.medium].map((n: any) => n.category)
       )
     ).slice(0, 5);
 
-    const highlights = [
-      ...filtered.critical,
-      ...filtered.high.slice(0, 5),
-    ];
+    const highlights = [...filtered.critical, ...filtered.high.slice(0, 5)];
 
     let summary = '';
     if (filtered.critical.length > 0) {
@@ -149,7 +195,7 @@ export class AiNotificationsService {
       summary += `${filtered.medium.length} new engagement(s). `;
     }
     if (!summary) {
-      summary = total === 0 ? 'No new notifications.' : 'Nothing urgent — you\'re all caught up!';
+      summary = total === 0 ? 'No new notifications.' : "Nothing urgent — you're all caught up!";
     }
 
     return {

@@ -22,13 +22,15 @@ const CHALLENGE_TTL_MS = 2 * 60 * 1000;
 export class CaptchaService {
   constructor(
     @InjectRepository(CaptchaChallengeEntity)
-    private readonly captchaRepository: Repository<CaptchaChallengeEntity>,
+    private readonly captchaRepository: Repository<CaptchaChallengeEntity>
   ) {}
 
   /**
    * Issue a challenge. The answer is never returned to the caller.
    */
-  async generate(userId?: string | null): Promise<{ id: string; expression: string; expiresIn: number }> {
+  async generate(
+    userId?: string | null
+  ): Promise<{ id: string; expression: string; expiresIn: number }> {
     // randomInt, not Math.random — and a stored digest is not appropriate here
     // because the answer is shown to the user anyway; what matters is that the
     // challenge cannot be precomputed.

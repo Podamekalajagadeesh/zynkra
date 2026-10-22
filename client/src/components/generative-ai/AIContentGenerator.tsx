@@ -3,7 +3,18 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Wand2, Image as ImageIcon, Video as VideoIcon, Music, FileText, Loader2, Download, X, Sparkles, RefreshCw } from 'lucide-react';
+import {
+  Wand2,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Music,
+  FileText,
+  Loader2,
+  Download,
+  X,
+  Sparkles,
+  RefreshCw,
+} from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface GeneratedContent {
@@ -15,7 +26,10 @@ interface GeneratedContent {
   createdAt: Date;
 }
 
-export default function AIContentGenerator({ onInsertContent, onClose }: {
+export default function AIContentGenerator({
+  onInsertContent,
+  onClose,
+}: {
   onInsertContent: (content: GeneratedContent) => void;
   onClose: () => void;
 }) {
@@ -47,7 +61,9 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
       });
 
       const data = response.data;
-      const generatedText = Array.isArray(data?.content) ? data.content.join('\n\n') : data?.content || '';
+      const generatedText = Array.isArray(data?.content)
+        ? data.content.join('\n\n')
+        : data?.content || '';
 
       const newContent: GeneratedContent = {
         id: Date.now().toString(),
@@ -56,10 +72,10 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
         createdAt: new Date(),
         ...(activeTab === 'text'
           ? { content: generatedText }
-          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` })
+          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` }),
       };
 
-      setGeneratedContents(prev => [newContent, ...prev]);
+      setGeneratedContents((prev) => [newContent, ...prev]);
       setSelectedContent(newContent);
     } catch {
       // Fallback when API is unavailable
@@ -69,10 +85,12 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
         prompt,
         createdAt: new Date(),
         ...(activeTab === 'text'
-          ? { content: `AI-generated content for: "${prompt}". This content was created with AI assistance and is ready for you to edit and refine.` }
-          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` })
+          ? {
+              content: `AI-generated content for: "${prompt}". This content was created with AI assistance and is ready for you to edit and refine.`,
+            }
+          : { url: `https://picsum.photos/seed/${Date.now()}/800/600` }),
       };
-      setGeneratedContents(prev => [newContent, ...prev]);
+      setGeneratedContents((prev) => [newContent, ...prev]);
       setSelectedContent(newContent);
     } finally {
       setIsGenerating(false);
@@ -108,7 +126,9 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
       });
 
       const data = response.data;
-      const generatedText = Array.isArray(data?.content) ? data.content.join('\n\n') : data?.content || '';
+      const generatedText = Array.isArray(data?.content)
+        ? data.content.join('\n\n')
+        : data?.content || '';
 
       const newContent: GeneratedContent = {
         id: Date.now().toString(),
@@ -117,10 +137,10 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
         createdAt: new Date(),
         ...(activeTab === 'text'
           ? { content: generatedText }
-          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` })
+          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` }),
       };
 
-      setGeneratedContents(prev => [newContent, ...prev]);
+      setGeneratedContents((prev) => [newContent, ...prev]);
       setSelectedContent(newContent);
     } catch {
       const newContent: GeneratedContent = {
@@ -129,10 +149,12 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
         prompt: currentPrompt,
         createdAt: new Date(),
         ...(activeTab === 'text'
-          ? { content: `Regenerated AI content for: "${currentPrompt}". This is an updated version with enhanced language and better engagement optimization.` }
-          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` })
+          ? {
+              content: `Regenerated AI content for: "${currentPrompt}". This is an updated version with enhanced language and better engagement optimization.`,
+            }
+          : { url: `https://picsum.photos/seed/${Date.now() + 100}/800/600` }),
       };
-      setGeneratedContents(prev => [newContent, ...prev]);
+      setGeneratedContents((prev) => [newContent, ...prev]);
       setSelectedContent(newContent);
     } finally {
       setIsGenerating(false);
@@ -146,7 +168,9 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-500" />
             <h2 className="text-xl font-bold">AI Content Generator</h2>
-            <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Preview · Cloud</span>
+            <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+              Preview · Cloud
+            </span>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />
@@ -154,7 +178,11 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
         </div>
 
         <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+            className="w-full"
+          >
             <TabsList className="grid grid-cols-4 mb-6">
               <TabsTrigger value="text" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" /> Text
@@ -180,8 +208,8 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
                   className="min-h-[100px] text-base"
                 />
                 <div className="flex gap-3">
-                  <Button 
-                    onClick={generateContent} 
+                  <Button
+                    onClick={generateContent}
                     disabled={isGenerating || !prompt.trim()}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
@@ -198,11 +226,7 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
                     )}
                   </Button>
                   {selectedContent && (
-                    <Button 
-                      variant="secondary" 
-                      onClick={regenerateContent}
-                      disabled={isGenerating}
-                    >
+                    <Button variant="secondary" onClick={regenerateContent} disabled={isGenerating}>
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Regenerate
                     </Button>
@@ -216,14 +240,16 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
                   {activeTab === 'text' ? (
                     <Textarea
                       value={selectedContent.content || ''}
-                      onChange={(e) => setSelectedContent({...selectedContent, content: e.target.value})}
+                      onChange={(e) =>
+                        setSelectedContent({ ...selectedContent, content: e.target.value })
+                      }
                       className="min-h-[150px] mb-4"
                     />
                   ) : (
                     <div className="mb-4">
-                      <img 
-                        src={selectedContent.url} 
-                        alt="Generated AI media" 
+                      <img
+                        src={selectedContent.url}
+                        alt="Generated AI media"
                         className="max-w-full rounded-lg shadow-md"
                       />
                     </div>
@@ -242,12 +268,12 @@ export default function AIContentGenerator({ onInsertContent, onClose }: {
                   <h4 className="font-medium mb-3">Generation history:</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {generatedContents.map((content) => (
-                      <div 
+                      <div
                         key={content.id}
                         onClick={() => setSelectedContent(content)}
                         className={`cursor-pointer border-2 rounded-lg overflow-hidden transition-all ${
-                          selectedContent?.id === content.id 
-                            ? 'border-purple-500 ring-2 ring-purple-200' 
+                          selectedContent?.id === content.id
+                            ? 'border-purple-500 ring-2 ring-purple-200'
                             : 'border-transparent hover:border-gray-300'
                         }`}
                       >

@@ -31,7 +31,7 @@ const SubscriptionsPage = () => {
     setError(false);
     try {
       const data = await getSubscriptions();
-      setSubscriptions(Array.isArray(data) ? data : data.subscriptions ?? []);
+      setSubscriptions(Array.isArray(data) ? data : (data.subscriptions ?? []));
     } catch {
       setError(true);
       addToast('Failed to load subscriptions', 'error');
@@ -65,7 +65,10 @@ const SubscriptionsPage = () => {
         <h1 className="text-2xl font-bold mb-6">Your Subscriptions</h1>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-dark-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-800">
+            <div
+              key={i}
+              className="rounded-xl border border-dark-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-800"
+            >
               <div className="flex items-center gap-4">
                 <Skeleton width={48} height={48} className="rounded-full" />
                 <div className="flex-1 space-y-2">
@@ -155,15 +158,13 @@ const SubscriptionsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel this subscription? You'll lose access to
-              subscriber benefits at the end of the current billing period.
+              Are you sure you want to cancel this subscription? You'll lose access to subscriber
+              benefits at the end of the current billing period.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <div onClick={() => setCancelId(null)}>
-              <AlertDialogCancel>
-                Keep Subscription
-              </AlertDialogCancel>
+              <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
             </div>
             <AlertDialogAction onClick={handleCancel}>
               {cancelling ? 'Cancelling...' : 'Yes, Cancel'}

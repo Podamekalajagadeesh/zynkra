@@ -38,7 +38,7 @@ export function CreateLinkModal({ onClose, onSuccess }: CreateLinkModalProps) {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Create New Affiliate Link</h3>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -62,7 +62,10 @@ export function CreateLinkModal({ onClose, onSuccess }: CreateLinkModalProps) {
           </div>
 
           <div>
-            <label htmlFor="destinationUrl" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="destinationUrl"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Destination URL
             </label>
             <input
@@ -77,7 +80,10 @@ export function CreateLinkModal({ onClose, onSuccess }: CreateLinkModalProps) {
           </div>
 
           <div>
-            <label htmlFor="commissionRate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="commissionRate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Commission Rate (%)
             </label>
             <input
@@ -89,7 +95,9 @@ export function CreateLinkModal({ onClose, onSuccess }: CreateLinkModalProps) {
               onChange={(e) => setCommissionRate(Number(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
             />
-            <p className="text-xs text-gray-500 mt-1">Set your commission rate between 1% and 50%</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Set your commission rate between 1% and 50%
+            </p>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

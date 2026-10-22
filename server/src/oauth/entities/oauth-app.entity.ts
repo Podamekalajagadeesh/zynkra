@@ -32,7 +32,7 @@ export class OAuthApp {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   redirectUris: string[];
 
-  @Column({ type: 'jsonb', default: () => "'[\"read_profile\"]'" })
+  @Column({ type: 'jsonb', default: () => '\'["read_profile"]\'' })
   scopes: string[];
 
   @Column({ type: 'varchar', length: 254, nullable: true })

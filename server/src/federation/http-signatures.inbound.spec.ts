@@ -40,7 +40,9 @@ beforeAll(() => {
 
 beforeEach(() => {
   instanceKeyRepository = {
-    findOne: jest.fn().mockResolvedValue({ isActive: true, privateKey: privateKeyPem, publicKey: publicKeyPem }),
+    findOne: jest
+      .fn()
+      .mockResolvedValue({ isActive: true, privateKey: privateKeyPem, publicKey: publicKeyPem }),
     create: jest.fn((data: any) => data),
     save: jest.fn(async (data: any) => ({ ...data, id: 'key-1' })),
   };
@@ -61,7 +63,7 @@ async function initialized() {
 describe('parseSignatureHeader', () => {
   it('parses keyId, algorithm, headers, and signature', () => {
     const parsed = service.parseSignatureHeader(
-      'keyId="https://example.com/users/alice#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="YWJj"',
+      'keyId="https://example.com/users/alice#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="YWJj"'
     );
 
     expect(parsed).toEqual({
@@ -79,7 +81,7 @@ describe('parseSignatureHeader', () => {
 
   it('tolerates whitespace around segments and single quotes', () => {
     const parsed = service.parseSignatureHeader(
-      '  keyId = "k" , algorithm="rsa-sha256", headers="date host" , signature="s"  ',
+      '  keyId = "k" , algorithm="rsa-sha256", headers="date host" , signature="s"  '
     );
     expect(parsed.keyId).toBe('k');
     expect(parsed.signedHeaders).toEqual(['date', 'host']);
@@ -225,7 +227,10 @@ describe('verifyRequestSignature', () => {
   });
 
   it('rejects a body carrying a Digest that was not signed', () => {
-    const unsignedDigest = { ...headers, Signature: headers.Signature.replace(' date digest', ' date') };
+    const unsignedDigest = {
+      ...headers,
+      Signature: headers.Signature.replace(' date digest', ' date'),
+    };
     // The parsed header must come from the signature actually on the request.
     const parsed = service.parseSignatureHeader(unsignedDigest.Signature);
 
@@ -305,28 +310,36 @@ describe('isInboundVerificationRequired', () => {
   });
 
   it('defaults to not required when federation is disabled', () => {
-    expect(makeService({ FEDERATION_ENABLED: 'false' }).isInboundVerificationRequired()).toBe(false);
+    expect(makeService({ FEDERATION_ENABLED: 'false' }).isInboundVerificationRequired()).toBe(
+      false
+    );
     expect(makeService({}).isInboundVerificationRequired()).toBe(false);
   });
 
   it('honours an explicit override in both directions', () => {
     expect(
-      makeService({ FEDERATION_ENABLED: 'true', FEDERATION_VERIFY_INBOUND: 'false' }).isInboundVerificationRequired(),
+      makeService({
+        FEDERATION_ENABLED: 'true',
+        FEDERATION_VERIFY_INBOUND: 'false',
+      }).isInboundVerificationRequired()
     ).toBe(false);
     expect(
-      makeService({ FEDERATION_ENABLED: 'false', FEDERATION_VERIFY_INBOUND: 'true' }).isInboundVerificationRequired(),
+      makeService({
+        FEDERATION_ENABLED: 'false',
+        FEDERATION_VERIFY_INBOUND: 'true',
+      }).isInboundVerificationRequired()
     ).toBe(true);
   });
 });
 
 describe('assertSafeRemoteUrl', () => {
   it('accepts a public https URL', async () => {
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
 
     expect(await service.assertSafeRemoteUrl('https://example.com/users/alice')).toBe(
-      'https://example.com/users/alice',
+      'https://example.com/users/alice'
     );
   });
 
@@ -374,7 +387,7 @@ describe('assertSafeRemoteUrl', () => {
 
   it('accepts a public IP literal', async () => {
     expect(await service.assertSafeRemoteUrl('https://93.184.216.34/a')).toBe(
-      'https://93.184.216.34/a',
+      'https://93.184.216.34/a'
     );
   });
 
@@ -395,9 +408,7 @@ describe('assertSafeRemoteUrl', () => {
   });
 
   it('rejects a hostname that fails to resolve', async () => {
-    jest
-      .spyOn(require('dns').promises, 'lookup')
-      .mockRejectedValue(new Error('ENOTFOUND'));
+    jest.spyOn(require('dns').promises, 'lookup').mockRejectedValue(new Error('ENOTFOUND'));
 
     expect(await service.assertSafeRemoteUrl('https://nx.example/a')).toBeNull();
   });
@@ -410,16 +421,16 @@ describe('assertSafeRemoteUrl', () => {
 describe('fetchActorPublicKey', () => {
   it('returns the actor public key PEM', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     const getSpy = jest.spyOn(axios as any, 'get').mockResolvedValue({
       data: { id: 'https://example.com/users/alice', publicKey: { publicKeyPem } },
     });
 
     const pem = await svc.fetchActorPublicKey(
       'https://example.com/users/alice',
-      'https://example.com/users/alice',
+      'https://example.com/users/alice'
     );
 
     expect(pem).toBe(publicKeyPem);
@@ -429,15 +440,18 @@ describe('fetchActorPublicKey', () => {
 
   it('accepts a JSON string body', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     jest
       .spyOn(axios as any, 'get')
       .mockResolvedValue({ data: JSON.stringify({ publicKey: { publicKeyPem } }) });
 
     expect(
-      await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice'),
+      await svc.fetchActorPublicKey(
+        'https://example.com/users/alice',
+        'https://example.com/users/alice'
+      )
     ).toBe(publicKeyPem);
   });
 
@@ -446,60 +460,75 @@ describe('fetchActorPublicKey', () => {
     const getSpy = jest.spyOn(axios as any, 'get');
 
     expect(
-      await svc.fetchActorPublicKey('https://169.254.169.254/latest/meta-data', 'https://example.com/u/a'),
+      await svc.fetchActorPublicKey(
+        'https://169.254.169.254/latest/meta-data',
+        'https://example.com/u/a'
+      )
     ).toBeNull();
     expect(getSpy).not.toHaveBeenCalled();
   });
 
   it('does not follow redirects', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     const getSpy = jest
       .spyOn(axios as any, 'get')
       .mockResolvedValue({ data: { publicKey: { publicKeyPem } } });
 
-    await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice');
+    await svc.fetchActorPublicKey(
+      'https://example.com/users/alice',
+      'https://example.com/users/alice'
+    );
 
     expect((getSpy.mock.calls[0][1] as any).maxRedirects).toBe(0);
   });
 
   it('returns null when the actor has no usable public key', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     jest.spyOn(axios as any, 'get').mockResolvedValue({ data: { publicKey: {} } });
 
     expect(
-      await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice'),
+      await svc.fetchActorPublicKey(
+        'https://example.com/users/alice',
+        'https://example.com/users/alice'
+      )
     ).toBeNull();
   });
 
   it('returns null when the key is not a PEM', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     jest
       .spyOn(axios as any, 'get')
       .mockResolvedValue({ data: { publicKey: { publicKeyPem: 'not-a-key' } } });
 
     expect(
-      await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice'),
+      await svc.fetchActorPublicKey(
+        'https://example.com/users/alice',
+        'https://example.com/users/alice'
+      )
     ).toBeNull();
   });
 
   it('returns null on a transport error', async () => {
     const svc = await initialized();
-    jest.spyOn(require('dns').promises, 'lookup').mockResolvedValue([
-      { address: '93.184.216.34', family: 4 },
-    ] as any);
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
     jest.spyOn(axios as any, 'get').mockRejectedValue(new Error('ETIMEDOUT'));
 
     expect(
-      await svc.fetchActorPublicKey('https://example.com/users/alice', 'https://example.com/users/alice'),
+      await svc.fetchActorPublicKey(
+        'https://example.com/users/alice',
+        'https://example.com/users/alice'
+      )
     ).toBeNull();
   });
 });
@@ -515,7 +544,11 @@ describe('full inbound round trip', () => {
     const remotePriv = remote.privateKey as string;
 
     const actorUrl = 'https://mastodon.example/users/alice';
-    const body = JSON.stringify({ type: 'Create', actor: actorUrl, object: { id: 'x', content: 'hi' } });
+    const body = JSON.stringify({
+      type: 'Create',
+      actor: actorUrl,
+      object: { id: 'x', content: 'hi' },
+    });
     const date = new Date().toUTCString();
     const digest = digestOf(body);
     const signingString = [
@@ -524,7 +557,8 @@ describe('full inbound round trip', () => {
       `date: ${date}`,
       `digest: ${digest}`,
     ].join('\n');
-    const signature = crypto.createSign('rsa-sha256')
+    const signature = crypto
+      .createSign('rsa-sha256')
       .update(signingString, 'utf8')
       .sign(remotePriv, 'base64');
 
@@ -543,7 +577,7 @@ describe('full inbound round trip', () => {
         rawBody: Buffer.from(body, 'utf8'),
         publicKeyPem: remotePub,
         parsed,
-      }),
+      })
     ).toEqual({ valid: true });
   });
 });

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { PageShell } from '../components/PageShell';
 import { api } from '../lib/api';
@@ -25,17 +24,23 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
     e.preventDefault();
     const newAdAudience = {
       name,
-      locations: locations.split(',').map(s => s.trim()),
-      age_range: age_range.split('-').map(s => parseInt(s.trim(), 10)),
+      locations: locations.split(',').map((s) => s.trim()),
+      age_range: age_range.split('-').map((s) => parseInt(s.trim(), 10)),
       gender,
-      interests: interests.split(',').map(s => s.trim()),
+      interests: interests.split(',').map((s) => s.trim()),
     };
     onSave(newAdAudience);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onCancel}>
-      <div className="relative w-full max-w-md rounded-lg bg-white p-6 dark:bg-dark-800" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={onCancel}
+    >
+      <div
+        className="relative w-full max-w-md rounded-lg bg-white p-6 dark:bg-dark-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">{adAudience ? 'Edit' : 'Create'} Ad Audience</h2>
           <button type="button" onClick={onCancel} className="text-dark-500 dark:text-dark-400">
@@ -44,7 +49,10 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="name" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Name
             </label>
             <input
@@ -56,7 +64,10 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="locations" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="locations"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Locations (comma-separated)
             </label>
             <input
@@ -68,7 +79,10 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="age_range" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="age_range"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Age Range (e.g., 18-65)
             </label>
             <input
@@ -80,7 +94,10 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="gender" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="gender"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Gender
             </label>
             <select
@@ -95,7 +112,10 @@ const AdAudienceForm = ({ adAudience, onSave, onCancel }) => {
             </select>
           </div>
           <div className="mb-4">
-            <label htmlFor="interests" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="interests"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Interests (comma-separated)
             </label>
             <input
@@ -124,7 +144,8 @@ export const AdAudiencesPage = () => {
 
   const fetchAdAudiences = () => {
     setLoading(true);
-    api.get('/ad-audiences')
+    api
+      .get('/ad-audiences')
       .then((response) => {
         setAdAudiences(response.data);
       })
@@ -157,7 +178,8 @@ export const AdAudiencesPage = () => {
   };
 
   const handleDelete = (id: number) => {
-    api.delete(`/ad-audiences/${id}`)
+    api
+      .delete(`/ad-audiences/${id}`)
       .then(() => {
         fetchAdAudiences();
       })

@@ -35,9 +35,7 @@ const getNotificationText = (notification: NotificationData) => {
           ? metadata.deviceName
           : 'a new device';
       const ipAddress =
-        typeof metadata?.ipAddress === 'string' && metadata.ipAddress
-          ? metadata.ipAddress
-          : '';
+        typeof metadata?.ipAddress === 'string' && metadata.ipAddress ? metadata.ipAddress : '';
       return (
         <>
           signed in from {deviceName}
@@ -63,9 +61,11 @@ export const NotificationItem = ({ notification }: { notification: NotificationD
 
   return (
     <Link to={getNotificationLink(notification)} onClick={handleClick}>
-      <div className={`p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-        notification.read ? '' : 'bg-blue-50 dark:bg-blue-900/20'
-      }`}>
+      <div
+        className={`p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+          notification.read ? '' : 'bg-blue-50 dark:bg-blue-900/20'
+        }`}
+      >
         <div className="flex items-center">
           <Avatar className="h-10 w-10 mr-4">
             <AvatarImage src={sender.profile?.avatarUrl || undefined} alt={senderUsername} />
@@ -73,11 +73,10 @@ export const NotificationItem = ({ notification }: { notification: NotificationD
           </Avatar>
           <div className="text-sm">
             <p>
-              <span className="font-bold">{senderUsername}</span> {getNotificationText(notification)}
+              <span className="font-bold">{senderUsername}</span>{' '}
+              {getNotificationText(notification)}
             </p>
-            <p className="text-xs text-gray-500">
-              {formatDateTime(notification.createdAt)}
-            </p>
+            <p className="text-xs text-gray-500">{formatDateTime(notification.createdAt)}</p>
           </div>
         </div>
       </div>

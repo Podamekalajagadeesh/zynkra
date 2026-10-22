@@ -1,4 +1,14 @@
-import { IsBoolean, IsString, IsEnum, IsOptional, IsObject, MaxLength, IsInt, Min, Max } from 'class-validator';
+import {
+  IsBoolean,
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsObject,
+  MaxLength,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 
 export enum Theme {
   LIGHT = 'light',

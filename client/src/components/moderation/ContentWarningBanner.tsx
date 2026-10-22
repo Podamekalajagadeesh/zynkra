@@ -10,20 +10,20 @@ interface ContentWarningBannerProps {
   className?: string;
 }
 
-export function ContentWarningBanner({ 
-  analysis, 
-  onDismiss, 
+export function ContentWarningBanner({
+  analysis,
+  onDismiss,
   showDismiss = false,
-  className = ''
+  className = '',
 }: ContentWarningBannerProps) {
   const [visible, setVisible] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
   if (!visible) return null;
 
-  const hasDeepfake = analysis.flags.some(f => f.type === 'deepfake');
-  const hasSyntheticContent = analysis.flags.some(f => f.type === 'synthetic_content');
-  const hasNeuralHarmfulIntent = analysis.flags.some(f => f.type === 'neural_harmful_intent');
+  const hasDeepfake = analysis.flags.some((f) => f.type === 'deepfake');
+  const hasSyntheticContent = analysis.flags.some((f) => f.type === 'synthetic_content');
+  const hasNeuralHarmfulIntent = analysis.flags.some((f) => f.type === 'neural_harmful_intent');
   const isNeuralThought = analysis.contentType === 'neural_thought';
 
   const getWarningTitle = () => {
@@ -46,40 +46,62 @@ export function ContentWarningBanner({
   const getWarningDescription = () => {
     const descriptions: string[] = [];
     if (hasNeuralHarmfulIntent) {
-      const neuralFlag = analysis.flags.find(f => f.type === 'neural_harmful_intent');
+      const neuralFlag = analysis.flags.find((f) => f.type === 'neural_harmful_intent');
       if (neuralFlag?.neuralSignalAnalysis) {
         descriptions.push(`Detection confidence: ${Math.round(neuralFlag.confidence * 100)}%`);
-        descriptions.push(`Processed locally on your device: ${neuralFlag.neuralSignalAnalysis.processedLocally ? 'Yes' : 'No'}`);
-        if (neuralFlag.neuralSignalAnalysis.detectedContext && neuralFlag.neuralSignalAnalysis.detectedContext.length > 0) {
-          descriptions.push(`Detected context: ${neuralFlag.neuralSignalAnalysis.detectedContext.join(', ')}`);
+        descriptions.push(
+          `Processed locally on your device: ${neuralFlag.neuralSignalAnalysis.processedLocally ? 'Yes' : 'No'}`
+        );
+        if (
+          neuralFlag.neuralSignalAnalysis.detectedContext &&
+          neuralFlag.neuralSignalAnalysis.detectedContext.length > 0
+        ) {
+          descriptions.push(
+            `Detected context: ${neuralFlag.neuralSignalAnalysis.detectedContext.join(', ')}`
+          );
         }
         if (analysis.neuralThoughtAnalysis) {
-          descriptions.push(`Thought clarity: ${Math.round(analysis.neuralThoughtAnalysis.thoughtClarity)}%`);
+          descriptions.push(
+            `Thought clarity: ${Math.round(analysis.neuralThoughtAnalysis.thoughtClarity)}%`
+          );
           descriptions.push(`Privacy protection: Active - no thought data sent to servers`);
         }
       }
     } else if (hasDeepfake) {
-      const deepfakeFlag = analysis.flags.find(f => f.type === 'deepfake');
+      const deepfakeFlag = analysis.flags.find((f) => f.type === 'deepfake');
       if (deepfakeFlag?.deepfakeAnalysis) {
-        descriptions.push(`Deepfake detection confidence: ${Math.round(deepfakeFlag.confidence * 100)}%`);
-        descriptions.push(`Manipulation score: ${Math.round(deepfakeFlag.deepfakeAnalysis.manipulationScore * 100)}%`);
-        if (deepfakeFlag.deepfakeAnalysis.tamperedRegions && deepfakeFlag.deepfakeAnalysis.tamperedRegions.length > 0) {
-          descriptions.push(`Tampered regions: ${deepfakeFlag.deepfakeAnalysis.tamperedRegions.join(', ')}`);
+        descriptions.push(
+          `Deepfake detection confidence: ${Math.round(deepfakeFlag.confidence * 100)}%`
+        );
+        descriptions.push(
+          `Manipulation score: ${Math.round(deepfakeFlag.deepfakeAnalysis.manipulationScore * 100)}%`
+        );
+        if (
+          deepfakeFlag.deepfakeAnalysis.tamperedRegions &&
+          deepfakeFlag.deepfakeAnalysis.tamperedRegions.length > 0
+        ) {
+          descriptions.push(
+            `Tampered regions: ${deepfakeFlag.deepfakeAnalysis.tamperedRegions.join(', ')}`
+          );
         }
         descriptions.push(`AI model: ${deepfakeFlag.deepfakeAnalysis.aiModelUsed}`);
       }
     }
     if (hasSyntheticContent) {
-      const syntheticFlag = analysis.flags.find(f => f.type === 'synthetic_content');
+      const syntheticFlag = analysis.flags.find((f) => f.type === 'synthetic_content');
       if (syntheticFlag) {
-        descriptions.push(`Synthetic content confidence: ${Math.round(syntheticFlag.confidence * 100)}%`);
+        descriptions.push(
+          `Synthetic content confidence: ${Math.round(syntheticFlag.confidence * 100)}%`
+        );
       }
     }
     if (analysis.harmfulCategories && analysis.harmfulCategories.length > 0) {
       descriptions.push(`Harmful categories: ${analysis.harmfulCategories.join(', ')}`);
     }
     if (analysis.misinformationTopics && analysis.misinformationTopics.length > 0) {
-      descriptions.push(`Potential misinformation topics: ${analysis.misinformationTopics.join(', ')}`);
+      descriptions.push(
+        `Potential misinformation topics: ${analysis.misinformationTopics.join(', ')}`
+      );
     }
     return descriptions.join(' | ');
   };
@@ -122,7 +144,7 @@ export function ContentWarningBanner({
           <div className="flex items-start justify-between gap-2">
             <h4 className={`font-medium ${colors.header}`}>{getWarningTitle()}</h4>
             {showDismiss && (
-              <button 
+              <button
                 onClick={handleDismiss}
                 className={`${colors.icon} hover:opacity-80`}
                 aria-label="Dismiss warning"
@@ -135,9 +157,9 @@ export function ContentWarningBanner({
             <p className={`text-sm ${colors.body} mt-1`}>{getWarningDescription()}</p>
           )}
           {analysis.flags.length > 2 && !expanded && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setExpanded(true)}
               className={`${colors.body} hover:opacity-80 p-0 h-auto mt-1 text-sm underline`}
             >

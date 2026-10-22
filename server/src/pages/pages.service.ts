@@ -21,7 +21,7 @@ export class PagesService {
     @InjectRepository(Conversation)
     private readonly conversationRepository: Repository<Conversation>,
     @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>,
+    private readonly messageRepository: Repository<Message>
   ) {}
 
   async create(createPageDto: CreatePageDto, user: User): Promise<Page> {
@@ -48,7 +48,10 @@ export class PagesService {
   }
 
   async findOne(id: string): Promise<Page> {
-    const page = await this.pageRepository.findOne({ where: { id }, relations: ['owner', 'members', 'posts'] });
+    const page = await this.pageRepository.findOne({
+      where: { id },
+      relations: ['owner', 'members', 'posts'],
+    });
     if (!page) {
       throw new NotFoundException(`Page with ID "${id}" not found`);
     }
@@ -88,9 +91,9 @@ export class PagesService {
       where: { userId },
       relations: ['page'],
     });
-    
-    const followedPageIds = userPages.map(member => member.page.id);
-    
+
+    const followedPageIds = userPages.map((member) => member.page.id);
+
     // Return public pages that the user isn't following yet
     return this.pageRepository.find({
       where: {

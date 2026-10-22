@@ -12,10 +12,7 @@ export class StickersController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createSticker(
-    @CurrentUser() user: User,
-    @Body() createStickerDto: CreateStickerDto,
-  ) {
+  async createSticker(@CurrentUser() user: User, @Body() createStickerDto: CreateStickerDto) {
     return this.stickersService.createSticker(user.id, createStickerDto);
   }
 
@@ -61,10 +58,7 @@ export class StickersController {
 
   @Post('purchase')
   @UseGuards(JwtAuthGuard)
-  async purchaseSticker(
-    @CurrentUser() user: User,
-    @Body() purchaseStickerDto: PurchaseStickerDto,
-  ) {
+  async purchaseSticker(@CurrentUser() user: User, @Body() purchaseStickerDto: PurchaseStickerDto) {
     return this.stickersService.purchaseSticker(user.id, purchaseStickerDto.stickerId);
   }
 }

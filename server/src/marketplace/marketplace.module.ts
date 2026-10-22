@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MarketplaceService } from './marketplace.service';
@@ -30,9 +29,23 @@ import { Order } from './entities/order.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Transaction, Rating, ProductVariant, User, MarketplaceListing,
-      ProductReview, EscrowTransaction, CheckoutSession, Product,
-      Warehouse, InventoryStock, InventoryReservation, Shipment, ReturnRequest, Supplier, DemandForecast, Order,
+      Transaction,
+      Rating,
+      ProductVariant,
+      User,
+      MarketplaceListing,
+      ProductReview,
+      EscrowTransaction,
+      CheckoutSession,
+      Product,
+      Warehouse,
+      InventoryStock,
+      InventoryReservation,
+      Shipment,
+      ReturnRequest,
+      Supplier,
+      DemandForecast,
+      Order,
     ]),
     UsersModule,
     WalletModule,

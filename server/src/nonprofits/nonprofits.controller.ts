@@ -1,14 +1,4 @@
-
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Body,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { NonprofitsService } from './nonprofits.service';
 import { CreateNonprofitDto } from './dto/create-nonprofit.dto';
 import { RejectNonprofitDto } from './dto/reject-nonprofit.dto';
@@ -23,10 +13,7 @@ export class NonprofitsController {
 
   @Get()
   findAll(@Query('take') take?: string, @Query('skip') skip?: string) {
-    return this.nonprofitsService.findAll(
-      take ? +take : 20,
-      skip ? +skip : 0,
-    );
+    return this.nonprofitsService.findAll(take ? +take : 20, skip ? +skip : 0);
   }
 
   @Get('mine')
@@ -38,10 +25,7 @@ export class NonprofitsController {
   @Get('pending')
   @UseGuards(JwtAuthGuard, AdminGuard)
   getPending(@Query('take') take?: string, @Query('skip') skip?: string) {
-    return this.nonprofitsService.getPending(
-      take ? +take : 20,
-      skip ? +skip : 0,
-    );
+    return this.nonprofitsService.getPending(take ? +take : 20, skip ? +skip : 0);
   }
 
   @Get(':id')
@@ -51,10 +35,7 @@ export class NonprofitsController {
 
   @Post('apply')
   @UseGuards(JwtAuthGuard)
-  apply(
-    @Body() createNonprofitDto: CreateNonprofitDto,
-    @CurrentUser() user: User,
-  ) {
+  apply(@Body() createNonprofitDto: CreateNonprofitDto, @CurrentUser() user: User) {
     return this.nonprofitsService.create(createNonprofitDto, user);
   }
 
@@ -66,10 +47,7 @@ export class NonprofitsController {
 
   @Patch(':id/reject')
   @UseGuards(JwtAuthGuard, AdminGuard)
-  reject(
-    @Param('id') id: string,
-    @Body() rejectDto: RejectNonprofitDto,
-  ) {
+  reject(@Param('id') id: string, @Body() rejectDto: RejectNonprofitDto) {
     return this.nonprofitsService.reject(id, rejectDto.reason);
   }
 }

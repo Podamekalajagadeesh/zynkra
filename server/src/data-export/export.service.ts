@@ -96,22 +96,27 @@ export class ExportService {
     @InjectRepository(Article) private readonly articlesRepo: Repository<Article>,
     @InjectRepository(Podcast) private readonly podcastsRepo: Repository<Podcast>,
     @InjectRepository(Course) private readonly coursesRepo: Repository<Course>,
-    @InjectRepository(CourseEnrollment) private readonly enrollmentsRepo: Repository<CourseEnrollment>,
+    @InjectRepository(CourseEnrollment)
+    private readonly enrollmentsRepo: Repository<CourseEnrollment>,
     @InjectRepository(DataExport) private readonly dataExportsRepo: Repository<DataExport>,
-    @InjectRepository(VerificationRequest) private readonly verificationRepo: Repository<VerificationRequest>,
-    @InjectRepository(ConnectedAccount) private readonly connectedAccountsRepo: Repository<ConnectedAccount>,
-    private readonly configService: ConfigService,
+    @InjectRepository(VerificationRequest)
+    private readonly verificationRepo: Repository<VerificationRequest>,
+    @InjectRepository(ConnectedAccount)
+    private readonly connectedAccountsRepo: Repository<ConnectedAccount>,
+    private readonly configService: ConfigService
   ) {}
 
   async exportUserData(userId: string): Promise<ExportData> {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const enabledCategories = Array.from(new Set(
-      user.accountDataPermissions === null || user.accountDataPermissions === undefined
-        ? DEFAULT_DATA_PERMISSIONS
-        : user.accountDataPermissions,
-    )) as ExportCategory[];
+    const enabledCategories = Array.from(
+      new Set(
+        user.accountDataPermissions === null || user.accountDataPermissions === undefined
+          ? DEFAULT_DATA_PERMISSIONS
+          : user.accountDataPermissions
+      )
+    ) as ExportCategory[];
     const hasCategory = (category: ExportCategory) => enabledCategories.includes(category);
     const canExportPosts = hasCategory('posts');
     const canExportMessages = hasCategory('messages');
@@ -137,46 +142,80 @@ export class ExportService {
       enrollments,
       bookmarks,
     ] = await Promise.all([
-      canExportPosts ? this.postsRepo.find({
-        where: { user: { id: userId } },
-        relations: ['media', 'reelEffect'],
-      }) : Promise.resolve([]),
-      canExportMessages ? this.messagesRepo.find({ where: { sender: { id: userId } } as any, relations: ['conversation'] }) : Promise.resolve([]),
-      canExportPosts ? this.commentsRepo.find({ where: { user: { id: userId } } as any, relations: ['post', 'parent'] }) : Promise.resolve([]),
-      canExportPosts ? this.reactionsRepo.find({ where: { user: { id: userId } } as any, relations: ['post'] }) : Promise.resolve([]),
-      canExportPosts ? this.storiesRepo.find({ where: { user: { id: userId } } as any, relations: ['elements'] }) : Promise.resolve([]),
-      canExportProfile ? this.groupMembersRepo.find({
-        where: { user: { id: userId } },
-        relations: ['group'],
-      }) : Promise.resolve([]),
-      canExportSettings ? this.notificationsRepo.find({ where: { user: { id: userId } } as any }) : Promise.resolve([]),
-      canExportConnectedServices ? this.ordersRepo.find({ where: { customerId: userId }, relations: ['items'] }) : Promise.resolve([]),
-      canExportConnectedServices ? this.ledgerRepo.find({ where: { user: { id: userId } } as any }) : Promise.resolve([]),
-      canExportPosts ? this.articlesRepo.find({ where: { authorId: userId } }) : Promise.resolve([]),
-      canExportPosts ? this.podcastsRepo.find({ where: { authorId: userId } }) : Promise.resolve([]),
+      canExportPosts
+        ? this.postsRepo.find({
+            where: { user: { id: userId } },
+            relations: ['media', 'reelEffect'],
+          })
+        : Promise.resolve([]),
+      canExportMessages
+        ? this.messagesRepo.find({
+            where: { sender: { id: userId } } as any,
+            relations: ['conversation'],
+          })
+        : Promise.resolve([]),
+      canExportPosts
+        ? this.commentsRepo.find({
+            where: { user: { id: userId } } as any,
+            relations: ['post', 'parent'],
+          })
+        : Promise.resolve([]),
+      canExportPosts
+        ? this.reactionsRepo.find({ where: { user: { id: userId } } as any, relations: ['post'] })
+        : Promise.resolve([]),
+      canExportPosts
+        ? this.storiesRepo.find({ where: { user: { id: userId } } as any, relations: ['elements'] })
+        : Promise.resolve([]),
+      canExportProfile
+        ? this.groupMembersRepo.find({
+            where: { user: { id: userId } },
+            relations: ['group'],
+          })
+        : Promise.resolve([]),
+      canExportSettings
+        ? this.notificationsRepo.find({ where: { user: { id: userId } } as any })
+        : Promise.resolve([]),
+      canExportConnectedServices
+        ? this.ordersRepo.find({ where: { customerId: userId }, relations: ['items'] })
+        : Promise.resolve([]),
+      canExportConnectedServices
+        ? this.ledgerRepo.find({ where: { user: { id: userId } } as any })
+        : Promise.resolve([]),
+      canExportPosts
+        ? this.articlesRepo.find({ where: { authorId: userId } })
+        : Promise.resolve([]),
+      canExportPosts
+        ? this.podcastsRepo.find({ where: { authorId: userId } })
+        : Promise.resolve([]),
       canExportPosts ? this.coursesRepo.find({ where: { authorId: userId } }) : Promise.resolve([]),
       canExportPosts ? this.enrollmentsRepo.find({ where: { userId } }) : Promise.resolve([]),
-      canExportPosts ? this.bookmarksRepo.find({ where: { user: { id: userId } } as any, relations: ['post'] }) : Promise.resolve([]),
+      canExportPosts
+        ? this.bookmarksRepo.find({ where: { user: { id: userId } } as any, relations: ['post'] })
+        : Promise.resolve([]),
     ]);
 
-    const follows = canExportProfile ? await Promise.all([
-      this.followsRepo.find({
-        where: { followerId: userId },
-        relations: ['following'],
-      }),
-      this.followsRepo.find({
-        where: { followingId: userId },
-        relations: ['follower'],
-      }),
-    ]) : [[], []];
+    const follows = canExportProfile
+      ? await Promise.all([
+          this.followsRepo.find({
+            where: { followerId: userId },
+            relations: ['following'],
+          }),
+          this.followsRepo.find({
+            where: { followingId: userId },
+            relations: ['follower'],
+          }),
+        ])
+      : [[], []];
 
     // DMs received: messages in conversations the user is part of, excluding
     // their own sent messages (already captured above). Relations are loaded so
     // received messages carry their conversation id and sender id for import.
-    const conversations = canExportMessages ? await this.conversationsRepo.find({
-      where: { participants: { id: userId } },
-      relations: ['participants'],
-    }) : [];
+    const conversations = canExportMessages
+      ? await this.conversationsRepo.find({
+          where: { participants: { id: userId } },
+          relations: ['participants'],
+        })
+      : [];
     const conversationIds = conversations.map((c) => c.id);
     let receivedMessages: Message[] = [];
     if (canExportMessages && conversationIds.length > 0) {
@@ -190,27 +229,33 @@ export class ExportService {
     }
 
     const [verification, linkedAccounts] = await Promise.all([
-      canExportProfile ? this.verificationRepo.find({ where: { user: { id: userId } } }) : Promise.resolve([]),
-      canExportConnectedServices ? this.connectedAccountsRepo.find({ where: { userId } }) : Promise.resolve([]),
+      canExportProfile
+        ? this.verificationRepo.find({ where: { user: { id: userId } } })
+        : Promise.resolve([]),
+      canExportConnectedServices
+        ? this.connectedAccountsRepo.find({ where: { userId } })
+        : Promise.resolve([]),
     ]);
 
     return {
-      user: canExportProfile ? {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName,
-        bio: user.bio,
-        avatar: user.avatar,
-        header: user.header,
-        pronouns: user.pronouns,
-        createdAt: user.createdAt,
-        accountType: (user as any).accountType,
-        verified: user.verified,
-        walletAddress: user.walletAddress,
-      } : {
-        id: user.id,
-      },
+      user: canExportProfile
+        ? {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            displayName: user.displayName,
+            bio: user.bio,
+            avatar: user.avatar,
+            header: user.header,
+            pronouns: user.pronouns,
+            createdAt: user.createdAt,
+            accountType: (user as any).accountType,
+            verified: user.verified,
+            walletAddress: user.walletAddress,
+          }
+        : {
+            id: user.id,
+          },
       posts: posts.map((p) => ({
         id: p.id,
         content: (p as any).content,
@@ -238,18 +283,20 @@ export class ExportService {
         reaction: r.reaction,
         postId: (r.post as any)?.id,
       })),
-      follows: canExportProfile ? {
-        following: follows[0].map((f) => ({
-          username: (f.following as any)?.username,
-          userId: (f.following as any)?.id,
-          followedAt: f.followedAt,
-        })),
-        followers: follows[1].map((f) => ({
-          username: (f.follower as any)?.username,
-          userId: (f.follower as any)?.id,
-          followedAt: f.followedAt,
-        })),
-      } : { following: [], followers: [] },
+      follows: canExportProfile
+        ? {
+            following: follows[0].map((f) => ({
+              username: (f.following as any)?.username,
+              userId: (f.following as any)?.id,
+              followedAt: f.followedAt,
+            })),
+            followers: follows[1].map((f) => ({
+              username: (f.follower as any)?.username,
+              userId: (f.follower as any)?.id,
+              followedAt: f.followedAt,
+            })),
+          }
+        : { following: [], followers: [] },
       bookmarks: bookmarks.map((b) => ({
         id: b.id,
         postId: (b.post as any)?.id,
@@ -265,13 +312,19 @@ export class ExportService {
         backgroundOptions: (s as any).backgroundOptions,
         arFilterName: (s as any).arFilterName,
         music: (s as any).music,
-        elements: ((s as any).elements || []).map((element: any) => ({ ...element, id: undefined, story: undefined })),
+        elements: ((s as any).elements || []).map((element: any) => ({
+          ...element,
+          id: undefined,
+          story: undefined,
+        })),
       })),
-      reels: posts.filter((p) => (p as any).reelEffect).map((p) => ({
-        id: p.id,
-        mediaUrl: ((p as any).media || [])[0]?.url ?? null,
-        caption: (p as any).content,
-      })),
+      reels: posts
+        .filter((p) => (p as any).reelEffect)
+        .map((p) => ({
+          id: p.id,
+          mediaUrl: ((p as any).media || [])[0]?.url ?? null,
+          caption: (p as any).content,
+        })),
       messages: [
         ...messages.map((m) => ({
           id: m.id,
@@ -300,17 +353,16 @@ export class ExportService {
         })),
       ],
       conversations: conversations.map((c) => {
-        const other = c.type === ConversationType.ONE_TO_ONE
-          ? (c.participants || []).find((p) => p.id !== userId)
-          : undefined;
+        const other =
+          c.type === ConversationType.ONE_TO_ONE
+            ? (c.participants || []).find((p) => p.id !== userId)
+            : undefined;
         return {
           id: c.id,
           type: c.type,
           name: c.name,
           isEncrypted: c.isEncrypted,
-          otherParticipant: other
-            ? { userId: other.id, username: other.username }
-            : null,
+          otherParticipant: other ? { userId: other.id, username: other.username } : null,
         };
       }),
       verification: verification.map((v) => ({
@@ -388,56 +440,71 @@ export class ExportService {
         purpose: l.purpose,
         createdAt: l.createdAt,
       })),
-      settings: canExportSettings ? {
-        postVisibility: (user as any).postVisibility,
-        commentPrivacy: (user as any).commentPrivacy,
-        messagePrivacy: (user as any).messagePrivacy,
-        profileTheme: user.profileTheme,
-        profileThemeColor: user.profileThemeColor,
-        notificationSettings: (user as any).notificationSettings,
-        followedHashtags: (user as any).followedHashtags,
-        blockedKeywords: (user as any).blockedKeywords,
-        blockedHashtags: (user as any).blockedHashtags,
-        blockedContentTypes: (user as any).blockedContentTypes,
-        closeFriends: user.closeFriends?.map((cf) => cf.username),
-      } : {},
-      personalization: canExportPersonalization ? {
-        accountPreferences: user.accountPreferences ?? {},
-        privacy: {
-          personalization: (user as any).personalization ?? null,
-          adPersonalization: (user as any).adPersonalization ?? null,
-          personalizationControls: (user as any).personalizationControls ?? {},
-        },
-      } : {},
-      analytics: canExportAnalytics ? {
-        posts: {
-          count: posts.length,
-          comments: comments.length,
-          reactions: reactions.length,
-        },
-        audience: {
-          following: follows[0].length,
-          followers: follows[1].length,
-        },
-        content: {
-          stories: stories.length,
-          articles: articles.length,
-          podcasts: podcasts.length,
-          courses: courses.length,
-        },
-        messaging: {
-          messages: messages.length + receivedMessages.length,
-          conversations: conversations.length,
-        },
-        commerce: {
-          orders: orders.length,
-          walletEntries: wallet.length,
-        },
-      } : {},
+      settings: canExportSettings
+        ? {
+            postVisibility: (user as any).postVisibility,
+            commentPrivacy: (user as any).commentPrivacy,
+            messagePrivacy: (user as any).messagePrivacy,
+            profileTheme: user.profileTheme,
+            profileThemeColor: user.profileThemeColor,
+            notificationSettings: (user as any).notificationSettings,
+            followedHashtags: (user as any).followedHashtags,
+            blockedKeywords: (user as any).blockedKeywords,
+            blockedHashtags: (user as any).blockedHashtags,
+            blockedContentTypes: (user as any).blockedContentTypes,
+            closeFriends: user.closeFriends?.map((cf) => cf.username),
+          }
+        : {},
+      personalization: canExportPersonalization
+        ? {
+            accountPreferences: user.accountPreferences ?? {},
+            privacy: {
+              personalization: (user as any).personalization ?? null,
+              adPersonalization: (user as any).adPersonalization ?? null,
+              personalizationControls: (user as any).personalizationControls ?? {},
+            },
+          }
+        : {},
+      analytics: canExportAnalytics
+        ? {
+            posts: {
+              count: posts.length,
+              comments: comments.length,
+              reactions: reactions.length,
+            },
+            audience: {
+              following: follows[0].length,
+              followers: follows[1].length,
+            },
+            content: {
+              stories: stories.length,
+              articles: articles.length,
+              podcasts: podcasts.length,
+              courses: courses.length,
+            },
+            messaging: {
+              messages: messages.length + receivedMessages.length,
+              conversations: conversations.length,
+            },
+            commerce: {
+              orders: orders.length,
+              walletEntries: wallet.length,
+            },
+          }
+        : {},
       exportManifest: {
         enabledCategories,
-        omittedCategories: (['profile', 'posts', 'messages', 'personalization', 'analytics', 'connected_services', 'settings'] as ExportCategory[])
-          .filter((category) => !hasCategory(category)),
+        omittedCategories: (
+          [
+            'profile',
+            'posts',
+            'messages',
+            'personalization',
+            'analytics',
+            'connected_services',
+            'settings',
+          ] as ExportCategory[]
+        ).filter((category) => !hasCategory(category)),
       },
       exportedAt: new Date().toISOString(),
       version: '2.1.0',
@@ -466,7 +533,7 @@ export class ExportService {
    */
   async importFromZip(
     userId: string,
-    zipBuffer: Buffer,
+    zipBuffer: Buffer
   ): Promise<{ imported: boolean; mediaRehosted: number; posts: number; comments: number }> {
     let zip: AdmZip;
     try {
@@ -495,7 +562,7 @@ export class ExportService {
     }
 
     const dataEntry = entries.find(
-      (entry) => entry.entryName === 'data.json' || entry.entryName.endsWith('/data.json'),
+      (entry) => entry.entryName === 'data.json' || entry.entryName.endsWith('/data.json')
     );
     if (!dataEntry) {
       throw new BadRequestException('Archive does not contain data.json.');
@@ -529,7 +596,7 @@ export class ExportService {
     }
 
     this.logger.log(
-      `Zip import for ${userId}: re-hosted ${mediaRehosted} media file(s), running JSON import.`,
+      `Zip import for ${userId}: re-hosted ${mediaRehosted} media file(s), running JSON import.`
     );
     const result = await this.importFromJson(userId, userData);
     return {
@@ -547,8 +614,28 @@ export class ExportService {
   // not restored: importing never fabricates money, trust, or credentials.
   async importFromJson(
     userId: string,
-    data: ExportData,
-  ): Promise<{ imported: boolean; posts: number; comments: number; reactions: number; bookmarks: number; stories: number; follows: number; articles: number; podcasts: number; courses: number; enrollments: number; messages: number; skippedMessages: number; conversations: number; skippedConversations: number; orders: number; walletEntries: number; verificationRequests: number; linkedAccounts: number }> {
+    data: ExportData
+  ): Promise<{
+    imported: boolean;
+    posts: number;
+    comments: number;
+    reactions: number;
+    bookmarks: number;
+    stories: number;
+    follows: number;
+    articles: number;
+    podcasts: number;
+    courses: number;
+    enrollments: number;
+    messages: number;
+    skippedMessages: number;
+    conversations: number;
+    skippedConversations: number;
+    orders: number;
+    walletEntries: number;
+    verificationRequests: number;
+    linkedAccounts: number;
+  }> {
     this.validateImportPayload(data);
 
     let importedPosts = 0;
@@ -579,7 +666,7 @@ export class ExportService {
       const enabledCategories = new Set<DataPermission>(
         user.accountDataPermissions === null || user.accountDataPermissions === undefined
           ? DEFAULT_DATA_PERMISSIONS
-          : user.accountDataPermissions as DataPermission[],
+          : (user.accountDataPermissions as DataPermission[])
       );
       const canImport = (permission: DataPermission) => enabledCategories.has(permission);
 
@@ -593,7 +680,18 @@ export class ExportService {
       }
       const settings = data.settings || {};
       if (canImport(DataPermission.SETTINGS)) {
-        for (const key of ['postVisibility', 'commentPrivacy', 'messagePrivacy', 'profileTheme', 'profileThemeColor', 'notificationSettings', 'followedHashtags', 'blockedKeywords', 'blockedHashtags', 'blockedContentTypes']) {
+        for (const key of [
+          'postVisibility',
+          'commentPrivacy',
+          'messagePrivacy',
+          'profileTheme',
+          'profileThemeColor',
+          'notificationSettings',
+          'followedHashtags',
+          'blockedKeywords',
+          'blockedHashtags',
+          'blockedContentTypes',
+        ]) {
           if (settings[key] !== undefined) (user as any)[key] = settings[key];
         }
       }
@@ -644,7 +742,10 @@ export class ExportService {
         for (const reactionData of data.reactions) {
           const post = postIdMap.get(reactionData.postId);
           if (!post || !reactionData.reaction) continue;
-          await manager.save(PostReaction, manager.create(PostReaction, { reaction: reactionData.reaction, user, post }));
+          await manager.save(
+            PostReaction,
+            manager.create(PostReaction, { reaction: reactionData.reaction, user, post })
+          );
           importedReactions++;
         }
       }
@@ -665,7 +766,9 @@ export class ExportService {
             textContent: storyData.textContent,
             mediaUrl: storyData.mediaUrl,
             audience: storyData.audience,
-            expiresAt: storyData.expiresAt ? new Date(storyData.expiresAt) : new Date(Date.now() + 24 * 60 * 60 * 1000),
+            expiresAt: storyData.expiresAt
+              ? new Date(storyData.expiresAt)
+              : new Date(Date.now() + 24 * 60 * 60 * 1000),
             backgroundOptions: storyData.backgroundOptions,
             arFilterName: storyData.arFilterName,
             music: storyData.music,
@@ -677,10 +780,11 @@ export class ExportService {
 
       const importedCourseIds = new Map<string, Course>();
       const createSlug = (title: string, sourceId: string | undefined) => {
-        const base = String(title || 'untitled')
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '') || 'untitled';
+        const base =
+          String(title || 'untitled')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') || 'untitled';
         return `${base}-${sourceId || Date.now()}`;
       };
 
@@ -747,7 +851,9 @@ export class ExportService {
         }
       }
 
-      const followingUsernames = (canImport(DataPermission.PROFILE) ? data.follows?.following ?? [] : [])
+      const followingUsernames = (
+        canImport(DataPermission.PROFILE) ? (data.follows?.following ?? []) : []
+      )
         .map((f: any) => f.username)
         .filter(Boolean) as string[];
       if (followingUsernames.length > 0) {
@@ -765,7 +871,7 @@ export class ExportService {
             manager.create(Follow, {
               followerId: userId,
               followingId: target.id,
-            } as Partial<Follow>),
+            } as Partial<Follow>)
           );
           importedFollows++;
         }
@@ -800,8 +906,8 @@ export class ExportService {
             where: { type: ConversationType.ONE_TO_ONE, participants: { id: user.id } },
             relations: ['participants'],
           });
-          let conversation = candidates.find(
-            (c) => (c.participants || []).some((p) => p.id === peer!.id),
+          let conversation = candidates.find((c) =>
+            (c.participants || []).some((p) => p.id === peer!.id)
           );
           if (!conversation) {
             conversation = await manager.save(
@@ -810,13 +916,13 @@ export class ExportService {
                 type: ConversationType.ONE_TO_ONE,
                 isEncrypted: !!user.publicKey && !!peer.publicKey,
                 participants: [user, peer],
-              } as Partial<Conversation>),
+              } as Partial<Conversation>)
             );
           }
           importedConversations++;
 
           const threadMessages = (data.messages || []).filter(
-            (m) => m.conversationId === convData.id,
+            (m) => m.conversationId === convData.id
           );
           for (const m of threadMessages) {
             const sender = m.direction === 'received' ? peer : user;
@@ -832,7 +938,7 @@ export class ExportService {
                 media: m.media ?? null,
                 voiceNote: m.voiceNote ?? null,
                 createdAt: m.createdAt ? new Date(m.createdAt) : undefined,
-              } as Partial<Message>),
+              } as Partial<Message>)
             );
             importedMessages++;
           }
@@ -861,7 +967,7 @@ export class ExportService {
                 note: 'Archival history from a Zynkra export. Does not change your spendable balance.',
               },
               createdAt: entry.createdAt ? new Date(entry.createdAt) : undefined,
-            } as Partial<LedgerEntry>),
+            } as Partial<LedgerEntry>)
           );
           importedWallet++;
         }
@@ -879,7 +985,7 @@ export class ExportService {
               total: o.total ?? 0,
               status: o.status ?? 'pending',
               createdAt: o.createdAt ? new Date(o.createdAt) : undefined,
-            } as Partial<Order>),
+            } as Partial<Order>)
           );
           importedOrders++;
         }
@@ -904,7 +1010,7 @@ export class ExportService {
               reviewNote: v.reviewNote ?? null,
               createdAt: v.createdAt ? new Date(v.createdAt) : undefined,
               updatedAt: v.updatedAt ? new Date(v.updatedAt) : new Date(),
-            } as Partial<VerificationRequest>),
+            } as Partial<VerificationRequest>)
           );
           importedVerification++;
         }
@@ -928,18 +1034,45 @@ export class ExportService {
               accessToken: null,
               isActive: account.isActive ?? true,
               createdAt: account.createdAt ? new Date(account.createdAt) : undefined,
-            } as Partial<ConnectedAccount>),
+            } as Partial<ConnectedAccount>)
           );
           importedLinkedAccounts++;
         }
       }
     });
 
-    return { imported: true, posts: importedPosts, comments: importedComments, reactions: importedReactions, bookmarks: importedBookmarks, stories: importedStories, follows: importedFollows, articles: importedArticles, podcasts: importedPodcasts, courses: importedCourses, enrollments: importedEnrollments, messages: importedMessages, skippedMessages, conversations: importedConversations, skippedConversations, orders: importedOrders, walletEntries: importedWallet, verificationRequests: importedVerification, linkedAccounts: importedLinkedAccounts };
+    return {
+      imported: true,
+      posts: importedPosts,
+      comments: importedComments,
+      reactions: importedReactions,
+      bookmarks: importedBookmarks,
+      stories: importedStories,
+      follows: importedFollows,
+      articles: importedArticles,
+      podcasts: importedPodcasts,
+      courses: importedCourses,
+      enrollments: importedEnrollments,
+      messages: importedMessages,
+      skippedMessages,
+      conversations: importedConversations,
+      skippedConversations,
+      orders: importedOrders,
+      walletEntries: importedWallet,
+      verificationRequests: importedVerification,
+      linkedAccounts: importedLinkedAccounts,
+    };
   }
 
   private validateImportPayload(data: ExportData): void {
-    if (!data || typeof data !== 'object' || Array.isArray(data) || !data.user || typeof data.user !== 'object' || Array.isArray(data.user)) {
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Array.isArray(data) ||
+      !data.user ||
+      typeof data.user !== 'object' ||
+      Array.isArray(data.user)
+    ) {
       throw new BadRequestException('Invalid export data: missing user object');
     }
 
@@ -947,7 +1080,23 @@ export class ExportService {
       throw new BadRequestException('Unsupported export version. Expected version 2.x.');
     }
 
-    const collections = ['posts', 'comments', 'reactions', 'bookmarks', 'stories', 'articles', 'podcasts', 'courses', 'enrollments', 'messages', 'orders', 'wallet', 'conversations', 'verification', 'linkedAccounts'] as const;
+    const collections = [
+      'posts',
+      'comments',
+      'reactions',
+      'bookmarks',
+      'stories',
+      'articles',
+      'podcasts',
+      'courses',
+      'enrollments',
+      'messages',
+      'orders',
+      'wallet',
+      'conversations',
+      'verification',
+      'linkedAccounts',
+    ] as const;
     // Message histories are the one collection that legitimately gets large;
     // everything else keeps the conservative 10k cap.
     const collectionLimits: Record<string, number> = { messages: 100000 };
@@ -955,17 +1104,25 @@ export class ExportService {
       if (data[collection] !== undefined && !Array.isArray(data[collection])) {
         throw new BadRequestException(`Invalid export data: ${collection} must be an array`);
       }
-      if (Array.isArray(data[collection]) && data[collection].length > (collectionLimits[collection] ?? 10000)) {
-        throw new BadRequestException(`Invalid export data: ${collection} exceeds the ${collectionLimits[collection] ?? 10000} item limit`);
+      if (
+        Array.isArray(data[collection]) &&
+        data[collection].length > (collectionLimits[collection] ?? 10000)
+      ) {
+        throw new BadRequestException(
+          `Invalid export data: ${collection} exceeds the ${collectionLimits[collection] ?? 10000} item limit`
+        );
       }
     }
 
-    if (data.follows !== undefined && (
-      typeof data.follows !== 'object' ||
-      !Array.isArray(data.follows.following) ||
-      !Array.isArray(data.follows.followers)
-    )) {
-      throw new BadRequestException('Invalid export data: follows must contain following and followers arrays');
+    if (
+      data.follows !== undefined &&
+      (typeof data.follows !== 'object' ||
+        !Array.isArray(data.follows.following) ||
+        !Array.isArray(data.follows.followers))
+    ) {
+      throw new BadRequestException(
+        'Invalid export data: follows must contain following and followers arrays'
+      );
     }
   }
 
@@ -1039,7 +1196,9 @@ export class ExportService {
     await remove('enrollments', this.enrollmentsRepo, { userId });
     await remove('posts', this.postsRepo, { user: { id: userId } });
 
-    const follows = await this.followsRepo.find({ where: [{ followerId: userId }, { followingId: userId }] });
+    const follows = await this.followsRepo.find({
+      where: [{ followerId: userId }, { followingId: userId }],
+    });
     deletedCounts.follows = follows.length;
     if (follows.length) await this.followsRepo.remove(follows);
 

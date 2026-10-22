@@ -11,13 +11,15 @@ import { PreKeysService } from './prekeys.service';
 
 const USER = { id: 'user-1', publicKey: 'IK-old' };
 
-function makeService(overrides: {
-  user?: any;
-  signedPreKeys?: any[];
-  oneTimePreKeys?: any[];
-  rotationEvents?: any[];
-  claimedPreKey?: any;
-} = {}) {
+function makeService(
+  overrides: {
+    user?: any;
+    signedPreKeys?: any[];
+    oneTimePreKeys?: any[];
+    rotationEvents?: any[];
+    claimedPreKey?: any;
+  } = {}
+) {
   const rotationEvents = overrides.rotationEvents ?? [];
   let eventSeq = 0;
 
@@ -53,12 +55,16 @@ function makeService(overrides: {
 
   const signedRows = (overrides.signedPreKeys ?? []).map((r) => ({ ...r }));
   const signedPreKeysRepository = {
-    find: jest.fn().mockImplementation(async () =>
-      signedRows.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
-    ),
+    find: jest
+      .fn()
+      .mockImplementation(async () =>
+        signedRows.slice().sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      ),
     findOne: jest.fn().mockImplementation(async ({ where }: any) => {
       const matches = signedRows
-        .filter((r) => r.userId === where.userId && (where.keyId === undefined || r.keyId === where.keyId))
+        .filter(
+          (r) => r.userId === where.userId && (where.keyId === undefined || r.keyId === where.keyId)
+        )
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       return matches[0] ? { ...matches[0] } : null;
     }),
@@ -131,7 +137,9 @@ function makeService(overrides: {
   };
 
   const usersRepository = {
-    findOne: jest.fn().mockResolvedValue(overrides.user === undefined ? { ...USER } : overrides.user),
+    findOne: jest
+      .fn()
+      .mockResolvedValue(overrides.user === undefined ? { ...USER } : overrides.user),
     save: jest.fn().mockImplementation(async (u: any) => u),
   };
 
@@ -140,7 +148,7 @@ function makeService(overrides: {
     oneTimePreKeysRepository as any,
     signedPreKeysRepository as any,
     {} as any, // preKeyBundlesRepository — unused by these paths
-    rotationEventsRepository as any,
+    rotationEventsRepository as any
   );
 
   return {
@@ -166,7 +174,7 @@ describe('PreKeysService key rotation', () => {
       await service.uploadIdentityKey('user-1', 'IK-new');
 
       expect(usersRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ publicKey: 'IK-new' }),
+        expect.objectContaining({ publicKey: 'IK-new' })
       );
       expect(rotationEvents).toHaveLength(1);
       expect(rotationEvents[0]).toMatchObject({ kind: 'identity', keyId: null });
@@ -179,8 +187,7 @@ describe('PreKeysService key rotation', () => {
     });
 
     it('purges pre-keys issued under the old identity on rotation', async () => {
-      const { service, oneTimePreKeysRepository, signedPreKeysRepository } =
-        makeService();
+      const { service, oneTimePreKeysRepository, signedPreKeysRepository } = makeService();
 
       await service.uploadIdentityKey('user-1', 'IK-new');
 
@@ -197,8 +204,7 @@ describe('PreKeysService key rotation', () => {
     });
 
     it('does not purge pre-keys on a same-key re-upload', async () => {
-      const { service, oneTimePreKeysRepository, signedPreKeysRepository } =
-        makeService();
+      const { service, oneTimePreKeysRepository, signedPreKeysRepository } = makeService();
 
       await service.uploadIdentityKey('user-1', 'IK-old');
 
@@ -210,7 +216,14 @@ describe('PreKeysService key rotation', () => {
       const past = new Date(Date.now() - 60_000);
       const { service } = makeService({
         rotationEvents: [
-          { id: 'e1', userId: 'user-1', kind: 'identity', keyId: null, detail: null, createdAt: past },
+          {
+            id: 'e1',
+            userId: 'user-1',
+            kind: 'identity',
+            keyId: null,
+            detail: null,
+            createdAt: past,
+          },
         ],
       });
 
@@ -223,7 +236,7 @@ describe('PreKeysService key rotation', () => {
     it('throws when the user has no identity key', async () => {
       const { service } = makeService({ user: { id: 'user-1', publicKey: null } });
       await expect(service.getIdentityKeyStatus('user-1')).rejects.toBeInstanceOf(
-        NotFoundException,
+        NotFoundException
       );
     });
   });
@@ -277,7 +290,14 @@ describe('PreKeysService key rotation', () => {
     it('skips keyIds that already exist instead of re-using them', async () => {
       const { service, otpkRows } = makeService({
         oneTimePreKeys: [
-          { id: 'k1', userId: 'user-1', keyId: 1, publicKey: 'P1', isUsed: false, createdAt: new Date() },
+          {
+            id: 'k1',
+            userId: 'user-1',
+            keyId: 1,
+            publicKey: 'P1',
+            isUsed: false,
+            createdAt: new Date(),
+          },
         ],
       });
 
@@ -343,7 +363,14 @@ describe('PreKeysService key rotation', () => {
       const { service } = makeService({
         signedPreKeys: [spk],
         rotationEvents: [
-          { id: 'e1', userId: 'user-1', kind: 'identity', keyId: null, detail: null, createdAt: rotatedAt },
+          {
+            id: 'e1',
+            userId: 'user-1',
+            kind: 'identity',
+            keyId: null,
+            detail: null,
+            createdAt: rotatedAt,
+          },
         ],
       });
 
@@ -359,8 +386,22 @@ describe('PreKeysService key rotation', () => {
       const since = new Date(Date.now() - 30_000);
       const { service } = makeService({
         rotationEvents: [
-          { id: 'old', userId: 'user-1', kind: 'identity', keyId: null, detail: null, createdAt: new Date(Date.now() - 120_000) },
-          { id: 'new', userId: 'user-1', kind: 'signed-prekey', keyId: 2, detail: null, createdAt: new Date(Date.now() - 10_000) },
+          {
+            id: 'old',
+            userId: 'user-1',
+            kind: 'identity',
+            keyId: null,
+            detail: null,
+            createdAt: new Date(Date.now() - 120_000),
+          },
+          {
+            id: 'new',
+            userId: 'user-1',
+            kind: 'signed-prekey',
+            keyId: 2,
+            detail: null,
+            createdAt: new Date(Date.now() - 10_000),
+          },
         ],
       });
 

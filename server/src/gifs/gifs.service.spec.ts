@@ -36,7 +36,10 @@ describe('GifsService', () => {
           {
             id: 'gif-1',
             title: 'Cat GIF',
-            images: { fixed_height: { url: 'https://media.giphy.com/1.gif' }, fixed_height_small: { url: 'https://media.giphy.com/1s.gif' } },
+            images: {
+              fixed_height: { url: 'https://media.giphy.com/1.gif' },
+              fixed_height_small: { url: 'https://media.giphy.com/1s.gif' },
+            },
           },
         ],
       },
@@ -47,10 +50,15 @@ describe('GifsService', () => {
     expect(configService.get).toHaveBeenCalledWith('GIPHY_API_KEY');
     expect(mockedAxiosGet).toHaveBeenCalledWith(
       'https://api.giphy.com/v1/gifs/search',
-      expect.objectContaining({ params: expect.objectContaining({ q: 'cats', limit: 5 }) }),
+      expect.objectContaining({ params: expect.objectContaining({ q: 'cats', limit: 5 }) })
     );
     expect(result).toEqual([
-      { id: 'gif-1', title: 'Cat GIF', url: 'https://media.giphy.com/1.gif', previewUrl: 'https://media.giphy.com/1s.gif' },
+      {
+        id: 'gif-1',
+        title: 'Cat GIF',
+        url: 'https://media.giphy.com/1.gif',
+        previewUrl: 'https://media.giphy.com/1s.gif',
+      },
     ]);
   });
 });

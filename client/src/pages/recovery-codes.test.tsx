@@ -17,7 +17,10 @@ describe('RecoveryCodesPage', () => {
     vi.clearAllMocks();
     mockGenerateRecoveryCodes.mockResolvedValue({ codes: ['ABCD-EFGH', 'IJKL-MNOP'] });
     mockGetTrustedRecoveryContacts.mockResolvedValue({ contacts: ['backup@example.com'] });
-    mockSetTrustedRecoveryContacts.mockResolvedValue({ contacts: ['backup@example.com'], message: 'updated' });
+    mockSetTrustedRecoveryContacts.mockResolvedValue({
+      contacts: ['backup@example.com'],
+      message: 'updated',
+    });
   });
 
   it('renders recovery codes and trusted contacts setup', async () => {
@@ -26,7 +29,7 @@ describe('RecoveryCodesPage', () => {
     render(
       <MemoryRouter>
         <RecoveryCodesPage />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     await waitFor(() => {

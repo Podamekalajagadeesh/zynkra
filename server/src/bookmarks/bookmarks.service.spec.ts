@@ -9,7 +9,14 @@ import { Collection } from './entities/collection.entity';
 import { UserInterestsService } from '../user-interests/user-interests.service';
 
 function makeBookmark(overrides: any = {}) {
-  return { id: 'bm-1', user: { id: 'user-1' }, post: { id: 'post-1', tags: [] }, collection: null, createdAt: new Date(), ...overrides };
+  return {
+    id: 'bm-1',
+    user: { id: 'user-1' },
+    post: { id: 'post-1', tags: [] },
+    collection: null,
+    createdAt: new Date(),
+    ...overrides,
+  };
 }
 
 function makePost(overrides: any = {}) {
@@ -31,9 +38,27 @@ describe('BookmarksService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BookmarksService,
-        { provide: getRepositoryToken(Bookmark), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() } },
+        {
+          provide: getRepositoryToken(Bookmark),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(Post), useValue: { findOne: jest.fn() } },
-        { provide: getRepositoryToken(Collection), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() } },
+        {
+          provide: getRepositoryToken(Collection),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
         { provide: UserInterestsService, useValue: { recordInteraction: jest.fn() } },
       ],
     }).compile();
@@ -61,7 +86,9 @@ describe('BookmarksService', () => {
     it('throws NotFoundException when post not found', async () => {
       postRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.create({ postId: 'missing' } as any, { id: 'user-1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.create({ postId: 'missing' } as any, { id: 'user-1' } as any)
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('validates collection belongs to user when collectionId provided', async () => {
@@ -70,7 +97,10 @@ describe('BookmarksService', () => {
       bookmarkRepo.create.mockReturnValue(makeBookmark());
       bookmarkRepo.save.mockResolvedValue(makeBookmark());
 
-      await service.create({ postId: 'post-1', collectionId: 'col-1' } as any, { id: 'user-1' } as any);
+      await service.create(
+        { postId: 'post-1', collectionId: 'col-1' } as any,
+        { id: 'user-1' } as any
+      );
       expect(collectionRepo.findOne).toHaveBeenCalled();
     });
 
@@ -78,7 +108,12 @@ describe('BookmarksService', () => {
       postRepo.findOne.mockResolvedValue(makePost());
       collectionRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.create({ postId: 'post-1', collectionId: 'missing' } as any, { id: 'user-1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.create(
+          { postId: 'post-1', collectionId: 'missing' } as any,
+          { id: 'user-1' } as any
+        )
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -114,7 +149,9 @@ describe('BookmarksService', () => {
 
     it('throws NotFoundException when bookmark not found', async () => {
       bookmarkRepo.findOne.mockResolvedValue(null);
-      await expect(service.remove('missing', { id: 'user-1' } as any)).rejects.toThrow(NotFoundException);
+      await expect(service.remove('missing', { id: 'user-1' } as any)).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -153,7 +190,9 @@ describe('BookmarksService', () => {
 
     it('throws NotFoundException when collection not found', async () => {
       collectionRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOneCollection('missing', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOneCollection('missing', 'user-1')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -172,7 +211,9 @@ describe('BookmarksService', () => {
 
     it('throws NotFoundException when not found', async () => {
       collectionRepo.findOne.mockResolvedValue(null);
-      await expect(service.updateCollection('missing', { name: 'X' } as any, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateCollection('missing', { name: 'X' } as any, 'user-1')
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -190,7 +231,9 @@ describe('BookmarksService', () => {
 
     it('throws NotFoundException when not found', async () => {
       collectionRepo.findOne.mockResolvedValue(null);
-      await expect(service.removeCollection('missing', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.removeCollection('missing', 'user-1')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 });

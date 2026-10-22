@@ -5,7 +5,18 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import { ShoppingCart, Users, Monitor, Settings, X, Tag, Clock, Play, Pause, Circle } from 'lucide-react';
+import {
+  ShoppingCart,
+  Users,
+  Monitor,
+  Settings,
+  X,
+  Tag,
+  Clock,
+  Play,
+  Pause,
+  Circle,
+} from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import LiveStreamChat from '../components/LiveStreamChat';
 import { LiveShoppingProductPanel } from '../components/liveshopping/LiveShoppingProductPanel';
@@ -58,7 +69,7 @@ export const LiveShoppingPage = () => {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<LiveShoppingProduct[]>([]);
   const [newProductSearch, setNewProductSearch] = useState('');
-  
+
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const userVideo = useRef<HTMLVideoElement>(null);
   const { user: currentUser } = useAuth();
@@ -69,7 +80,7 @@ export const LiveShoppingPage = () => {
   useEffect(() => {
     if (id) {
       // Fetch live shopping event details
-      api.get(`/live-shopping/events/${id}`).then(response => {
+      api.get(`/live-shopping/events/${id}`).then((response) => {
         setEvent(response.data);
         if (response.data.products.length > 0) {
           setFeaturedProductId(response.data.products[0].id);
@@ -77,7 +88,7 @@ export const LiveShoppingPage = () => {
       });
 
       // Fetch host's products that can be added to the stream
-      api.get('/products').then(response => {
+      api.get('/products').then((response) => {
         const formattedProducts = response.data.map((p: any) => ({
           id: p.id,
           name: p.name,
@@ -87,8 +98,8 @@ export const LiveShoppingPage = () => {
             id: v.id,
             name: v.name,
             price: v.price,
-            stock: v.stock
-          }))
+            stock: v.stock,
+          })),
         }));
         setAvailableProducts(formattedProducts);
       });
@@ -105,7 +116,7 @@ export const LiveShoppingPage = () => {
     });
 
     socket.on('viewer-count-updated', ({ count }) => {
-      setEvent(prev => prev ? { ...prev, viewerCount: count } : null);
+      setEvent((prev) => (prev ? { ...prev, viewerCount: count } : null));
     });
 
     return () => {
@@ -130,14 +141,17 @@ export const LiveShoppingPage = () => {
         video: true,
         audio: true,
       });
-      
+
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
       }
 
       // Connect to LiveKit
       const newRoom = new Room();
-      await newRoom.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', 'stream-token');
+      await newRoom.connect(
+        process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com',
+        'stream-token'
+      );
       setRoom(newRoom);
 
       setIsStreaming(true);
@@ -169,11 +183,11 @@ export const LiveShoppingPage = () => {
 
   // Host: Start flash sale on a product
   const handleStartFlashSale = (productId: string, duration: number, discount: number) => {
-    socket.emit('start-flash-sale', { 
-      eventId: id, 
-      productId, 
+    socket.emit('start-flash-sale', {
+      eventId: id,
+      productId,
       durationMinutes: duration,
-      discountPercentage: discount 
+      discountPercentage: discount,
     });
     addToast(`Flash sale started! ${discount}% off for ${duration} minutes`, 'success');
   };
@@ -196,7 +210,11 @@ export const LiveShoppingPage = () => {
   };
 
   if (!event) {
-    return <PageShell><div className="flex items-center justify-center h-96">Loading live shopping event...</div></PageShell>;
+    return (
+      <PageShell>
+        <div className="flex items-center justify-center h-96">Loading live shopping event...</div>
+      </PageShell>
+    );
   }
 
   return (
@@ -221,8 +239,8 @@ export const LiveShoppingPage = () => {
                     <Users className="w-4 h-4" />
                     <span>{event.viewerCount} watching</span>
                   </div>
-                  <img 
-                    src={event.hostAvatar} 
+                  <img
+                    src={event.hostAvatar}
                     alt={event.hostName}
                     className="w-6 h-6 rounded-full inline-block"
                   />
@@ -234,18 +252,12 @@ export const LiveShoppingPage = () => {
               {isHost && (
                 <div className="flex gap-2">
                   {!isStreaming ? (
-                    <Button 
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={handleStartStream}
-                    >
+                    <Button className="bg-green-600 hover:bg-green-700" onClick={handleStartStream}>
                       <Play className="w-4 h-4 mr-2" />
                       Go Live
                     </Button>
                   ) : (
-                    <Button 
-                      className="bg-red-600 hover:bg-red-700"
-                      onClick={handleStopStream}
-                    >
+                    <Button className="bg-red-600 hover:bg-red-700" onClick={handleStopStream}>
                       <Pause className="w-4 h-4 mr-2" />
                       End Stream
                     </Button>
@@ -257,10 +269,10 @@ export const LiveShoppingPage = () => {
 
           {/* Video stream */}
           <div className="flex-1 bg-black relative">
-            <video 
+            <video
               ref={userVideo}
-              autoPlay 
-              muted 
+              autoPlay
+              muted
               playsInline
               className="w-full h-full object-contain"
             />
@@ -280,7 +292,9 @@ export const LiveShoppingPage = () => {
                 <div className="text-center">
                   <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h2 className="text-2xl font-bold text-white">Stream hasn't started yet</h2>
-                  <p className="text-gray-400 mt-2">Check back later for the live shopping event!</p>
+                  <p className="text-gray-400 mt-2">
+                    Check back later for the live shopping event!
+                  </p>
                 </div>
               </div>
             )}
@@ -293,7 +307,7 @@ export const LiveShoppingPage = () => {
         </div>
 
         {/* Live shopping product panel */}
-        <LiveShoppingProductPanel 
+        <LiveShoppingProductPanel
           products={event.products}
           host={isHost}
           featuredProductId={featuredProductId || undefined}
@@ -307,7 +321,10 @@ export const LiveShoppingPage = () => {
           <div className="bg-dark-900 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
             <div className="p-4 border-b border-dark-700 flex items-center justify-between">
               <h3 className="text-xl font-bold text-white">Add Product to Stream</h3>
-              <button onClick={() => setShowAddProductModal(false)} className="text-gray-400 hover:text-white">
+              <button
+                onClick={() => setShowAddProductModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -320,17 +337,20 @@ export const LiveShoppingPage = () => {
               />
               <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                 {availableProducts
-                  .filter(p => p.name.toLowerCase().includes(newProductSearch.toLowerCase()))
-                  .map(product => (
-                    <div key={product.id} className="bg-dark-800 rounded-lg p-3 border border-dark-700">
-                      <img 
-                        src={product.imageUrl} 
+                  .filter((p) => p.name.toLowerCase().includes(newProductSearch.toLowerCase()))
+                  .map((product) => (
+                    <div
+                      key={product.id}
+                      className="bg-dark-800 rounded-lg p-3 border border-dark-700"
+                    >
+                      <img
+                        src={product.imageUrl}
                         alt={product.name}
                         className="w-full h-32 object-cover rounded-md mb-2"
                       />
                       <h4 className="font-medium text-white">{product.name}</h4>
                       <p className="text-sm text-gray-400">${product.variants[0]?.price}</p>
-                      <Button 
+                      <Button
                         className="w-full mt-2"
                         onClick={() => handleAddProductToStream(product)}
                       >

@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, NotFoundException, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UsersService } from '../users/users.service';
@@ -18,15 +31,12 @@ export class AdminController {
     private readonly usersService: UsersService,
     private readonly adminService: AdminService,
     private readonly changelogService: ChangelogService,
-    private readonly sandboxEnvironmentsService: SandboxEnvironmentsService,
+    private readonly sandboxEnvironmentsService: SandboxEnvironmentsService
   ) {}
 
   @Get('reports')
   @UseGuards(JwtAuthGuard, AdminGuard)
-  listReports(
-    @Query('take') take?: string,
-    @Query('skip') skip?: string,
-  ) {
+  listReports(@Query('take') take?: string, @Query('skip') skip?: string) {
     return this.adminService.getReports(this.parsePageSize(take), this.parsePageSize(skip));
   }
 

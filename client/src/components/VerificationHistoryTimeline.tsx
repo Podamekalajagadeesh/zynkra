@@ -97,9 +97,7 @@ export function VerificationHistoryTimeline() {
                 <div className="flex-shrink-0 pt-1">{getStatusIcon(entry.status)}</div>
                 <div className="flex-grow">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-dark-900 dark:text-white">
-                      {entry.action}
-                    </p>
+                    <p className="font-medium text-dark-900 dark:text-white">{entry.action}</p>
                     <span className="text-xs text-dark-500">
                       {new Date(entry.timestamp).toLocaleDateString()}
                     </span>
@@ -108,14 +106,10 @@ export function VerificationHistoryTimeline() {
                     Status: <span className="font-semibold">{getStatusLabel(entry.status)}</span>
                   </p>
                   {entry.details && (
-                    <p className="text-sm text-dark-600 dark:text-dark-300 mt-2">
-                      {entry.details}
-                    </p>
+                    <p className="text-sm text-dark-600 dark:text-dark-300 mt-2">{entry.details}</p>
                   )}
                   {entry.reviewedBy && (
-                    <p className="text-xs text-dark-500 mt-2">
-                      Reviewed by: {entry.reviewedBy}
-                    </p>
+                    <p className="text-xs text-dark-500 mt-2">Reviewed by: {entry.reviewedBy}</p>
                   )}
                 </div>
               </div>

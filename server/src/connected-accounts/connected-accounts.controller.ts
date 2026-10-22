@@ -1,4 +1,17 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ConnectedAccountsService } from './connected-accounts.service';
@@ -16,7 +29,7 @@ export class ConnectedAccountsController {
   @Post()
   create(
     @Req() req: Request,
-    @Body() body: { platform: string; apiKey?: string; apiSecret?: string; accessToken?: string },
+    @Body() body: { platform: string; apiKey?: string; apiSecret?: string; accessToken?: string }
   ) {
     if (!body?.platform) {
       throw new BadRequestException('platform is required');
@@ -26,7 +39,11 @@ export class ConnectedAccountsController {
 
   @Patch(':id')
   updateActive(@Req() req: Request, @Param('id') id: string, @Body() body: { isActive?: boolean }) {
-    return this.connectedAccountsService.updateActive(this.getUserId(req), id, body?.isActive ?? true);
+    return this.connectedAccountsService.updateActive(
+      this.getUserId(req),
+      id,
+      body?.isActive ?? true
+    );
   }
 
   @Delete(':id')

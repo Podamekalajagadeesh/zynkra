@@ -24,7 +24,7 @@ export class PostFederationService {
 
   constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /** Federation is opt-in and off by default, matching FEDERATION_ENABLED. */
@@ -63,14 +63,12 @@ export class PostFederationService {
     const report = await federationService.federateDelete(authorId, postId, targets);
 
     if (report.skipped) {
-      this.logger.log(
-        `Post ${postId} was never federated — no Delete emitted (${report.reason})`,
-      );
+      this.logger.log(`Post ${postId} was never federated — no Delete emitted (${report.reason})`);
       return;
     }
 
     this.logger.log(
-      `Federated Delete for post ${postId} to ${report.delivered}/${report.requested} instance(s)`,
+      `Federated Delete for post ${postId} to ${report.delivered}/${report.requested} instance(s)`
     );
   }
 
@@ -113,7 +111,7 @@ export class PostFederationService {
     }
 
     this.logger.log(
-      `Federated Update for post ${post.id} to ${report.delivered}/${report.requested} instance(s)`,
+      `Federated Update for post ${post.id} to ${report.delivered}/${report.requested} instance(s)`
     );
   }
 
@@ -169,12 +167,12 @@ export class PostFederationService {
         content: post.content,
         publishedAt: post.createdAt ?? new Date(),
       } as any,
-      targets,
+      targets
     );
 
     this.logger.log(
       `Federated post ${post.id} to ${report.delivered}/${report.requested} instance(s)` +
-        (report.failed > 0 ? ` (${report.failed} failed)` : ''),
+        (report.failed > 0 ? ` (${report.failed} failed)` : '')
     );
   }
 }

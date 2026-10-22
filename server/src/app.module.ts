@@ -116,7 +116,7 @@ import { DocumentationModule } from './documentation/documentation.module';
       {
         rootPath: join(process.cwd(), 'uploads'),
         serveRoot: '/uploads',
-      },
+      }
     ),
     ConfigModule.forRoot({
       isGlobal: true,

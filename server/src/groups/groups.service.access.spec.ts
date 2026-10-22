@@ -88,7 +88,11 @@ describe('GroupsService (membership & channel access)', () => {
 
       const member = await service.joinGroup('g1', user);
 
-      expect(member).toEqual({ group: { id: 'g1', privacy: GroupPrivacy.PUBLIC }, user, role: GroupRole.MEMBER });
+      expect(member).toEqual({
+        group: { id: 'g1', privacy: GroupPrivacy.PUBLIC },
+        user,
+        role: GroupRole.MEMBER,
+      });
       expect(groupMembersRepo.save).toHaveBeenCalled();
     });
 
@@ -97,7 +101,9 @@ describe('GroupsService (membership & channel access)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
       lockdownsRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.joinGroup('g1', user)).resolves.toMatchObject({ role: GroupRole.MEMBER });
+      await expect(service.joinGroup('g1', user)).resolves.toMatchObject({
+        role: GroupRole.MEMBER,
+      });
     });
 
     it('hides secret groups behind a 404', async () => {
@@ -120,7 +126,10 @@ describe('GroupsService (membership & channel access)', () => {
     it('rejects joins while the group is in lockdown', async () => {
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
       groupMembersRepo.findOne.mockResolvedValue(null);
-      lockdownsRepo.findOne.mockResolvedValue({ id: 'l1', activeUntil: new Date(Date.now() + 60_000) });
+      lockdownsRepo.findOne.mockResolvedValue({
+        id: 'l1',
+        activeUntil: new Date(Date.now() + 60_000),
+      });
 
       await expect(service.joinGroup('g1', user)).rejects.toBeInstanceOf(ForbiddenException);
       expect(groupMembersRepo.save).not.toHaveBeenCalled();
@@ -159,16 +168,12 @@ describe('GroupsService (membership & channel access)', () => {
   describe('getDiscoverableGroups', () => {
     it('returns public groups the caller has not joined', async () => {
       groupMembersRepo.find.mockResolvedValue([{ group: { id: 'g-joined' } }]);
-      groupsRepo.find.mockResolvedValue([
-        { id: 'g-joined' },
-        { id: 'g-open' },
-        { id: 'g-other' },
-      ]);
+      groupsRepo.find.mockResolvedValue([{ id: 'g-joined' }, { id: 'g-open' }, { id: 'g-other' }]);
 
       const result = await service.getDiscoverableGroups(user);
       expect(result.map((g) => g.id)).toEqual(['g-open', 'g-other']);
       expect(groupsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { privacy: GroupPrivacy.PUBLIC } }),
+        expect.objectContaining({ where: { privacy: GroupPrivacy.PUBLIC } })
       );
     });
   });
@@ -192,7 +197,9 @@ describe('GroupsService (membership & channel access)', () => {
       channelsRepo.findOne.mockResolvedValue(channelOf(GroupPrivacy.PRIVATE));
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getMessages('c1', stranger.id)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.getMessages('c1', stranger.id)).rejects.toBeInstanceOf(
+        ForbiddenException
+      );
       expect(messagesRepo.find).not.toHaveBeenCalled();
     });
 
@@ -200,7 +207,9 @@ describe('GroupsService (membership & channel access)', () => {
       channelsRepo.findOne.mockResolvedValue(channelOf(GroupPrivacy.SECRET));
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getMessages('c1', stranger.id)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getMessages('c1', stranger.id)).rejects.toBeInstanceOf(
+        NotFoundException
+      );
     });
 
     it('lets private-group members read', async () => {
@@ -218,7 +227,11 @@ describe('GroupsService (membership & channel access)', () => {
   });
 
   describe('addMessage', () => {
-    const publicChannel = { id: 'c1', type: 'group', group: { id: 'g1', privacy: GroupPrivacy.PUBLIC } };
+    const publicChannel = {
+      id: 'c1',
+      type: 'group',
+      group: { id: 'g1', privacy: GroupPrivacy.PUBLIC },
+    };
     const broadcastChannel = {
       id: 'c2',
       type: 'broadcast',
@@ -229,7 +242,9 @@ describe('GroupsService (membership & channel access)', () => {
       channelsRepo.findOne.mockResolvedValue(publicChannel);
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(
+        ForbiddenException
+      );
       expect(messagesRepo.save).not.toHaveBeenCalled();
     });
 
@@ -242,7 +257,7 @@ describe('GroupsService (membership & channel access)', () => {
 
       expect(saved).toMatchObject({ content: 'hi' });
       expect(channelMembersRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ role: 'member' }),
+        expect.objectContaining({ role: 'member' })
       );
       expect(gateway.sendMessageToChannel).toHaveBeenCalledWith('c1', saved);
     });
@@ -265,7 +280,9 @@ describe('GroupsService (membership & channel access)', () => {
       });
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(
+        ForbiddenException
+      );
     });
 
     it('requires channel-admin role to post in broadcast channels', async () => {
@@ -273,7 +290,7 @@ describe('GroupsService (membership & channel access)', () => {
       channelMembersRepo.findOne.mockResolvedValue({ id: 'cm1', role: 'member' });
 
       await expect(service.addMessage('c2', 'announcement', user)).rejects.toBeInstanceOf(
-        UnauthorizedException,
+        UnauthorizedException
       );
       expect(messagesRepo.save).not.toHaveBeenCalled();
     });

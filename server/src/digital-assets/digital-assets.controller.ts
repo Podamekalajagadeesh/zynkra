@@ -30,8 +30,9 @@ export class DigitalAssetsController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [new MaxFileSizeValidator({ maxSize: 100 * 1024 * 1024 })], // 100MB max
-      }),
-    ) file: Express.Multer.File,
+      })
+    )
+    file: Express.Multer.File
   ) {
     return this.digitalAssetsService.createAsset(user.userId, createAssetDto, file.buffer);
   }
@@ -50,28 +51,19 @@ export class DigitalAssetsController {
 
   @Post('transfer')
   @UseGuards(JwtAuthGuard)
-  async transferAsset(
-    @CurrentUser() user: any,
-    @Body() transferAssetDto: TransferAssetDto,
-  ) {
+  async transferAsset(@CurrentUser() user: any, @Body() transferAssetDto: TransferAssetDto) {
     return this.digitalAssetsService.transferAsset(user.userId, transferAssetDto);
   }
 
   @Post(':id/sync-to-instance/:domain')
   @UseGuards(JwtAuthGuard)
-  async syncAssetToRemoteInstance(
-    @Param('id') id: string,
-    @Param('domain') domain: string,
-  ) {
+  async syncAssetToRemoteInstance(@Param('id') id: string, @Param('domain') domain: string) {
     return this.digitalAssetsService.syncAssetToRemoteInstance(id, domain);
   }
 
   @Get(':id/verify-interoperability/:platform')
   @UseGuards(JwtAuthGuard)
-  async verifyAssetInteroperability(
-    @Param('id') id: string,
-    @Param('platform') platform: string,
-  ) {
+  async verifyAssetInteroperability(@Param('id') id: string, @Param('platform') platform: string) {
     return this.digitalAssetsService.verifyAssetInteroperability(id, platform);
   }
 }

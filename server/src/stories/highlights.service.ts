@@ -12,11 +12,14 @@ export class HighlightsService {
   constructor(
     @InjectRepository(StoryHighlight)
     private highlightsRepository: Repository<StoryHighlight>,
-    private readonly storiesService: StoriesService,
+    private readonly storiesService: StoriesService
   ) {}
 
   async create(createHighlightDto: CreateHighlightDto, user: User): Promise<StoryHighlight> {
-    const stories = await this.storiesService.findMultipleByIds(createHighlightDto.storyIds, user.id);
+    const stories = await this.storiesService.findMultipleByIds(
+      createHighlightDto.storyIds,
+      user.id
+    );
     if (stories.length !== createHighlightDto.storyIds.length) {
       throw new NotFoundException('One or more stories not found or do not belong to the user.');
     }
@@ -43,14 +46,21 @@ export class HighlightsService {
     return highlight;
   }
 
-  async update(id: string, updateHighlightDto: UpdateHighlightDto, user: User): Promise<StoryHighlight> {
+  async update(
+    id: string,
+    updateHighlightDto: UpdateHighlightDto,
+    user: User
+  ): Promise<StoryHighlight> {
     const highlight = await this.findOne(id);
     if (highlight.user.id !== user.id) {
       throw new UnauthorizedException();
     }
 
     if (updateHighlightDto.storyIds) {
-      const stories = await this.storiesService.findMultipleByIds(updateHighlightDto.storyIds, user.id);
+      const stories = await this.storiesService.findMultipleByIds(
+        updateHighlightDto.storyIds,
+        user.id
+      );
       if (stories.length !== updateHighlightDto.storyIds.length) {
         throw new NotFoundException('One or more stories not found or do not belong to the user.');
       }

@@ -27,7 +27,7 @@ export class WebhooksService {
     @InjectRepository(WebhookDelivery)
     private readonly deliveriesRepository: Repository<WebhookDelivery>,
     @Inject(forwardRef(() => PaymentsService))
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentsService: PaymentsService
   ) {}
 
   async handleStripeWebhook(rawBody: Buffer, signature: string) {
@@ -38,7 +38,7 @@ export class WebhooksService {
 
   async createEndpoint(
     developerId: string,
-    dto: CreateWebhookEndpointDto,
+    dto: CreateWebhookEndpointDto
   ): Promise<WebhookEndpoint & { secret: string }> {
     const secret = randomBytes(32).toString('base64url');
     const endpoint = this.endpointsRepository.create({
@@ -62,7 +62,7 @@ export class WebhooksService {
   async updateEndpoint(
     developerId: string,
     endpointId: string,
-    dto: UpdateWebhookEndpointDto,
+    dto: UpdateWebhookEndpointDto
   ): Promise<WebhookEndpoint> {
     const endpoint = await this.getOwnedEndpoint(developerId, endpointId);
     if (dto.url !== undefined) endpoint.url = dto.url;
@@ -76,10 +76,7 @@ export class WebhooksService {
     await this.endpointsRepository.remove(endpoint);
   }
 
-  async rotateSecret(
-    developerId: string,
-    endpointId: string,
-  ): Promise<{ secret: string }> {
+  async rotateSecret(developerId: string, endpointId: string): Promise<{ secret: string }> {
     const endpoint = await this.getOwnedEndpoint(developerId, endpointId);
     const secret = randomBytes(32).toString('base64url');
     endpoint.secretHash = sha256(secret);
@@ -87,10 +84,7 @@ export class WebhooksService {
     return { secret };
   }
 
-  async getDeliveries(
-    developerId: string,
-    endpointId: string,
-  ): Promise<WebhookDelivery[]> {
+  async getDeliveries(developerId: string, endpointId: string): Promise<WebhookDelivery[]> {
     await this.getOwnedEndpoint(developerId, endpointId);
     return this.deliveriesRepository.find({
       where: { endpoint: { id: endpointId } },
@@ -105,9 +99,7 @@ export class WebhooksService {
     const targets = endpoints.filter((e) => e.events.includes(event));
     if (targets.length === 0) return;
 
-    await Promise.allSettled(
-      targets.map((endpoint) => this.deliver(endpoint, event, payload)),
-    );
+    await Promise.allSettled(targets.map((endpoint) => this.deliver(endpoint, event, payload)));
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -127,7 +119,7 @@ export class WebhooksService {
   private async deliver(
     endpoint: WebhookEndpoint,
     event: string,
-    payload: Record<string, unknown>,
+    payload: Record<string, unknown>
   ): Promise<void> {
     let delivery = this.deliveriesRepository.create({
       endpoint,
@@ -145,10 +137,7 @@ export class WebhooksService {
     });
   }
 
-  private async send(
-    endpoint: WebhookEndpoint,
-    delivery: WebhookDelivery,
-  ): Promise<void> {
+  private async send(endpoint: WebhookEndpoint, delivery: WebhookDelivery): Promise<void> {
     const body = JSON.stringify({
       id: delivery.id,
       event: delivery.event,
@@ -189,7 +178,7 @@ export class WebhooksService {
 
   private async getOwnedEndpoint(
     developerId: string,
-    endpointId: string,
+    endpointId: string
   ): Promise<WebhookEndpoint> {
     const endpoint = await this.endpointsRepository.findOne({
       where: { id: endpointId, developer: { id: developerId } },

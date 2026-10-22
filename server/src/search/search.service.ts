@@ -34,7 +34,7 @@ export class SearchService {
     private readonly eventsRepository: Repository<Event>,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
-    private readonly visibilityService: VisibilityService,
+    private readonly visibilityService: VisibilityService
   ) {}
 
   private normalize(query: string): string {
@@ -64,9 +64,10 @@ export class SearchService {
             .where('user."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('user.username ILIKE :pattern')
             .orWhere('user."displayName" ILIKE :pattern');
-        }),
+        })
       )
-      .andWhere(`(
+      .andWhere(
+        `(
           user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
           (user."searchVisibility" = 'friends' AND EXISTS (
             SELECT 1 FROM follows f1
@@ -75,7 +76,9 @@ export class SearchService {
             SELECT 1 FROM follows f2
             WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
           ))
-        )`, { viewerId: viewerId ?? null })
+        )`,
+        { viewerId: viewerId ?? null }
+      )
       .orderBy(this.rank('user'), 'DESC')
       .setParameter('ftsQuery', q)
       .setParameter('pattern', pattern)
@@ -90,7 +93,7 @@ export class SearchService {
           contentQuery
             .where('post."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('post.content ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('post'), 'DESC')
       .addOrderBy('post."createdAt"', 'DESC')
@@ -109,7 +112,7 @@ export class SearchService {
               tagQuery
                 .where('tag."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
                 .orWhere('tag.name ILIKE :pattern');
-            }),
+            })
           )
           .orderBy(this.rank('tag'), 'DESC')
           .setParameter('ftsQuery', q)
@@ -119,10 +122,10 @@ export class SearchService {
       ).map(async (tag) => {
         const countRow: { count: number }[] = await this.tagsRepository.query(
           `SELECT COUNT(*)::int AS count FROM post_tags pt WHERE pt."tag_id" = $1`,
-          [tag.id],
+          [tag.id]
         );
         return { ...tag, postCount: countRow[0]?.count ?? 0 };
-      }),
+      })
     );
 
     const places = await this.placesRepository
@@ -133,7 +136,7 @@ export class SearchService {
             .where('place."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('place.name ILIKE :pattern')
             .orWhere('place.address ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('place'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -150,7 +153,7 @@ export class SearchService {
               groupQuery
                 .where('group."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
                 .orWhere('group.name ILIKE :pattern');
-            }),
+            })
           )
           .orderBy(this.rank('group'), 'DESC')
           .setParameter('ftsQuery', q)
@@ -160,10 +163,10 @@ export class SearchService {
       ).map(async (group) => {
         const countRow: { count: number }[] = await this.groupsRepository.query(
           `SELECT COUNT(*)::int AS count FROM group_members gm WHERE gm."groupId" = $1`,
-          [group.id],
+          [group.id]
         );
         return { ...group, memberCount: countRow[0]?.count ?? 0 };
-      }),
+      })
     );
 
     const events = await this.eventsRepository
@@ -174,7 +177,7 @@ export class SearchService {
             .where('event."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('event.title ILIKE :pattern')
             .orWhere('event.description ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('event'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -190,7 +193,7 @@ export class SearchService {
             .where('product."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('product.name ILIKE :pattern')
             .orWhere('product.description ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('product'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -249,9 +252,10 @@ export class SearchService {
             .where('user."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('user.username ILIKE :pattern')
             .orWhere('user."displayName" ILIKE :pattern');
-        }),
+        })
       )
-      .andWhere(`(
+      .andWhere(
+        `(
           user.id = :viewerId OR user."searchVisibility" = 'everyone' OR
           (user."searchVisibility" = 'friends' AND EXISTS (
             SELECT 1 FROM follows f1
@@ -260,7 +264,9 @@ export class SearchService {
             SELECT 1 FROM follows f2
             WHERE f2."followerId" = user.id AND f2."followingId" = :viewerId
           ))
-        )`, { viewerId: viewerId ?? null })
+        )`,
+        { viewerId: viewerId ?? null }
+      )
       .orderBy(this.rank('user'), 'DESC')
       .setParameter('ftsQuery', q)
       .setParameter('pattern', pattern)
@@ -281,7 +287,7 @@ export class SearchService {
           contentQuery
             .where('post."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('post.content ILIKE :pattern');
-        }),
+        })
       )
       .setParameter('ftsQuery', q)
       .setParameter('pattern', pattern);
@@ -292,12 +298,12 @@ export class SearchService {
       query.orderBy(this.rank('post'), 'DESC').addOrderBy('post."createdAt"', 'DESC');
     }
 
-    const posts = await query
-      .limit(limit)
-      .offset(offset)
-      .getMany();
+    const posts = await query.limit(limit).offset(offset).getMany();
 
-    const filteredPosts = await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, posts);
+    const filteredPosts = await this.visibilityService.filterVisiblePostsForViewer(
+      viewerId ?? null,
+      posts
+    );
 
     return { posts: filteredPosts, total: filteredPosts.length };
   }
@@ -311,7 +317,7 @@ export class SearchService {
           tagQuery
             .where('tag."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('tag.name ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('tag'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -324,10 +330,10 @@ export class SearchService {
       rows.map(async (tag) => {
         const countRow: { count: number }[] = await this.tagsRepository.query(
           `SELECT COUNT(*)::int AS count FROM post_tags pt WHERE pt."tag_id" = $1`,
-          [tag.id],
+          [tag.id]
         );
         return { ...tag, postCount: countRow[0]?.count ?? 0 };
-      }),
+      })
     );
 
     return { hashtags, total: hashtags.length };
@@ -343,7 +349,7 @@ export class SearchService {
             .where('place."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('place.name ILIKE :pattern')
             .orWhere('place.address ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('place'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -364,7 +370,7 @@ export class SearchService {
           groupQuery
             .where('group."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('group.name ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('group'), 'DESC')
       .setParameter('ftsQuery', q)
@@ -377,10 +383,10 @@ export class SearchService {
       rows.map(async (group) => {
         const countRow: { count: number }[] = await this.groupsRepository.query(
           `SELECT COUNT(*)::int AS count FROM group_members gm WHERE gm."groupId" = $1`,
-          [group.id],
+          [group.id]
         );
         return { ...group, memberCount: countRow[0]?.count ?? 0 };
-      }),
+      })
     );
 
     return { groups, total: groups.length };
@@ -396,7 +402,7 @@ export class SearchService {
             .where('event."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('event.title ILIKE :pattern')
             .orWhere('event.description ILIKE :pattern');
-        }),
+        })
       )
       .orderBy('event.date', 'ASC')
       .setParameter('ftsQuery', q)
@@ -418,7 +424,7 @@ export class SearchService {
             .where('product."searchVector" @@ websearch_to_tsquery(\'simple\', :ftsQuery)')
             .orWhere('product.name ILIKE :pattern')
             .orWhere('product.description ILIKE :pattern');
-        }),
+        })
       )
       .orderBy(this.rank('product'), 'DESC')
       .addOrderBy('product."createdAt"', 'DESC')
@@ -468,7 +474,13 @@ export class SearchService {
     const textResults = query?.trim()
       ? await this.search(query.trim())
       : {
-          users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [],
+          users: [],
+          posts: [],
+          hashtags: [],
+          places: [],
+          groups: [],
+          events: [],
+          products: [],
         };
 
     return {
@@ -503,7 +515,13 @@ export class SearchService {
         query: normalizedQuery,
         results: [
           ...(data.AbstractText && data.AbstractURL
-            ? [{ title: data.Heading || normalizedQuery, snippet: data.AbstractText, url: data.AbstractURL }]
+            ? [
+                {
+                  title: data.Heading || normalizedQuery,
+                  snippet: data.AbstractText,
+                  url: data.AbstractURL,
+                },
+              ]
             : []),
           ...relatedTopics,
         ].slice(0, MAX_RESULTS),

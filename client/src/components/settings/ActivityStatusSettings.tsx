@@ -25,10 +25,7 @@ export function ActivityStatusSettings() {
       .catch(() => setLoaded(true));
   }, []);
 
-  const update = async (patch: {
-    showOnlineStatus?: boolean;
-    showLastSeenTimestamp?: boolean;
-  }) => {
+  const update = async (patch: { showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean }) => {
     try {
       const res = await api.patch('/activity/settings', patch);
       setShowOnlineStatus(res.data.showOnlineStatus);
@@ -50,9 +47,7 @@ export function ActivityStatusSettings() {
           onCheckedChange={(checked) => update({ showOnlineStatus: checked })}
           disabled={!loaded}
         />
-        <span className="text-sm text-dark-600 dark:text-dark-300">
-          Show when you're active
-        </span>
+        <span className="text-sm text-dark-600 dark:text-dark-300">Show when you're active</span>
       </div>
       <div className="flex items-center gap-2">
         <Switch
@@ -60,13 +55,10 @@ export function ActivityStatusSettings() {
           onCheckedChange={(checked) => update({ showLastSeenTimestamp: checked })}
           disabled={!loaded}
         />
-        <span className="text-sm text-dark-600 dark:text-dark-300">
-          Show your last seen time
-        </span>
+        <span className="text-sm text-dark-600 dark:text-dark-300">Show your last seen time</span>
       </div>
       <p className="text-xs text-dark-500 dark:text-dark-400">
-        When off, others won't see a green dot or last-seen time on your profile
-        and in messages.
+        When off, others won't see a green dot or last-seen time on your profile and in messages.
       </p>
     </div>
   );

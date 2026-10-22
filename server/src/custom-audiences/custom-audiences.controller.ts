@@ -1,4 +1,17 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CustomAudiencesService } from './custom-audiences.service';
@@ -26,7 +39,7 @@ export class CustomAudiencesController {
   update(
     @Req() req: Request,
     @Param('id') id: string,
-    @Body() body: { name?: string; userIds?: string[] },
+    @Body() body: { name?: string; userIds?: string[] }
   ) {
     return this.customAudiencesService.update(this.getUserId(req), id, body);
   }

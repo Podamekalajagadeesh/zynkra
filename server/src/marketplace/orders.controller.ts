@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Req } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { Order } from './entities/order.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,7 +9,10 @@ export class OrdersController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() orderData: { items: { productVariantId: string; quantity: number }[] }, @Req() req) {
+  create(
+    @Body() orderData: { items: { productVariantId: string; quantity: number }[] },
+    @Req() req
+  ) {
     return this.ordersService.create({ ...orderData, customerId: req.user.id });
   }
 

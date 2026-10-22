@@ -40,11 +40,14 @@ export class GqlPost {
 export class PostResolver {
   constructor(
     private readonly postsService: PostsService,
-    private readonly visibilityService: VisibilityService,
+    private readonly visibilityService: VisibilityService
   ) {}
 
   @Query(() => GqlPost, { nullable: true })
-  async post(@Args('id', { type: () => ID }) id: string, @Context() context: any): Promise<GqlPost | null> {
+  async post(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: any
+  ): Promise<GqlPost | null> {
     const viewerId: string = context?.req?.user?.userId;
     if (!viewerId) {
       throw new NotFoundException('Post not found.');

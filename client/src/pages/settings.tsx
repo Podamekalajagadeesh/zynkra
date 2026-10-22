@@ -1,11 +1,48 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, Cog, FileText, Globe, Keyboard, KeyRound, MoonStar, Shield, ShieldAlert, ShieldCheck, SunMedium, Trash2, User as UserIcon, UserCheck, Users, ArrowUpDown, Heart, Brain, Timer, Eye, Mic, Expand, Accessibility, Contrast, Minimize2, Lock, BadgeCheck } from 'lucide-react';
+import {
+  Clock,
+  Cog,
+  FileText,
+  Globe,
+  Keyboard,
+  KeyRound,
+  MoonStar,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  SunMedium,
+  Trash2,
+  User as UserIcon,
+  UserCheck,
+  Users,
+  ArrowUpDown,
+  Heart,
+  Brain,
+  Timer,
+  Eye,
+  Mic,
+  Expand,
+  Accessibility,
+  Contrast,
+  Minimize2,
+  Lock,
+  BadgeCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog.tsx';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog.tsx';
 import { useAuth } from '../hooks/useAuth';
 import {
   api,
@@ -182,7 +219,8 @@ export function SettingsPage() {
       try {
         const accountPreferences = await getAccountPreferences();
         if (accountPreferences.theme !== 'system') setThemeState(accountPreferences.theme);
-        if (accountPreferences.appIcon) setAppIconState(accountPreferences.appIcon as typeof appIcon);
+        if (accountPreferences.appIcon)
+          setAppIconState(accountPreferences.appIcon as typeof appIcon);
         if (LANGUAGE_OPTIONS.some((option) => option.value === accountPreferences.language)) {
           setLanguageState(accountPreferences.language as typeof language);
         }
@@ -279,7 +317,9 @@ export function SettingsPage() {
   const handleRevokeSession = async (sessionId: string) => {
     try {
       await revokeLoginSession(sessionId);
-      setSessions((currentSessions) => currentSessions.filter((session) => session.id !== sessionId));
+      setSessions((currentSessions) =>
+        currentSessions.filter((session) => session.id !== sessionId)
+      );
       toast.success('Session revoked.');
     } catch (error) {
       console.error('Failed to revoke session', error);
@@ -374,54 +414,62 @@ export function SettingsPage() {
                 Encryption — Preview
               </p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                Direct messages are end-to-end encrypted (the server stores ciphertext only);
-                other content is protected in transit with TLS. Back up or restore your
-                encryption keys below.
+                Direct messages are end-to-end encrypted (the server stores ciphertext only); other
+                content is protected in transit with TLS. Back up or restore your encryption keys
+                below.
               </p>
 
-            <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
-              <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
-                <Clock size={16} />
-                Time zone
+              <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
+                <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
+                  <Clock size={16} />
+                  Time zone
+                </div>
+                <input
+                  value={timezone}
+                  onChange={(event) => setTimezone(event.target.value)}
+                  onBlur={() => void saveAccountPreference({ timezone })}
+                  placeholder="UTC"
+                  className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
+                />
+                <p className="text-xs text-dark-500 dark:text-dark-400">
+                  Used for dates, times, and scheduled activity.
+                </p>
               </div>
-              <input
-                value={timezone}
-                onChange={(event) => setTimezone(event.target.value)}
-                onBlur={() => void saveAccountPreference({ timezone })}
-                placeholder="UTC"
-                className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
-              />
-              <p className="text-xs text-dark-500 dark:text-dark-400">Used for dates, times, and scheduled activity.</p>
-            </div>
 
-            <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
-              <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
-                <Shield size={16} />
-                Default post privacy
+              <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
+                <div className="flex items-center gap-2 text-sm font-semibold text-dark-900 dark:text-white">
+                  <Shield size={16} />
+                  Default post privacy
+                </div>
+                <select
+                  value={defaultPrivacy}
+                  onChange={(event) => {
+                    const nextPrivacy = event.target.value as typeof defaultPrivacy;
+                    setDefaultPrivacy(nextPrivacy);
+                    void saveAccountPreference({ defaultPrivacy: nextPrivacy });
+                  }}
+                  className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
+                >
+                  <option value="public">Public</option>
+                  <option value="friends">Friends</option>
+                  <option value="private">Private</option>
+                </select>
+                <p className="text-xs text-dark-500 dark:text-dark-400">
+                  The default audience for new posts.
+                </p>
               </div>
-              <select
-                value={defaultPrivacy}
-                onChange={(event) => {
-                  const nextPrivacy = event.target.value as typeof defaultPrivacy;
-                  setDefaultPrivacy(nextPrivacy);
-                  void saveAccountPreference({ defaultPrivacy: nextPrivacy });
-                }}
-                className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm text-dark-900 shadow-sm outline-none transition focus:border-primary-500 dark:border-dark-700 dark:bg-dark-900 dark:text-white"
-              >
-                <option value="public">Public</option>
-                <option value="friends">Friends</option>
-                <option value="private">Private</option>
-              </select>
-              <p className="text-xs text-dark-500 dark:text-dark-400">The default audience for new posts.</p>
-            </div>
             </div>
           </div>
 
           <div className="space-y-4 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-dark-900 dark:text-white">Transport Encryption</p>
-                <p className="text-xs text-dark-500 dark:text-dark-400">All data is encrypted in transit using TLS</p>
+                <p className="text-sm font-semibold text-dark-900 dark:text-white">
+                  Transport Encryption
+                </p>
+                <p className="text-xs text-dark-500 dark:text-dark-400">
+                  All data is encrypted in transit using TLS
+                </p>
               </div>
               <Switch checked={true} disabled={true} />
             </div>
@@ -435,7 +483,8 @@ export function SettingsPage() {
             <div>
               <p className="font-semibold text-lg">Display and Navigation</p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                Language, region, theme, and keyboard navigation are stored locally and applied across the app.
+                Language, region, theme, and keyboard navigation are stored locally and applied
+                across the app.
               </p>
             </div>
             <Cog className="mt-1 text-dark-500 dark:text-dark-400" size={20} />
@@ -463,7 +512,8 @@ export function SettingsPage() {
                 ))}
               </select>
               <p className="text-xs text-dark-500 dark:text-dark-400">
-                Switch language preferences and the app will update its locale and reading direction.
+                Switch language preferences and the app will update its locale and reading
+                direction.
               </p>
             </div>
 
@@ -574,7 +624,8 @@ export function SettingsPage() {
                 </Button>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-400">
-                Choose how your feed is sorted: algorithmic relevance or reverse-chronological (newest first).
+                Choose how your feed is sorted: algorithmic relevance or reverse-chronological
+                (newest first).
               </p>
             </div>
 
@@ -603,10 +654,16 @@ export function SettingsPage() {
             <p className="font-semibold text-dark-900 dark:text-white">Live preview</p>
             <p className="mt-1">Locale: {locale}</p>
             <p>
-              Sample date: {new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeStyle: 'short' }).format(new Date('2026-05-28T13:45:00Z'))}
+              Sample date:{' '}
+              {new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeStyle: 'short' }).format(
+                new Date('2026-05-28T13:45:00Z')
+              )}
             </p>
             <p className="mt-2 text-xs uppercase tracking-[0.2em] text-dark-500 dark:text-dark-400">
-              {LANGUAGE_METADATA[language === 'system' ? (navigator.language.split('-')[0] || 'en') : language]?.nativeLabel || 'English'} • {language === 'system' ? 'System default' : 'Selected'}
+              {LANGUAGE_METADATA[
+                language === 'system' ? navigator.language.split('-')[0] || 'en' : language
+              ]?.nativeLabel || 'English'}{' '}
+              • {language === 'system' ? 'System default' : 'Selected'}
             </p>
           </div>
         </div>
@@ -629,10 +686,7 @@ export function SettingsPage() {
                 Daily Screen Time Limit
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={screenTimeEnabled}
-                  onCheckedChange={setScreenTimeEnabled}
-                />
+                <Switch checked={screenTimeEnabled} onCheckedChange={setScreenTimeEnabled} />
                 <span className="text-sm text-dark-600 dark:text-dark-300">
                   {screenTimeEnabled ? 'Enabled' : 'Disabled'}
                 </span>
@@ -673,7 +727,8 @@ export function SettingsPage() {
                 </span>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-400">
-                Automatically show warnings for potentially triggering content (violence, self-harm, etc.).
+                Automatically show warnings for potentially triggering content (violence, self-harm,
+                etc.).
               </p>
             </div>
 
@@ -685,12 +740,16 @@ export function SettingsPage() {
                 Mental Health Resources
               </div>
               <p className="text-sm text-dark-600 dark:text-dark-300">
-                If you're struggling with mental health, please reach out to these trusted resources:
+                If you're struggling with mental health, please reach out to these trusted
+                resources:
               </p>
               <ul className="mt-2 space-y-2 text-sm text-primary-600 dark:text-primary-400">
                 <li>• National Suicide Prevention Lifeline: 988 (US)</li>
                 <li>• Crisis Text Line: Text HOME to 741741 (US)</li>
-                <li>• International Association for Suicide Prevention: iasp.info/resources/Crisis_Centres/</li>
+                <li>
+                  • International Association for Suicide Prevention:
+                  iasp.info/resources/Crisis_Centres/
+                </li>
               </ul>
             </div>
           </div>
@@ -701,7 +760,8 @@ export function SettingsPage() {
             <div>
               <p className="font-semibold text-lg">Accessibility & Assistive Technologies</p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                Voice control, screen reader support, and sensory-friendly modes to customize your experience.
+                Voice control, screen reader support, and sensory-friendly modes to customize your
+                experience.
               </p>
             </div>
             <Accessibility className="mt-1 text-dark-500 dark:text-dark-400" size={20} />
@@ -714,10 +774,7 @@ export function SettingsPage() {
                 Voice Control
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={voiceControlEnabled}
-                  onCheckedChange={setVoiceControlEnabled}
-                />
+                <Switch checked={voiceControlEnabled} onCheckedChange={setVoiceControlEnabled} />
                 <span className="text-sm text-dark-600 dark:text-dark-300">
                   {voiceControlEnabled ? 'Enabled' : 'Disabled'}
                 </span>
@@ -744,7 +801,8 @@ export function SettingsPage() {
                 </span>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-400">
-                Enhances ARIA labels and semantic markup for better compatibility with screen readers.
+                Enhances ARIA labels and semantic markup for better compatibility with screen
+                readers.
               </p>
             </div>
 
@@ -754,10 +812,7 @@ export function SettingsPage() {
                 High Contrast Mode
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={highContrastMode}
-                  onCheckedChange={setHighContrastMode}
-                />
+                <Switch checked={highContrastMode} onCheckedChange={setHighContrastMode} />
                 <span className="text-sm text-dark-600 dark:text-dark-300">
                   {highContrastMode ? 'Enabled' : 'Disabled'}
                 </span>
@@ -773,16 +828,14 @@ export function SettingsPage() {
                 Reduced Motion
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={reducedMotion}
-                  onCheckedChange={setReducedMotion}
-                />
+                <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
                 <span className="text-sm text-dark-600 dark:text-dark-300">
                   {reducedMotion ? 'Enabled' : 'Disabled'}
                 </span>
               </div>
               <p className="text-xs text-dark-500 dark:text-dark-400">
-                Disables all non-essential animations and transitions for vestibular disorder sufferers.
+                Disables all non-essential animations and transitions for vestibular disorder
+                sufferers.
               </p>
             </div>
 
@@ -792,10 +845,7 @@ export function SettingsPage() {
                 Large Text Mode
               </div>
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={largeTextMode}
-                  onCheckedChange={setLargeTextMode}
-                />
+                <Switch checked={largeTextMode} onCheckedChange={setLargeTextMode} />
                 <span className="text-sm text-dark-600 dark:text-dark-300">
                   {largeTextMode ? 'Enabled' : 'Disabled'}
                 </span>
@@ -947,10 +997,7 @@ export function SettingsPage() {
               <Link to="/profile-review">
                 <Button variant="secondary">Review</Button>
               </Link>
-              <Switch
-                checked={tagReviewEnabled}
-                onCheckedChange={handleTagReviewToggle}
-              />
+              <Switch checked={tagReviewEnabled} onCheckedChange={handleTagReviewToggle} />
             </div>
           }
         />
@@ -989,7 +1036,11 @@ export function SettingsPage() {
                 Generate one-time codes to regain access if you lose your password or passkey.
               </p>
             </div>
-            <Button variant="secondary" onClick={handleGenerateRecoveryCodes} disabled={isGeneratingRecoveryCodes}>
+            <Button
+              variant="secondary"
+              onClick={handleGenerateRecoveryCodes}
+              disabled={isGeneratingRecoveryCodes}
+            >
               <KeyRound size={16} className="mr-2" />
               {isGeneratingRecoveryCodes ? 'Generating...' : 'Generate Codes'}
             </Button>
@@ -997,13 +1048,18 @@ export function SettingsPage() {
           {recoveryCodes.length > 0 ? (
             <div className="grid gap-2 sm:grid-cols-2">
               {recoveryCodes.map((code) => (
-                <div key={code} className="rounded-md border border-dashed border-dark-300 bg-white px-3 py-2 font-mono text-sm dark:border-dark-700 dark:bg-dark-900">
+                <div
+                  key={code}
+                  className="rounded-md border border-dashed border-dark-300 bg-white px-3 py-2 font-mono text-sm dark:border-dark-700 dark:bg-dark-900"
+                >
                   {code}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-dark-500 dark:text-dark-400">No recovery codes generated yet.</p>
+            <p className="text-sm text-dark-500 dark:text-dark-400">
+              No recovery codes generated yet.
+            </p>
           )}
         </div>
 
@@ -1021,7 +1077,11 @@ export function SettingsPage() {
               onChange={(event) => setTrustedContactsInput(event.target.value)}
               placeholder="friend1@example.com, friend2@example.com"
             />
-            <Button variant="secondary" onClick={handleSaveTrustedContacts} disabled={savingTrustedContacts}>
+            <Button
+              variant="secondary"
+              onClick={handleSaveTrustedContacts}
+              disabled={savingTrustedContacts}
+            >
               {savingTrustedContacts ? 'Saving...' : 'Save Contacts'}
             </Button>
           </div>
@@ -1052,25 +1112,40 @@ export function SettingsPage() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
-                <div key={session.id} className="flex flex-col gap-3 rounded-lg border border-dark-200 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-900 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  key={session.id}
+                  className="flex flex-col gap-3 rounded-lg border border-dark-200 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-900 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-dark-900 dark:text-white">{session.deviceName || 'Unknown device'}</p>
+                      <p className="font-medium text-dark-900 dark:text-white">
+                        {session.deviceName || 'Unknown device'}
+                      </p>
                       {session.isCurrent && (
-                        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-950/50 dark:text-primary-300">Current</span>
+                        <span className="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-950/50 dark:text-primary-300">
+                          Current
+                        </span>
                       )}
                       {session.isRevoked && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300">Revoked</span>
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                          Revoked
+                        </span>
                       )}
                       {session.suspicious && !session.isApproved && !session.isRevoked && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">Pending approval</span>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                          Pending approval
+                        </span>
                       )}
                     </div>
                     <p className="text-xs text-dark-500 dark:text-dark-400">
-                      {session.ipAddress || 'Unknown IP'} · Started {new Date(session.createdAt).toLocaleString()}
+                      {session.ipAddress || 'Unknown IP'} · Started{' '}
+                      {new Date(session.createdAt).toLocaleString()}
                     </p>
                     <p className="text-xs text-dark-500 dark:text-dark-400">
-                      Last seen {session.lastSeenAt ? new Date(session.lastSeenAt).toLocaleString() : 'just now'}
+                      Last seen{' '}
+                      {session.lastSeenAt
+                        ? new Date(session.lastSeenAt).toLocaleString()
+                        : 'just now'}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -1203,7 +1278,8 @@ export function SettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will deactivate your account. You can reactivate your account by logging in again.
+              This will deactivate your account. You can reactivate your account by logging in
+              again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1218,7 +1294,8 @@ export function SettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action is irreversible and will permanently delete your account and all of your content.
+              This action is irreversible and will permanently delete your account and all of your
+              content.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -15,7 +15,7 @@ export const DEFAULT_DATA_PERMISSIONS: DataPermission[] = [
 export class DataPermissionsService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async has(userId: string, permission: DataPermission): Promise<boolean> {

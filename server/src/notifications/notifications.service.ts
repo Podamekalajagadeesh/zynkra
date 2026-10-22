@@ -5,7 +5,11 @@ import { Notification, NotificationType } from './entities/notification.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsGateway } from './notifications.gateway';
 import { PushSubscriptionEntity } from './push-subscription.entity';
-import { MobilePushToken, MobilePushPlatform, MobilePushProvider } from './mobile-push-token.entity';
+import {
+  MobilePushToken,
+  MobilePushPlatform,
+  MobilePushProvider,
+} from './mobile-push-token.entity';
 import { ConfigService } from '@nestjs/config';
 import webPush from 'web-push';
 import axios from 'axios';
@@ -24,10 +28,16 @@ export class NotificationsService {
     private readonly mobilePushTokenRepository: Repository<MobilePushToken>,
     private readonly notificationsGateway: NotificationsGateway,
     private readonly configService: ConfigService,
-    private readonly emailService?: EmailService,
+    private readonly emailService?: EmailService
   ) {
-    const vapidPublicKey = this.configService.get<string>('VAPID_PUBLIC_KEY', 'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo');
-    const vapidPrivateKey = this.configService.get<string>('VAPID_PRIVATE_KEY', 'DTsKcnW0AEmDxuZ5ZN_4gPNI8rgSjPrq-gbet8vL2Pg');
+    const vapidPublicKey = this.configService.get<string>(
+      'VAPID_PUBLIC_KEY',
+      'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo'
+    );
+    const vapidPrivateKey = this.configService.get<string>(
+      'VAPID_PRIVATE_KEY',
+      'DTsKcnW0AEmDxuZ5ZN_4gPNI8rgSjPrq-gbet8vL2Pg'
+    );
     const vapidSubject = this.configService.get<string>('VAPID_SUBJECT', 'mailto:hello@zynkra.app');
 
     if (vapidPublicKey && vapidPrivateKey) {
@@ -37,7 +47,9 @@ export class NotificationsService {
 
   async create(user: User, type: NotificationType, data: any): Promise<Notification | null> {
     if (!this.isNotificationEnabledForType(user, type)) {
-      this.logger.debug(`Skipping ${type} notification for user ${user.id} because the preference is disabled`);
+      this.logger.debug(
+        `Skipping ${type} notification for user ${user.id} because the preference is disabled`
+      );
       return null;
     }
 
@@ -58,9 +70,10 @@ export class NotificationsService {
 
   // Alias for backward compatibility
   async createNotification(
-    userOrPayload: User | { userId: string; title: string; message: string; type: string; metadata?: any },
+    userOrPayload:
+      User | { userId: string; title: string; message: string; type: string; metadata?: any },
     type?: NotificationType,
-    data?: any,
+    data?: any
   ): Promise<Notification | null> {
     if (typeof userOrPayload === 'object' && 'userId' in userOrPayload) {
       const payload = userOrPayload;
@@ -97,7 +110,9 @@ export class NotificationsService {
   }
 
   async markAsRead(notificationId: string, userId: string): Promise<Notification | null> {
-    const notification = await this.notificationRepository.findOne({ where: { id: notificationId, user: { id: userId } } });
+    const notification = await this.notificationRepository.findOne({
+      where: { id: notificationId, user: { id: userId } },
+    });
     if (notification) {
       notification.read = true;
       return this.notificationRepository.save(notification);
@@ -106,16 +121,18 @@ export class NotificationsService {
   }
 
   async markAllAsRead(userId: string): Promise<{ success: boolean }> {
-    await this.notificationRepository.update(
-      { user: { id: userId }, read: false },
-      { read: true },
-    );
+    await this.notificationRepository.update({ user: { id: userId }, read: false }, { read: true });
 
     return { success: true };
   }
 
-  async savePushSubscription(user: User, subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
-    const existing = await this.pushSubscriptionRepository.findOne({ where: { endpoint: subscription.endpoint } });
+  async savePushSubscription(
+    user: User,
+    subscription: { endpoint: string; keys: { p256dh: string; auth: string } }
+  ) {
+    const existing = await this.pushSubscriptionRepository.findOne({
+      where: { endpoint: subscription.endpoint },
+    });
 
     if (existing) {
       existing.keys = subscription.keys;
@@ -141,9 +158,11 @@ export class NotificationsService {
     user: User,
     token: string,
     platform: MobilePushPlatform,
-    provider: MobilePushProvider,
+    provider: MobilePushProvider
   ) {
-    const existing = await this.mobilePushTokenRepository.findOne({ where: { token, user: { id: user.id } } });
+    const existing = await this.mobilePushTokenRepository.findOne({
+      where: { token, user: { id: user.id } },
+    });
 
     if (existing) {
       existing.platform = platform;
@@ -168,7 +187,9 @@ export class NotificationsService {
       return;
     }
 
-    const settings = (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ?? {};
+    const settings =
+      (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ??
+      {};
     const notificationSettings = settings as Record<string, boolean>;
     const globalEmailEnabled = notificationSettings.emailNotifications !== false;
     const typeSpecificEnabled = this.isEmailEnabledForType(user, notification.type);
@@ -190,12 +211,17 @@ export class NotificationsService {
   }
 
   private isNotificationEnabledForType(user: User, type: NotificationType): boolean {
-    const settings = (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ?? {};
+    const settings =
+      (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ??
+      {};
     const notificationSettings = settings as Record<string, boolean>;
 
     const customNotifications = (settings as Record<string, unknown>).customNotifications;
-    if (customNotifications && typeof customNotifications === 'object' &&
-      (customNotifications as Record<string, unknown>)[type] === false) {
+    if (
+      customNotifications &&
+      typeof customNotifications === 'object' &&
+      (customNotifications as Record<string, unknown>)[type] === false
+    ) {
       return false;
     }
 
@@ -220,7 +246,9 @@ export class NotificationsService {
   }
 
   private isEmailEnabledForType(user: User, type: NotificationType): boolean {
-    const settings = (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ?? {};
+    const settings =
+      (user as User & { notificationSettings?: Record<string, boolean> }).notificationSettings ??
+      {};
     const notificationSettings = settings as Record<string, boolean>;
     if (notificationSettings.emailNotifications === false) {
       return false;
@@ -250,7 +278,9 @@ export class NotificationsService {
       return;
     }
 
-    const subscriptions = await this.pushSubscriptionRepository.find({ where: { user: { id: user.id } } });
+    const subscriptions = await this.pushSubscriptionRepository.find({
+      where: { user: { id: user.id } },
+    });
 
     if (!subscriptions.length) {
       return;
@@ -272,9 +302,9 @@ export class NotificationsService {
             endpoint: subscription.endpoint,
             keys: subscription.keys,
           } as any,
-          JSON.stringify(payload),
-        ),
-      ),
+          JSON.stringify(payload)
+        )
+      )
     );
   }
 
@@ -283,7 +313,9 @@ export class NotificationsService {
       return;
     }
 
-    const tokens = await this.mobilePushTokenRepository.find({ where: { user: { id: user.id }, active: true } });
+    const tokens = await this.mobilePushTokenRepository.find({
+      where: { user: { id: user.id }, active: true },
+    });
 
     if (!tokens.length) {
       return;
@@ -325,7 +357,7 @@ export class NotificationsService {
                 Authorization: `key=${fcmServerKey}`,
                 'Content-Type': 'application/json',
               },
-            },
+            }
           );
           return;
         }
@@ -352,10 +384,10 @@ export class NotificationsService {
                 'apns-priority': '10',
                 'Content-Type': 'application/json',
               },
-            },
+            }
           );
         }
-      }),
+      })
     );
   }
 }

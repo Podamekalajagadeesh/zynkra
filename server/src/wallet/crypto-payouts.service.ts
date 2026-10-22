@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -41,9 +46,10 @@ export class CryptoPayoutsService {
     private readonly usersRepository: Repository<User>,
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
-    private readonly dataSource: DataSource,
+    private readonly dataSource: DataSource
   ) {
-    this.cryptoEnabled = this.configService.get<string>('CRYPTO_PAYOUTS_ENABLED', 'false') === 'true';
+    this.cryptoEnabled =
+      this.configService.get<string>('CRYPTO_PAYOUTS_ENABLED', 'false') === 'true';
     const chains = this.configService.get<string>('CRYPTO_PAYOUT_CHAINS', '8453');
     this.supportedChains = chains.split(',').map(Number).filter(Boolean);
   }
@@ -79,7 +85,7 @@ export class CryptoPayoutsService {
   async sendCryptoPayout(
     userId: string,
     amountUsd: number,
-    chainId: number = 8453, // default: Base
+    chainId: number = 8453 // default: Base
   ): Promise<{
     success: boolean;
     txHash: string | null;
@@ -104,7 +110,9 @@ export class CryptoPayoutsService {
     // Check chain support
     const usdcAddress = USDC_ADDRESSES[chainId];
     if (!usdcAddress) {
-      throw new BadRequestException(`Chain ${chainId} (${this.getChainName(chainId)}) is not supported`);
+      throw new BadRequestException(
+        `Chain ${chainId} (${this.getChainName(chainId)}) is not supported`
+      );
     }
 
     // Get signer
@@ -135,7 +143,7 @@ export class CryptoPayoutsService {
       const usdcContract = new ethers.Contract(
         usdcAddress,
         ['function transfer(address to, uint256 amount) external returns (bool)'],
-        signer,
+        signer
       );
 
       // USDC has 6 decimals
@@ -175,7 +183,10 @@ export class CryptoPayoutsService {
   /**
    * Get the transaction status of a crypto payout.
    */
-  async getTransactionStatus(txHash: string, chainId: number = 8453): Promise<{
+  async getTransactionStatus(
+    txHash: string,
+    chainId: number = 8453
+  ): Promise<{
     confirmed: boolean;
     blockNumber: number | null;
     confirmations: number;
@@ -208,7 +219,7 @@ export class CryptoPayoutsService {
   private assertEnabled(): void {
     if (!this.cryptoEnabled) {
       throw new ServiceUnavailableException(
-        'Crypto payouts are disabled. Set CRYPTO_PAYOUTS_ENABLED=true and configure a private key.',
+        'Crypto payouts are disabled. Set CRYPTO_PAYOUTS_ENABLED=true and configure a private key.'
       );
     }
   }
@@ -229,14 +240,12 @@ export class CryptoPayoutsService {
   private async assertUsdcContract(
     chainId: number,
     usdcAddress: string,
-    provider: ethers.JsonRpcProvider | null,
+    provider: ethers.JsonRpcProvider | null
   ): Promise<void> {
     if (!ethers.isAddress(usdcAddress)) {
-      this.logger.error(
-        `USDC_ADDRESSES[${chainId}] is not a valid address: ${usdcAddress}`,
-      );
+      this.logger.error(`USDC_ADDRESSES[${chainId}] is not a valid address: ${usdcAddress}`);
       throw new ServiceUnavailableException(
-        'Crypto payouts are misconfigured: the USDC contract address is malformed. Refusing to move funds.',
+        'Crypto payouts are misconfigured: the USDC contract address is malformed. Refusing to move funds.'
       );
     }
 
@@ -246,10 +255,10 @@ export class CryptoPayoutsService {
     if (!code || code === '0x') {
       this.logger.error(
         `No contract deployed at USDC address ${usdcAddress} on chain ${chainId}. ` +
-          'The address is wrong, or the RPC endpoint is pointing at a different network.',
+          'The address is wrong, or the RPC endpoint is pointing at a different network.'
       );
       throw new ServiceUnavailableException(
-        'Crypto payouts are misconfigured: no USDC contract at the configured address on this network. Refusing to move funds.',
+        'Crypto payouts are misconfigured: no USDC contract at the configured address on this network. Refusing to move funds.'
       );
     }
   }

@@ -32,12 +32,14 @@ export const ServerChannelsList = ({
   onJoinStageChannel,
 }: ServerChannelsListProps) => {
   // Group channels by category
-  const groupedChannels = community.categories.map((category) => ({
-    ...category,
-    channels: community.channels
-      .filter((channel) => channel.categoryId === category.id)
-      .sort((a, b) => a.position - b.position),
-  })).sort((a, b) => a.position - b.position);
+  const groupedChannels = community.categories
+    .map((category) => ({
+      ...category,
+      channels: community.channels
+        .filter((channel) => channel.categoryId === category.id)
+        .sort((a, b) => a.position - b.position),
+    }))
+    .sort((a, b) => a.position - b.position);
 
   // Get users in voice channels
   const getVoiceChannelUsers = (channelId: string) => {
@@ -52,13 +54,13 @@ export const ServerChannelsList = ({
   return (
     <div className="space-y-4">
       <h3 className="font-semibold text-lg mb-4 px-2">Server Channels</h3>
-      
+
       {groupedChannels.map((category) => (
         <div key={category.id} className="space-y-1">
           <h4 className="text-xs font-semibold uppercase text-dark-500 dark:text-dark-400 px-2 mb-1">
             {category.name}
           </h4>
-          
+
           {category.channels.map((channel) => {
             const Icon = channelTypeIcons[channel.type];
             const colorClass = channelTypeColors[channel.type];
@@ -88,7 +90,7 @@ export const ServerChannelsList = ({
               >
                 <Icon size={18} className={colorClass} />
                 <span className="flex-1 truncate text-sm">{channel.name}</span>
-                
+
                 {/* Show user count for voice/stage channels */}
                 {channel.type === 'voice' && voiceUsers.length > 0 && (
                   <span className="text-xs text-dark-500 dark:text-dark-400">

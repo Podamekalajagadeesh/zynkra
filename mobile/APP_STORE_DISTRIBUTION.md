@@ -5,20 +5,23 @@ This document provides comprehensive instructions for distributing Zynkra mobile
 ## Prerequisites
 
 ### System Requirements
+
 - macOS 12.0 or later (for iOS builds)
 - Node.js 18.x or later
 - npm or yarn package manager
 
 ### Required Accounts
+
 1. **Apple Developer Account** ($99/year)
    - Access to App Store Connect
    - Developer ID and Team ID
-   
+
 2. **Google Play Developer Account** ($25 one-time)
    - Access to Google Play Console
    - Service account for automated submissions
 
 ### Required Tools
+
 ```bash
 # Install Expo CLI
 npm install -g eas-cli
@@ -175,6 +178,7 @@ eas build --platform android --profile production
 2. Create new project: "Zynkra-Release"
 3. Enable Google Play Android Developer API
 4. Create service account:
+
    ```bash
    # Create service account JSON key
    # Download and save as `google-play-credentials.json`
@@ -262,6 +266,7 @@ Bug fixes and performance improvements
 ### Incrementing Versions
 
 **iOS:**
+
 ```json
 // app.json
 "ios": {
@@ -270,6 +275,7 @@ Bug fixes and performance improvements
 ```
 
 **Android:**
+
 ```json
 // app.json
 "android": {
@@ -325,20 +331,20 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Install EAS CLI
         run: npm install -g eas-cli
-      
+
       - name: Login to Expo
         run: eas login --username=${{ secrets.EXPO_USERNAME }} --password=${{ secrets.EXPO_PASSWORD }}
-      
+
       - name: Build and Submit
         run: |
           if [ "${{ github.event.inputs.platform }}" = "all" ]; then
@@ -357,11 +363,13 @@ jobs:
 ### Common Issues
 
 **iOS:**
+
 - "Certificate expired" → Regenerate via `eas credentials`
 - "Provisioning profile invalid" → Delete and recreate
 - "Code signing failed" → Check certificate in Keychain
 
 **Android:**
+
 - "Signing key mismatch" → Ensure keystore matches Google Play key
 - "Service account permission denied" → Verify IAM roles in Google Cloud
 - "Version code too low" → Increment versionCode in app.json
@@ -369,6 +377,7 @@ jobs:
 ### Support
 
 For issues with:
+
 - **Expo/EAS**: [docs.expo.dev](https://docs.expo.dev)
 - **App Store Connect**: [developer.apple.com](https://developer.apple.com/app-store-connect/)
 - **Google Play Console**: [support.google.com/googleplay](https://support.google.com/googleplay)

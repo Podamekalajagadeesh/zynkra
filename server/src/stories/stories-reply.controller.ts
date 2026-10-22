@@ -8,11 +8,7 @@ export class StoriesReplyController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  addReply(
-    @Request() req,
-    @Param('id') storyId: string,
-    @Body('text') text: string,
-  ) {
+  addReply(@Request() req, @Param('id') storyId: string, @Body('text') text: string) {
     return this.storiesReplyService.addReply(req.user.id, storyId, text);
   }
 }

@@ -41,15 +41,22 @@ describe('CallModal Picture-in-Picture', () => {
       resizeTo: () => {},
     }) as PictureInPictureWindow;
     remoteVideo.requestPictureInPicture = vi.fn(async () => pipWindow);
-    fireEvent.click(screen.getByRole('button', { name: 'Open remote video in picture-in-picture' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open remote video in picture-in-picture' })
+    );
 
     expect(remoteVideo.requestPictureInPicture).toHaveBeenCalled();
   });
 
   it('reports when Picture-in-Picture is unavailable', () => {
-    Object.defineProperty(document, 'pictureInPictureEnabled', { value: false, configurable: true });
+    Object.defineProperty(document, 'pictureInPictureEnabled', {
+      value: false,
+      configurable: true,
+    });
     render(<CallModal {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Open remote video in picture-in-picture' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open remote video in picture-in-picture' })
+    );
 
     expect(screen.getByRole('status')).toHaveTextContent('Picture-in-Picture is unavailable');
   });

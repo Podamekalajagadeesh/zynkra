@@ -7,7 +7,7 @@ import { User } from '../users/entities/user.entity';
 export class KeysService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async savePublicKey(userId: string, publicKey: string): Promise<User> {

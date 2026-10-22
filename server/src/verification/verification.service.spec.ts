@@ -43,7 +43,7 @@ describe('VerificationService appeals', () => {
     const service = new VerificationService(
       requestsRepo as any,
       usersRepo as any,
-      appealsRepo as any,
+      appealsRepo as any
     );
 
     const appeal = await service.submitAppeal('user-1', 'req-1', {
@@ -94,13 +94,13 @@ describe('VerificationService appeals', () => {
     const service = new VerificationService(
       requestsRepo as any,
       usersRepo as any,
-      appealsRepo as any,
+      appealsRepo as any
     );
 
     await expect(
       service.submitAppeal('user-1', 'req-1', {
         appealReason: 'I have more evidence showing the incorrect rejection.',
-      }),
+      })
     ).rejects.toThrow(BadRequestException);
   });
 });

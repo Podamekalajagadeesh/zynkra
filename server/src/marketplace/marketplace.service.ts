@@ -1,5 +1,9 @@
-
-import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
@@ -22,11 +26,16 @@ export class MarketplaceService {
     @InjectRepository(MarketplaceListing)
     private readonly listingRepository: Repository<MarketplaceListing>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
-  async createTransaction(createTransactionDto: CreateTransactionDto, seller: User): Promise<Transaction> {
-    const buyer = await this.userRepository.findOne({where: {id: createTransactionDto.buyerId}});
+  async createTransaction(
+    createTransactionDto: CreateTransactionDto,
+    seller: User
+  ): Promise<Transaction> {
+    const buyer = await this.userRepository.findOne({
+      where: { id: createTransactionDto.buyerId },
+    });
     if (!buyer) {
       throw new NotFoundException('Buyer not found');
     }
@@ -40,7 +49,10 @@ export class MarketplaceService {
   }
 
   async createRating(createRatingDto: CreateRatingDto, rater: User): Promise<Rating> {
-    const transaction = await this.transactionRepository.findOne({where: {id: createRatingDto.transactionId}, relations: ['seller', 'buyer']});
+    const transaction = await this.transactionRepository.findOne({
+      where: { id: createRatingDto.transactionId },
+      relations: ['seller', 'buyer'],
+    });
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
@@ -58,7 +70,9 @@ export class MarketplaceService {
 
     const ratee = isBuyer ? transaction.seller : transaction.buyer;
 
-    const existingRating = await this.ratingRepository.findOne({where: {transaction: {id: transaction.id}, rater: {id: rater.id}}});
+    const existingRating = await this.ratingRepository.findOne({
+      where: { transaction: { id: transaction.id }, rater: { id: rater.id } },
+    });
     if (existingRating) {
       throw new UnauthorizedException('You have already rated this transaction');
     }
@@ -78,9 +92,10 @@ export class MarketplaceService {
   }
 
   private async updateUserRating(user: User): Promise<void> {
-    const ratings = await this.ratingRepository.find({where: {ratee: {id: user.id}}});
+    const ratings = await this.ratingRepository.find({ where: { ratee: { id: user.id } } });
     const totalRatings = ratings.length;
-    const averageRating = totalRatings > 0 ? ratings.reduce((acc, r) => acc + r.score, 0) / totalRatings : 0;
+    const averageRating =
+      totalRatings > 0 ? ratings.reduce((acc, r) => acc + r.score, 0) / totalRatings : 0;
 
     user.totalRatings = totalRatings;
     user.averageRating = averageRating;
@@ -97,7 +112,9 @@ export class MarketplaceService {
 
     if (query?.trim()) {
       const term = `%${query.trim()}%`;
-      qb.where('listing.title ILIKE :term', { term }).orWhere('listing.description ILIKE :term', { term });
+      qb.where('listing.title ILIKE :term', { term }).orWhere('listing.description ILIKE :term', {
+        term,
+      });
     }
 
     return qb.getMany();
@@ -105,7 +122,7 @@ export class MarketplaceService {
 
   async findOneListing(id: string): Promise<MarketplaceListing> {
     const listing = await this.listingRepository.findOne({
-      where: {id},
+      where: { id },
       relations: ['seller'],
     });
 
@@ -116,8 +133,11 @@ export class MarketplaceService {
     return listing;
   }
 
-  async createListing(createListingDto: CreateListingDto, sellerId: string): Promise<MarketplaceListing> {
-    const seller = await this.userRepository.findOne({where: {id: sellerId}});
+  async createListing(
+    createListingDto: CreateListingDto,
+    sellerId: string
+  ): Promise<MarketplaceListing> {
+    const seller = await this.userRepository.findOne({ where: { id: sellerId } });
     if (!seller) {
       throw new NotFoundException('Seller not found');
     }
@@ -134,7 +154,11 @@ export class MarketplaceService {
     return this.listingRepository.save(listing);
   }
 
-  async updateListing(id: string, updateListingDto: UpdateListingDto, userId: string): Promise<MarketplaceListing> {
+  async updateListing(
+    id: string,
+    updateListingDto: UpdateListingDto,
+    userId: string
+  ): Promise<MarketplaceListing> {
     const listing = await this.assertListingOwnership(id, userId);
 
     if (updateListingDto.title !== undefined) {
@@ -163,7 +187,7 @@ export class MarketplaceService {
 
   private async assertListingOwnership(id: string, userId: string): Promise<MarketplaceListing> {
     const listing = await this.listingRepository.findOne({
-      where: {id},
+      where: { id },
       relations: ['seller'],
     });
 

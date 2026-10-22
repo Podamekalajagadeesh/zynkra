@@ -26,13 +26,13 @@ export class SubscriptionBundles1786953000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "subscription_bundles" ADD CONSTRAINT "FK_subscription_bundles_creator" FOREIGN KEY ("creatorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "subscription_bundles" ADD CONSTRAINT "FK_subscription_bundles_creator" FOREIGN KEY ("creatorId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "subscription_bundle_tiers" ADD CONSTRAINT "FK_bundle_tiers_bundle" FOREIGN KEY ("bundleId") REFERENCES "subscription_bundles"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "subscription_bundle_tiers" ADD CONSTRAINT "FK_bundle_tiers_bundle" FOREIGN KEY ("bundleId") REFERENCES "subscription_bundles"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "subscription_bundle_tiers" ADD CONSTRAINT "FK_bundle_tiers_tier" FOREIGN KEY ("tierId") REFERENCES "subscription_tiers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "subscription_bundle_tiers" ADD CONSTRAINT "FK_bundle_tiers_tier" FOREIGN KEY ("tierId") REFERENCES "subscription_tiers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
   }
 

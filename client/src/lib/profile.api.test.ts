@@ -77,10 +77,7 @@ describe('getProfile API helper', () => {
   it('throws on API error', async () => {
     server.use(
       http.get('*/users/me', () => {
-        return HttpResponse.json(
-          { message: 'Unauthorized' },
-          { status: 401 }
-        );
+        return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
       })
     );
 
@@ -137,10 +134,7 @@ describe('getUserProfile API helper', () => {
   it('throws on 404 not found', async () => {
     server.use(
       http.get('*/users/nonexistent', () => {
-        return HttpResponse.json(
-          { message: 'User not found' },
-          { status: 404 }
-        );
+        return HttpResponse.json({ message: 'User not found' }, { status: 404 });
       })
     );
 
@@ -194,10 +188,7 @@ describe('updateProfile API helper', () => {
   it('throws on API error', async () => {
     server.use(
       http.patch('*/users/profile', () => {
-        return HttpResponse.json(
-          { message: 'Failed to update profile' },
-          { status: 400 }
-        );
+        return HttpResponse.json({ message: 'Failed to update profile' }, { status: 400 });
       })
     );
 

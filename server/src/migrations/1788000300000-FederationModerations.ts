@@ -18,16 +18,16 @@ export class FederationModerations1788000300000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "federation_moderations" ADD CONSTRAINT "FK_federation_moderations_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "federation_moderations" ADD CONSTRAINT "FK_federation_moderations_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "federation_moderations" ADD CONSTRAINT "FK_federation_moderations_remote_user" FOREIGN KEY ("remoteUserId") REFERENCES "federated_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "federation_moderations" ADD CONSTRAINT "FK_federation_moderations_remote_user" FOREIGN KEY ("remoteUserId") REFERENCES "federated_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_moderations_local_user" ON "federation_moderations" ("localUserId")`,
+      `CREATE INDEX "IDX_federation_moderations_local_user" ON "federation_moderations" ("localUserId")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_moderations_remote_user" ON "federation_moderations" ("remoteUserId")`,
+      `CREATE INDEX "IDX_federation_moderations_remote_user" ON "federation_moderations" ("remoteUserId")`
     );
   }
 

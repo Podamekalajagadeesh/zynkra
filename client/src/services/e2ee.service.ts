@@ -20,10 +20,7 @@ import {
   collectE2eeStoreData,
   restoreE2eeStoreData,
 } from '../lib/signal-protocol-store';
-import {
-  encryptRecoveryPackage,
-  decryptRecoveryPackage,
-} from '../lib/e2ee-recovery';
+import { encryptRecoveryPackage, decryptRecoveryPackage } from '../lib/e2ee-recovery';
 import { decidePeerRotation, PEER_IDENTITY_CHECK_TTL_MS } from '../lib/e2ee-rotation';
 import { api } from '../lib/api';
 import type {
@@ -42,7 +39,7 @@ async function getLibsignal() {
   } catch {
     throw new Error(
       'Signal Protocol library is not available. E2EE is disabled — ' +
-      'install @privacyresearch/libsignal-protocol-typescript to enable it.',
+        'install @privacyresearch/libsignal-protocol-typescript to enable it.'
     );
   }
 }
@@ -101,7 +98,7 @@ export class E2EEService {
     // 2. Generate signed pre-key
     const signedPreKey = await libsignal.KeyHelper.generateSignedPreKey(
       identityKeyPair,
-      SIGNED_PREKEY_ID,
+      SIGNED_PREKEY_ID
     );
 
     // 3. Generate one-time pre-keys
@@ -112,10 +109,7 @@ export class E2EEService {
     }
 
     // 4. Store locally
-    await this.store.storeSignedPreKey(
-      signedPreKey.keyId,
-      signedPreKey.keyPair,
-    );
+    await this.store.storeSignedPreKey(signedPreKey.keyId, signedPreKey.keyPair);
     for (const pk of oneTimePreKeys) {
       await this.store.storePreKey(pk.keyId, pk.keyPair);
     }
@@ -160,7 +154,7 @@ export class E2EEService {
         const oneTimePreKeys: PreKeyPairType[] = [];
         for (let i = 0; i < PREKEY_BATCH_SIZE; i++) {
           const pk = await libsignal.KeyHelper.generatePreKey(
-            Math.floor(Math.random() * 100000) + 100,
+            Math.floor(Math.random() * 100000) + 100
           );
           oneTimePreKeys.push(pk);
         }
@@ -275,9 +269,7 @@ export class E2EEService {
     const decision = decidePeerRotation(cachedKey, remoteKey, lastCheckedAt, now);
 
     if (decision === 'reestablish') {
-      console.warn(
-        `E2EE: identity key rotated for ${recipientUserId} — rebuilding session`,
-      );
+      console.warn(`E2EE: identity key rotated for ${recipientUserId} — rebuilding session`);
       await this.store.removeSession(address.toString());
       await this.establishSession(recipientUserId);
     }
@@ -343,10 +335,7 @@ export class E2EEService {
    * Automatically establishes a session if one doesn't exist.
    * Returns the ciphertext as a base64-encoded string that can be sent via the API.
    */
-  async encryptMessage(
-    recipientUserId: string,
-    plaintext: string,
-  ): Promise<string> {
+  async encryptMessage(recipientUserId: string, plaintext: string): Promise<string> {
     if (!this.store) throw new Error('E2EE not initialized');
 
     const libsignal = await getLibsignal();
@@ -376,10 +365,7 @@ export class E2EEService {
    * Handles both pre-key whisper messages (first message from a new session)
    * and regular whisper messages (subsequent messages).
    */
-  async decryptMessage(
-    senderUserId: string,
-    ciphertextJson: string,
-  ): Promise<string> {
+  async decryptMessage(senderUserId: string, ciphertextJson: string): Promise<string> {
     if (!this.store) throw new Error('E2EE not initialized');
 
     const libsignal = await getLibsignal();
@@ -396,14 +382,10 @@ export class E2EEService {
         // PreKeyWhisperMessage: first message in a session
         // No encoding argument: the default ('binary') passes an
         // ArrayBuffer through unchanged — any other value is rejected.
-        decrypted = await cipher.decryptPreKeyWhisperMessage(
-          ciphertextBuffer,
-        );
+        decrypted = await cipher.decryptPreKeyWhisperMessage(ciphertextBuffer);
       } else {
         // Regular WhisperMessage
-        decrypted = await cipher.decryptWhisperMessage(
-          ciphertextBuffer,
-        );
+        decrypted = await cipher.decryptWhisperMessage(ciphertextBuffer);
       }
 
       return arrayBufferToString(decrypted);
@@ -453,8 +435,10 @@ export class E2EEService {
    * device was offline.
    */
   async getRotationEvents(
-    since?: string,
-  ): Promise<Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>> {
+    since?: string
+  ): Promise<
+    Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
+  > {
     if (!this.store) throw new Error('E2EE not initialized');
     const qs = since ? `?since=${encodeURIComponent(since)}` : '';
     const res = await api.get(`/keys/rotation-events${qs}`);
@@ -489,9 +473,7 @@ export class E2EEService {
 
     const pkg = await decryptRecoveryPackage(envelope, passphrase);
     if (pkg.userId !== this.userId) {
-      throw new Error(
-        'This backup belongs to a different account. Sign in as that account first.',
-      );
+      throw new Error('This backup belongs to a different account. Sign in as that account first.');
     }
 
     await restoreE2eeStoreData(this.userId, pkg.snapshot);

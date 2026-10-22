@@ -17,7 +17,14 @@ interface ThreadDetailProps {
   userVote: 'up' | 'down' | null;
 }
 
-export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, userVote }: ThreadDetailProps) => {
+export const ThreadDetail = ({
+  thread,
+  community,
+  onBack,
+  onAddComment,
+  onVote,
+  userVote,
+}: ThreadDetailProps) => {
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState('');
   const [replyToId, setReplyToId] = useState<string | null>(null);
@@ -39,7 +46,10 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
 
   // Recursive comment renderer
   const renderComment = (comment: Comment, depth = 0) => (
-    <div key={comment.id} className={`${depth > 0 ? 'ml-8 border-l-2 border-dark-200 dark:border-dark-700 pl-4' : ''} mb-4`}>
+    <div
+      key={comment.id}
+      className={`${depth > 0 ? 'ml-8 border-l-2 border-dark-200 dark:border-dark-700 pl-4' : ''} mb-4`}
+    >
       <div className="flex items-start gap-3 mb-2">
         <Avatar src={comment.user.profile?.avatarUrl} size="sm" />
         <div className="flex-1">
@@ -71,7 +81,7 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
         <ArrowLeft size={20} />
         Back to r/{community.name}
       </button>
-      
+
       <div className="p-6 rounded-lg border border-dark-200 dark:border-dark-700 bg-white dark:bg-dark-800 mb-6">
         <div className="flex gap-6">
           {/* Vote buttons */}
@@ -96,7 +106,7 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
               <ArrowBigDown size={32} />
             </button>
           </div>
-          
+
           {/* Thread content */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
@@ -121,13 +131,18 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
             </div>
             {thread.media && thread.media.length > 0 && (
               <div className="grid grid-cols-2 gap-4 mb-6">
-                {thread.media.map((media, idx) => (
+                {thread.media.map((media, idx) =>
                   media.type === 'image' ? (
-                    <img key={idx} src={media.url} alt="" className="rounded-lg w-full object-cover" />
+                    <img
+                      key={idx}
+                      src={media.url}
+                      alt=""
+                      className="rounded-lg w-full object-cover"
+                    />
                   ) : (
                     <video key={idx} src={media.url} controls className="rounded-lg w-full" />
                   )
-                ))}
+                )}
               </div>
             )}
             <div className="flex items-center gap-4 text-sm text-dark-500 dark:text-dark-400 border-t border-dark-200 dark:border-dark-700 pt-4">
@@ -142,7 +157,10 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
       </div>
 
       {/* Add comment form */}
-      <form onSubmit={handleSubmitComment} className="mb-8 p-4 rounded-lg border border-dark-200 dark:border-dark-700 bg-white dark:bg-dark-800">
+      <form
+        onSubmit={handleSubmitComment}
+        className="mb-8 p-4 rounded-lg border border-dark-200 dark:border-dark-700 bg-white dark:bg-dark-800"
+      >
         {replyToId && (
           <div className="mb-3 flex items-center gap-2 text-sm">
             <span>Replying to a comment</span>
@@ -162,7 +180,9 @@ export const ThreadDetail = ({ thread, community, onBack, onAddComment, onVote, 
           className="mb-3 min-h-[100px]"
         />
         <div className="flex justify-end">
-          <Button type="submit" disabled={!newComment.trim()}>Comment</Button>
+          <Button type="submit" disabled={!newComment.trim()}>
+            Comment
+          </Button>
         </div>
       </form>
 

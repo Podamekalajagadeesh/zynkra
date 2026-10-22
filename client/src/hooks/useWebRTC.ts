@@ -10,11 +10,15 @@ const ICE_SERVERS = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     // Add TURN server for production to support all network conditions
-    ...(process.env.TURN_SERVER_URL ? [{
-      urls: process.env.TURN_SERVER_URL,
-      username: process.env.TURN_SERVER_USERNAME,
-      credential: process.env.TURN_SERVER_CREDENTIAL
-    }] : []),
+    ...(process.env.TURN_SERVER_URL
+      ? [
+          {
+            urls: process.env.TURN_SERVER_URL,
+            username: process.env.TURN_SERVER_USERNAME,
+            credential: process.env.TURN_SERVER_CREDENTIAL,
+          },
+        ]
+      : []),
   ],
 };
 
@@ -40,14 +44,17 @@ export function useWebRTC(conversationId: string | undefined) {
   const blurStreamRef = useRef<MediaStream | null>(null);
 
   // Handle ICE candidates for P2P calls
-  const handleIceCandidate = useCallback((event: RTCPeerConnectionIceEvent) => {
-    if (event.candidate) {
-      socketRef.current?.emit('ice-candidate', {
-        candidate: event.candidate,
-        room: conversationId,
-      });
-    }
-  }, [conversationId]);
+  const handleIceCandidate = useCallback(
+    (event: RTCPeerConnectionIceEvent) => {
+      if (event.candidate) {
+        socketRef.current?.emit('ice-candidate', {
+          candidate: event.candidate,
+          room: conversationId,
+        });
+      }
+    },
+    [conversationId]
+  );
 
   // Handle incoming tracks for P2P calls
   const handleTrack = useCallback((event: RTCTrackEvent) => {
@@ -65,45 +72,48 @@ export function useWebRTC(conversationId: string | undefined) {
   }, [handleIceCandidate, handleTrack]);
 
   // Apply background blur to video stream
-  const applyBackgroundBlur = useCallback(async (stream: MediaStream): Promise<MediaStream> => {
-    if (!isBackgroundBlurEnabled) return stream;
-    
-    try {
-      // Create canvas for processing
-      if (!blurCanvasRef.current) {
-        blurCanvasRef.current = document.createElement('canvas');
+  const applyBackgroundBlur = useCallback(
+    async (stream: MediaStream): Promise<MediaStream> => {
+      if (!isBackgroundBlurEnabled) return stream;
+
+      try {
+        // Create canvas for processing
+        if (!blurCanvasRef.current) {
+          blurCanvasRef.current = document.createElement('canvas');
+        }
+        const canvas = blurCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const videoTrack = stream.getVideoTracks()[0];
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+
+        canvas.width = videoTrack.getSettings().width || 1280;
+        canvas.height = videoTrack.getSettings().height || 720;
+
+        // Simple background blur implementation (can be enhanced with TensorFlow.js for person segmentation)
+        const processFrame = () => {
+          if (!ctx || !isBackgroundBlurEnabled) return;
+          ctx.filter = 'blur(15px)';
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(processFrame);
+        };
+        processFrame();
+
+        const blurredStream = canvas.captureStream(30);
+        // Combine with original audio track
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) blurredStream.addTrack(audioTrack);
+
+        blurStreamRef.current = blurredStream;
+        return blurredStream;
+      } catch (error) {
+        console.error('Failed to apply background blur:', error);
+        return stream;
       }
-      const canvas = blurCanvasRef.current;
-      const ctx = canvas.getContext('2d');
-      const videoTrack = stream.getVideoTracks()[0];
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      await video.play();
-      
-      canvas.width = videoTrack.getSettings().width || 1280;
-      canvas.height = videoTrack.getSettings().height || 720;
-      
-      // Simple background blur implementation (can be enhanced with TensorFlow.js for person segmentation)
-      const processFrame = () => {
-        if (!ctx || !isBackgroundBlurEnabled) return;
-        ctx.filter = 'blur(15px)';
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        requestAnimationFrame(processFrame);
-      };
-      processFrame();
-      
-      const blurredStream = canvas.captureStream(30);
-      // Combine with original audio track
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) blurredStream.addTrack(audioTrack);
-      
-      blurStreamRef.current = blurredStream;
-      return blurredStream;
-    } catch (error) {
-      console.error('Failed to apply background blur:', error);
-      return stream;
-    }
-  }, [isBackgroundBlurEnabled]);
+    },
+    [isBackgroundBlurEnabled]
+  );
 
   // Start screen sharing
   const startScreenShare = useCallback(async () => {
@@ -112,23 +122,23 @@ export function useWebRTC(conversationId: string | undefined) {
         video: true,
         audio: true,
       });
-      
+
       screenStreamRef.current = screenStream;
-      
+
       // Add screen share track to peer connection for P2P calls
       if (peerConnectionRef.current && localStreamRef.current) {
-        screenStream.getTracks().forEach(track => {
+        screenStream.getTracks().forEach((track) => {
           peerConnectionRef.current?.addTrack(track, screenStream);
         });
       }
-      
+
       // For LiveKit group calls
       if (liveKitRoomRef.current) {
         const { LocalVideoTrack } = await import('livekit-client');
         const track = new LocalVideoTrack(screenStream.getVideoTracks()[0]);
         await liveKitRoomRef.current.localParticipant.publishTrack(track);
       }
-      
+
       setIsScreenSharing(true);
       return true;
     } catch (error) {
@@ -140,10 +150,10 @@ export function useWebRTC(conversationId: string | undefined) {
   // Stop screen sharing
   const stopScreenShare = useCallback(() => {
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
     }
-    
+
     if (liveKitRoomRef.current) {
       liveKitRoomRef.current.localParticipant.tracks.forEach((publication: any) => {
         if (publication.track?.source === 'screen_share') {
@@ -151,29 +161,29 @@ export function useWebRTC(conversationId: string | undefined) {
         }
       });
     }
-    
+
     setIsScreenSharing(false);
   }, []);
 
   // Start call recording
   const startCallRecording = useCallback(() => {
     if (!localStreamRef.current) return;
-    
+
     const combinedStream = new MediaStream([
       ...localStreamRef.current.getTracks(),
       ...(screenStreamRef.current?.getTracks() || []),
     ]);
-    
+
     const recorder = new MediaRecorder(combinedStream);
     mediaRecorderRef.current = recorder;
     recordedChunksRef.current = [];
-    
+
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         recordedChunksRef.current.push(event.data);
       }
     };
-    
+
     recorder.start();
     setIsRecording(true);
   }, []);
@@ -182,7 +192,7 @@ export function useWebRTC(conversationId: string | undefined) {
   const stopCallRecording = useCallback(async () => {
     if (mediaRecorderRef.current && recordedChunksRef.current.length > 0) {
       mediaRecorderRef.current.stop();
-      
+
       // Save recording blob - can be uploaded to server
       const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
@@ -190,10 +200,10 @@ export function useWebRTC(conversationId: string | undefined) {
       a.href = url;
       a.download = `call-recording-${new Date().toISOString()}.webm`;
       a.click();
-      
+
       recordedChunksRef.current = [];
     }
-    
+
     setIsRecording(false);
   }, []);
 
@@ -206,8 +216,9 @@ export function useWebRTC(conversationId: string | undefined) {
       if (videoTrack) {
         videoTrack.stop();
         localStreamRef.current.removeTrack(videoTrack);
-        
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: true })
           .then(async (newStream) => {
             const processedStream = await applyBackgroundBlur(newStream);
             localStreamRef.current = processedStream;
@@ -216,7 +227,7 @@ export function useWebRTC(conversationId: string | undefined) {
             }
             // Update peer connection with new stream
             if (peerConnectionRef.current) {
-              processedStream.getTracks().forEach(track => {
+              processedStream.getTracks().forEach((track) => {
                 peerConnectionRef.current?.addTrack(track, processedStream);
               });
             }
@@ -226,119 +237,121 @@ export function useWebRTC(conversationId: string | undefined) {
   }, [isBackgroundBlurEnabled, applyBackgroundBlur]);
 
   // Initialize group call with LiveKit (supports large groups)
-  const initializeGroupCall = useCallback(async (maxParticipants: number = 50) => {
-    if (!conversationId) return;
-    
-    try {
-      const { Room, RoomEvent } = await import('livekit-client');
-      const room = new Room();
-      liveKitRoomRef.current = room;
-      
-      // Connect to LiveKit server with token from our backend
-      const socket = io(API_BASE_URL);
-      socket.emit('join-stream', { 
-        roomName: conversationId, 
-        userId: 'current-user-id', // Get from auth context
-        isHost: true 
-      });
-      
-      socket.on('stream-token', async ({ token }) => {
-        await room.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', token);
-        setIsCallActive(true);
-      });
-      
-      // Handle participants joining/leaving
-      room.on(RoomEvent.ParticipantConnected, (participant) => {
-        setParticipants(prev => [...prev, participant.identity]);
-      });
+  const initializeGroupCall = useCallback(
+    async (maxParticipants: number = 50) => {
+      if (!conversationId) return;
 
-      room.on(RoomEvent.ParticipantDisconnected, (participant) => {
-        setParticipants(prev => prev.filter(id => id !== participant.identity));
-      });
-      
-    } catch (error) {
-      console.error('Failed to initialize group call:', error);
-    }
-  }, [conversationId]);
+      try {
+        const { Room, RoomEvent } = await import('livekit-client');
+        const room = new Room();
+        liveKitRoomRef.current = room;
+
+        // Connect to LiveKit server with token from our backend
+        const socket = io(API_BASE_URL);
+        socket.emit('join-stream', {
+          roomName: conversationId,
+          userId: 'current-user-id', // Get from auth context
+          isHost: true,
+        });
+
+        socket.on('stream-token', async ({ token }) => {
+          await room.connect(process.env.LIVEKIT_URL || 'wss://your-livekit-instance.com', token);
+          setIsCallActive(true);
+        });
+
+        // Handle participants joining/leaving
+        room.on(RoomEvent.ParticipantConnected, (participant) => {
+          setParticipants((prev) => [...prev, participant.identity]);
+        });
+
+        room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+          setParticipants((prev) => prev.filter((id) => id !== participant.identity));
+        });
+      } catch (error) {
+        console.error('Failed to initialize group call:', error);
+      }
+    },
+    [conversationId]
+  );
 
   // Start call (supports both 1:1 and group calls)
-  const startCall = useCallback(async (isGroupCall: boolean = false, maxParticipants: number = 50) => {
-    if (isGroupCall) {
-      await initializeGroupCall(maxParticipants);
-      return;
-    }
-    
-    // Original 1:1 call implementation with enhanced features
-    setIsCallActive(true);
-    peerConnectionRef.current = createPeerConnection();
+  const startCall = useCallback(
+    async (isGroupCall: boolean = false, maxParticipants: number = 50) => {
+      if (isGroupCall) {
+        await initializeGroupCall(maxParticipants);
+        return;
+      }
 
-    let stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    
-    // Apply background blur if enabled
-    stream = await applyBackgroundBlur(stream);
-    localStreamRef.current = stream;
-    
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
-    }
-
-    stream.getTracks().forEach((track) => {
-      peerConnectionRef.current?.addTrack(track, stream);
-    });
-
-    const offer = await peerConnectionRef.current.createOffer();
-    await peerConnectionRef.current.setLocalDescription(offer);
-
-    socketRef.current?.emit('offer', { sdp: offer, room: conversationId });
-  }, [createPeerConnection, conversationId, initializeGroupCall, applyBackgroundBlur]);
-
-  const handleOffer = useCallback(async (data: { sdp: any; from: string }) => {
-    if (!peerConnectionRef.current) {
+      // Original 1:1 call implementation with enhanced features
+      setIsCallActive(true);
       peerConnectionRef.current = createPeerConnection();
-    }
 
-    await peerConnectionRef.current.setRemoteDescription(
-      new RTCSessionDescription(data.sdp)
-    );
+      let stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
 
-    let stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    
-    // Apply background blur if enabled
-    stream = await applyBackgroundBlur(stream);
-    localStreamRef.current = stream;
-    
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
-    }
+      // Apply background blur if enabled
+      stream = await applyBackgroundBlur(stream);
+      localStreamRef.current = stream;
 
-    stream.getTracks().forEach((track) => {
-      peerConnectionRef.current?.addTrack(track, stream);
-    });
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
 
-    const answer = await peerConnectionRef.current.createAnswer();
-    await peerConnectionRef.current.setLocalDescription(answer);
+      stream.getTracks().forEach((track) => {
+        peerConnectionRef.current?.addTrack(track, stream);
+      });
 
-    socketRef.current?.emit('answer', { sdp: answer, room: conversationId });
-    setIsCallActive(true);
-  }, [createPeerConnection, conversationId, applyBackgroundBlur]);
+      const offer = await peerConnectionRef.current.createOffer();
+      await peerConnectionRef.current.setLocalDescription(offer);
+
+      socketRef.current?.emit('offer', { sdp: offer, room: conversationId });
+    },
+    [createPeerConnection, conversationId, initializeGroupCall, applyBackgroundBlur]
+  );
+
+  const handleOffer = useCallback(
+    async (data: { sdp: any; from: string }) => {
+      if (!peerConnectionRef.current) {
+        peerConnectionRef.current = createPeerConnection();
+      }
+
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      let stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      // Apply background blur if enabled
+      stream = await applyBackgroundBlur(stream);
+      localStreamRef.current = stream;
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      stream.getTracks().forEach((track) => {
+        peerConnectionRef.current?.addTrack(track, stream);
+      });
+
+      const answer = await peerConnectionRef.current.createAnswer();
+      await peerConnectionRef.current.setLocalDescription(answer);
+
+      socketRef.current?.emit('answer', { sdp: answer, room: conversationId });
+      setIsCallActive(true);
+    },
+    [createPeerConnection, conversationId, applyBackgroundBlur]
+  );
 
   const handleAnswer = useCallback(async (data: { sdp: any; from: string }) => {
-    await peerConnectionRef.current?.setRemoteDescription(
-      new RTCSessionDescription(data.sdp)
-    );
+    await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(data.sdp));
   }, []);
 
   const handleNewIceCandidate = useCallback(async (data: { candidate: any; from: string }) => {
     if (data.candidate) {
-      await peerConnectionRef.current?.addIceCandidate(
-        new RTCIceCandidate(data.candidate)
-      );
+      await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   }, []);
 
@@ -352,33 +365,42 @@ export function useWebRTC(conversationId: string | undefined) {
     socketRef.current.on('offer', handleOffer);
     socketRef.current.on('answer', handleAnswer);
     socketRef.current.on('ice-candidate', handleNewIceCandidate);
-    
+
     // Handle group call participants
     socketRef.current.on('participant-joined', ({ userId }: { userId: string }) => {
-      setParticipants(prev => [...prev, userId]);
+      setParticipants((prev) => [...prev, userId]);
     });
-    
+
     socketRef.current.on('participant-left', ({ userId }: { userId: string }) => {
-      setParticipants(prev => prev.filter(id => id !== userId));
+      setParticipants((prev) => prev.filter((id) => id !== userId));
     });
 
     return () => {
       // Clean up all resources
       if (isRecording) stopCallRecording();
       if (isScreenSharing) stopScreenShare();
-      
+
       socketRef.current?.emit('leave-call', conversationId);
       socketRef.current?.disconnect();
-      
+
       if (liveKitRoomRef.current) {
         liveKitRoomRef.current.disconnect();
       }
-      
+
       if (blurStreamRef.current) {
-        blurStreamRef.current.getTracks().forEach(track => track.stop());
+        blurStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [conversationId, handleOffer, handleAnswer, handleNewIceCandidate, isRecording, isScreenSharing, stopCallRecording, stopScreenShare]);
+  }, [
+    conversationId,
+    handleOffer,
+    handleAnswer,
+    handleNewIceCandidate,
+    isRecording,
+    isScreenSharing,
+    stopCallRecording,
+    stopScreenShare,
+  ]);
 
   const toggleMute = () => {
     if (localStreamRef.current) {
@@ -387,7 +409,7 @@ export function useWebRTC(conversationId: string | undefined) {
       });
       setIsMuted(!isMuted);
     }
-    
+
     // Update LiveKit participant if in group call
     if (liveKitRoomRef.current) {
       liveKitRoomRef.current.localParticipant.setAudioEnabled(!isMuted);
@@ -401,7 +423,7 @@ export function useWebRTC(conversationId: string | undefined) {
       });
       setIsVideoEnabled(!isVideoEnabled);
     }
-    
+
     // Update LiveKit participant if in group call
     if (liveKitRoomRef.current) {
       liveKitRoomRef.current.localParticipant.setVideoEnabled(!isVideoEnabled);
@@ -412,20 +434,20 @@ export function useWebRTC(conversationId: string | undefined) {
     // Clean up all resources
     if (isRecording) stopCallRecording();
     if (isScreenSharing) stopScreenShare();
-    
+
     peerConnectionRef.current?.close();
     peerConnectionRef.current = null;
-    
+
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
-    
+
     if (liveKitRoomRef.current) {
       liveKitRoomRef.current.disconnect();
       liveKitRoomRef.current = null;
     }
-    
+
     setIsCallActive(false);
     setParticipants([]);
     setIsBackgroundBlurEnabled(false);

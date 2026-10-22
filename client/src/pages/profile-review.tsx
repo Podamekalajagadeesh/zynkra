@@ -62,10 +62,14 @@ export function ProfileReviewPage() {
       ) : (
         <div className="space-y-4">
           {pendingReviews.map((review) => (
-            <div key={review.id} className="flex items-center justify-between rounded-lg border p-4">
+            <div
+              key={review.id}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
               <div>
                 <p>
-                  <span className="font-semibold">{review.taggingUser.displayName}</span> tagged you in a post.
+                  <span className="font-semibold">{review.taggingUser.displayName}</span> tagged you
+                  in a post.
                 </p>
                 <p className="text-sm text-gray-500">{review.post.content}</p>
               </div>

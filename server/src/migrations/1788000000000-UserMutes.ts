@@ -12,13 +12,13 @@ export class UserMutes1788000000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "user_mutes" ADD CONSTRAINT "FK_user_mutes_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "user_mutes" ADD CONSTRAINT "FK_user_mutes_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "user_mutes" ADD CONSTRAINT "FK_user_mutes_muted_user" FOREIGN KEY ("mutedUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "user_mutes" ADD CONSTRAINT "FK_user_mutes_muted_user" FOREIGN KEY ("mutedUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_user_mutes_muted_user" ON "user_mutes" ("mutedUserId")`,
+      `CREATE INDEX "IDX_user_mutes_muted_user" ON "user_mutes" ("mutedUserId")`
     );
   }
 

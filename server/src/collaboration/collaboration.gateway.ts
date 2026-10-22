@@ -26,7 +26,7 @@ export class CollaborationGateway
     private readonly collaborationService: CollaborationService,
     private readonly wsAuth: WsAuthService,
     private readonly configService: ConfigService,
-    private readonly rateLimiter: WsRateLimiter,
+    private readonly rateLimiter: WsRateLimiter
   ) {}
 
   afterInit(server: Server) {
@@ -44,7 +44,7 @@ export class CollaborationGateway
    */
   private actorId(
     client: Socket,
-    payload?: { postId?: string; sessionId?: string } & Record<string, any>,
+    payload?: { postId?: string; sessionId?: string } & Record<string, any>
   ): string | undefined {
     const userId = client.data.userId as string | undefined;
     if (!userId) return undefined;
@@ -96,7 +96,10 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('content-update')
-  async handleContentUpdate(client: Socket, payload: { postId: string; content: any; timestamp: number }) {
+  async handleContentUpdate(
+    client: Socket,
+    payload: { postId: string; content: any; timestamp: number }
+  ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
     const { postId, content, timestamp } = payload;
@@ -109,7 +112,10 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('cursor-position')
-  async handleCursorPosition(client: Socket, payload: { postId: string; position: { x: number; y: number } }) {
+  async handleCursorPosition(
+    client: Socket,
+    payload: { postId: string; position: { x: number; y: number } }
+  ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
     const { postId, position } = payload;
@@ -125,7 +131,10 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('invite-collaborator')
-  async handleInviteCollaborator(client: Socket, payload: { postId: string; guestId: string; guestEmail: string }) {
+  async handleInviteCollaborator(
+    client: Socket,
+    payload: { postId: string; guestId: string; guestEmail: string }
+  ) {
     const hostId = this.actorId(client, payload);
     if (!hostId || !payload.guestId) return;
     const { postId, guestId, guestEmail } = payload;
@@ -144,7 +153,10 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('remove-collaborator')
-  async handleRemoveCollaborator(client: Socket, payload: { postId: string; collaboratorId: string }) {
+  async handleRemoveCollaborator(
+    client: Socket,
+    payload: { postId: string; collaboratorId: string }
+  ) {
     if (!this.actorId(client, payload) || !payload.collaboratorId) return;
     const { postId, collaboratorId } = payload;
 
@@ -175,7 +187,7 @@ export class CollaborationGateway
       prompt: string;
       location?: string;
       sensoryMood?: string;
-    },
+    }
   ) {
     const hostId = this.actorId(client, payload);
     if (!hostId || !payload?.title) return;
@@ -200,7 +212,10 @@ export class CollaborationGateway
   async handleListCollectiveExperienceSessions(
     client: Socket,
     _payload: unknown,
-    ack?: (response: { success: boolean; sessions: ReturnType<CollaborationService['getCollectiveExperienceSessions']> }) => void,
+    ack?: (response: {
+      success: boolean;
+      sessions: ReturnType<CollaborationService['getCollectiveExperienceSessions']>;
+    }) => void
   ) {
     const sessions = this.collaborationService.getCollectiveExperienceSessions();
 
@@ -213,7 +228,10 @@ export class CollaborationGateway
   async handleGetCollectiveExperienceSession(
     client: Socket,
     payload: { sessionId: string },
-    ack?: (response: { success: boolean; session: ReturnType<CollaborationService['getCollectiveExperienceSession']> }) => void,
+    ack?: (response: {
+      success: boolean;
+      session: ReturnType<CollaborationService['getCollectiveExperienceSession']>;
+    }) => void
   ) {
     const session = this.collaborationService.getCollectiveExperienceSession(payload.sessionId);
 
@@ -230,7 +248,7 @@ export class CollaborationGateway
   @SubscribeMessage('collective-experience:join-session')
   async handleJoinCollectiveExperienceSession(
     client: Socket,
-    payload: { sessionId: string; displayName: string },
+    payload: { sessionId: string; displayName: string }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
@@ -238,7 +256,7 @@ export class CollaborationGateway
     const session = this.collaborationService.joinCollectiveExperienceSession(
       payload.sessionId,
       userId,
-      payload.displayName,
+      payload.displayName
     );
 
     client.join(payload.sessionId);
@@ -253,14 +271,14 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('collective-experience:leave-session')
-  async handleLeaveCollectiveExperienceSession(
-    client: Socket,
-    payload: { sessionId: string },
-  ) {
+  async handleLeaveCollectiveExperienceSession(client: Socket, payload: { sessionId: string }) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
 
-    const session = this.collaborationService.leaveCollectiveExperienceSession(payload.sessionId, userId);
+    const session = this.collaborationService.leaveCollectiveExperienceSession(
+      payload.sessionId,
+      userId
+    );
     client.leave(payload.sessionId);
 
     this.server.to(payload.sessionId).emit('collective-experience:participant-left', {
@@ -282,13 +300,21 @@ export class CollaborationGateway
   @SubscribeMessage('collective-experience:update-scene')
   async handleUpdateCollectiveExperienceScene(
     client: Socket,
-    payload: { sessionId: string; updates: { prompt?: string; location?: string; sensoryMood?: string; highlights?: string[] } },
+    payload: {
+      sessionId: string;
+      updates: { prompt?: string; location?: string; sensoryMood?: string; highlights?: string[] };
+    }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
 
-    const session = this.collaborationService.updateCollectiveExperienceScene(payload.sessionId, payload.updates);
-    this.server.to(payload.sessionId).emit('collective-experience:session-updated', { session, userId });
+    const session = this.collaborationService.updateCollectiveExperienceScene(
+      payload.sessionId,
+      payload.updates
+    );
+    this.server
+      .to(payload.sessionId)
+      .emit('collective-experience:session-updated', { session, userId });
     this.broadcastCollectiveExperienceSessions();
   }
 
@@ -301,18 +327,21 @@ export class CollaborationGateway
       type: 'travel-note' | 'event-step' | 'story-beat' | 'sensory-cue';
       text: string;
       intensity: number;
-    },
+    }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
 
-    const session = this.collaborationService.addCollectiveExperienceContribution(payload.sessionId, {
-      userId,
-      displayName: payload.displayName,
-      type: payload.type,
-      text: payload.text,
-      intensity: payload.intensity,
-    });
+    const session = this.collaborationService.addCollectiveExperienceContribution(
+      payload.sessionId,
+      {
+        userId,
+        displayName: payload.displayName,
+        type: payload.type,
+        text: payload.text,
+        intensity: payload.intensity,
+      }
+    );
 
     this.server.to(payload.sessionId).emit('collective-experience:contribution-added', {
       sessionId: payload.sessionId,
@@ -335,7 +364,7 @@ export class CollaborationGateway
       thoughtPrompt?: string;
       broadcastIntensity?: number;
       maxAudience?: number;
-    },
+    }
   ) {
     const hostId = this.actorId(client, payload);
     if (!hostId || !payload?.title) return;
@@ -363,7 +392,10 @@ export class CollaborationGateway
   async handleListNeuralLiveStreamSessions(
     _client: Socket,
     _payload: unknown,
-    ack?: (response: { success: boolean; sessions: ReturnType<CollaborationService['getNeuralLiveStreamSessions']> }) => void,
+    ack?: (response: {
+      success: boolean;
+      sessions: ReturnType<CollaborationService['getNeuralLiveStreamSessions']>;
+    }) => void
   ) {
     const sessions = this.collaborationService.getNeuralLiveStreamSessions();
 
@@ -376,7 +408,10 @@ export class CollaborationGateway
   async handleGetNeuralLiveStreamSession(
     _client: Socket,
     payload: { sessionId: string },
-    ack?: (response: { success: boolean; session: ReturnType<CollaborationService['getNeuralLiveStreamSession']> }) => void,
+    ack?: (response: {
+      success: boolean;
+      session: ReturnType<CollaborationService['getNeuralLiveStreamSession']>;
+    }) => void
   ) {
     const session = this.collaborationService.getNeuralLiveStreamSession(payload.sessionId);
 
@@ -393,7 +428,7 @@ export class CollaborationGateway
   @SubscribeMessage('neural-live-stream:join-session')
   async handleJoinNeuralLiveStreamSession(
     client: Socket,
-    payload: { sessionId: string; displayName: string; role?: 'host' | 'co-host' | 'viewer' },
+    payload: { sessionId: string; displayName: string; role?: 'host' | 'co-host' | 'viewer' }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
@@ -402,7 +437,7 @@ export class CollaborationGateway
       payload.sessionId,
       userId,
       payload.displayName,
-      payload.role,
+      payload.role
     );
 
     client.join(payload.sessionId);
@@ -418,14 +453,14 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('neural-live-stream:leave-session')
-  async handleLeaveNeuralLiveStreamSession(
-    client: Socket,
-    payload: { sessionId: string },
-  ) {
+  async handleLeaveNeuralLiveStreamSession(client: Socket, payload: { sessionId: string }) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
 
-    const session = this.collaborationService.leaveNeuralLiveStreamSession(payload.sessionId, userId);
+    const session = this.collaborationService.leaveNeuralLiveStreamSession(
+      payload.sessionId,
+      userId
+    );
     client.leave(payload.sessionId);
 
     this.server.to(payload.sessionId).emit('neural-live-stream:participant-left', {
@@ -457,13 +492,18 @@ export class CollaborationGateway
         thoughtPrompt?: string;
         broadcastIntensity?: number;
       };
-    },
+    }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
 
-    const session = this.collaborationService.updateNeuralLiveStreamBroadcast(payload.sessionId, payload.updates);
-    this.server.to(payload.sessionId).emit('neural-live-stream:session-updated', { session, userId });
+    const session = this.collaborationService.updateNeuralLiveStreamBroadcast(
+      payload.sessionId,
+      payload.updates
+    );
+    this.server
+      .to(payload.sessionId)
+      .emit('neural-live-stream:session-updated', { session, userId });
     this.broadcastNeuralLiveStreamSessions();
   }
 
@@ -477,7 +517,7 @@ export class CollaborationGateway
       content: string;
       intensity: number;
       sensoryTags: string[];
-    },
+    }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
@@ -508,7 +548,7 @@ export class CollaborationGateway
       type: 'reaction' | 'question' | 'spotlight-request' | 'sensory-feedback';
       content: string;
       reaction?: string;
-    },
+    }
   ) {
     const userId = this.actorId(client, payload);
     if (!userId) return;
@@ -530,10 +570,7 @@ export class CollaborationGateway
   }
 
   @SubscribeMessage('neural-live-stream:end-session')
-  async handleEndNeuralLiveStreamSession(
-    client: Socket,
-    payload: { sessionId: string },
-  ) {
+  async handleEndNeuralLiveStreamSession(client: Socket, payload: { sessionId: string }) {
     if (!this.actorId(client, payload)) return;
 
     const ended = this.collaborationService.endNeuralLiveStreamSession(payload.sessionId);

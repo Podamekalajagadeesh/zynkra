@@ -54,14 +54,36 @@ describe('CommentsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CommentsService,
-        { provide: getRepositoryToken(Comment), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() } },
+        {
+          provide: getRepositoryToken(Comment),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
         { provide: ReputationService, useValue: { addReputation: jest.fn() } },
         { provide: NotificationsService, useValue: { createNotification: jest.fn() } },
         { provide: MentionsService, useValue: { createMentions: jest.fn().mockResolvedValue([]) } },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
         { provide: UserInterestsService, useValue: { recordInteraction: jest.fn() } },
-        { provide: SentimentService, useValue: { analyzeSentiment: jest.fn().mockResolvedValue({ sentiment: 'neutral', score: 0, confidence: 0.5 }) } },
-        { provide: VisibilityService, useValue: { isBlockedEither: jest.fn().mockResolvedValue(false), getBlockedIdSet: jest.fn().mockResolvedValue(new Set()) } },
+        {
+          provide: SentimentService,
+          useValue: {
+            analyzeSentiment: jest
+              .fn()
+              .mockResolvedValue({ sentiment: 'neutral', score: 0, confidence: 0.5 }),
+          },
+        },
+        {
+          provide: VisibilityService,
+          useValue: {
+            isBlockedEither: jest.fn().mockResolvedValue(false),
+            getBlockedIdSet: jest.fn().mockResolvedValue(new Set()),
+          },
+        },
         { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
         { provide: ProfileReviewService, useValue: { createForPost: jest.fn() } },
       ],
@@ -95,11 +117,11 @@ describe('CommentsService', () => {
     it('creates a reply to a comment', async () => {
       const user = makeUser();
       const post = makePost();
-       const parentComment = {
-         id: 'parent-1',
-         isLocked: false,
-         user: makeUser({ id: 'parent-user' }),
-       } as Comment;
+      const parentComment = {
+        id: 'parent-1',
+        isLocked: false,
+        user: makeUser({ id: 'parent-user' }),
+      } as Comment;
 
       commentsRepo.findOne.mockResolvedValue(parentComment);
       usersService.findOneById.mockResolvedValue(post.user);
@@ -114,14 +136,18 @@ describe('CommentsService', () => {
     it('throws when replying to a locked comment', async () => {
       commentsRepo.findOne.mockResolvedValue({ id: 'parent-1', isLocked: true } as Comment);
 
-      await expect(service.create('Hack', makeUser(), makePost(), 'parent-1')).rejects.toThrow(UnauthorizedException);
+      await expect(service.create('Hack', makeUser(), makePost(), 'parent-1')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
 
     it('throws when blocked by post owner', async () => {
       visibilityService.isBlockedEither.mockResolvedValue(true);
       usersService.findOneById.mockResolvedValue(makeUser({ id: 'owner' }));
 
-      await expect(service.create('Hello', makeUser(), makePost())).rejects.toThrow(UnauthorizedException);
+      await expect(service.create('Hello', makeUser(), makePost())).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 
@@ -170,7 +196,11 @@ describe('CommentsService', () => {
 
     it('throws when not the owner', async () => {
       const user = makeUser({ id: 'user-1' });
-      commentsRepo.findOne.mockResolvedValue({ id: 'c1', user: makeUser({ id: 'other' }), post: makePost({ user: makeUser({ id: 'other' }) }) });
+      commentsRepo.findOne.mockResolvedValue({
+        id: 'c1',
+        user: makeUser({ id: 'other' }),
+        post: makePost({ user: makeUser({ id: 'other' }) }),
+      });
 
       await expect(service.delete('c1', user)).rejects.toThrow(UnauthorizedException);
     });

@@ -33,9 +33,9 @@ export function AdminAppealDashboard() {
   const [appeals, setAppeals] = useState<AppealWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'under_review' | 'approved' | 'rejected'>(
-    'pending',
-  );
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'pending' | 'under_review' | 'approved' | 'rejected'
+  >('pending');
   const [selectedAppeal, setSelectedAppeal] = useState<AppealWithUser | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
 
@@ -120,7 +120,9 @@ export function AdminAppealDashboard() {
     return labels[status];
   };
 
-  const filteredAppeals = appeals.filter((a) => filterStatus === 'all' || a.status === filterStatus);
+  const filteredAppeals = appeals.filter(
+    (a) => filterStatus === 'all' || a.status === filterStatus
+  );
 
   return (
     <div className="space-y-6">
@@ -236,7 +238,9 @@ export function AdminAppealDashboard() {
                       <p className="text-xs font-medium text-blue-900 dark:text-blue-300 mb-1">
                         Review Notes:
                       </p>
-                      <p className="text-xs text-blue-800 dark:text-blue-400">{appeal.reviewNotes}</p>
+                      <p className="text-xs text-blue-800 dark:text-blue-400">
+                        {appeal.reviewNotes}
+                      </p>
                     </div>
                   )}
                 </div>

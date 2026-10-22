@@ -26,11 +26,7 @@ export function CreatePage() {
   return (
     <PageShell title="Create a New Page">
       <div className="space-y-4">
-        <Input
-          placeholder="Page Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <Input placeholder="Page Name" value={name} onChange={(e) => setName(e.target.value)} />
         <Textarea
           placeholder="Page Description"
           value={description}

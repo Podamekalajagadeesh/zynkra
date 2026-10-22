@@ -44,8 +44,8 @@ export function TagFriendsModal({ onClose, onTagUsers, taggedUsers }: TagFriends
   };
 
   const toggleUserSelection = (user: UserProfile) => {
-    if (selectedUsers.find(u => u.id === user.id)) {
-      setSelectedUsers(selectedUsers.filter(u => u.id !== user.id));
+    if (selectedUsers.find((u) => u.id === user.id)) {
+      setSelectedUsers(selectedUsers.filter((u) => u.id !== user.id));
     } else {
       setSelectedUsers([...selectedUsers, user]);
     }
@@ -61,7 +61,13 @@ export function TagFriendsModal({ onClose, onTagUsers, taggedUsers }: TagFriends
       <div className="bg-white dark:bg-dark-800 rounded-lg shadow-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Tag People</h2>
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={onClose} ariaLabel="Close tag friends modal">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 p-0"
+            onClick={onClose}
+            ariaLabel="Close tag friends modal"
+          >
             <X className="h-6 w-6" />
           </Button>
         </div>
@@ -73,10 +79,10 @@ export function TagFriendsModal({ onClose, onTagUsers, taggedUsers }: TagFriends
           className="mb-4"
         />
         <div className="space-y-2 h-64 overflow-y-auto">
-          {followers.map(user => (
+          {followers.map((user) => (
             <div
               key={user.id}
-              className={`flex items-center p-2 rounded-md cursor-pointer ${selectedUsers.find(u => u.id === user.id) ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
+              className={`flex items-center p-2 rounded-md cursor-pointer ${selectedUsers.find((u) => u.id === user.id) ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
               onClick={() => toggleUserSelection(user)}
             >
               <img src={user.pfp} alt={user.username} className="w-8 h-8 rounded-full mr-3" />

@@ -49,10 +49,11 @@ async function main() {
   try {
     console.log('Running migrations against a fresh database...');
     try {
-      execSync(
-        'npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts',
-        { stdio: ['ignore', 'pipe', 'pipe'], cwd, env },
-      );
+      execSync('npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts', {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        cwd,
+        env,
+      });
     } catch (e) {
       console.error('migration:run FAILED');
       if (e.stdout) console.error(e.stdout.toString().slice(-4000));
@@ -66,7 +67,7 @@ async function main() {
     try {
       execSync(
         'npx typeorm-ts-node-commonjs migration:generate src/migrations/DriftCheck -d src/data-source.ts',
-        { stdio: 'pipe', cwd, env },
+        { stdio: 'pipe', cwd, env }
       );
       // generate SUCCEEDING means it found a diff and wrote a file — that's drift.
       const drift = fs
@@ -74,7 +75,7 @@ async function main() {
         .filter((f) => f.includes('DriftCheck'));
       drift.forEach((f) => fs.unlinkSync(path.join(cwd, 'src/migrations', f)));
       console.error(
-        'FAIL: entities have changes not covered by migrations. Run npm run migration:generate.',
+        'FAIL: entities have changes not covered by migrations. Run npm run migration:generate.'
       );
       process.exit(1);
     } catch {

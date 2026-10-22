@@ -70,7 +70,7 @@ export const SendMessageForm = ({
       setIsNeuralCaptureActive(true);
       setIsNeuralProcessing(true);
       addToast('Neural interface connected! Capturing your thoughts and emotions...', 'success');
-      
+
       // Simulate neural signal processing that converts brain activity to text with emotional/contextual data
       const neuralProcessingTimeout = setTimeout(() => {
         // In a real implementation, this would use a trained ML model to interpret brain signals
@@ -78,65 +78,109 @@ export const SendMessageForm = ({
         const commonThoughts = [
           "I'm so excited to meet you later today! I've been looking forward to this all week.",
           "I'm feeling a bit stressed about that work project, but I know I can get through it.",
-          "Just saw the most beautiful sunset - it made me think of you immediately.",
+          'Just saw the most beautiful sunset - it made me think of you immediately.',
           "I'm so happy we got to spend that time together yesterday, it meant the world to me.",
           "I'm worried about our friend, I hope they're doing okay.",
           "That movie we watched last night was incredible, I can't stop thinking about the ending.",
           "I'm really calm right now, just enjoying this quiet morning with coffee.",
-          "I'm so angry about what happened, I can't believe they would do that!"
+          "I'm so angry about what happened, I can't believe they would do that!",
         ];
-        
+
         // Generate realistic emotional data
         const generateEmotions = (thought: string): EmotionData => {
           if (thought.includes('excited') || thought.includes('happy')) {
-            return { joy: 0.9, sadness: 0.1, excitement: 0.95, calm: 0.7, anger: 0.05, surprise: 0.3, love: 0.8, fear: 0.05 };
+            return {
+              joy: 0.9,
+              sadness: 0.1,
+              excitement: 0.95,
+              calm: 0.7,
+              anger: 0.05,
+              surprise: 0.3,
+              love: 0.8,
+              fear: 0.05,
+            };
           } else if (thought.includes('stressed') || thought.includes('worried')) {
-            return { joy: 0.2, sadness: 0.5, excitement: 0.1, calm: 0.2, anger: 0.3, surprise: 0.1, love: 0.4, fear: 0.8 };
+            return {
+              joy: 0.2,
+              sadness: 0.5,
+              excitement: 0.1,
+              calm: 0.2,
+              anger: 0.3,
+              surprise: 0.1,
+              love: 0.4,
+              fear: 0.8,
+            };
           } else if (thought.includes('calm') || thought.includes('beautiful')) {
-            return { joy: 0.8, sadness: 0.1, excitement: 0.4, calm: 0.95, anger: 0.05, surprise: 0.2, love: 0.7, fear: 0.05 };
+            return {
+              joy: 0.8,
+              sadness: 0.1,
+              excitement: 0.4,
+              calm: 0.95,
+              anger: 0.05,
+              surprise: 0.2,
+              love: 0.7,
+              fear: 0.05,
+            };
           } else if (thought.includes('angry')) {
-            return { joy: 0.1, sadness: 0.3, excitement: 0.2, calm: 0.1, anger: 0.95, surprise: 0.4, love: 0.2, fear: 0.3 };
+            return {
+              joy: 0.1,
+              sadness: 0.3,
+              excitement: 0.2,
+              calm: 0.1,
+              anger: 0.95,
+              surprise: 0.4,
+              love: 0.2,
+              fear: 0.3,
+            };
           }
           // Default emotions
-          return { joy: 0.6, sadness: 0.2, excitement: 0.5, calm: 0.6, anger: 0.1, surprise: 0.3, love: 0.5, fear: 0.1 };
+          return {
+            joy: 0.6,
+            sadness: 0.2,
+            excitement: 0.5,
+            calm: 0.6,
+            anger: 0.1,
+            surprise: 0.3,
+            love: 0.5,
+            fear: 0.1,
+          };
         };
 
         // Generate contextual data
         const generateContext = (): ContextualData => {
           // Get current location (mock for demo)
           const locations = [
-            { latitude: 40.7128, longitude: -74.0060, name: "New York, NY" },
-            { latitude: 34.0522, longitude: -118.2437, name: "Los Angeles, CA" },
-            { latitude: 51.5074, longitude: -0.1278, name: "London, UK" },
-            { latitude: 48.8566, longitude: 2.3522, name: "Paris, France" }
+            { latitude: 40.7128, longitude: -74.006, name: 'New York, NY' },
+            { latitude: 34.0522, longitude: -118.2437, name: 'Los Angeles, CA' },
+            { latitude: 51.5074, longitude: -0.1278, name: 'London, UK' },
+            { latitude: 48.8566, longitude: 2.3522, name: 'Paris, France' },
           ];
           const randomLocation = locations[Math.floor(Math.random() * locations.length)];
-          
+
           return {
             location: randomLocation,
             timestamp: new Date().toISOString(),
-            activity: "relaxing at home",
-            sensoryCues: ["warm coffee", "soft music", "sunlight through window"]
+            activity: 'relaxing at home',
+            sensoryCues: ['warm coffee', 'soft music', 'sunlight through window'],
           };
         };
-        
+
         // Pick a random thought to simulate capturing the user's current thought
         const randomThought = commonThoughts[Math.floor(Math.random() * commonThoughts.length)];
         const emotions = generateEmotions(randomThought);
         const context = generateContext();
-        
+
         const metadata: NeuralMessageMetadata = {
           emotions,
-          context
+          context,
         };
-        
+
         setContent(randomThought);
         setNeuralMetadata(metadata);
         clearTimeout(neuralProcessingTimeout);
         setIsNeuralProcessing(false);
         addToast('Thought captured with full emotional and contextual transfer!', 'success');
       }, 3500);
-      
     } catch (error) {
       console.error('Failed to connect to neural interface:', error);
       addToast('Failed to connect to neural implant. Please check your device settings.', 'error');
@@ -213,7 +257,7 @@ export const SendMessageForm = ({
             contentToSend,
             replyTo?.id,
             [{ url, type: 'audio', enc: E2EE_ATTACHMENT_ALG }],
-            voiceNote,
+            voiceNote
           );
         } else {
           const { url } = await uploadMedia(voiceFile);
@@ -223,7 +267,7 @@ export const SendMessageForm = ({
             '',
             replyTo?.id,
             [{ url, type: 'audio' }],
-            voiceNote,
+            voiceNote
           );
         }
         addToast('Voice message sent', 'success');
@@ -255,22 +299,12 @@ export const SendMessageForm = ({
           attachments: [{ url, type: 'video', key: encrypted.key, nonce: encrypted.nonce }],
         };
         const contentToSend = await encryptMessage(recipientId, JSON.stringify(payload));
-        await sendMessage(
-          conversationId,
-          channelId,
-          contentToSend,
-          replyTo?.id,
-          [{ url, type: 'video', enc: E2EE_ATTACHMENT_ALG }],
-        );
+        await sendMessage(conversationId, channelId, contentToSend, replyTo?.id, [
+          { url, type: 'video', enc: E2EE_ATTACHMENT_ALG },
+        ]);
       } else {
         const { url } = await uploadMedia(file);
-        await sendMessage(
-          conversationId,
-          channelId,
-          '',
-          replyTo?.id,
-          [{ url, type: 'video' }],
-        );
+        await sendMessage(conversationId, channelId, '', replyTo?.id, [{ url, type: 'video' }]);
       }
       addToast('Video message sent', 'success');
       onMessageSent?.();
@@ -283,19 +317,14 @@ export const SendMessageForm = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="border-t border-dark-200 bg-white p-lg"
-    >
+    <form onSubmit={handleSubmit} className="border-t border-dark-200 bg-white p-lg">
       {replyTo && (
         <div className="bg-gray-100 p-2 rounded-lg mb-2 flex justify-between items-center">
           <div>
             <p className="text-xs font-semibold">
               Replying to {replyTo.sender.username || replyTo.sender.email}
             </p>
-            <p className="text-xs text-gray-600 truncate">
-              {replyTo.content}
-            </p>
+            <p className="text-xs text-gray-600 truncate">{replyTo.content}</p>
           </div>
           <button onClick={onClearReply}>
             <X size={16} />
@@ -367,15 +396,15 @@ export const SendMessageForm = ({
         {/* Neural telepathic messaging button */}
         <Button
           type="button"
-          variant={isNeuralCaptureActive ? "destructive" : "default"}
+          variant={isNeuralCaptureActive ? 'destructive' : 'default'}
           size="md"
           onClick={isNeuralCaptureActive ? stopNeuralCapture : startNeuralCapture}
           disabled={isLoading || isNeuralProcessing}
-          aria-label={isNeuralCaptureActive ? "Stop neural capture" : "Start telepathic messaging"}
+          aria-label={isNeuralCaptureActive ? 'Stop neural capture' : 'Start telepathic messaging'}
           className="mr-2"
         >
           <Brain className="mr-1 h-4 w-4" />
-          {isNeuralProcessing ? "Capturing..." : isNeuralCaptureActive ? "Stop" : "Telepathic"}
+          {isNeuralProcessing ? 'Capturing...' : isNeuralCaptureActive ? 'Stop' : 'Telepathic'}
         </Button>
         <Button
           type="submit"
@@ -394,9 +423,7 @@ export const SendMessageForm = ({
           recipientId={recipientId}
         />
       )}
-      <p className="text-xs text-dark-500 mt-xs text-right">
-        {content.length}/500
-      </p>
+      <p className="text-xs text-dark-500 mt-xs text-right">{content.length}/500</p>
     </form>
   );
 };

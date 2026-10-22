@@ -17,7 +17,7 @@ export function OrdersPage() {
   return (
     <PageShell>
       <h1 className="text-2xl font-bold mb-4">My Orders</h1>
-      {orders.map(order => (
+      {orders.map((order) => (
         <div key={order.id} className="border rounded-lg p-4 mb-4">
           <div className="flex justify-between font-bold">
             <p>Order #{order.id}</p>
@@ -25,7 +25,7 @@ export function OrdersPage() {
           </div>
           <p>Status: {order.status}</p>
           <div>
-            {order.items.map(item => (
+            {order.items.map((item) => (
               <div key={item.id} className="flex justify-between items-center mt-2">
                 <div>
                   <p>{item.productVariant.name}</p>

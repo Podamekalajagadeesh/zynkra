@@ -83,7 +83,7 @@ export default function MessageContent({ message }: MessageContentProps) {
                     const objectUrl = URL.createObjectURL(plaintext);
                     objectUrls.push(objectUrl);
                     return { url: att.url, type: att.type, objectUrl };
-                  }),
+                  })
                 );
               }
             } catch {
@@ -161,7 +161,9 @@ export default function MessageContent({ message }: MessageContentProps) {
         <div className="mb-2 p-2 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border border-purple-200 dark:border-purple-800">
           <div className="flex items-center gap-1 mb-1">
             <Brain size={14} className="text-purple-600 dark:text-purple-400" />
-            <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Telepathic Message</span>
+            <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+              Telepathic Message
+            </span>
           </div>
 
           {/* Display emotions if available */}
@@ -172,7 +174,9 @@ export default function MessageContent({ message }: MessageContentProps) {
                 {Object.entries(message.neuralMetadata.emotions).map(([emotion, value]) => (
                   <div key={emotion} className="flex flex-col items-center">
                     <div className={`w-full h-1.5 rounded-full ${getEmotionColor(value)}`}></div>
-                    <span className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">{formatEmotionName(emotion)}</span>
+                    <span className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">
+                      {formatEmotionName(emotion)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -196,18 +200,20 @@ export default function MessageContent({ message }: MessageContentProps) {
         {isE2EE ? (
           <>
             <ShieldCheck size={12} className="text-green-600 dark:text-green-400" />
-            <span className="text-[10px] text-green-600 dark:text-green-400">Encrypted (Signal Protocol)</span>
+            <span className="text-[10px] text-green-600 dark:text-green-400">
+              Encrypted (Signal Protocol)
+            </span>
           </>
         ) : (
           <>
             <Lock size={12} className="text-amber-600 dark:text-amber-400" />
-            <span className="text-[10px] text-amber-600 dark:text-amber-400">TLS only — not E2EE</span>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400">
+              TLS only — not E2EE
+            </span>
           </>
         )}
       </div>
-      {message.forwardedFrom && (
-        <p className="text-xs text-gray-500">Forwarded</p>
-      )}
+      {message.forwardedFrom && <p className="text-xs text-gray-500">Forwarded</p>}
       {isDecrypting ? (
         <p className="text-sm text-gray-500">Decrypting message...</p>
       ) : decryptError ? (
@@ -215,7 +221,7 @@ export default function MessageContent({ message }: MessageContentProps) {
       ) : (
         <div className="flex items-start gap-2">
           <p className="text-sm">{decryptedContent || message.content}</p>
-          {('speechSynthesis' in window) && (
+          {'speechSynthesis' in window && (
             <button
               type="button"
               onClick={speakMessage}
@@ -234,7 +240,9 @@ export default function MessageContent({ message }: MessageContentProps) {
             <img src={message.gift.imageUrl} alt={message.gift.name} className="w-12 h-12" />
             <div>
               <p className="text-sm font-semibold text-purple-800">🎁 {message.gift.name}</p>
-              {message.gift.message && <p className="text-xs text-gray-600 mt-1">{message.gift.message}</p>}
+              {message.gift.message && (
+                <p className="text-xs text-gray-600 mt-1">{message.gift.message}</p>
+              )}
             </div>
           </div>
         </div>
@@ -278,7 +286,10 @@ export default function MessageContent({ message }: MessageContentProps) {
                       ))}
                       <span className="ml-2 text-xs text-gray-500">
                         {Math.floor(message.voiceNote.durationSeconds / 60)}:
-                        {String(Math.round(message.voiceNote.durationSeconds % 60)).padStart(2, '0')}
+                        {String(Math.round(message.voiceNote.durationSeconds % 60)).padStart(
+                          2,
+                          '0'
+                        )}
                       </span>
                     </div>
                   )}

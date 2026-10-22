@@ -2,8 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, In, MoreThanOrEqual, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PlatformIncidentEntity, PlatformIncidentImpact, PlatformIncidentStatus } from './entities/platform-incident.entity';
-import { PlatformMaintenanceEntity, PlatformMaintenanceStatus } from './entities/platform-maintenance.entity';
+import {
+  PlatformIncidentEntity,
+  PlatformIncidentImpact,
+  PlatformIncidentStatus,
+} from './entities/platform-incident.entity';
+import {
+  PlatformMaintenanceEntity,
+  PlatformMaintenanceStatus,
+} from './entities/platform-maintenance.entity';
 import { PlatformStatusSnapshotEntity } from './entities/platform-status-snapshot.entity';
 
 export interface InfrastructureHealthSnapshot {
@@ -48,7 +55,7 @@ export class InfrastructureService {
     @InjectRepository(PlatformIncidentEntity)
     private readonly incidentRepository: Repository<PlatformIncidentEntity>,
     @InjectRepository(PlatformMaintenanceEntity)
-    private readonly maintenanceRepository: Repository<PlatformMaintenanceEntity>,
+    private readonly maintenanceRepository: Repository<PlatformMaintenanceEntity>
   ) {}
 
   async getHealthSnapshot(): Promise<InfrastructureHealthSnapshot> {
@@ -62,7 +69,8 @@ export class InfrastructureService {
     };
     const serviceStatuses = Object.values(services).map((service) => service.status);
     const hasUnavailableService = serviceStatuses.includes('unavailable');
-    const hasDegradedService = serviceStatuses.includes('degraded') || serviceStatuses.includes('not-configured');
+    const hasDegradedService =
+      serviceStatuses.includes('degraded') || serviceStatuses.includes('not-configured');
 
     const snapshot: InfrastructureHealthSnapshot = {
       status: hasUnavailableService ? 'outage' : hasDegradedService ? 'degraded' : 'operational',
@@ -74,10 +82,12 @@ export class InfrastructureService {
     };
 
     try {
-      await this.snapshotRepository.save(this.snapshotRepository.create({
-        ...snapshot,
-        generatedAt: new Date(snapshot.generatedAt),
-      }));
+      await this.snapshotRepository.save(
+        this.snapshotRepository.create({
+          ...snapshot,
+          generatedAt: new Date(snapshot.generatedAt),
+        })
+      );
     } catch {
       // Health reporting must remain available when the history store is down.
     }
@@ -88,14 +98,18 @@ export class InfrastructureService {
   async getStatusPage(): Promise<PlatformStatusPage> {
     const snapshot = await this.getHealthSnapshot();
     const [activeIncidents, upcomingMaintenance, history] = await Promise.all([
-      this.incidentRepository.find({
-        where: { status: In(['investigating', 'identified', 'monitoring']) },
-        order: { createdAt: 'DESC' },
-      }).catch(() => []),
-      this.maintenanceRepository.find({
-        where: { status: In(['scheduled', 'in-progress']), endsAt: MoreThanOrEqual(new Date()) },
-        order: { startsAt: 'ASC' },
-      }).catch(() => []),
+      this.incidentRepository
+        .find({
+          where: { status: In(['investigating', 'identified', 'monitoring']) },
+          order: { createdAt: 'DESC' },
+        })
+        .catch(() => []),
+      this.maintenanceRepository
+        .find({
+          where: { status: In(['scheduled', 'in-progress']), endsAt: MoreThanOrEqual(new Date()) },
+          order: { startsAt: 'ASC' },
+        })
+        .catch(() => []),
       this.getHistory(),
     ]);
 
@@ -103,7 +117,9 @@ export class InfrastructureService {
   }
 
   async getHistory(limit = 30): Promise<PlatformStatusSnapshotEntity[]> {
-    return this.snapshotRepository.find({ order: { generatedAt: 'DESC' }, take: Math.min(Math.max(limit, 1), 100) }).catch(() => []);
+    return this.snapshotRepository
+      .find({ order: { generatedAt: 'DESC' }, take: Math.min(Math.max(limit, 1), 100) })
+      .catch(() => []);
   }
 
   async createIncident(input: {
@@ -113,10 +129,21 @@ export class InfrastructureService {
     impact: PlatformIncidentImpact;
     status?: PlatformIncidentStatus;
   }): Promise<PlatformIncidentEntity> {
-    return this.incidentRepository.save(this.incidentRepository.create({ ...input, status: input.status ?? 'investigating', resolvedAt: null }));
+    return this.incidentRepository.save(
+      this.incidentRepository.create({
+        ...input,
+        status: input.status ?? 'investigating',
+        resolvedAt: null,
+      })
+    );
   }
 
-  async updateIncident(id: string, input: Partial<Pick<PlatformIncidentEntity, 'title' | 'message' | 'service' | 'impact' | 'status'>>): Promise<PlatformIncidentEntity> {
+  async updateIncident(
+    id: string,
+    input: Partial<
+      Pick<PlatformIncidentEntity, 'title' | 'message' | 'service' | 'impact' | 'status'>
+    >
+  ): Promise<PlatformIncidentEntity> {
     const incident = await this.incidentRepository.preload({ id, ...input });
     if (!incident) {
       throw new Error('Incident not found');
@@ -133,15 +160,23 @@ export class InfrastructureService {
     endsAt: string;
     status?: PlatformMaintenanceStatus;
   }): Promise<PlatformMaintenanceEntity> {
-    return this.maintenanceRepository.save(this.maintenanceRepository.create({
-      ...input,
-      startsAt: new Date(input.startsAt),
-      endsAt: new Date(input.endsAt),
-      status: input.status ?? 'scheduled',
-    }));
+    return this.maintenanceRepository.save(
+      this.maintenanceRepository.create({
+        ...input,
+        startsAt: new Date(input.startsAt),
+        endsAt: new Date(input.endsAt),
+        status: input.status ?? 'scheduled',
+      })
+    );
   }
 
-  async updateMaintenance(id: string, input: Partial<Pick<PlatformMaintenanceEntity, 'title' | 'message' | 'service' | 'status'>> & { startsAt?: string; endsAt?: string }): Promise<PlatformMaintenanceEntity> {
+  async updateMaintenance(
+    id: string,
+    input: Partial<Pick<PlatformMaintenanceEntity, 'title' | 'message' | 'service' | 'status'>> & {
+      startsAt?: string;
+      endsAt?: string;
+    }
+  ): Promise<PlatformMaintenanceEntity> {
     const maintenance = await this.maintenanceRepository.preload({
       id,
       ...input,
@@ -160,11 +195,18 @@ export class InfrastructureService {
       await this.dataSource.query('SELECT 1');
       return { status: 'operational', responseTimeMs: Date.now() - startedAt };
     } catch {
-      return { status: 'unavailable', responseTimeMs: Date.now() - startedAt, detail: 'Database probe failed' };
+      return {
+        status: 'unavailable',
+        responseTimeMs: Date.now() - startedAt,
+        detail: 'Database probe failed',
+      };
     }
   }
 
-  private getConfiguredServices(): Omit<InfrastructureHealthSnapshot['services'], 'api' | 'database'> {
+  private getConfiguredServices(): Omit<
+    InfrastructureHealthSnapshot['services'],
+    'api' | 'database'
+  > {
     const services: InfrastructureHealthSnapshot['services'] = {
       api: { status: 'operational' },
       database: { status: 'operational' },
@@ -183,7 +225,9 @@ export class InfrastructureService {
   }
 
   private configurationHealth(key: string): ServiceHealth {
-    return this.isConfigured(key) ? { status: 'operational' } : { status: 'not-configured', detail: `${key} is not configured` };
+    return this.isConfigured(key)
+      ? { status: 'operational' }
+      : { status: 'not-configured', detail: `${key} is not configured` };
   }
 
   private isConfigured(key: string): boolean {

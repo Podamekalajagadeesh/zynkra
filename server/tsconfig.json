@@ -24,11 +24,5 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": [
-    "test",
-    "archive",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "dist"
-  ]
+  "exclude": ["test", "archive", "**/*.spec.ts", "**/*.test.ts", "dist"]
 }

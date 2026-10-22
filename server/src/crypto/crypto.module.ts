@@ -8,10 +8,7 @@ import { SignedPreKey } from './entities/signed-pre-key.entity';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([IdentityKey, PreKey, SignedPreKey]),
-    UsersModule,
-  ],
+  imports: [TypeOrmModule.forFeature([IdentityKey, PreKey, SignedPreKey]), UsersModule],
   providers: [CryptoService],
   controllers: [CryptoController],
 })

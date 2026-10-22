@@ -13,7 +13,9 @@ export function OnDeviceLLMPanel() {
   const { addToast } = useToast();
   const llm = useOnDeviceLLM();
 
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>(
+    []
+  );
   const [chatInput, setChatInput] = useState('');
   const [toolText, setToolText] = useState('');
   const [toolLang, setToolLang] = useState<(typeof TARGET_LANGUAGES)[number]>('Spanish');
@@ -29,7 +31,9 @@ export function OnDeviceLLMPanel() {
     setMessages(nextMessages);
     setChatInput('');
     try {
-      const response = await llm.chat(nextMessages.map((message) => ({ role: message.role, content: message.content })));
+      const response = await llm.chat(
+        nextMessages.map((message) => ({ role: message.role, content: message.content }))
+      );
       setMessages((current) => [...current, { role: 'assistant', content: response.text }]);
     } catch (error) {
       addToast(error instanceof Error ? error.message : 'AI chat failed', 'error');
@@ -106,7 +110,9 @@ export function OnDeviceLLMPanel() {
         <h2 className="font-bold">Chat</h2>
         <div className="space-y-2 max-h-72 overflow-y-auto">
           {messages.length === 0 ? (
-            <p className="text-sm text-gray-500">Ask anything. This conversation never leaves your device.</p>
+            <p className="text-sm text-gray-500">
+              Ask anything. This conversation never leaves your device.
+            </p>
           ) : (
             messages.map((message, index) => (
               <div
@@ -133,7 +139,10 @@ export function OnDeviceLLMPanel() {
             disabled={!status.loaded || llm.isGenerating}
             className="flex-1 p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
           />
-          <Button onClick={() => void sendChat()} disabled={!status.loaded || !chatInput.trim() || llm.isGenerating}>
+          <Button
+            onClick={() => void sendChat()}
+            disabled={!status.loaded || !chatInput.trim() || llm.isGenerating}
+          >
             Send
           </Button>
         </div>
@@ -150,18 +159,32 @@ export function OnDeviceLLMPanel() {
           className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
         />
         <div className="flex flex-wrap gap-2 items-center">
-          <Button variant="outline" onClick={() => void runTool('summarize')} disabled={!status.loaded || !toolText.trim() || llm.isGenerating}>
+          <Button
+            variant="outline"
+            onClick={() => void runTool('summarize')}
+            disabled={!status.loaded || !toolText.trim() || llm.isGenerating}
+          >
             Summarize
           </Button>
-          <Button variant="outline" onClick={() => void runTool('sentiment')} disabled={!status.loaded || !toolText.trim() || llm.isGenerating}>
+          <Button
+            variant="outline"
+            onClick={() => void runTool('sentiment')}
+            disabled={!status.loaded || !toolText.trim() || llm.isGenerating}
+          >
             Sentiment
           </Button>
-          <Button variant="outline" onClick={() => void runTool('hashtags')} disabled={!status.loaded || !toolText.trim() || llm.isGenerating}>
+          <Button
+            variant="outline"
+            onClick={() => void runTool('hashtags')}
+            disabled={!status.loaded || !toolText.trim() || llm.isGenerating}
+          >
             Hashtags
           </Button>
           <select
             value={toolLang}
-            onChange={(event) => setToolLang(event.target.value as (typeof TARGET_LANGUAGES)[number])}
+            onChange={(event) =>
+              setToolLang(event.target.value as (typeof TARGET_LANGUAGES)[number])
+            }
             disabled={!status.loaded}
             className="p-2 border rounded dark:bg-gray-800 dark:border-gray-700 text-sm"
           >
@@ -171,12 +194,18 @@ export function OnDeviceLLMPanel() {
               </option>
             ))}
           </select>
-          <Button variant="outline" onClick={() => void runTool('translate')} disabled={!status.loaded || !toolText.trim() || llm.isGenerating}>
+          <Button
+            variant="outline"
+            onClick={() => void runTool('translate')}
+            disabled={!status.loaded || !toolText.trim() || llm.isGenerating}
+          >
             Translate
           </Button>
         </div>
         {toolOutput !== null && (
-          <pre className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm whitespace-pre-wrap">{toolOutput}</pre>
+          <pre className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm whitespace-pre-wrap">
+            {toolOutput}
+          </pre>
         )}
       </Card>
     </div>

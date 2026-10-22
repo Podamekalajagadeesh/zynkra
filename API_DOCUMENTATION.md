@@ -1,9 +1,11 @@
 # API_DOCUMENTATION.md
+
 **Backend API Reference & Endpoints**
 
 ---
 
 ## Table of Contents
+
 1. [Authentication](#authentication)
 2. [Users](#users)
 3. [Posts](#posts)
@@ -21,6 +23,7 @@
 ---
 
 ## Base URL
+
 ```
 http://localhost:3000
 ```
@@ -43,6 +46,7 @@ npm run qa:check
 Use these commands before release validation or deployment to verify the API surface and basic release readiness.
 
 ### Release validation checklist
+
 - Run the server QA suite before each release candidate.
 - Run the client offline smoke check and build before shipping the web client.
 - Generate an internal mobile beta build and attach the release notes from the mobile build artifacts.
@@ -60,6 +64,7 @@ Authorization: Bearer <token>
 ## Authentication Endpoints
 
 ### Register User
+
 ```http
 POST /auth/register
 Content-Type: application/json
@@ -72,6 +77,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "user-123",
@@ -83,6 +89,7 @@ Content-Type: application/json
 ```
 
 ### Login
+
 ```http
 POST /auth/login
 Content-Type: application/json
@@ -94,6 +101,7 @@ Content-Type: application/json
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "user-123",
@@ -105,12 +113,14 @@ Content-Type: application/json
 ```
 
 ### Logout
+
 ```http
 POST /auth/logout
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Logged out successfully"
@@ -122,12 +132,14 @@ Authorization: Bearer <token>
 ## Users
 
 ### Get Current User
+
 ```http
 GET /users/me
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "user-123",
@@ -142,12 +154,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get User by ID
+
 ```http
 GET /users/:id
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "user-456",
@@ -162,6 +176,7 @@ Authorization: Bearer <token>
 ```
 
 ### Update User Profile
+
 ```http
 PUT /users/:id
 Authorization: Bearer <token>
@@ -174,6 +189,7 @@ Content-Type: application/json
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "user-123",
@@ -184,17 +200,20 @@ Content-Type: application/json
 ```
 
 ### Search Users
+
 ```http
 GET /users/search?q=john
 Authorization: Bearer <token>
 ```
 
 **Query Parameters**:
+
 - `q` (string): Search query
 - `limit` (number, default 20): Results per page
 - `page` (number, default 1): Page number
 
 **Response (200)**:
+
 ```json
 {
   "users": [
@@ -216,6 +235,7 @@ Authorization: Bearer <token>
 ## Posts
 
 ### Create Post
+
 ```http
 POST /posts
 Authorization: Bearer <token>
@@ -232,6 +252,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "post-789",
@@ -246,12 +267,14 @@ Content-Type: application/json
 ```
 
 ### Get Post
+
 ```http
 GET /posts/:id
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "post-789",
@@ -272,6 +295,7 @@ Authorization: Bearer <token>
 ```
 
 ### Update Post
+
 ```http
 PUT /posts/:id
 Authorization: Bearer <token>
@@ -283,6 +307,7 @@ Content-Type: application/json
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "post-789",
@@ -292,12 +317,14 @@ Content-Type: application/json
 ```
 
 ### Delete Post
+
 ```http
 DELETE /posts/:id
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Post deleted successfully"
@@ -305,12 +332,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get User's Posts
+
 ```http
 GET /posts/users/:userId?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "posts": [
@@ -329,12 +358,14 @@ Authorization: Bearer <token>
 ```
 
 ### Bookmark Post
+
 ```http
 POST /posts/:id/bookmark
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Post bookmarked",
@@ -343,12 +374,14 @@ Authorization: Bearer <token>
 ```
 
 ### Unbookmark Post
+
 ```http
 DELETE /posts/:id/bookmark
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Post unbookmarked",
@@ -361,6 +394,7 @@ Authorization: Bearer <token>
 ## Comments
 
 ### Create Comment
+
 ```http
 POST /posts/:postId/comments
 Authorization: Bearer <token>
@@ -372,6 +406,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "comment-001",
@@ -384,12 +419,14 @@ Content-Type: application/json
 ```
 
 ### Get Comments for Post
+
 ```http
 GET /posts/:postId/comments?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "comments": [
@@ -413,6 +450,7 @@ Authorization: Bearer <token>
 ```
 
 ### Update Comment
+
 ```http
 PUT /comments/:commentId
 Authorization: Bearer <token>
@@ -424,6 +462,7 @@ Content-Type: application/json
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "comment-001",
@@ -433,12 +472,14 @@ Content-Type: application/json
 ```
 
 ### Delete Comment
+
 ```http
 DELETE /comments/:commentId
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Comment deleted successfully"
@@ -450,6 +491,7 @@ Authorization: Bearer <token>
 ## Reactions
 
 ### Like Post
+
 ```http
 POST /posts/:postId/reactions
 Authorization: Bearer <token>
@@ -461,6 +503,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "reaction-001",
@@ -472,12 +515,14 @@ Content-Type: application/json
 ```
 
 ### Unlike Post
+
 ```http
 DELETE /posts/:postId/reactions/:reactionId
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Reaction removed"
@@ -485,6 +530,7 @@ Authorization: Bearer <token>
 ```
 
 ### Like Comment
+
 ```http
 POST /comments/:commentId/reactions
 Authorization: Bearer <token>
@@ -496,6 +542,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "reaction-002",
@@ -511,6 +558,7 @@ Content-Type: application/json
 ## Direct Messages
 
 ### Send Message
+
 ```http
 POST /dms
 Authorization: Bearer <token>
@@ -523,6 +571,7 @@ Content-Type: application/json
 ```
 
 **Response (201)**:
+
 ```json
 {
   "id": "message-001",
@@ -539,12 +588,14 @@ Content-Type: application/json
 > currently plaintext server-side (transport uses TLS).
 
 ### Get Conversation
+
 ```http
 GET /dms/conversations/:userId?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "messages": [
@@ -564,12 +615,14 @@ Authorization: Bearer <token>
 ```
 
 ### Mark Message as Read
+
 ```http
 PUT /dms/:messageId/read
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "id": "message-001",
@@ -578,12 +631,14 @@ Authorization: Bearer <token>
 ```
 
 ### Delete Message
+
 ```http
 DELETE /dms/:messageId
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "Message deleted successfully"
@@ -595,12 +650,14 @@ Authorization: Bearer <token>
 ## Feed
 
 ### Get Home Feed
+
 ```http
 GET /feed?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "posts": [
@@ -625,12 +682,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get Discover/Explore Feed
+
 ```http
 GET /feed/discover?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "posts": [
@@ -653,12 +712,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get Following Feed
+
 ```http
 GET /feed/following?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "posts": [
@@ -683,12 +744,14 @@ Authorization: Bearer <token>
 ## Follows
 
 ### Follow User
+
 ```http
 POST /users/:userId/follow
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "User followed successfully",
@@ -697,12 +760,14 @@ Authorization: Bearer <token>
 ```
 
 ### Unfollow User
+
 ```http
 DELETE /users/:userId/follow
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "message": "User unfollowed successfully",
@@ -711,12 +776,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get User's Followers
+
 ```http
 GET /users/:userId/followers?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "followers": [
@@ -734,12 +801,14 @@ Authorization: Bearer <token>
 ```
 
 ### Get User's Following
+
 ```http
 GET /users/:userId/following?page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "following": [
@@ -766,6 +835,7 @@ Local-disk backend (`UPLOAD_DIR`, default `./uploads`). Files are served at
 Client flow for posts: upload first → pass `{ id, url, type }` to `POST /posts`.
 
 ### Upload media (posts, DMs, general)
+
 ```http
 POST /media/upload
 Authorization: Bearer <token>
@@ -777,6 +847,7 @@ file=<binary>
 **Limits:** image ≤ 10MB, video ≤ 100MB, audio ≤ 20MB. Only `image/*`, `video/*`, `audio/*`.
 
 **Response (201)**:
+
 ```json
 {
   "id": "media-uuid",
@@ -790,6 +861,7 @@ file=<binary>
 ```
 
 ### Upload processed image (resize/optimize via sharp)
+
 ```http
 POST /media/upload/image?maxWidth=2048&quality=85&format=webp
 Authorization: Bearer <token>
@@ -799,6 +871,7 @@ file=<binary>
 ```
 
 ### Upload avatar
+
 ```http
 POST /users/me/avatar
 Authorization: Bearer <token>
@@ -810,6 +883,7 @@ file=<binary>   # image/*, ≤ 5MB
 Also available via `PATCH /users/profile` with FormData field `avatar`.
 
 ### Upload story media
+
 ```http
 POST /stories
 Authorization: Bearer <token>
@@ -819,6 +893,7 @@ file=<binary>   # image/* or video/*, ≤ 50MB
 ```
 
 ### Delete owned media
+
 ```http
 DELETE /media/:id
 Authorization: Bearer <token>
@@ -833,12 +908,14 @@ Uses `searchVector` tsvector columns (GIN-indexed) with `websearch_to_tsquery` +
 plus ILIKE fallback for partial matches. All endpoints require a JWT.
 
 ### Basic search
+
 ```http
 GET /search?q=hello world
 Authorization: Bearer <token>
 ```
 
 **Response (200)**:
+
 ```json
 {
   "users": [],
@@ -852,6 +929,7 @@ Authorization: Bearer <token>
 ```
 
 ### Advanced search (filter by type)
+
 ```http
 GET /search/advanced?q=hello&type=posts&sort=relevance&limit=20&offset=0
 Authorization: Bearer <token>
@@ -861,6 +939,7 @@ Authorization: Bearer <token>
 - `sort` (posts): `relevance` | `date` | `popularity`
 
 ### Follow-up search
+
 ```http
 POST /search/follow-up
 Authorization: Bearer <token>
@@ -870,12 +949,14 @@ Content-Type: application/json
 ```
 
 ### Web search (DuckDuckGo Instant Answer)
+
 ```http
 GET /search/web?q=nestjs
 Authorization: Bearer <token>
 ```
 
 ### Reverse image search (Preview)
+
 ```http
 POST /search/reverse-image
 Authorization: Bearer <token>
@@ -887,6 +968,7 @@ image=<binary>
 Returns recent public posts that have images. Perceptual/ML reverse-image matching is **not** implemented.
 
 ### Image + text search
+
 ```http
 POST /search/image-text?q=cats
 Authorization: Bearer <token>
@@ -900,6 +982,7 @@ image=<binary>
 ## Error Handling
 
 ### Error Response Format
+
 ```json
 {
   "statusCode": 400,
@@ -913,20 +996,22 @@ image=<binary>
 ```
 
 ### Common Status Codes
-| Code | Meaning |
-|------|---------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request (validation error) |
-| 401 | Unauthorized (missing/invalid token) |
-| 403 | Forbidden (not allowed) |
-| 404 | Not Found |
-| 409 | Conflict (e.g., username taken) |
-| 500 | Internal Server Error |
+
+| Code | Meaning                              |
+| ---- | ------------------------------------ |
+| 200  | Success                              |
+| 201  | Created                              |
+| 400  | Bad Request (validation error)       |
+| 401  | Unauthorized (missing/invalid token) |
+| 403  | Forbidden (not allowed)              |
+| 404  | Not Found                            |
+| 409  | Conflict (e.g., username taken)      |
+| 500  | Internal Server Error                |
 
 ### Common Errors
 
 **Missing Token**:
+
 ```json
 {
   "statusCode": 401,
@@ -936,6 +1021,7 @@ image=<binary>
 ```
 
 **Invalid Token**:
+
 ```json
 {
   "statusCode": 401,
@@ -945,6 +1031,7 @@ image=<binary>
 ```
 
 **Not Found**:
+
 ```json
 {
   "statusCode": 404,
@@ -954,6 +1041,7 @@ image=<binary>
 ```
 
 **Validation Error**:
+
 ```json
 {
   "statusCode": 400,
@@ -979,6 +1067,7 @@ A single global limiter runs on every HTTP request, keyed **per IP address**:
 ```
 
 Sensitive endpoints declare stricter `@Throttle` overrides:
+
 - auth routes (signup, signin, 2FA, passkeys, recovery, session approval): **100/min**
 - email-sending routes (forgot-password, magic-link, verification resend): **50 per 5 min**
 - AI content routes: **30/min**; AI chat: **15/min**
@@ -991,15 +1080,16 @@ when a bucket is exhausted.
 
 Per-endpoint buckets (in addition to the global 300/min):
 
-| Route | Limit |
-|---|---|
-| `POST /auth/refresh` | 20/min (token exchange) |
-| `POST /auth/verify-code` | 10/min (6-digit code redemption) |
-| auth signin / signup / 2FA / passkeys / recovery | 100/min |
-| email-sending routes | 50 per 5 min |
-| `POST /ai/content/*` | 30/min; AI chat 15/min |
+| Route                                            | Limit                            |
+| ------------------------------------------------ | -------------------------------- |
+| `POST /auth/refresh`                             | 20/min (token exchange)          |
+| `POST /auth/verify-code`                         | 10/min (6-digit code redemption) |
+| auth signin / signup / 2FA / passkeys / recovery | 100/min                          |
+| email-sending routes                             | 50 per 5 min                     |
+| `POST /ai/content/*`                             | 30/min; AI chat 15/min           |
 
 If exceeded:
+
 ```json
 {
   "statusCode": 429,
@@ -1014,15 +1104,15 @@ If exceeded:
 Most routes authenticate with a **bearer token**, which a browser does not attach
 automatically — so they are not CSRF-able and need nothing extra.
 
-Three flows are authenticated *only* by the session cookie, and therefore require a
+Three flows are authenticated _only_ by the session cookie, and therefore require a
 CSRF token:
 
-| Route | Session value it protects |
-|---|---|
-| `POST /auth/webauthn/registration/verify` | WebAuthn registration challenge |
+| Route                                       | Session value it protects         |
+| ------------------------------------------- | --------------------------------- |
+| `POST /auth/webauthn/registration/verify`   | WebAuthn registration challenge   |
 | `POST /auth/webauthn/authentication/verify` | WebAuthn authentication challenge |
-| `POST /siwe/verify` | SIWE nonce |
-| `POST /wallet/connect` | wallet-link nonce |
+| `POST /siwe/verify`                         | SIWE nonce                        |
+| `POST /wallet/connect`                      | wallet-link nonce                 |
 
 **Get a token** from any of:
 
@@ -1064,32 +1154,38 @@ token is missing, expired, or whose session has been revoked are disconnected on
 connect, so `POST /auth/signout` also invalidates live sockets.
 
 ```typescript
-import { io } from 'socket.io-client'
+import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:3000/notifications', {
-  auth: { token: accessToken },   // or headers: { Authorization: `Bearer ${accessToken}` }
-})
+  auth: { token: accessToken }, // or headers: { Authorization: `Bearer ${accessToken}` }
+});
 ```
 
 Handshake errors surface as a `connect_error` with
 `"Unauthorized"` / `"Invalid token"`.
 
 ### Emit Events
+
 ```typescript
 // Notifications namespace
-socket.emit('user-online')                       // activity/presence
+socket.emit('user-online'); // activity/presence
 
 // LiveKit gateway — identity comes from the socket, not the payload
-socket.emit('join-stream', { roomName, isHost: true })
-socket.emit('leave-stream', { roomName })
+socket.emit('join-stream', { roomName, isHost: true });
+socket.emit('leave-stream', { roomName });
 ```
 
 ### Listen for Events
+
 ```typescript
-socket.on('notification', (n) => { /* this user's notifications only */ })
-socket.on('stream-token', ({ token, roomName }) => { /* LiveKit access token */ })
-socket.on('participant-joined', ({ userId }) => {})
-socket.on('user-status-updated', (s) => {})
+socket.on('notification', (n) => {
+  /* this user's notifications only */
+});
+socket.on('stream-token', ({ token, roomName }) => {
+  /* LiveKit access token */
+});
+socket.on('participant-joined', ({ userId }) => {});
+socket.on('user-status-updated', (s) => {});
 ```
 
 > Note: the emit/listen examples above reflect the gateways that are actually
@@ -1101,6 +1197,7 @@ socket.on('user-status-updated', (s) => {})
 ## Testing API Endpoints
 
 ### Using cURL
+
 ```bash
 # Get user
 curl -H "Authorization: Bearer <token>" http://localhost:3000/api/users/me
@@ -1115,11 +1212,13 @@ curl -X POST http://localhost:3000/api/posts \
 ```
 
 ### Using Postman
+
 1. Set Authorization header: `Bearer <token>`
 2. Set Content-Type: `application/json`
 3. Copy-paste examples from above
 
 ### Using Thunder Client (VS Code)
+
 Install the Thunder Client extension and import endpoints from examples above.
 
 ---
@@ -1133,42 +1232,43 @@ Balances and history live in the append-only wallet ledger (`GET /wallet/ledger`
 
 ### Wallet
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/wallet/balance` | JWT | Current `walletBalance` |
-| GET | `/wallet/ledger?limit=` | JWT | Signed ledger entries (newest first) |
+| Method | Path                    | Auth | Description                          |
+| ------ | ----------------------- | ---- | ------------------------------------ |
+| GET    | `/wallet/balance`       | JWT  | Current `walletBalance`              |
+| GET    | `/wallet/ledger?limit=` | JWT  | Signed ledger entries (newest first) |
 
 ### Creator earnings & monetization
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/creator/earnings` | JWT | Ledger-derived earnings summary |
-| GET | `/creator/dashboard` | JWT | Dashboard + `creatorSplit: 90` |
-| GET | `/creator/tiers` | public | Default subscription tiers |
-| POST | `/creator/tip` | JWT | Wallet tip `{ creatorId, amount, message? }` |
-| POST | `/creator/subscribe` | JWT | Wallet subscription `{ creatorId, tierId }` |
-| POST | `/creator/pay-per-view` | JWT | Wallet PPV purchase |
+| Method | Path                    | Auth   | Description                                  |
+| ------ | ----------------------- | ------ | -------------------------------------------- |
+| GET    | `/creator/earnings`     | JWT    | Ledger-derived earnings summary              |
+| GET    | `/creator/dashboard`    | JWT    | Dashboard + `creatorSplit: 90`               |
+| GET    | `/creator/tiers`        | public | Default subscription tiers                   |
+| POST   | `/creator/tip`          | JWT    | Wallet tip `{ creatorId, amount, message? }` |
+| POST   | `/creator/subscribe`    | JWT    | Wallet subscription `{ creatorId, tierId }`  |
+| POST   | `/creator/pay-per-view` | JWT    | Wallet PPV purchase                          |
 
 ### Stripe Connect & payouts
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/payments/connect/status` | JWT | Connect mode / `payoutsEnabled` |
-| POST | `/payments/connect/onboard` | JWT | Express account onboarding link → `/earnings` |
-| GET | `/payments/payouts` | JWT | Creator payout history |
-| POST | `/payments/payouts/request` | JWT | Debit wallet → payout (`{ amount, purpose? }`) |
-| POST | `/payments/payouts/schedule` | JWT | Debit now, release at `{ dueAt }` |
-| GET | `/payments/admin/payouts/pending` | JWT+Admin | Manual queue |
-| POST | `/payments/admin/payouts/:id/approve` | JWT+Admin | Mark paid + emit event |
-| POST | `/payments/admin/payouts/:id/reject` | JWT+Admin | Refund wallet, mark rejected |
+| Method | Path                                  | Auth      | Description                                    |
+| ------ | ------------------------------------- | --------- | ---------------------------------------------- |
+| GET    | `/payments/connect/status`            | JWT       | Connect mode / `payoutsEnabled`                |
+| POST   | `/payments/connect/onboard`           | JWT       | Express account onboarding link → `/earnings`  |
+| GET    | `/payments/payouts`                   | JWT       | Creator payout history                         |
+| POST   | `/payments/payouts/request`           | JWT       | Debit wallet → payout (`{ amount, purpose? }`) |
+| POST   | `/payments/payouts/schedule`          | JWT       | Debit now, release at `{ dueAt }`              |
+| GET    | `/payments/admin/payouts/pending`     | JWT+Admin | Manual queue                                   |
+| POST   | `/payments/admin/payouts/:id/approve` | JWT+Admin | Mark paid + emit event                         |
+| POST   | `/payments/admin/payouts/:id/reject`  | JWT+Admin | Refund wallet, mark rejected                   |
 
 ### Stripe webhook
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/webhooks/stripe` | Stripe signature | Raw body + `stripe-signature` header |
+| Method | Path               | Auth             | Description                          |
+| ------ | ------------------ | ---------------- | ------------------------------------ |
+| POST   | `/webhooks/stripe` | Stripe signature | Raw body + `stripe-signature` header |
 
 Handled event types (state-based idempotent — replay is a no-op):
+
 - `payment_intent.succeeded` — credit recipient net + platform fee once
 - `payment_intent.payment_failed` / `canceled` — never regress a succeeded txn
 - `transfer.paid` / `transfer.failed` — finalize or reverse a payout
@@ -1184,20 +1284,20 @@ Env: `STRIPE_WEBHOOK_SECRET` (required for signature verification),
 
 All routes require a Bearer JWT.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/data-export/info` | Export inventory (counts per category) |
-| GET | `/data-export/download` | Whole-account JSON export (`v2.1`) as a file download |
-| POST | `/data-export` | Request a full archive export (zip: `data.json` + `media/…`); returns the export row (`origin: manual`, `fileUrl`, `sizeBytes`) |
-| GET | `/data-export` | The caller's latest export row |
-| GET | `/data-export/archive/:id` | Download the zip of an export **you own** (owner-only; streams from the private exports directory, falling back to pre-upgrade `uploads/` archives) |
-| GET | `/data-export/schedule` | Automatic-backup schedule: `{ enabled, intervalDays, lastExportAt, nextExportAt }` |
-| POST | `/data-export/schedule` | Arm/pause automatic backups `{ enabled, intervalDays? }`; allowed intervals 7/14/30/90 days; (re-)arming starts counting from now, so the first scheduled run is one full interval out |
-| GET | `/data-export/history` | Last 20 exports: `{ id, status, origin, fileUrl, sizeBytes, createdAt }[]` (`origin` = `manual` \| `scheduled`; deletion-workflow rows excluded) |
-| POST | `/data-export/import` | Import a JSON export body (transactional; money/trust archived, never fabricated) |
-| POST | `/data-export/import-zip` | Import a zip export archive (multipart field `file`); re-hosts `media/` files into this instance's upload directory, then runs the JSON import |
-| DELETE | `/data-export/delete-all` | Delete all user data |
-| DELETE | `/data-deletion` | Schedule account deletion (30-day grace period; user soft-banned immediately) |
+| Method | Path                       | Description                                                                                                                                                                            |
+| ------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/data-export/info`        | Export inventory (counts per category)                                                                                                                                                 |
+| GET    | `/data-export/download`    | Whole-account JSON export (`v2.1`) as a file download                                                                                                                                  |
+| POST   | `/data-export`             | Request a full archive export (zip: `data.json` + `media/…`); returns the export row (`origin: manual`, `fileUrl`, `sizeBytes`)                                                        |
+| GET    | `/data-export`             | The caller's latest export row                                                                                                                                                         |
+| GET    | `/data-export/archive/:id` | Download the zip of an export **you own** (owner-only; streams from the private exports directory, falling back to pre-upgrade `uploads/` archives)                                    |
+| GET    | `/data-export/schedule`    | Automatic-backup schedule: `{ enabled, intervalDays, lastExportAt, nextExportAt }`                                                                                                     |
+| POST   | `/data-export/schedule`    | Arm/pause automatic backups `{ enabled, intervalDays? }`; allowed intervals 7/14/30/90 days; (re-)arming starts counting from now, so the first scheduled run is one full interval out |
+| GET    | `/data-export/history`     | Last 20 exports: `{ id, status, origin, fileUrl, sizeBytes, createdAt }[]` (`origin` = `manual` \| `scheduled`; deletion-workflow rows excluded)                                       |
+| POST   | `/data-export/import`      | Import a JSON export body (transactional; money/trust archived, never fabricated)                                                                                                      |
+| POST   | `/data-export/import-zip`  | Import a zip export archive (multipart field `file`); re-hosts `media/` files into this instance's upload directory, then runs the JSON import                                         |
+| DELETE | `/data-export/delete-all`  | Delete all user data                                                                                                                                                                   |
+| DELETE | `/data-deletion`           | Schedule account deletion (30-day grace period; user soft-banned immediately)                                                                                                          |
 
 The zip archive is the one produced by the export flow: `data.json` plus
 `media/<basename>`. Import re-hosts flat `media/` entries only (zip-slip
@@ -1206,7 +1306,7 @@ sanitized; 256 MiB/entry and 1 GiB total uncompressed caps).
 **Scheduled exports & archive storage.** An hourly cron produces an archive for
 every schedule whose `nextExportAt` has passed (failures retry in one hour;
 banned users' schedules are switched off). Archives are written to `EXPORT_DIR`
-(default `./exports`) — deliberately *outside* the publicly served uploads
+(default `./exports`) — deliberately _outside_ the publicly served uploads
 directory — so `GET /data-export/archive/:id` (Bearer JWT, owner-only) is the
 only way to fetch one; `fileUrl` values must be fetched through the API client,
 not raw `<a href>`/`window.open` links, which carry no auth header. A nightly
@@ -1220,10 +1320,10 @@ retention sweep (03:00) deletes archive files older than `EXPORT_RETENTION_DAYS`
 
 Delivery dead-letter queue. All routes require a Bearer JWT with the `admin` role.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/federation/deliveries?status=pending\|dead\|delivered` | Latest 50 delivery-attempt rows (default: most recent) |
-| POST | `/federation/deliveries/:id/redrive` | Manually redrive one attempt (works on dead rows after a config fix) |
+| Method | Path                                                     | Description                                                          |
+| ------ | -------------------------------------------------------- | -------------------------------------------------------------------- |
+| GET    | `/federation/deliveries?status=pending\|dead\|delivered` | Latest 50 delivery-attempt rows (default: most recent)               |
+| POST   | `/federation/deliveries/:id/redrive`                     | Manually redrive one attempt (works on dead rows after a config fix) |
 
 A scheduled job also redrives pending attempts every minute while
 `FEDERATION_ENABLED=true` (10 redrive cycles, hour-capped backoff; deterministic
@@ -1239,46 +1339,46 @@ require a Bearer JWT; bundle/identity fetches require authentication too.
 
 ### Setup (device bootstrap)
 
-| Method | Path | Body | Description |
-|--------|------|------|-------------|
-| POST | `/keys/upload` | `{ publicKey }` | Legacy public-key upload (same storage as identity key) |
-| POST | `/keys/identity` | `{ identityKey }` | Publish/rotate the identity key (root of trust for all sessions); on rotation the user's stored signed + one-time pre-keys are **purged** (stale material can't be claimed) and the device re-uploads fresh keys |
-| POST | `/keys/signed-prekey` | `{ keyId, publicKey, signature }` | Publish a signed pre-key; a new `keyId` becomes current |
-| POST | `/keys/one-time-prekeys` | `{ preKeys: [{keyId, publicKey}] }` | Batch-upload one-time pre-keys; existing `keyId`s are skipped, never re-used |
-| POST | `/keys/bundle` | full bundle | One-shot setup: identity + signed pre-key + one-time pre-keys |
+| Method | Path                     | Body                                | Description                                                                                                                                                                                                      |
+| ------ | ------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/keys/upload`           | `{ publicKey }`                     | Legacy public-key upload (same storage as identity key)                                                                                                                                                          |
+| POST   | `/keys/identity`         | `{ identityKey }`                   | Publish/rotate the identity key (root of trust for all sessions); on rotation the user's stored signed + one-time pre-keys are **purged** (stale material can't be claimed) and the device re-uploads fresh keys |
+| POST   | `/keys/signed-prekey`    | `{ keyId, publicKey, signature }`   | Publish a signed pre-key; a new `keyId` becomes current                                                                                                                                                          |
+| POST   | `/keys/one-time-prekeys` | `{ preKeys: [{keyId, publicKey}] }` | Batch-upload one-time pre-keys; existing `keyId`s are skipped, never re-used                                                                                                                                     |
+| POST   | `/keys/bundle`           | full bundle                         | One-shot setup: identity + signed pre-key + one-time pre-keys                                                                                                                                                    |
 
 ### Session establishment (initiator side)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/keys/bundle/:userId` | Fetch a bundle; **atomically claims** one unused one-time pre-key (pessimistic lock — two concurrent fetches never receive the same key). Includes `identityRotatedAt` |
-| GET | `/keys/identity/:userId` | Current identity key + `rotatedAt` (compare to the key cached for an existing session) |
-| GET | `/keys/prekey-count` | Remaining unused one-time pre-keys for the caller (replenish when low) |
+| Method | Path                     | Description                                                                                                                                                            |
+| ------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/keys/bundle/:userId`   | Fetch a bundle; **atomically claims** one unused one-time pre-key (pessimistic lock — two concurrent fetches never receive the same key). Includes `identityRotatedAt` |
+| GET    | `/keys/identity/:userId` | Current identity key + `rotatedAt` (compare to the key cached for an existing session)                                                                                 |
+| GET    | `/keys/prekey-count`     | Remaining unused one-time pre-keys for the caller (replenish when low)                                                                                                 |
 
 ### Rotation & recovery
 
-* **Identity key rotation** — uploading a *different* identity key replaces the old one
+- **Identity key rotation** — uploading a _different_ identity key replaces the old one
   and records an `identity` event; re-uploading the same key is a no-op. Peers detect the
   change via `GET /keys/identity/:userId` (or `identityRotatedAt` in the bundle) and
   re-establish the session with X3DH instead of continuing to ratchet.
-* **Signed pre-key rotation** — a new `keyId` becomes current; the server keeps exactly
+- **Signed pre-key rotation** — a new `keyId` becomes current; the server keeps exactly
   the current + previous signed pre-key (previous covers a handshake started moments
   before rotation) and prunes older rows.
-* **One-time pre-key replenishment** — batch uploads, deduplicated by `keyId`; clients
+- **One-time pre-key replenishment** — batch uploads, deduplicated by `keyId`; clients
   poll `/keys/prekey-count` and top up.
-* **Audit feed** — `GET /keys/rotation-events?since=<ISO-8601>` returns the caller's own
+- **Audit feed** — `GET /keys/rotation-events?since=<ISO-8601>` returns the caller's own
   rotation history (newest first, max 50) so a restored device can catch up on what
   changed while it was offline.
-* **Device recovery backup** — client-side (no endpoint): Settings → "Encryption key
+- **Device recovery backup** — client-side (no endpoint): Settings → "Encryption key
   recovery" exports the full local key state (identity + session ratchet + pre-keys) as a
   passphrase-encrypted `.zkebackup` file (PBKDF2-SHA256 600k → XChaCha20-Poly1305) and
   restores it on a new device. The passphrase never leaves the device; the server holds
   no escrow copy.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/keys/rotation-events?since=` | Own rotation events: `{ kind, keyId, detail, createdAt }[]` |
-| GET | `/keys/identity/:userId` | `{ publicKey, rotatedAt }` — peer-facing rotation detection |
+| Method | Path                           | Description                                                 |
+| ------ | ------------------------------ | ----------------------------------------------------------- |
+| GET    | `/keys/rotation-events?since=` | Own rotation events: `{ kind, keyId, detail, createdAt }[]` |
+| GET    | `/keys/identity/:userId`       | `{ publicKey, rotatedAt }` — peer-facing rotation detection |
 
 ---
 

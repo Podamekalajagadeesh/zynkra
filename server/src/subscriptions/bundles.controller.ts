@@ -56,12 +56,8 @@ export class BundlesController {
   purchase(
     @Request() req,
     @Param('id') id: string,
-    @Body() body: { paymentMethodId?: string } = {},
+    @Body() body: { paymentMethodId?: string } = {}
   ) {
-    return this.subscriptionsService.purchaseBundle(
-      req.user.userId,
-      id,
-      body.paymentMethodId,
-    );
+    return this.subscriptionsService.purchaseBundle(req.user.userId, id, body.paymentMethodId);
   }
 }

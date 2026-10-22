@@ -18,7 +18,7 @@ export class CommerceService {
     @InjectRepository(CheckoutSession) private readonly checkoutRepo: Repository<CheckoutSession>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
-    private readonly walletService: WalletService,
+    private readonly walletService: WalletService
   ) {}
 
   // ---- Checkout -----------------------------------------------------------
@@ -27,7 +27,7 @@ export class CommerceService {
     buyerId: string,
     productId: string,
     paymentMethod: 'card' | 'crypto' | 'wallet' = 'card',
-    shippingAddress?: any,
+    shippingAddress?: any
   ): Promise<CheckoutSession> {
     const buyer = await this.usersRepo.findOne({ where: { id: buyerId } });
     if (!buyer) throw new NotFoundException('User not found');
@@ -36,7 +36,8 @@ export class CommerceService {
     if (!product) throw new NotFoundException('Product not found');
     if (!product.isActive) throw new BadRequestException('Product is no longer available');
     if (product.stock <= 0) throw new BadRequestException('Product is out of stock');
-    if (product.sellerId === buyerId) throw new BadRequestException('Cannot purchase your own product');
+    if (product.sellerId === buyerId)
+      throw new BadRequestException('Cannot purchase your own product');
 
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min expiry
 
@@ -63,7 +64,8 @@ export class CommerceService {
       relations: ['product', 'buyer'],
     });
     if (!session) throw new NotFoundException('Checkout session not found');
-    if (session.status !== CheckoutStatus.PENDING) throw new BadRequestException('Checkout already processed');
+    if (session.status !== CheckoutStatus.PENDING)
+      throw new BadRequestException('Checkout already processed');
     if (session.expiresAt && new Date() > session.expiresAt) {
       session.status = CheckoutStatus.EXPIRED;
       await this.checkoutRepo.save(session);
@@ -127,7 +129,8 @@ export class CommerceService {
     const escrow = await this.escrowRepo.findOne({ where: { id: escrowId } });
     if (!escrow) throw new NotFoundException('Escrow not found');
     if (escrow.buyerId !== buyerId) throw new BadRequestException('Not authorized');
-    if (escrow.status !== EscrowStatus.HELD) throw new BadRequestException('Escrow is not in held status');
+    if (escrow.status !== EscrowStatus.HELD)
+      throw new BadRequestException('Escrow is not in held status');
 
     escrow.buyerConfirmedDelivery = true;
     escrow.status = EscrowStatus.RELEASED;
@@ -136,7 +139,11 @@ export class CommerceService {
     return this.escrowRepo.save(escrow);
   }
 
-  async shipProduct(escrowId: string, sellerId: string, trackingNumber: string): Promise<EscrowTransaction> {
+  async shipProduct(
+    escrowId: string,
+    sellerId: string,
+    trackingNumber: string
+  ): Promise<EscrowTransaction> {
     const escrow = await this.escrowRepo.findOne({ where: { id: escrowId } });
     if (!escrow) throw new NotFoundException('Escrow not found');
     if (escrow.sellerId !== sellerId) throw new BadRequestException('Not authorized');
@@ -147,11 +154,17 @@ export class CommerceService {
     return this.escrowRepo.save(escrow);
   }
 
-  async disputeEscrow(escrowId: string, userId: string, reason: string): Promise<EscrowTransaction> {
+  async disputeEscrow(
+    escrowId: string,
+    userId: string,
+    reason: string
+  ): Promise<EscrowTransaction> {
     const escrow = await this.escrowRepo.findOne({ where: { id: escrowId } });
     if (!escrow) throw new NotFoundException('Escrow not found');
-    if (escrow.buyerId !== userId && escrow.sellerId !== userId) throw new BadRequestException('Not authorized');
-    if (escrow.status !== EscrowStatus.HELD) throw new BadRequestException('Escrow is not in held status');
+    if (escrow.buyerId !== userId && escrow.sellerId !== userId)
+      throw new BadRequestException('Not authorized');
+    if (escrow.status !== EscrowStatus.HELD)
+      throw new BadRequestException('Escrow is not in held status');
 
     escrow.status = EscrowStatus.DISPUTED;
     escrow.reason = reason;
@@ -164,7 +177,7 @@ export class CommerceService {
   async createReview(
     reviewerId: string,
     productId: string,
-    data: { rating: number; title: string; content?: string; images?: string[] },
+    data: { rating: number; title: string; content?: string; images?: string[] }
   ): Promise<ProductReview> {
     if (data.rating < 1 || data.rating > 5) throw new BadRequestException('Rating must be 1-5');
 
@@ -189,11 +202,12 @@ export class CommerceService {
 
   async getProductReviews(
     productId: string,
-    options: { page?: number; limit?: number; sortBy?: string } = {},
+    options: { page?: number; limit?: number; sortBy?: string } = {}
   ): Promise<{ reviews: ProductReview[]; total: number; averageRating: number }> {
     const { page = 1, limit = 20, sortBy = 'recent' } = options;
 
-    const order = sortBy === 'helpful' ? { helpfulCount: 'DESC' as const } : { createdAt: 'DESC' as const };
+    const order =
+      sortBy === 'helpful' ? { helpfulCount: 'DESC' as const } : { createdAt: 'DESC' as const };
 
     const [reviews, total] = await this.reviewsRepo.findAndCount({
       where: { productId, isHidden: false },

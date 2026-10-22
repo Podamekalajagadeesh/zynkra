@@ -1,4 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, LessThan, Like, Not, Repository } from 'typeorm';
@@ -26,7 +33,10 @@ import { WebhooksService } from '../webhooks/webhooks.service';
 import { LoginSession } from '../auth/entities/login-session.entity';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
-import { DEFAULT_PERSONALIZATION_CONTROLS, normalizePersonalizationControls } from './personalization-controls';
+import {
+  DEFAULT_PERSONALIZATION_CONTROLS,
+  normalizePersonalizationControls,
+} from './personalization-controls';
 
 export function toPublicUserResponse(user: User | null | undefined): Record<string, any> | null {
   if (!user) {
@@ -75,10 +85,7 @@ export function toPublicUserResponse(user: User | null | undefined): Record<stri
   };
 }
 
-export function toSearchUserResponse(
-  user: User,
-  includeEmail = false,
-): Record<string, any> {
+export function toSearchUserResponse(user: User, includeEmail = false): Record<string, any> {
   const response = toPublicUserResponse(user) as Record<string, any>;
   if (includeEmail && user.email) {
     response.email = user.email;
@@ -151,7 +158,7 @@ export class UsersService {
     private readonly webhooksService: WebhooksService,
     private readonly dataPermissions: DataPermissionsService,
     @Optional()
-    private readonly dataSource?: DataSource,
+    private readonly dataSource?: DataSource
   ) {}
 
   private getProfileUpdateData(updateUserDto: UpdateUserDto): Partial<User> {
@@ -190,7 +197,7 @@ export class UsersService {
 
   async updateFaceRecognition(
     userId: string,
-    updateFaceRecognitionDto: UpdateFaceRecognitionDto,
+    updateFaceRecognitionDto: UpdateFaceRecognitionDto
   ): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
@@ -198,16 +205,13 @@ export class UsersService {
     }
 
     // In a real application, you'd have a service to determine this based on user's country
-    const isRegionEligible = true; 
+    const isRegionEligible = true;
 
     if (!isRegionEligible) {
-      throw new ForbiddenException(
-        'Face recognition is not available in your region.',
-      );
+      throw new ForbiddenException('Face recognition is not available in your region.');
     }
 
-    user.isFaceRecognitionEnabled =
-      updateFaceRecognitionDto.isFaceRecognitionEnabled;
+    user.isFaceRecognitionEnabled = updateFaceRecognitionDto.isFaceRecognitionEnabled;
     user.isRegionEligibleForFaceRecognition = isRegionEligible;
 
     return this.usersRepository.save(user);
@@ -234,11 +238,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async updateProfile(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-    avatar: any,
-  ): Promise<User> {
+  async updateProfile(userId: string, updateUserDto: UpdateUserDto, avatar: any): Promise<User> {
     await this.dataPermissions.require(userId, DataPermission.PROFILE);
     const user = await this.findOneById(userId);
     if (!user) {
@@ -366,7 +366,31 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async getPrivacy(userId: string): Promise<Pick<User, 'postVisibility' | 'friendRequestPrivacy' | 'emailSearchPrivacy' | 'commentPrivacy' | 'tagPrivacy' | 'messagePrivacy' | 'screenshotProtection' | 'showOnlineStatus' | 'showLastSeenTimestamp' | 'readReceipts' | 'mentions' | 'activityVisibility' | 'storyVisibility' | 'searchVisibility' | 'contactDiscovery' | 'personalization' | 'adPersonalization' | 'personalizationControls'>> {
+  async getPrivacy(
+    userId: string
+  ): Promise<
+    Pick<
+      User,
+      | 'postVisibility'
+      | 'friendRequestPrivacy'
+      | 'emailSearchPrivacy'
+      | 'commentPrivacy'
+      | 'tagPrivacy'
+      | 'messagePrivacy'
+      | 'screenshotProtection'
+      | 'showOnlineStatus'
+      | 'showLastSeenTimestamp'
+      | 'readReceipts'
+      | 'mentions'
+      | 'activityVisibility'
+      | 'storyVisibility'
+      | 'searchVisibility'
+      | 'contactDiscovery'
+      | 'personalization'
+      | 'adPersonalization'
+      | 'personalizationControls'
+    >
+  > {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -394,7 +418,9 @@ export class UsersService {
     };
   }
 
-  async resetPersonalizationControls(userId: string): Promise<Pick<User, 'personalizationControls'>> {
+  async resetPersonalizationControls(
+    userId: string
+  ): Promise<Pick<User, 'personalizationControls'>> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -405,17 +431,14 @@ export class UsersService {
     return { personalizationControls: user.personalizationControls };
   }
 
-  async findOneById(
-    id: string,
-    relations: string[] = [],
-  ): Promise<User | undefined> {
+  async findOneById(id: string, relations: string[] = []): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { id }, relations });
   }
 
   /** Resolve a user by id or username — profile routes use the username. */
   async findUserByIdOrUsername(
     identifier: string,
-    relations: string[] = [],
+    relations: string[] = []
   ): Promise<User | undefined> {
     if (!identifier) {
       return undefined;
@@ -430,7 +453,11 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findByUsername(username: string, relations: string[] = [], _requestingUserId?: string): Promise<User | undefined> {
+  async findByUsername(
+    username: string,
+    relations: string[] = [],
+    _requestingUserId?: string
+  ): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { username }, relations });
   }
 
@@ -514,7 +541,9 @@ export class UsersService {
     }
 
     if (updateUserDto.username) {
-      const existingUser = await this.usersRepository.findOne({ where: { username: updateUserDto.username } });
+      const existingUser = await this.usersRepository.findOne({
+        where: { username: updateUserDto.username },
+      });
       if (existingUser && existingUser.id !== id) {
         throw new ConflictException('Username already exists');
       }
@@ -540,7 +569,7 @@ export class UsersService {
     user.deactivationReason = reason?.trim() || null;
     await this.loginSessionsRepository.update(
       { user: { id: userId }, revokedAt: IsNull() },
-      { revokedAt: new Date() },
+      { revokedAt: new Date() }
     );
     return this.usersRepository.save(user);
   }
@@ -570,7 +599,10 @@ export class UsersService {
     if ((user.status as string) !== 'deactivated') {
       throw new BadRequestException('Account is not deactivated');
     }
-    if (user.deactivatedAt && user.deactivatedAt.getTime() + 90 * 24 * 60 * 60 * 1000 < Date.now()) {
+    if (
+      user.deactivatedAt &&
+      user.deactivatedAt.getTime() + 90 * 24 * 60 * 60 * 1000 < Date.now()
+    ) {
       throw new BadRequestException('The 90-day reactivation window has expired');
     }
     user.status = 'active' as any;
@@ -602,14 +634,36 @@ export class UsersService {
 
       await this.cleanupUserAsset(user.avatar);
 
-      await queryRunner.manager.update(LoginSession, { user: { id: userId } }, { revokedAt: new Date() });
+      await queryRunner.manager.update(
+        LoginSession,
+        { user: { id: userId } },
+        { revokedAt: new Date() }
+      );
 
       const ownershipColumns = [
-        'userId', 'user_id', 'ownerId', 'owner_id', 'creatorId', 'creator_id',
-        'authorId', 'author_id', 'subscriberId', 'subscriber_id', 'buyerId',
-        'sellerId', 'organizerId', 'donorId', 'viewerId', 'localUserId',
-        'taggingUserId', 'taggedUserId', 'raterId', 'rateeId', 'developerId',
-        'providerId', 'accountId',
+        'userId',
+        'user_id',
+        'ownerId',
+        'owner_id',
+        'creatorId',
+        'creator_id',
+        'authorId',
+        'author_id',
+        'subscriberId',
+        'subscriber_id',
+        'buyerId',
+        'sellerId',
+        'organizerId',
+        'donorId',
+        'viewerId',
+        'localUserId',
+        'taggingUserId',
+        'taggedUserId',
+        'raterId',
+        'rateeId',
+        'developerId',
+        'providerId',
+        'accountId',
       ];
       const tables = await queryRunner.query(
         `SELECT DISTINCT table_name, column_name
@@ -617,7 +671,7 @@ export class UsersService {
          WHERE table_schema = 'public'
            AND column_name = ANY($1::text[])
            AND table_name <> 'users'`,
-        [ownershipColumns],
+        [ownershipColumns]
       );
 
       for (let pass = 0; pass < tables.length + 1; pass += 1) {
@@ -626,7 +680,7 @@ export class UsersService {
           try {
             const result = await queryRunner.query(
               `DELETE FROM "${table.table_name.replace(/"/g, '""')}" WHERE "${table.column_name.replace(/"/g, '""')}" = $1`,
-              [userId],
+              [userId]
             );
             deletedRows += result.rowCount ?? 0;
           } catch (error: any) {
@@ -749,11 +803,10 @@ export class UsersService {
       followingId: following.id,
     });
 
-    await this.notificationsService.createNotification(
-      following,
-      NotificationType.FOLLOW,
-      { followerId: follower.id, followerUsername: follower.username }
-    );
+    await this.notificationsService.createNotification(following, NotificationType.FOLLOW, {
+      followerId: follower.id,
+      followerUsername: follower.username,
+    });
   }
 
   async unfollow(followerId: string, followingId: string): Promise<void> {
@@ -770,9 +823,7 @@ export class UsersService {
       return;
     }
 
-    follower.following = follower.following.filter(
-      (user) => user.id !== followingId,
-    );
+    follower.following = follower.following.filter((user) => user.id !== followingId);
     await this.usersRepository.save(follower);
   }
 
@@ -811,9 +862,7 @@ export class UsersService {
       return;
     }
 
-    user.favorites = user.favorites.filter(
-      (user) => user.id !== favoriteUserId,
-    );
+    user.favorites = user.favorites.filter((user) => user.id !== favoriteUserId);
     await this.usersRepository.save(user);
   }
 
@@ -825,7 +874,7 @@ export class UsersService {
     id: string,
     currentUserId?: string,
     take = 10,
-    skip = 0,
+    skip = 0
   ): Promise<User | undefined> {
     if (currentUserId && (await this.isBlockedBy(id, currentUserId))) {
       throw new ForbiddenException('This user has blocked you.');
@@ -877,19 +926,23 @@ export class UsersService {
 
   async search(query: string, searchingUserId?: string): Promise<User[]> {
     const users = await this.usersRepository.find({
-      where: [
-        { username: Like(`%${query}%`) },
-        { displayName: Like(`%${query}%`) },
-      ],
+      where: [{ username: Like(`%${query}%`) }, { displayName: Like(`%${query}%`) }],
       relations: ['followers', 'following'],
       take: 10,
     });
 
     const visibleUsers = users.filter((user) => {
-      if (user.id === searchingUserId || !user.searchVisibility || user.searchVisibility === 'everyone') return true;
+      if (
+        user.id === searchingUserId ||
+        !user.searchVisibility ||
+        user.searchVisibility === 'everyone'
+      )
+        return true;
       if (user.searchVisibility !== 'friends' || !searchingUserId) return false;
-      return user.followers?.some((follower) => follower.id === searchingUserId)
-        && user.following?.some((following) => following.id === searchingUserId);
+      return (
+        user.followers?.some((follower) => follower.id === searchingUserId) &&
+        user.following?.some((following) => following.id === searchingUserId)
+      );
     });
 
     if (query.includes('@')) {
@@ -907,19 +960,26 @@ export class UsersService {
           return true;
         }
         if (user.emailSearchPrivacy === 'friends' && searchingUser) {
-          return user.followers.some(
-            (follower) => follower.id === searchingUser.id,
-          );
+          return user.followers.some((follower) => follower.id === searchingUser.id);
         }
         return false;
       });
 
-      visibleUsers.push(...filteredEmailUsers.filter((user) => {
-        if (user.id === searchingUserId || !user.searchVisibility || user.searchVisibility === 'everyone') return true;
-        if (user.searchVisibility !== 'friends' || !searchingUserId) return false;
-        return user.followers?.some((follower) => follower.id === searchingUserId)
-          && user.following?.some((following) => following.id === searchingUserId);
-      }));
+      visibleUsers.push(
+        ...filteredEmailUsers.filter((user) => {
+          if (
+            user.id === searchingUserId ||
+            !user.searchVisibility ||
+            user.searchVisibility === 'everyone'
+          )
+            return true;
+          if (user.searchVisibility !== 'friends' || !searchingUserId) return false;
+          return (
+            user.followers?.some((follower) => follower.id === searchingUserId) &&
+            user.following?.some((following) => following.id === searchingUserId)
+          );
+        })
+      );
     }
 
     return visibleUsers;
@@ -927,24 +987,24 @@ export class UsersService {
 
   async discoverContacts(
     userId: string,
-    contactDiscoveryDto: ContactDiscoveryDto,
+    contactDiscoveryDto: ContactDiscoveryDto
   ): Promise<Array<Pick<User, 'id' | 'username' | 'displayName' | 'avatar'>>> {
-    const normalizedContacts = Array.from(new Set(
-      contactDiscoveryDto.contacts
-        .map((contact) => {
-          const normalized = contact.trim().toLowerCase();
-          return normalized.includes('@')
-            ? normalized
-            : normalized.replace(/[\s().-]/g, '');
-        })
-        .filter((contact) => {
-          if (!contact) return false;
-          if (contact.includes('@')) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
-          }
-          return /^\+?[1-9]\d{6,14}$/.test(contact);
-        }),
-    ));
+    const normalizedContacts = Array.from(
+      new Set(
+        contactDiscoveryDto.contacts
+          .map((contact) => {
+            const normalized = contact.trim().toLowerCase();
+            return normalized.includes('@') ? normalized : normalized.replace(/[\s().-]/g, '');
+          })
+          .filter((contact) => {
+            if (!contact) return false;
+            if (contact.includes('@')) {
+              return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+            }
+            return /^\+?[1-9]\d{6,14}$/.test(contact);
+          })
+      )
+    );
 
     if (normalizedContacts.length === 0) {
       return [];
@@ -985,9 +1045,7 @@ export class UsersService {
     }
 
     const following1 = user1.following.map((user) => user.id);
-    const mutuals = user2.following.filter((user) =>
-      following1.includes(user.id),
-    );
+    const mutuals = user2.following.filter((user) => following1.includes(user.id));
 
     for (const mutual of mutuals) {
       (mutual as any).password_hash = undefined;
@@ -1018,9 +1076,7 @@ export class UsersService {
       throw new BadRequestException('You cannot restrict yourself.');
     }
 
-    const isAlreadyRestricted = user.restrictedUsers.some(
-      (u) => u.id === restrictedUserId,
-    );
+    const isAlreadyRestricted = user.restrictedUsers.some((u) => u.id === restrictedUserId);
     if (isAlreadyRestricted) {
       throw new BadRequestException('User is already restricted.');
     }
@@ -1038,16 +1094,12 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const isRestricted = user.restrictedUsers.some(
-      (u) => u.id === restrictedUserId,
-    );
+    const isRestricted = user.restrictedUsers.some((u) => u.id === restrictedUserId);
     if (!isRestricted) {
       throw new BadRequestException('User is not restricted.');
     }
 
-    user.restrictedUsers = user.restrictedUsers.filter(
-      (u) => u.id !== restrictedUserId,
-    );
+    user.restrictedUsers = user.restrictedUsers.filter((u) => u.id !== restrictedUserId);
     await this.usersRepository.save(user);
   }
 
@@ -1079,9 +1131,7 @@ export class UsersService {
       throw new BadRequestException('You cannot block yourself.');
     }
 
-    const isAlreadyBlocked = user.blockedUsers.some(
-      (u) => u.id === blockedUserId,
-    );
+    const isAlreadyBlocked = user.blockedUsers.some((u) => u.id === blockedUserId);
     if (isAlreadyBlocked) {
       throw new BadRequestException('User is already blocked.');
     }
@@ -1108,9 +1158,7 @@ export class UsersService {
       throw new BadRequestException('User is not blocked.');
     }
 
-    user.blockedUsers = user.blockedUsers.filter(
-      (u) => u.id !== blockedUserId,
-    );
+    user.blockedUsers = user.blockedUsers.filter((u) => u.id !== blockedUserId);
     await this.usersRepository.save(user);
   }
 
@@ -1125,9 +1173,7 @@ export class UsersService {
       throw new BadRequestException('You cannot mute yourself.');
     }
 
-    const isAlreadyMuted = user.mutedUsers.some(
-      (u) => u.id === mutedUserId,
-    );
+    const isAlreadyMuted = user.mutedUsers.some((u) => u.id === mutedUserId);
     if (isAlreadyMuted) {
       throw new BadRequestException('User is already muted.');
     }
@@ -1198,7 +1244,7 @@ export class UsersService {
     }
 
     user.followedHashtags = user.followedHashtags.filter(
-      (ht) => ht.name !== hashtagName.toLowerCase(),
+      (ht) => ht.name !== hashtagName.toLowerCase()
     );
     await this.usersRepository.save(user);
   }
@@ -1230,9 +1276,7 @@ export class UsersService {
       throw new BadRequestException('Keyword is not blocked');
     }
 
-    user.blockedKeywords = user.blockedKeywords.filter(
-      (k) => k !== keyword.toLowerCase(),
-    );
+    user.blockedKeywords = user.blockedKeywords.filter((k) => k !== keyword.toLowerCase());
     await this.usersRepository.save(user);
   }
 
@@ -1263,9 +1307,7 @@ export class UsersService {
       throw new BadRequestException('Hashtag is not blocked');
     }
 
-    user.blockedHashtags = user.blockedHashtags.filter(
-      (ht) => ht !== hashtagName.toLowerCase(),
-    );
+    user.blockedHashtags = user.blockedHashtags.filter((ht) => ht !== hashtagName.toLowerCase());
     await this.usersRepository.save(user);
   }
 
@@ -1297,7 +1339,7 @@ export class UsersService {
     }
 
     user.blockedContentTypes = user.blockedContentTypes.filter(
-      (ct) => ct !== contentType.toLowerCase(),
+      (ct) => ct !== contentType.toLowerCase()
     );
     await this.usersRepository.save(user);
   }
@@ -1426,14 +1468,8 @@ export class UsersService {
     return user.following;
   }
 
-  async getUserFollowers(
-    profileId: string,
-    requestingUserId?: string,
-  ): Promise<User[]> {
-    const profile = await this.findUserByIdOrUsername(profileId, [
-      'followers',
-      'blockedUsers',
-    ]);
+  async getUserFollowers(profileId: string, requestingUserId?: string): Promise<User[]> {
+    const profile = await this.findUserByIdOrUsername(profileId, ['followers', 'blockedUsers']);
 
     if (!profile) {
       throw new NotFoundException('User not found.');
@@ -1450,28 +1486,21 @@ export class UsersService {
 
     if (profile.profilePrivacy === ProfilePrivacy.PRIVATE) {
       const isOwner = requestingUserId === profile.id;
-      const isFollower = profile.followers.some(
-        (follower) => follower.id === requestingUserId,
-      );
+      const isFollower = profile.followers.some((follower) => follower.id === requestingUserId);
       if (!isOwner && !isFollower) {
         throw new ForbiddenException('This profile is private.');
       }
     }
 
     const blockedIds = profile.blockedUsers.map((u) => u.id);
-    const followers = profile.followers.filter(
-      (follower) => !blockedIds.includes(follower.id),
-    );
+    const followers = profile.followers.filter((follower) => !blockedIds.includes(follower.id));
     for (const follower of followers) {
       (follower as any).password_hash = undefined;
     }
     return followers;
   }
 
-  async getUserFollowing(
-    profileId: string,
-    requestingUserId?: string,
-  ): Promise<User[]> {
+  async getUserFollowing(profileId: string, requestingUserId?: string): Promise<User[]> {
     const profile = await this.findUserByIdOrUsername(profileId, [
       'following',
       'followers',
@@ -1493,18 +1522,14 @@ export class UsersService {
 
     if (profile.profilePrivacy === ProfilePrivacy.PRIVATE) {
       const isOwner = requestingUserId === profile.id;
-      const isFollower = profile.followers.some(
-        (follower) => follower.id === requestingUserId,
-      );
+      const isFollower = profile.followers.some((follower) => follower.id === requestingUserId);
       if (!isOwner && !isFollower) {
         throw new ForbiddenException('This profile is private.');
       }
     }
 
     const blockedIds = profile.blockedUsers.map((u) => u.id);
-    const following = profile.following.filter(
-      (followed) => !blockedIds.includes(followed.id),
-    );
+    const following = profile.following.filter((followed) => !blockedIds.includes(followed.id));
     for (const followed of following) {
       (followed as any).password_hash = undefined;
     }
@@ -1532,7 +1557,11 @@ export class UsersService {
 
   async cancelFollowRequestByUser(requesterId: string, targetUserId: string): Promise<void> {
     const request = await this.followRequestRepository.findOne({
-      where: { requester: { id: requesterId }, recipient: { id: targetUserId }, status: FollowRequestStatus.PENDING },
+      where: {
+        requester: { id: requesterId },
+        recipient: { id: targetUserId },
+        status: FollowRequestStatus.PENDING,
+      },
     });
 
     if (!request) {
@@ -1614,10 +1643,7 @@ export class UsersService {
     return user.closeFriends;
   }
 
-  async updateCloseFriends(
-    userId: string,
-    closeFriendIds: string[],
-  ): Promise<User> {
+  async updateCloseFriends(userId: string, closeFriendIds: string[]): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
       relations: ['closeFriends'],
@@ -1645,7 +1671,10 @@ export class UsersService {
     return user.followers;
   }
 
-  async updateNotificationSettings(userId: string, settings: NotificationSettingsDto): Promise<User> {
+  async updateNotificationSettings(
+    userId: string,
+    settings: NotificationSettingsDto
+  ): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -1679,7 +1708,10 @@ export class UsersService {
     return this.lifeEventRepository.save(lifeEvent);
   }
 
-  async updateLifeEvent(lifeEventId: string, updateLifeEventDto: UpdateLifeEventDto): Promise<LifeEvent> {
+  async updateLifeEvent(
+    lifeEventId: string,
+    updateLifeEventDto: UpdateLifeEventDto
+  ): Promise<LifeEvent> {
     const lifeEvent = await this.lifeEventRepository.findOneBy({ id: lifeEventId });
     if (!lifeEvent) {
       throw new NotFoundException('Life event not found');
@@ -1714,7 +1746,7 @@ export class UsersService {
 
     // Check if there's an unreturned poke from receiver to sender, if so mark it as returned
     const existingUnreturnedPoke = await this.pokeRepository.findOne({
-      where: { sender: { id: receiverId }, receiver: { id: senderId }, isReturned: false }
+      where: { sender: { id: receiverId }, receiver: { id: senderId }, isReturned: false },
     });
 
     if (existingUnreturnedPoke) {
@@ -1726,22 +1758,18 @@ export class UsersService {
     const poke = this.pokeRepository.create({
       sender,
       receiver,
-      isReturned: false
+      isReturned: false,
     });
 
     const savedPoke = await this.pokeRepository.save(poke);
 
     // Send notification to receiver
-    await this.notificationsService.createNotification(
-      receiver,
-      NotificationType.POKE,
-      {
-        pokeId: savedPoke.id,
-        senderId: sender.id,
-        senderUsername: sender.username,
-        senderAvatar: sender.avatar
-      }
-    );
+    await this.notificationsService.createNotification(receiver, NotificationType.POKE, {
+      pokeId: savedPoke.id,
+      senderId: sender.id,
+      senderUsername: sender.username,
+      senderAvatar: sender.avatar,
+    });
 
     return savedPoke;
   }
@@ -1750,13 +1778,13 @@ export class UsersService {
     return this.pokeRepository.find({
       where: { receiver: { id: userId }, isReturned: false },
       relations: ['sender'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
   async returnPoke(pokeId: string, userId: string): Promise<Poke> {
     const poke = await this.pokeRepository.findOne({
-      where: { id: pokeId, receiver: { id: userId } }
+      where: { id: pokeId, receiver: { id: userId } },
     });
 
     if (!poke) {
@@ -1769,26 +1797,22 @@ export class UsersService {
     // Create a new poke back from the current user to the original sender
     const receiver = await this.findOneById(userId);
     const sender = await this.findOneById(poke.sender.id);
-    
+
     if (receiver && sender) {
       const newPoke = this.pokeRepository.create({
         sender: receiver,
         receiver: sender,
-        isReturned: false
+        isReturned: false,
       });
       await this.pokeRepository.save(newPoke);
 
       // Send notification to original sender
-      await this.notificationsService.createNotification(
-        sender,
-        NotificationType.POKE,
-        {
-          senderId: receiver.id,
-          senderUsername: receiver.username,
-          senderAvatar: receiver.avatar,
-          isReturnPoke: true
-        }
-      );
+      await this.notificationsService.createNotification(sender, NotificationType.POKE, {
+        senderId: receiver.id,
+        senderUsername: receiver.username,
+        senderAvatar: receiver.avatar,
+        isReturnPoke: true,
+      });
     }
 
     return returnedPoke;
@@ -1796,7 +1820,7 @@ export class UsersService {
 
   async dismissPoke(pokeId: string, userId: string): Promise<void> {
     const poke = await this.pokeRepository.findOne({
-      where: { id: pokeId, receiver: { id: userId } }
+      where: { id: pokeId, receiver: { id: userId } },
     });
 
     if (!poke) {
@@ -1866,7 +1890,7 @@ export class UsersService {
 
     // Upload ID document to storage
     const idDocumentUrl = await this.storageService.upload(file.buffer);
-    
+
     user.idDocumentUrl = idDocumentUrl;
     user.verificationStatus = 'pending';
     user.verificationSubmittedAt = new Date();
@@ -1882,7 +1906,14 @@ export class UsersService {
 
     return this.usersRepository.find({
       where: { verificationStatus: 'pending' },
-      select: ['id', 'username', 'displayName', 'email', 'idDocumentUrl', 'verificationSubmittedAt']
+      select: [
+        'id',
+        'username',
+        'displayName',
+        'email',
+        'idDocumentUrl',
+        'verificationSubmittedAt',
+      ],
     });
   }
 }

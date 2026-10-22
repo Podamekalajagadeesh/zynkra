@@ -7,18 +7,13 @@ interface CreateGroupDmProps {
   onGroupCreated: () => void;
 }
 
-export const CreateGroupDm = ({
-  users,
-  onGroupCreated,
-}: CreateGroupDmProps) => {
+export const CreateGroupDm = ({ users, onGroupCreated }: CreateGroupDmProps) => {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [groupName, setGroupName] = useState('');
 
   const handleUserSelect = (userId: string) => {
     setSelectedUserIds((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   };
 

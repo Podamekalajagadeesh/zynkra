@@ -70,7 +70,7 @@ export function Trending() {
           if (userLocation) {
             queryString = `?location=${encodeURIComponent(userLocation)}`;
           }
-          
+
           const response = await api.get(`/trends${queryString}`);
           setTrendsData(response.data);
         }
@@ -91,9 +91,10 @@ export function Trending() {
     fetchTrends();
   }, [userLocation, useCustomized]);
 
-  const currentTrends = activeTab === 'local' && trendsData?.locationBasedTrends?.length 
-    ? trendsData.locationBasedTrends 
-    : trendsData?.globalTrends || [];
+  const currentTrends =
+    activeTab === 'local' && trendsData?.locationBasedTrends?.length
+      ? trendsData.locationBasedTrends
+      : trendsData?.globalTrends || [];
 
   return (
     <div className="p-4 bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-700 rounded-2xl">
@@ -106,10 +107,12 @@ export function Trending() {
           {useCustomized ? 'Customized' : 'Standard'}
         </button>
       </div>
-      
+
       {trendsData?.trendingPlaces && trendsData.trendingPlaces.length > 0 && (
         <div className="mb-4">
-          <h3 className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">Trending Places</h3>
+          <h3 className="text-sm font-semibold text-dark-700 dark:text-dark-300 mb-2">
+            Trending Places
+          </h3>
           <div className="flex flex-wrap gap-2">
             {trendsData.trendingPlaces.map(({ place, postCount }) => (
               <Link
@@ -139,10 +142,15 @@ export function Trending() {
         <ul>
           {currentTrends.map((trend) => (
             <li key={trend.tag} className="mb-2">
-              <Link to={`/hashtag/${trend.tag.replace(/^#/, '')}`} className="text-primary-600 hover:underline font-semibold">
+              <Link
+                to={`/hashtag/${trend.tag.replace(/^#/, '')}`}
+                className="text-primary-600 hover:underline font-semibold"
+              >
                 {trend.tag}
               </Link>
-              <span className="text-sm text-dark-500 dark:text-dark-400 ml-2">{Math.round(trend.score)} posts</span>
+              <span className="text-sm text-dark-500 dark:text-dark-400 ml-2">
+                {Math.round(trend.score)} posts
+              </span>
             </li>
           ))}
           {currentTrends.length === 0 && (

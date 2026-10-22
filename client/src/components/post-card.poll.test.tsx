@@ -64,7 +64,9 @@ vi.mock('./ui/avatar', () => ({
 
 vi.mock('./ui/button', () => ({
   Button: ({ children, onClick, ...props }: any) => (
-    <button onClick={onClick} {...props}>{children}</button>
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
 }));
 
@@ -147,7 +149,12 @@ function makePostWithPoll(overrides: Record<string, any> = {}) {
         id: 'poll-1',
         question: 'Fav color?',
         options: [
-          { id: 'opt-1', text: 'Red', voteCount: 3, votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }] },
+          {
+            id: 'opt-1',
+            text: 'Red',
+            voteCount: 3,
+            votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }],
+          },
           { id: 'opt-2', text: 'Blue', voteCount: 1, votes: [{ id: 'u-4' }] },
         ],
       },
@@ -237,7 +244,12 @@ describe('PostCard poll rendering and voting', () => {
       id: 'poll-1',
       question: 'Fav color?',
       options: [
-        { id: 'opt-1', text: 'Red', voteCount: 4, votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }, { id: 'user-5' }] },
+        {
+          id: 'opt-1',
+          text: 'Red',
+          voteCount: 4,
+          votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }, { id: 'user-5' }],
+        },
         { id: 'opt-2', text: 'Blue', voteCount: 1, votes: [{ id: 'u-4' }] },
       ],
     };
@@ -255,7 +267,12 @@ describe('PostCard poll rendering and voting', () => {
       id: 'poll-1',
       question: 'Fav color?',
       options: [
-        { id: 'opt-1', text: 'Red', voteCount: 4, votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }, { id: 'user-5' }] },
+        {
+          id: 'opt-1',
+          text: 'Red',
+          voteCount: 4,
+          votes: [{ id: 'u-1' }, { id: 'u-2' }, { id: 'u-3' }, { id: 'user-5' }],
+        },
         { id: 'opt-2', text: 'Blue', voteCount: 1, votes: [{ id: 'u-4' }] },
       ],
     };

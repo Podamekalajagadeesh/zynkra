@@ -18,7 +18,11 @@ interface CreateOpportunityModalProps {
   onSuccess: () => void;
 }
 
-export function CreateOpportunityModal({ brands, onClose, onSuccess }: CreateOpportunityModalProps) {
+export function CreateOpportunityModal({
+  brands,
+  onClose,
+  onSuccess,
+}: CreateOpportunityModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     brandId: '',
@@ -62,8 +66,8 @@ export function CreateOpportunityModal({ brands, onClose, onSuccess }: CreateOpp
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="brandId">Select Brand *</Label>
-            <Select 
-              value={formData.brandId} 
+            <Select
+              value={formData.brandId}
               onValueChange={(value) => setFormData({ ...formData, brandId: value })}
             >
               <SelectTrigger>
@@ -78,7 +82,7 @@ export function CreateOpportunityModal({ brands, onClose, onSuccess }: CreateOpp
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label htmlFor="title">Opportunity Title *</Label>
             <Input
@@ -141,8 +145,8 @@ export function CreateOpportunityModal({ brands, onClose, onSuccess }: CreateOpp
             </div>
             <div>
               <Label htmlFor="paymentType">Payment Type *</Label>
-              <Select 
-                value={formData.paymentType} 
+              <Select
+                value={formData.paymentType}
                 onValueChange={(value) => setFormData({ ...formData, paymentType: value })}
               >
                 <SelectTrigger>

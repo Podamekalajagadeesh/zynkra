@@ -1,4 +1,12 @@
-import { IsString, IsBoolean, IsOptional, MaxLength, IsEnum, IsArray, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  MaxLength,
+  IsEnum,
+  IsArray,
+  IsNumber,
+} from 'class-validator';
 
 export enum SecurityLevel {
   STANDARD = 'standard',

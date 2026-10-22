@@ -13,10 +13,18 @@ function makeUser(overrides: any = {}) {
 
 function makePost(overrides: any = {}) {
   return {
-    id: 'post-1', postType: PostType.REEL, content: 'Cool reel',
-    visibility: PostVisibility.PUBLIC, user: makeUser(),
-    viewCount: 0, shareCount: 0, reactions: [], comments: [],
-    reelEffect: null, media: [], ...overrides,
+    id: 'post-1',
+    postType: PostType.REEL,
+    content: 'Cool reel',
+    visibility: PostVisibility.PUBLIC,
+    user: makeUser(),
+    viewCount: 0,
+    shareCount: 0,
+    reactions: [],
+    comments: [],
+    reelEffect: null,
+    media: [],
+    ...overrides,
   };
 }
 
@@ -30,8 +38,27 @@ describe('ReelsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReelsService,
-        { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), increment: jest.fn() } },
-        { provide: getRepositoryToken(ReelEffect), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), delete: jest.fn() } },
+        {
+          provide: getRepositoryToken(Post),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
+            increment: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(ReelEffect),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(Media), useValue: { findOne: jest.fn(), save: jest.fn() } },
       ],
     }).compile();
@@ -59,7 +86,11 @@ describe('ReelsService', () => {
     it('returns reels sorted by engagement', async () => {
       const posts = [
         { ...makePost(), reactions: [{ id: 'r1' }], comments: [] },
-        { ...makePost({ id: 'post-2' }), reactions: [{ id: 'r2' }, { id: 'r3' }], comments: [{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }] },
+        {
+          ...makePost({ id: 'post-2' }),
+          reactions: [{ id: 'r2' }, { id: 'r3' }],
+          comments: [{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }],
+        },
       ];
       postRepo.find.mockResolvedValue(posts as any);
 
@@ -106,7 +137,9 @@ describe('ReelsService', () => {
       const post = makePost({ user: makeUser({ id: 'other' }) });
       postRepo.findOne.mockResolvedValue(post as any);
 
-      await expect(service.getReelInsights('post-1', makeUser())).rejects.toThrow(NotFoundException);
+      await expect(service.getReelInsights('post-1', makeUser())).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -117,13 +150,18 @@ describe('ReelsService', () => {
       postRepo.create.mockReturnValue(makePost() as any);
       postRepo.save.mockResolvedValue(makePost() as any);
 
-      const result = await service.createReel({ mediaId: 'media-1', content: 'My reel' } as any, makeUser());
+      const result = await service.createReel(
+        { mediaId: 'media-1', content: 'My reel' } as any,
+        makeUser()
+      );
       expect(postRepo.save).toHaveBeenCalled();
     });
 
     it('throws when media not found', async () => {
       mediaRepo.findOne.mockResolvedValue(null);
-      await expect(service.createReel({ mediaId: 'missing' } as any, makeUser())).rejects.toThrow(NotFoundException);
+      await expect(service.createReel({ mediaId: 'missing' } as any, makeUser())).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('creates reel with effect', async () => {
@@ -133,7 +171,10 @@ describe('ReelsService', () => {
       postRepo.create.mockReturnValue(makePost() as any);
       postRepo.save.mockResolvedValue(makePost() as any);
 
-      await service.createReel({ mediaId: 'media-1', effectId: 'effect-1', content: 'With effect' } as any, makeUser());
+      await service.createReel(
+        { mediaId: 'media-1', effectId: 'effect-1', content: 'With effect' } as any,
+        makeUser()
+      );
       expect(postRepo.save).toHaveBeenCalled();
     });
   });
@@ -150,14 +191,18 @@ describe('ReelsService', () => {
 
     it('throws when reel not found', async () => {
       postRepo.findOne.mockResolvedValue(null);
-      await expect(service.updateReel('missing', {} as any, makeUser())).rejects.toThrow(NotFoundException);
+      await expect(service.updateReel('missing', {} as any, makeUser())).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('throws when not authorized', async () => {
       const reel = makePost({ user: makeUser({ id: 'other' }) });
       postRepo.findOne.mockResolvedValue(reel as any);
 
-      await expect(service.updateReel('post-1', {} as any, makeUser())).rejects.toThrow(UnauthorizedException);
+      await expect(service.updateReel('post-1', {} as any, makeUser())).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 

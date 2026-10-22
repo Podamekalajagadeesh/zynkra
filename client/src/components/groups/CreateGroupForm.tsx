@@ -23,11 +23,7 @@ export function CreateGroupForm() {
 
     setIsLoading(true);
     try {
-      await createGroup(
-        name,
-        privacy,
-        allowAnonymousPosting,
-      );
+      await createGroup(name, privacy, allowAnonymousPosting);
       setName('');
       setPrivacy(GroupPrivacy.PUBLIC);
       addToast('Group created successfully!', 'success');

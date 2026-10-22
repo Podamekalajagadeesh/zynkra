@@ -2,9 +2,14 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import {
-  addBookmark, removeBookmark, getBookmarks,
-  createCollection, getCollections, getCollection,
-  updateCollection, deleteCollection,
+  addBookmark,
+  removeBookmark,
+  getBookmarks,
+  createCollection,
+  getCollections,
+  getCollection,
+  updateCollection,
+  deleteCollection,
 } from './api';
 
 describe('addBookmark API helper', () => {
@@ -66,9 +71,7 @@ describe('getBookmarks API helper', () => {
   it('fetches bookmarks list', async () => {
     server.use(
       http.get('*/bookmarks', () => {
-        return HttpResponse.json([
-          { id: 'bm-1', post: { id: 'post-1' } },
-        ]);
+        return HttpResponse.json([{ id: 'bm-1', post: { id: 'post-1' } }]);
       })
     );
 

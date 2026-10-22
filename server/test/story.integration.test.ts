@@ -4,7 +4,12 @@
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -23,13 +28,21 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(overrides: Record<string, any> = {}) {
   const defaults: Record<string, jest.Mock> = {
-    create: jest.fn(), findOne: jest.fn(), findActiveStoriesForUser: jest.fn(),
-    trackView: jest.fn(), getViews: jest.fn(), delete: jest.fn(),
-    addReaction: jest.fn(), addReply: jest.fn(),
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findActiveStoriesForUser: jest.fn(),
+    trackView: jest.fn(),
+    getViews: jest.fn(),
+    delete: jest.fn(),
+    addReaction: jest.fn(),
+    addReply: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [StoriesController, StoriesReactionController, StoriesReplyController],
     providers: [
       { provide: StoriesService, useValue: { ...defaults, ...overrides.stories } },
@@ -45,11 +58,34 @@ function createModule(overrides: Record<string, any> = {}) {
           })),
         },
       },
-      { provide: StoriesReactionService, useValue: { addReaction: overrides.addReaction || jest.fn() } },
+      {
+        provide: StoriesReactionService,
+        useValue: { addReaction: overrides.addReaction || jest.fn() },
+      },
       { provide: StoriesReplyService, useValue: { addReply: overrides.addReply || jest.fn() } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -71,7 +107,9 @@ describe('GET /stories', () => {
       { id: 'story-1', mediaUrl: '/img.jpg' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/stories').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/stories')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     await app.close();

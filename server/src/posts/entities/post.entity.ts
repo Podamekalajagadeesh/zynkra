@@ -138,7 +138,7 @@ export class Post {
   musicTags: { music_id: string; x: number; y: number }[];
 
   @Column({ type: 'jsonb', nullable: true })
-  autoTags: { 
+  autoTags: {
     id: string;
     name: string;
     category: 'topic' | 'genre' | 'format';

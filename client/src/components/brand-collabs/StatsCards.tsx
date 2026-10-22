@@ -52,7 +52,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     {
       title: 'Your Accepted Collabs',
       value: stats.creatorAccepted,
-      description: 'Collabs you\'ve been selected for',
+      description: "Collabs you've been selected for",
       bgColor: 'bg-pink-50',
       textColor: 'text-pink-600',
     },

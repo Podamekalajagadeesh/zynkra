@@ -1,4 +1,13 @@
-import { IsString, IsNotEmpty, IsUUID, IsOptional, IsEnum, IsBoolean, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { PostVisibility } from '../../posts/entities/post.entity';
 import { VideoResolution } from '../../media/entities/media.entity';

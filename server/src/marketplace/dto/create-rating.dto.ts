@@ -1,4 +1,3 @@
-
 import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export class CreateRatingDto {

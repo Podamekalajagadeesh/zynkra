@@ -15,8 +15,6 @@ export class AnalyticsController {
   @Get('sustainability')
   @UseGuards(JwtAuthGuard)
   getSustainability(@Request() req) {
-    return this.analyticsService.getSustainabilityData(
-      req.user.userId || req.user.id,
-    );
+    return this.analyticsService.getSustainabilityData(req.user.userId || req.user.id);
   }
 }

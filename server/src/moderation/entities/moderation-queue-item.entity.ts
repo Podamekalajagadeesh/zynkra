@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('moderation_queue_items')
 export class ModerationQueueItemEntity {
@@ -26,7 +32,7 @@ export class ModerationQueueItemEntity {
   @Column({
     type: 'varchar',
     length: 20,
-    default: 'pending'
+    default: 'pending',
   })
   status: 'pending' | 'approved' | 'removed' | 'appealed';
 

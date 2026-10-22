@@ -13,7 +13,12 @@ function makeRepo() {
     rows,
     create: jest.fn((partial: Partial<CaptchaChallengeEntity>) => {
       counter += 1;
-      return { id: `cap-${counter}`, attempts: 0, maxAttempts: 3, ...partial } as CaptchaChallengeEntity;
+      return {
+        id: `cap-${counter}`,
+        attempts: 0,
+        maxAttempts: 3,
+        ...partial,
+      } as CaptchaChallengeEntity;
     }),
     save: jest.fn(async (entity: CaptchaChallengeEntity) => {
       rows.set(entity.id, entity);
@@ -24,7 +29,9 @@ function makeRepo() {
       const existed = rows.delete(id);
       return { affected: existed ? 1 : 0 };
     }),
-  } as unknown as Repository<CaptchaChallengeEntity> & { rows: Map<string, CaptchaChallengeEntity> };
+  } as unknown as Repository<CaptchaChallengeEntity> & {
+    rows: Map<string, CaptchaChallengeEntity>;
+  };
 }
 
 describe('CaptchaService', () => {

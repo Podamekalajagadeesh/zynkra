@@ -111,10 +111,17 @@ export const CommunityNotes: FC<CommunityNotesProps> = ({ postId }) => {
       )}
 
       {notes.map((note) => (
-        <div key={note.id} className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900">
+        <div
+          key={note.id}
+          className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-900"
+        >
           <div className="flex items-center gap-2 mb-2">
             <div className="h-6 w-6 overflow-hidden rounded-full">
-              <AvatarImage src={note.user.profile.avatarUrl} alt={note.user.username} className="h-full w-full object-cover" />
+              <AvatarImage
+                src={note.user.profile.avatarUrl}
+                alt={note.user.username}
+                className="h-full w-full object-cover"
+              />
             </div>
             <span className="text-xs font-medium text-dark-700 dark:text-dark-300">
               {note.user.profile.displayName} (@{note.user.username})

@@ -6,9 +6,7 @@ import { SavedMarketplaceListingsController } from './saved-marketplace-listings
 import { MarketplaceListing } from '../marketplace/entities/listing.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([SavedMarketplaceListing, MarketplaceListing]),
-  ],
+  imports: [TypeOrmModule.forFeature([SavedMarketplaceListing, MarketplaceListing])],
   providers: [SavedMarketplaceListingsService],
   controllers: [SavedMarketplaceListingsController],
 })

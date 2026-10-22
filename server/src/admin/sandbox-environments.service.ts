@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
@@ -17,7 +13,7 @@ import {
 export class SandboxEnvironmentsService {
   constructor(
     @InjectRepository(SandboxEnvironmentEntity)
-    private readonly environments: Repository<SandboxEnvironmentEntity>,
+    private readonly environments: Repository<SandboxEnvironmentEntity>
   ) {}
 
   async create(input: CreateSandboxEnvironmentDto) {
@@ -90,7 +86,11 @@ export class SandboxEnvironmentsService {
   }
 
   private slugify(value: string) {
-    const slug = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
     return slug || `sandbox-${randomBytes(6).toString('hex')}`;
   }
 }

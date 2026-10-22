@@ -35,7 +35,7 @@ export class PodcastsController {
   async getFeed(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('tag') tag?: string,
+    @Query('tag') tag?: string
   ) {
     return this.podcastsService.getFeed({
       page: page ? parseInt(page, 10) : 1,

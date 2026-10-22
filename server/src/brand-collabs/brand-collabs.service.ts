@@ -20,7 +20,7 @@ export class BrandCollabsService {
     @InjectRepository(CollabApplication)
     private readonly applicationRepository: Repository<CollabApplication>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   // Brand management
@@ -51,7 +51,11 @@ export class BrandCollabsService {
   }
 
   // Collab Opportunities management
-  async createCollabOpportunity(user: User, brandId: string, dto: CreateCollabOpportunityDto): Promise<CollabOpportunity> {
+  async createCollabOpportunity(
+    user: User,
+    brandId: string,
+    dto: CreateCollabOpportunityDto
+  ): Promise<CollabOpportunity> {
     const brand = await this.brandRepository.findOne({ where: { id: brandId, userId: user.id } });
     if (!brand) throw new NotFoundException('Brand not found or access denied');
 
@@ -84,7 +88,9 @@ export class BrandCollabsService {
       queryBuilder.andWhere('opportunity.budget <= :maxBudget', { maxBudget: filters.maxBudget });
     }
     if (filters?.minFollowers) {
-      queryBuilder.andWhere('opportunity.minFollowers <= :minFollowers', { minFollowers: filters.minFollowers });
+      queryBuilder.andWhere('opportunity.minFollowers <= :minFollowers', {
+        minFollowers: filters.minFollowers,
+      });
     }
     if (filters?.search) {
       queryBuilder.andWhere(
@@ -107,7 +113,7 @@ export class BrandCollabsService {
 
   async getUserOpportunities(userId: string): Promise<CollabOpportunity[]> {
     const brands = await this.brandRepository.find({ where: { userId } });
-    const brandIds = brands.map(b => b.id);
+    const brandIds = brands.map((b) => b.id);
     return this.opportunityRepository.find({
       where: { brandId: In(brandIds) },
       relations: ['brand', 'applications'],
@@ -116,9 +122,13 @@ export class BrandCollabsService {
   }
 
   // Collab Applications management
-  async submitApplication(user: User, opportunityId: string, dto: SubmitCollabApplicationDto): Promise<CollabApplication> {
+  async submitApplication(
+    user: User,
+    opportunityId: string,
+    dto: SubmitCollabApplicationDto
+  ): Promise<CollabApplication> {
     const opportunity = await this.getOpportunityById(opportunityId);
-    
+
     // Check if user already applied
     const existingApplication = await this.applicationRepository.findOne({
       where: { opportunityId, creatorId: user.id },
@@ -141,7 +151,10 @@ export class BrandCollabsService {
     });
   }
 
-  async getOpportunityApplications(opportunityId: string, userId: string): Promise<CollabApplication[]> {
+  async getOpportunityApplications(
+    opportunityId: string,
+    userId: string
+  ): Promise<CollabApplication[]> {
     const opportunity = await this.opportunityRepository.findOne({
       where: { id: opportunityId },
       relations: ['brand'],
@@ -167,7 +180,8 @@ export class BrandCollabsService {
       relations: ['opportunity', 'opportunity.brand'],
     });
     if (!application) throw new NotFoundException('Application not found');
-    if (application.opportunity.brand.userId !== userId) throw new ForbiddenException('Access denied');
+    if (application.opportunity.brand.userId !== userId)
+      throw new ForbiddenException('Access denied');
 
     application.status = dto.status;
     if (dto.rejectionReason) application.rejectionReason = dto.rejectionReason;
@@ -177,15 +191,17 @@ export class BrandCollabsService {
   // Stats for dashboard
   async getDashboardStats(userId: string) {
     const brands = await this.brandRepository.find({ where: { userId } });
-    const brandIds = brands.map(b => b.id);
-    
-    const totalOpportunities = await this.opportunityRepository.count({ where: { brandId: In(brandIds) } });
+    const brandIds = brands.map((b) => b.id);
+
+    const totalOpportunities = await this.opportunityRepository.count({
+      where: { brandId: In(brandIds) },
+    });
     const totalApplications = await this.applicationRepository
       .createQueryBuilder('application')
       .leftJoin('application.opportunity', 'opportunity')
       .where('opportunity.brandId IN (:...brandIds)', { brandIds })
       .getCount();
-    
+
     const acceptedApplications = await this.applicationRepository
       .createQueryBuilder('application')
       .leftJoin('application.opportunity', 'opportunity')
@@ -193,9 +209,11 @@ export class BrandCollabsService {
       .andWhere('application.status = :status', { status: 'accepted' })
       .getCount();
 
-    const creatorApplications = await this.applicationRepository.count({ where: { creatorId: userId } });
-    const creatorAccepted = await this.applicationRepository.count({ 
-      where: { creatorId: userId, status: 'accepted' } 
+    const creatorApplications = await this.applicationRepository.count({
+      where: { creatorId: userId },
+    });
+    const creatorAccepted = await this.applicationRepository.count({
+      where: { creatorId: userId, status: 'accepted' },
     });
 
     return {

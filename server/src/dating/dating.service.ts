@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import { DatingProfile } from './entities/dating-profile.entity';
@@ -24,7 +20,7 @@ export class DatingService {
     @InjectRepository(DatingCrush)
     private readonly crushesRepository: Repository<DatingCrush>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async upsertProfile(userId: string, dto: UpsertDatingProfileDto): Promise<DatingProfile> {
@@ -57,7 +53,10 @@ export class DatingService {
   }
 
   /** Active dating profiles the user hasn't swiped on yet (excluding self). */
-  async getCandidates(userId: string, take = 20): Promise<Array<{ id: string; datingProfile: DatingProfile }>> {
+  async getCandidates(
+    userId: string,
+    take = 20
+  ): Promise<Array<{ id: string; datingProfile: DatingProfile }>> {
     const myProfile = await this.profilesRepository.findOne({
       where: { user: { id: userId } },
     });
@@ -83,7 +82,7 @@ export class DatingService {
   async swipe(
     userId: string,
     swipedUserId: string,
-    type: 'like' | 'dislike',
+    type: 'like' | 'dislike'
   ): Promise<{ matched: boolean; match?: DatingMatch }> {
     if (userId === swipedUserId) {
       throw new BadRequestException("You can't swipe on yourself.");
@@ -103,9 +102,7 @@ export class DatingService {
       existing.type = type;
       await this.swipesRepository.save(existing);
     } else {
-      await this.swipesRepository.save(
-        this.swipesRepository.create({ swiper, swiped, type }),
-      );
+      await this.swipesRepository.save(this.swipesRepository.create({ swiper, swiped, type }));
     }
 
     if (type !== 'like') return { matched: false };
@@ -136,7 +133,7 @@ export class DatingService {
 
   async addCrush(
     userId: string,
-    crushedUserId: string,
+    crushedUserId: string
   ): Promise<{ matched: boolean; match?: DatingMatch }> {
     if (userId === crushedUserId) {
       throw new BadRequestException("You can't crush on yourself.");
@@ -152,9 +149,7 @@ export class DatingService {
       where: { user: { id: userId }, crushedUser: { id: crushedUserId } },
     });
     if (!existing) {
-      await this.crushesRepository.save(
-        this.crushesRepository.create({ user, crushedUser }),
-      );
+      await this.crushesRepository.save(this.crushesRepository.create({ user, crushedUser }));
     }
 
     // Secret crush is only revealed when mutual.
@@ -179,8 +174,6 @@ export class DatingService {
     if (existing) {
       return this.matchesRepository.findOneOrFail({ where: { id: existing.id } });
     }
-    return this.matchesRepository.save(
-      this.matchesRepository.create({ users: [a, b] }),
-    );
+    return this.matchesRepository.save(this.matchesRepository.create({ users: [a, b] }));
   }
 }

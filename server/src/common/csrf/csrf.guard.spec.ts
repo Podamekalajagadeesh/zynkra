@@ -50,7 +50,7 @@ describe('issueCsrfToken', () => {
     expect(res.cookie).toHaveBeenCalledWith(
       'zynkra.csrf',
       token,
-      expect.objectContaining({ httpOnly: false, secure: true, sameSite: 'lax' }),
+      expect.objectContaining({ httpOnly: false, secure: true, sameSite: 'lax' })
     );
     expect(res.setHeader).toHaveBeenCalledWith(CSRF_HEADER, token);
   });
@@ -60,7 +60,9 @@ describe('CsrfGuard', () => {
   describe('when disabled', () => {
     it('allows everything', () => {
       const guard = new CsrfGuard(makeConfig({ CSRF_PROTECTION_ENABLED: 'false' }));
-      expect(guard.canActivate(makeContext({ method: 'POST', session: { csrfToken: TOKEN } }))).toBe(true);
+      expect(
+        guard.canActivate(makeContext({ method: 'POST', session: { csrfToken: TOKEN } }))
+      ).toBe(true);
     });
   });
 

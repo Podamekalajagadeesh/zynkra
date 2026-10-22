@@ -5,28 +5,28 @@ export class UserPrivacySettings1788100300000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "readReceipts" boolean NOT NULL DEFAULT true`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "readReceipts" boolean NOT NULL DEFAULT true`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "contactDiscovery" boolean NOT NULL DEFAULT true`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "contactDiscovery" boolean NOT NULL DEFAULT true`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "personalization" boolean NOT NULL DEFAULT true`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "personalization" boolean NOT NULL DEFAULT true`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "adPersonalization" boolean NOT NULL DEFAULT true`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "adPersonalization" boolean NOT NULL DEFAULT true`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mentions" character varying NOT NULL DEFAULT 'everyone'`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mentions" character varying NOT NULL DEFAULT 'everyone'`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "activityVisibility" character varying NOT NULL DEFAULT 'friends'`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "activityVisibility" character varying NOT NULL DEFAULT 'friends'`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "storyVisibility" character varying NOT NULL DEFAULT 'friends'`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "storyVisibility" character varying NOT NULL DEFAULT 'friends'`
     );
     await queryRunner.query(
-      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "searchVisibility" character varying NOT NULL DEFAULT 'everyone'`,
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "searchVisibility" character varying NOT NULL DEFAULT 'everyone'`
     );
   }
 

@@ -6,7 +6,7 @@ export class AffiliateClick {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => AffiliateLink, link => link.clicks)
+  @ManyToOne(() => AffiliateLink, (link) => link.clicks)
   affiliateLink: AffiliateLink;
 
   @Column()

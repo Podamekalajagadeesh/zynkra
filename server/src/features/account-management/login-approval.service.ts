@@ -17,7 +17,7 @@ export class LoginApprovalService {
     private loginApprovalRepository: Repository<LoginApproval>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private notificationsService: NotificationsService,
+    private notificationsService: NotificationsService
   ) {}
 
   async createLoginApprovalRequest(
@@ -25,7 +25,7 @@ export class LoginApprovalService {
     deviceName: string,
     ipAddress?: string,
     userAgent?: string,
-    location?: string,
+    location?: string
   ): Promise<LoginApproval> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -75,7 +75,7 @@ export class LoginApprovalService {
   async approveLoginRequest(
     approvalId: string,
     userId: string,
-    approveDto: ApproveLoginRequestDto,
+    approveDto: ApproveLoginRequestDto
   ): Promise<LoginApproval> {
     const loginApproval = await this.loginApprovalRepository.findOne({ where: { id: approvalId } });
 
@@ -116,7 +116,7 @@ export class LoginApprovalService {
   async rejectLoginRequest(
     approvalId: string,
     userId: string,
-    rejectDto: RejectLoginRequestDto,
+    rejectDto: RejectLoginRequestDto
   ): Promise<LoginApproval> {
     const loginApproval = await this.loginApprovalRepository.findOne({ where: { id: approvalId } });
 
@@ -157,7 +157,11 @@ export class LoginApprovalService {
     });
   }
 
-  async getUserApprovalHistory(userId: string, limit: number = 50, offset: number = 0): Promise<[LoginApproval[], number]> {
+  async getUserApprovalHistory(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<[LoginApproval[], number]> {
     return this.loginApprovalRepository.findAndCount({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
@@ -213,10 +217,10 @@ export class LoginApprovalService {
       where: { user: { id: userId } },
     });
 
-    const approved = all.filter(a => a.status === LoginApprovalStatus.APPROVED).length;
-    const rejected = all.filter(a => a.status === LoginApprovalStatus.REJECTED).length;
-    const pending = all.filter(a => a.status === LoginApprovalStatus.PENDING).length;
-    const remembered = all.filter(a => a.rememberDevice).length;
+    const approved = all.filter((a) => a.status === LoginApprovalStatus.APPROVED).length;
+    const rejected = all.filter((a) => a.status === LoginApprovalStatus.REJECTED).length;
+    const pending = all.filter((a) => a.status === LoginApprovalStatus.PENDING).length;
+    const remembered = all.filter((a) => a.rememberDevice).length;
 
     return {
       total,

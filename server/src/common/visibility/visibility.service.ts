@@ -12,7 +12,7 @@ import { PostVisibility } from '../../posts/entities/post.entity';
 export class VisibilityService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   /**
@@ -24,7 +24,7 @@ export class VisibilityService {
       `SELECT "blockedUserId" AS id FROM blocked_users WHERE "userId" = $1
        UNION
        SELECT "userId" AS id FROM blocked_users WHERE "blockedUserId" = $1`,
-      [userId],
+      [userId]
     );
     return new Set(rows.map((r) => r.id));
   }
@@ -38,7 +38,7 @@ export class VisibilityService {
          WHERE ("userId" = $1 AND "blockedUserId" = $2)
             OR ("userId" = $2 AND "blockedUserId" = $1)
        ) AS exists`,
-      [a, b],
+      [a, b]
     );
     return rows[0]?.exists === true;
   }
@@ -51,7 +51,7 @@ export class VisibilityService {
       `SELECT EXISTS(
          SELECT 1 FROM follows WHERE "followerId" = $1 AND "followingId" = $2
        ) AS exists`,
-      [followerId, targetId],
+      [followerId, targetId]
     );
     return rows[0]?.exists === true;
   }
@@ -63,7 +63,7 @@ export class VisibilityService {
    */
   async getHiddenPrivateAuthorIds(
     viewerId: string | null,
-    candidateAuthorIds: string[],
+    candidateAuthorIds: string[]
   ): Promise<Set<string>> {
     const uniqueIds = [...new Set(candidateAuthorIds)].filter(Boolean);
     if (uniqueIds.length === 0) return new Set();
@@ -75,7 +75,7 @@ export class VisibilityService {
          AND ($3::uuid IS NULL OR NOT EXISTS(
            SELECT 1 FROM follows f WHERE f."followerId" = $3 AND f."followingId" = u.id
          ))`,
-      [uniqueIds, ProfilePrivacy.PRIVATE, viewerId],
+      [uniqueIds, ProfilePrivacy.PRIVATE, viewerId]
     );
     return new Set(rows.map((r) => r.id));
   }
@@ -89,7 +89,10 @@ export class VisibilityService {
   }
 
   /** True when a viewer may see a user's presence and activity signals. */
-  async canViewActivity(viewerId: string | null, target: Pick<User, 'id' | 'activityVisibility'>): Promise<boolean> {
+  async canViewActivity(
+    viewerId: string | null,
+    target: Pick<User, 'id' | 'activityVisibility'>
+  ): Promise<boolean> {
     if (viewerId === target.id) return true;
     if (!viewerId || (await this.isBlockedEither(viewerId, target.id))) return false;
     if (target.activityVisibility === 'private') return false;
@@ -103,10 +106,9 @@ export class VisibilityService {
   }
 
   /** Apply post-level visibility after loading candidate posts. */
-  async filterVisiblePostsForViewer<T extends { visibility?: PostVisibility; user?: { id?: string } }>(
-    viewerId: string | null,
-    posts: T[],
-  ): Promise<T[]> {
+  async filterVisiblePostsForViewer<
+    T extends { visibility?: PostVisibility; user?: { id?: string } },
+  >(viewerId: string | null, posts: T[]): Promise<T[]> {
     const visible: T[] = [];
     for (const post of posts) {
       const authorId = post.user?.id;
@@ -117,7 +119,10 @@ export class VisibilityService {
         visible.push(post);
         continue;
       }
-      if (post.visibility === PostVisibility.FRIENDS || post.visibility === PostVisibility.PRIVATE) {
+      if (
+        post.visibility === PostVisibility.FRIENDS ||
+        post.visibility === PostVisibility.PRIVATE
+      ) {
         const followsAuthor = viewerId ? await this.isFollowing(viewerId, authorId) : false;
         const followsViewer = viewerId ? await this.isFollowing(authorId, viewerId) : false;
         if (followsAuthor && followsViewer) visible.push(post);
@@ -132,7 +137,7 @@ export class VisibilityService {
    */
   async filterVisiblePosts<T extends { user?: { id?: string } }>(
     viewerId: string | null,
-    posts: T[],
+    posts: T[]
   ): Promise<T[]> {
     if (posts.length === 0) return posts;
     const authorIds = posts.map((p) => p.user?.id).filter(Boolean) as string[];

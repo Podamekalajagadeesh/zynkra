@@ -29,21 +29,19 @@ export class OAuthService {
     @InjectRepository(OAuthAuthorization)
     private authorizationsRepository: Repository<OAuthAuthorization>,
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   // Returns the plaintext client secret exactly once so the developer can store it.
   async createApp(
     developerId: string,
-    dto: CreateOAuthAppDto,
+    dto: CreateOAuthAppDto
   ): Promise<OAuthApp & { clientSecret: string }> {
     const developer = await this.usersService.findOneById(developerId);
     if (!developer) {
       throw new NotFoundException('User not found');
     }
-    const scopes = (dto.scopes ?? ['read_profile']).filter((scope) =>
-      OAUTH_SCOPES.includes(scope),
-    );
+    const scopes = (dto.scopes ?? ['read_profile']).filter((scope) => OAUTH_SCOPES.includes(scope));
     if (scopes.length === 0) {
       throw new BadRequestException('No valid scopes requested');
     }
@@ -114,7 +112,7 @@ export class OAuthService {
     appId: string,
     scopes: string[],
     codeChallenge: string,
-    codeChallengeMethod = 'S256',
+    codeChallengeMethod = 'S256'
   ): Promise<{ code: string; expiresIn: number; scopes: string[] }> {
     const app = await this.getApp(appId);
     const allowed = scopes.filter((scope) => app.scopes.includes(scope));
@@ -146,7 +144,7 @@ export class OAuthService {
   async exchangeToken(
     code: string,
     codeVerifier: string,
-    clientId: string,
+    clientId: string
   ): Promise<{ accessToken: string; tokenType: string; scope: string[]; expiresIn: number }> {
     const auth = await this.authorizationsRepository.findOne({
       where: { codeHash: sha256(code) },
@@ -175,7 +173,7 @@ export class OAuthService {
 
     const accessToken = await this.jwtService.signAsync(
       { sub: userId, scope: scopes, aud: 'oauth', clientId },
-      { expiresIn: ACCESS_TOKEN_TTL },
+      { expiresIn: ACCESS_TOKEN_TTL }
     );
     return { accessToken, tokenType: 'Bearer', scope: scopes, expiresIn: 3600 };
   }

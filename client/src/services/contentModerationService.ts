@@ -39,7 +39,20 @@ export interface BiasAnalysisResult {
 
 export interface ContentFlag {
   id: string;
-  type: 'harmful' | 'misinformation' | 'hate_speech' | 'violence' | 'adult_content' | 'spam' | 'fraud' | 'deepfake' | 'synthetic_content' | 'neural_harmful_intent' | 'algorithmic_bias' | 'human_bias' | 'manipulation';
+  type:
+    | 'harmful'
+    | 'misinformation'
+    | 'hate_speech'
+    | 'violence'
+    | 'adult_content'
+    | 'spam'
+    | 'fraud'
+    | 'deepfake'
+    | 'synthetic_content'
+    | 'neural_harmful_intent'
+    | 'algorithmic_bias'
+    | 'human_bias'
+    | 'manipulation';
   description: string;
   confidence: number;
   deepfakeAnalysis?: {
@@ -124,7 +137,11 @@ export async function analyzeContent(
   // For neural thoughts, run on-device pre-screening first to preserve privacy
   if (contentType === 'neural_thought') {
     const localAnalysis = runLocalNeuralModeration(content, neuralSignalData);
-    if (localAnalysis.flags.some(flag => flag.type === 'neural_harmful_intent' && flag.confidence > 0.9)) {
+    if (
+      localAnalysis.flags.some(
+        (flag) => flag.type === 'neural_harmful_intent' && flag.confidence > 0.9
+      )
+    ) {
       // Immediately block harmful thoughts before they even reach any server
       return {
         ...localAnalysis,
@@ -173,29 +190,61 @@ function runLocalNeuralModeration(
   }
 ): ContentAnalysisResult {
   const startTime = performance.now();
-  
+
   // Comprehensive keyword-based detection for all ethical violations (in production, this would be an on-device ML model)
-  const harmfulKeywords = ['harm', 'hurt', 'kill', 'attack', 'threat', 'violence', 'hate', 'abuse', 'hurt', 'injure', 'damage'];
-  const misinformationKeywords = ['fake news', 'false', 'lie', 'mislead', 'conspiracy', 'hoax', 'disinformation', 'manipulate', 'fabricate'];
-  const manipulationKeywords = ['influence', 'control', 'exploit', 'trick', 'deceive', 'manipulate', 'coerce', 'pressure', 'brainwash'];
-  
+  const harmfulKeywords = [
+    'harm',
+    'hurt',
+    'kill',
+    'attack',
+    'threat',
+    'violence',
+    'hate',
+    'abuse',
+    'hurt',
+    'injure',
+    'damage',
+  ];
+  const misinformationKeywords = [
+    'fake news',
+    'false',
+    'lie',
+    'mislead',
+    'conspiracy',
+    'hoax',
+    'disinformation',
+    'manipulate',
+    'fabricate',
+  ];
+  const manipulationKeywords = [
+    'influence',
+    'control',
+    'exploit',
+    'trick',
+    'deceive',
+    'manipulate',
+    'coerce',
+    'pressure',
+    'brainwash',
+  ];
+
   const detectedHarmfulTerms: string[] = [];
   const detectedMisinformationTerms: string[] = [];
   const detectedManipulationTerms: string[] = [];
-  
-  harmfulKeywords.forEach(keyword => {
+
+  harmfulKeywords.forEach((keyword) => {
     if (thoughtContent.toLowerCase().includes(keyword)) {
       detectedHarmfulTerms.push(keyword);
     }
   });
-  
-  misinformationKeywords.forEach(keyword => {
+
+  misinformationKeywords.forEach((keyword) => {
     if (thoughtContent.toLowerCase().includes(keyword)) {
       detectedMisinformationTerms.push(keyword);
     }
   });
-  
-  manipulationKeywords.forEach(keyword => {
+
+  manipulationKeywords.forEach((keyword) => {
     if (thoughtContent.toLowerCase().includes(keyword)) {
       detectedManipulationTerms.push(keyword);
     }
@@ -209,21 +258,21 @@ function runLocalNeuralModeration(
   // Detect emotional context from keywords
   const emotionalContext: string[] = [];
   const emotionKeywords: Record<string, string[]> = {
-    'positive': ['happy', 'love', 'amazing', 'wonderful', 'grateful', 'excited'],
-    'negative': ['sad', 'angry', 'frustrated', 'upset', 'disappointed'],
-    'reflective': ['thinking', 'wondering', 'contemplating', 'considering'],
-    'excited': ['excited', 'thrilled', 'pumped', 'can\'t wait']
+    positive: ['happy', 'love', 'amazing', 'wonderful', 'grateful', 'excited'],
+    negative: ['sad', 'angry', 'frustrated', 'upset', 'disappointed'],
+    reflective: ['thinking', 'wondering', 'contemplating', 'considering'],
+    excited: ['excited', 'thrilled', 'pumped', "can't wait"],
   };
 
   Object.entries(emotionKeywords).forEach(([emotion, keywords]) => {
-    if (keywords.some(keyword => thoughtContent.toLowerCase().includes(keyword))) {
+    if (keywords.some((keyword) => thoughtContent.toLowerCase().includes(keyword))) {
       emotionalContext.push(emotion);
     }
   });
 
   // Create flags if any harmful content is detected
   const flags: ContentFlag[] = [];
-  
+
   if (isHarmful) {
     flags.push({
       id: `neural-flag-${Date.now()}-1`,
@@ -233,11 +282,11 @@ function runLocalNeuralModeration(
       neuralSignalAnalysis: {
         signalSource: neuralSignalData?.deviceId || 'unknown-neural-implant',
         processedLocally: true,
-        detectedContext: detectedHarmfulTerms
-      }
+        detectedContext: detectedHarmfulTerms,
+      },
     });
   }
-  
+
   if (isMisinformation) {
     flags.push({
       id: `neural-flag-${Date.now()}-2`,
@@ -247,11 +296,11 @@ function runLocalNeuralModeration(
       neuralSignalAnalysis: {
         signalSource: neuralSignalData?.deviceId || 'unknown-neural-implant',
         processedLocally: true,
-        detectedContext: detectedMisinformationTerms
-      }
+        detectedContext: detectedMisinformationTerms,
+      },
     });
   }
-  
+
   if (isManipulation) {
     flags.push({
       id: `neural-flag-${Date.now()}-3`,
@@ -261,13 +310,13 @@ function runLocalNeuralModeration(
       neuralSignalAnalysis: {
         signalSource: neuralSignalData?.deviceId || 'unknown-neural-implant',
         processedLocally: true,
-        detectedContext: detectedManipulationTerms
-      }
+        detectedContext: detectedManipulationTerms,
+      },
     });
   }
 
   const hasAnyViolations = isHarmful || isMisinformation || isManipulation;
-  
+
   return {
     id: `neural-analysis-${Date.now()}`,
     contentId: `thought-${Date.now()}`,
@@ -281,20 +330,26 @@ function runLocalNeuralModeration(
     neuralThoughtAnalysis: {
       thoughtClarity: 85 + Math.random() * 15, // Random clarity score between 85-100
       emotionalContext: emotionalContext.length > 0 ? emotionalContext : ['neutral'],
-      intentClassification: isHarmful ? 'harmful' : isMisinformation ? 'misleading' : isManipulation ? 'manipulative' : 'conversational',
+      intentClassification: isHarmful
+        ? 'harmful'
+        : isMisinformation
+          ? 'misleading'
+          : isManipulation
+            ? 'manipulative'
+            : 'conversational',
       privacySensitivity: 'medium',
       processingTimeMs: Math.round(endTime - startTime),
-      onDeviceProcessing: true // Critical: all processing happened on the user's device, preserving privacy
-    }
+      onDeviceProcessing: true, // Critical: all processing happened on the user's device, preserving privacy
+    },
   };
 }
 
 // Get moderation queue for admins/moderators
 export async function getModerationQueue(status?: string): Promise<ModerationQueueItem[]> {
-  const url = status 
-    ? `${API_BASE_URL}/moderation/queue?status=${status}` 
+  const url = status
+    ? `${API_BASE_URL}/moderation/queue?status=${status}`
     : `${API_BASE_URL}/moderation/queue`;
-    
+
   const response = await fetch(url, {
     credentials: 'include',
   });
@@ -351,7 +406,7 @@ export async function analyzeBias(
     credentials: 'include',
     body: JSON.stringify({
       feedContent,
-      interactionContext
+      interactionContext,
     }),
   });
 
@@ -376,7 +431,10 @@ export async function getActiveCommunityVotes(): Promise<CommunityVote[]> {
 }
 
 // Start a new community vote on a moderation item
-export async function startCommunityVote(queueItemId: string, voteDurationHours: number = 48): Promise<CommunityVote> {
+export async function startCommunityVote(
+  queueItemId: string,
+  voteDurationHours: number = 48
+): Promise<CommunityVote> {
   const response = await fetch(`${API_BASE_URL}/moderation/community-votes/start`, {
     method: 'POST',
     headers: {
@@ -385,7 +443,7 @@ export async function startCommunityVote(queueItemId: string, voteDurationHours:
     credentials: 'include',
     body: JSON.stringify({
       queueItemId,
-      voteDurationHours
+      voteDurationHours,
     }),
   });
 
@@ -397,7 +455,10 @@ export async function startCommunityVote(queueItemId: string, voteDurationHours:
 }
 
 // Submit a vote in an active community moderation vote
-export async function submitCommunityVote(voteId: string, vote: 'approve' | 'remove'): Promise<VoteAction> {
+export async function submitCommunityVote(
+  voteId: string,
+  vote: 'approve' | 'remove'
+): Promise<VoteAction> {
   const response = await fetch(`${API_BASE_URL}/moderation/community-votes/${voteId}/vote`, {
     method: 'POST',
     headers: {
@@ -405,7 +466,7 @@ export async function submitCommunityVote(voteId: string, vote: 'approve' | 'rem
     },
     credentials: 'include',
     body: JSON.stringify({
-      vote
+      vote,
     }),
   });
 
@@ -433,13 +494,13 @@ export async function getCommunityVoteResults(): Promise<CommunityVote[]> {
 export async function getFeedRepresentationMetrics(timeframe?: string): Promise<{
   overallRepresentationScore: number;
   demographicBreakdown: Record<string, number>;
-  historicalTrends: Array<{date: string; score: number}>;
+  historicalTrends: Array<{ date: string; score: number }>;
   improvementSuggestions: string[];
 }> {
-  const url = timeframe 
-    ? `${API_BASE_URL}/moderation/bias/feed-metrics?timeframe=${timeframe}` 
+  const url = timeframe
+    ? `${API_BASE_URL}/moderation/bias/feed-metrics?timeframe=${timeframe}`
     : `${API_BASE_URL}/moderation/bias/feed-metrics`;
-    
+
   const response = await fetch(url, {
     credentials: 'include',
   });
@@ -487,7 +548,10 @@ export async function getUserModerationHistory(): Promise<ContentAnalysisResult[
 }
 
 // Appeal a moderation decision
-export async function appealModerationDecision(queueItemId: string, appealReason: string): Promise<ModerationAction> {
+export async function appealModerationDecision(
+  queueItemId: string,
+  appealReason: string
+): Promise<ModerationAction> {
   const response = await fetch(`${API_BASE_URL}/moderation/${queueItemId}/appeal`, {
     method: 'POST',
     headers: {

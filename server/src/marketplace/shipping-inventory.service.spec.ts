@@ -12,7 +12,7 @@ function createService(overrides: Record<string, unknown> = {}) {
     overrides.returns as never,
     overrides.suppliers as never,
     overrides.forecasts as never,
-    overrides.orders as never,
+    overrides.orders as never
   );
 }
 
@@ -20,13 +20,17 @@ describe('ShippingInventoryService', () => {
   it('calculates domestic and international shipping rates', () => {
     const service = createService();
 
-    expect(service.calculateShippingRate({ subtotal: 50, country: 'US', serviceLevel: 'standard' })).toEqual({
+    expect(
+      service.calculateShippingRate({ subtotal: 50, country: 'US', serviceLevel: 'standard' })
+    ).toEqual({
       currency: 'USD',
       amount: 11,
       serviceLevel: 'standard',
       estimatedDays: 5,
     });
-    expect(service.calculateShippingRate({ subtotal: 150, country: 'GB', serviceLevel: 'express' })).toEqual({
+    expect(
+      service.calculateShippingRate({ subtotal: 150, country: 'GB', serviceLevel: 'express' })
+    ).toEqual({
       currency: 'USD',
       amount: 36,
       serviceLevel: 'express',
@@ -49,14 +53,27 @@ describe('ShippingInventoryService', () => {
     await expect(service.listStockAlerts('seller-1')).resolves.toEqual([
       { id: 'low', warehouseId: 'w1', quantity: 5, reservedQuantity: 2, reorderPoint: 3 },
     ]);
-    expect(stocks.find).toHaveBeenCalledWith({ where: { warehouseId: expect.anything() }, order: { updatedAt: 'DESC' } });
+    expect(stocks.find).toHaveBeenCalledWith({
+      where: { warehouseId: expect.anything() },
+      order: { updatedAt: 'DESC' },
+    });
   });
 
   it('expires active reservations through the normal release path', async () => {
     const reservations = {
       find: jest.fn().mockResolvedValue([
-        { id: 'expired', customerId: 'customer-1', status: InventoryReservationStatus.ACTIVE, expiresAt: new Date(Date.now() - 1000) },
-        { id: 'active', customerId: 'customer-1', status: InventoryReservationStatus.ACTIVE, expiresAt: new Date(Date.now() + 60_000) },
+        {
+          id: 'expired',
+          customerId: 'customer-1',
+          status: InventoryReservationStatus.ACTIVE,
+          expiresAt: new Date(Date.now() - 1000),
+        },
+        {
+          id: 'active',
+          customerId: 'customer-1',
+          status: InventoryReservationStatus.ACTIVE,
+          expiresAt: new Date(Date.now() + 60_000),
+        },
       ]),
     };
     const service = createService({ reservations });
@@ -76,7 +93,9 @@ describe('ShippingInventoryService', () => {
       getRawOne: jest.fn().mockResolvedValue({ quantity: '10' }),
     };
     const dataSource = { createQueryBuilder: jest.fn().mockReturnValue(queryBuilder) };
-    const variants = { findOne: jest.fn().mockResolvedValue({ id: 'variant-1', product: { sellerId: 'seller-1' } }) };
+    const variants = {
+      findOne: jest.fn().mockResolvedValue({ id: 'variant-1', product: { sellerId: 'seller-1' } }),
+    };
     const forecasts = {
       create: jest.fn((value) => value),
       save: jest.fn((value) => Promise.resolve({ id: 'forecast-1', ...value })),
@@ -90,14 +109,19 @@ describe('ShippingInventoryService', () => {
       forecastQuantity: 30,
       basedOnDays: 10,
     });
-    expect(variants.findOne).toHaveBeenCalledWith({ where: { id: 'variant-1' }, relations: ['product'] });
+    expect(variants.findOne).toHaveBeenCalledWith({
+      where: { id: 'variant-1' },
+      relations: ['product'],
+    });
   });
 
   it('rejects invalid forecast history windows before querying', async () => {
     const dataSource = { createQueryBuilder: jest.fn() };
     const service = createService({ dataSource });
 
-    await expect(service.forecast('seller-1', 'variant-1', Number.NaN)).rejects.toThrow('Forecast history must be between 1 and 365 days');
+    await expect(service.forecast('seller-1', 'variant-1', Number.NaN)).rejects.toThrow(
+      'Forecast history must be between 1 and 365 days'
+    );
     expect(dataSource.createQueryBuilder).not.toHaveBeenCalled();
   });
 });

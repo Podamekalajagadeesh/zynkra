@@ -18,21 +18,52 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    getReelById: jest.fn(), getReelSuggestions: jest.fn(), getReelEffects: jest.fn(),
-    shareReel: jest.fn(), trackView: jest.fn(), getReelInsights: jest.fn(),
-    createReel: jest.fn(), updateReel: jest.fn(), deleteReel: jest.fn(),
-    getUserReels: jest.fn(), createReelEffect: jest.fn(), updateReelEffect: jest.fn(),
+    getReelById: jest.fn(),
+    getReelSuggestions: jest.fn(),
+    getReelEffects: jest.fn(),
+    shareReel: jest.fn(),
+    trackView: jest.fn(),
+    getReelInsights: jest.fn(),
+    createReel: jest.fn(),
+    updateReel: jest.fn(),
+    deleteReel: jest.fn(),
+    getUserReels: jest.fn(),
+    createReelEffect: jest.fn(),
+    updateReelEffect: jest.fn(),
     deleteReelEffect: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [ReelsController],
     providers: [
       { provide: ReelsService, useValue: { ...defaultService, ...overrides } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -52,7 +83,9 @@ describe('GET /reels/:id', () => {
     const { app, service, token } = await buildApp();
     service.getReelById.mockResolvedValue({ id: 'post-1', content: 'Reel' } as any);
 
-    const r = await request(app.getHttpServer()).get('/reels/post-1').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/reels/post-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     await app.close();
   });
@@ -63,7 +96,9 @@ describe('GET /reels/effects', () => {
     const { app, service, token } = await buildApp();
     service.getReelEffects.mockResolvedValue([{ id: 'e1', name: 'Neon' }] as any);
 
-    const r = await request(app.getHttpServer()).get('/reels/effects').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/reels/effects')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     await app.close();
@@ -75,7 +110,9 @@ describe('POST /reels/:id/share', () => {
     const { app, service, token } = await buildApp();
     service.shareReel.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).post('/reels/post-1/share').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .post('/reels/post-1/share')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(201);
     expect(service.shareReel).toHaveBeenCalled();
     await app.close();
@@ -87,7 +124,9 @@ describe('POST /reels/:id/view', () => {
     const { app, service, token } = await buildApp();
     service.trackView.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).post('/reels/post-1/view').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .post('/reels/post-1/view')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(201);
     expect(service.trackView).toHaveBeenCalled();
     await app.close();
@@ -99,7 +138,9 @@ describe('DELETE /reels/:id', () => {
     const { app, service, token } = await buildApp();
     service.deleteReel.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).delete('/reels/post-1').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/reels/post-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     await app.close();
   });

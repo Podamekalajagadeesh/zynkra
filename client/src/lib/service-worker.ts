@@ -10,13 +10,7 @@
  */
 
 const CACHE_NAME = 'zynkra-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/assets/main.js',
-  '/assets/main.css',
-  '/offline.html',
-];
+const STATIC_ASSETS = ['/', '/index.html', '/assets/main.js', '/assets/main.css', '/offline.html'];
 
 const API_CACHE = 'zynkra-api-v1';
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -36,7 +30,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME && key !== API_CACHE)
+        keys
+          .filter((key) => key !== CACHE_NAME && key !== API_CACHE)
           .map((key) => caches.delete(key))
       );
     })
@@ -49,7 +44,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // API requests: network-first with cache fallback
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/dms/') || url.pathname.startsWith('/posts/')) {
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/dms/') ||
+    url.pathname.startsWith('/posts/')
+  ) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -67,13 +66,16 @@ self.addEventListener('fetch', (event) => {
           return caches.match(event.request).then((cached) => {
             if (cached) return cached;
             // Return a basic offline response
-            return new Response(JSON.stringify({
-              error: 'offline',
-              message: 'You are offline. Changes will sync when connection returns.',
-            }), {
-              headers: { 'Content-Type': 'application/json' },
-              status: 503,
-            });
+            return new Response(
+              JSON.stringify({
+                error: 'offline',
+                message: 'You are offline. Changes will sync when connection returns.',
+              }),
+              {
+                headers: { 'Content-Type': 'application/json' },
+                status: 503,
+              }
+            );
           });
         })
     );
@@ -111,7 +113,7 @@ async function syncPendingChanges() {
   const store = tx.objectStore('syncQueue');
   const items = await getAllFromStore(store);
 
-  const pending = items.filter(item => item.status === 'pending');
+  const pending = items.filter((item) => item.status === 'pending');
 
   for (const item of pending) {
     try {
@@ -138,7 +140,7 @@ async function syncPendingChanges() {
 
   // Notify client that sync completed
   const clients = await self.clients.matchAll();
-  clients.forEach(client => {
+  clients.forEach((client) => {
     client.postMessage({ type: 'SYNC_COMPLETE', timestamp: new Date().toISOString() });
   });
 }
@@ -179,14 +181,10 @@ self.addEventListener('push', (event) => {
     actions: data.actions || [],
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    self.clients.openWindow(event.notification.data)
-  );
+  event.waitUntil(self.clients.openWindow(event.notification.data));
 });

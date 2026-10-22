@@ -7,15 +7,20 @@ import { Post } from '../posts/entities/post.entity';
 @Injectable()
 export class PlacesService {
   private readonly logger = new Logger(PlacesService.name);
-  
+
   constructor(
     @InjectRepository(Place)
     private readonly placesRepository: Repository<Place>,
     @InjectRepository(Post)
-    private readonly postsRepository: Repository<Post>,
+    private readonly postsRepository: Repository<Post>
   ) {}
 
-  async findOrCreate(name: string, latitude?: number, longitude?: number, address?: string): Promise<Place> {
+  async findOrCreate(
+    name: string,
+    latitude?: number,
+    longitude?: number,
+    address?: string
+  ): Promise<Place> {
     let place = await this.placesRepository.findOne({ where: { name } });
 
     if (!place) {
@@ -28,10 +33,7 @@ export class PlacesService {
 
   async searchPlaces(query: string, limit: number = 10): Promise<Place[]> {
     return this.placesRepository.find({
-      where: [
-        { name: ILike(`%${query}%`) },
-        { address: ILike(`%${query}%`) },
-      ],
+      where: [{ name: ILike(`%${query}%`) }, { address: ILike(`%${query}%`) }],
       take: limit,
       order: { name: 'ASC' },
     });
@@ -47,7 +49,7 @@ export class PlacesService {
       .take(limit)
       .getRawMany();
 
-    return places.map(item => ({
+    return places.map((item) => ({
       place: item,
       postCount: parseInt(item.postCount, 10),
     }));
@@ -68,7 +70,7 @@ export class PlacesService {
 
   async getPlacePosts(id: string, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit;
-    
+
     const place = await this.placesRepository.findOne({ where: { id } });
     if (!place) {
       throw new NotFoundException('Place not found');

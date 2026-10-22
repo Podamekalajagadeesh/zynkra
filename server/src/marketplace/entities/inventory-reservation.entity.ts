@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum InventoryReservationStatus {
   ACTIVE = 'active',
@@ -28,7 +35,11 @@ export class InventoryReservation {
   @Column({ type: 'int' })
   quantity: number;
 
-  @Column({ type: 'enum', enum: InventoryReservationStatus, default: InventoryReservationStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: InventoryReservationStatus,
+    default: InventoryReservationStatus.ACTIVE,
+  })
   status: InventoryReservationStatus;
 
   @Column({ type: 'timestamptz' })

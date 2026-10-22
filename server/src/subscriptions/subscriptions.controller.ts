@@ -21,15 +21,12 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Post()
-  create(
-    @Request() req,
-    @Body() createSubscriptionDto: CreateSubscriptionDto,
-  ) {
+  create(@Request() req, @Body() createSubscriptionDto: CreateSubscriptionDto) {
     return this.subscriptionsService.createSubscription(
       req.user.userId,
       createSubscriptionDto.creatorId,
       createSubscriptionDto.tier,
-      createSubscriptionDto.paymentMethodId,
+      createSubscriptionDto.paymentMethodId
     );
   }
 
@@ -55,14 +52,11 @@ export class SubscriptionsController {
 
   // Subscription tier endpoints
   @Post('tiers')
-  createTier(
-    @Request() req,
-    @Body() createSubscriptionTierDto: CreateSubscriptionTierDto,
-  ) {
+  createTier(@Request() req, @Body() createSubscriptionTierDto: CreateSubscriptionTierDto) {
     return this.subscriptionsService.createSubscriptionTier(
       req.user.userId,
       createSubscriptionTierDto.name,
-      createSubscriptionTierDto.price,
+      createSubscriptionTierDto.price
     );
   }
 
@@ -75,12 +69,12 @@ export class SubscriptionsController {
   updateTier(
     @Request() req,
     @Param('id') id: string,
-    @Body() updateSubscriptionTierDto: UpdateSubscriptionTierDto,
+    @Body() updateSubscriptionTierDto: UpdateSubscriptionTierDto
   ) {
     return this.subscriptionsService.updateSubscriptionTier(
       req.user.userId,
       id,
-      updateSubscriptionTierDto,
+      updateSubscriptionTierDto
     );
   }
 

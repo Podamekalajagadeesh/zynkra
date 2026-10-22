@@ -33,10 +33,7 @@ const authHandlers = [
   http.post('*/auth/signup', async ({ request }) => {
     const body = (await request.json()) as Record<string, string>;
     if (!body.email || !body.password) {
-      return HttpResponse.json(
-        { message: 'Validation failed', statusCode: 400 },
-        { status: 400 },
-      );
+      return HttpResponse.json({ message: 'Validation failed', statusCode: 400 }, { status: 400 });
     }
     return HttpResponse.json({
       message: 'Signup successful. Please check your email to verify your account.',
@@ -46,10 +43,7 @@ const authHandlers = [
   http.post('*/auth/signin', async ({ request }) => {
     const body = (await request.json()) as Record<string, string>;
     if (!body.email || !body.password) {
-      return HttpResponse.json(
-        { message: 'Validation failed', statusCode: 400 },
-        { status: 400 },
-      );
+      return HttpResponse.json({ message: 'Validation failed', statusCode: 400 }, { status: 400 });
     }
     return HttpResponse.json({
       access_token: 'mock-jwt-token',
@@ -108,7 +102,7 @@ const authHandlers = [
     if (!body.token || body.token === 'expired-token') {
       return HttpResponse.json(
         { message: 'This sign-in link is invalid or has expired.' },
-        { status: 401 },
+        { status: 401 }
       );
     }
     return HttpResponse.json({ access_token: 'mock-jwt-token' });
@@ -182,13 +176,13 @@ export const handlers = [
 
   http.post('/api/crisis-events/:id/safety-status', async ({ request, params }) => {
     const crisisId = params.id as string;
-    const { userId, status } = await request.json() as { userId: string, status: SafetyStatus };
+    const { userId, status } = (await request.json()) as { userId: string; status: SafetyStatus };
 
     if (!safetyStatusesByCrisis[crisisId]) {
       safetyStatusesByCrisis[crisisId] = [];
     }
 
-    const userStatus = safetyStatusesByCrisis[crisisId].find(s => s.userId === userId);
+    const userStatus = safetyStatusesByCrisis[crisisId].find((s) => s.userId === userId);
 
     if (userStatus) {
       userStatus.status = status;

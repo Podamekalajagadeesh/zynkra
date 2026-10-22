@@ -23,7 +23,7 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
       await createModMailConversation(groupId, {
         subject,
         recipientId: recipient,
-        initialMessage: message
+        initialMessage: message,
       });
       addToast('Modmail conversation created successfully', 'success');
       setIsOpen(false);
@@ -38,11 +38,7 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
 
   if (!isOpen) {
     return (
-      <Button 
-        size="sm" 
-        className="mx-4 mb-2" 
-        onClick={() => setIsOpen(true)}
-      >
+      <Button size="sm" className="mx-4 mb-2" onClick={() => setIsOpen(true)}>
         New Modmail
       </Button>
     );
@@ -78,7 +74,9 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
           />
         </div>
         <div className="flex gap-2">
-          <Button type="submit" size="sm">Send</Button>
+          <Button type="submit" size="sm">
+            Send
+          </Button>
           <Button type="button" size="sm" variant="ghost" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>

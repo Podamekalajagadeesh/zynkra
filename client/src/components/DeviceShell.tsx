@@ -9,13 +9,16 @@ export function DeviceShell({ children }: DeviceShellProps) {
   const [device, setDevice] = useState<DeviceCapabilityInfo>(() => detectDeviceCapabilities());
 
   useEffect(() => {
-    const update = () => setDevice(detectDeviceCapabilities({
-      userAgent: window.navigator.userAgent,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-      isElectron: Boolean((window as Window & { electron?: unknown }).electron),
-    }));
+    const update = () =>
+      setDevice(
+        detectDeviceCapabilities({
+          userAgent: window.navigator.userAgent,
+          width: window.innerWidth,
+          height: window.innerHeight,
+          hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+          isElectron: Boolean((window as Window & { electron?: unknown }).electron),
+        })
+      );
 
     update();
     window.addEventListener('resize', update);

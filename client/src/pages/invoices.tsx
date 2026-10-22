@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../hooks/useToast';
-import {
-  getInvoices,
-  createInvoice,
-  deleteInvoice,
-  markInvoicePaid,
-} from '../lib/api';
+import { getInvoices, createInvoice, deleteInvoice, markInvoicePaid } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -46,9 +41,7 @@ export const InvoicesPage = () => {
   const [clientEmail, setClientEmail] = useState('');
   const [taxRate, setTaxRate] = useState('0');
   const [dueDate, setDueDate] = useState('');
-  const [lineItems, setLineItems] = useState([
-    { description: '', quantity: 1, unitPrice: 0 },
-  ]);
+  const [lineItems, setLineItems] = useState([{ description: '', quantity: 1, unitPrice: 0 }]);
   const [isSaving, setIsSaving] = useState(false);
 
   const fetchInvoices = useCallback(async () => {
@@ -69,10 +62,11 @@ export const InvoicesPage = () => {
   const handleAddLine = () =>
     setLineItems((prev) => [...prev, { description: '', quantity: 1, unitPrice: 0 }]);
 
-  const handleLineChange = (index: number, patch: Partial<{ description: string; quantity: number; unitPrice: number }>) => {
-    setLineItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-    );
+  const handleLineChange = (
+    index: number,
+    patch: Partial<{ description: string; quantity: number; unitPrice: number }>
+  ) => {
+    setLineItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   };
 
   const handleCreate = async () => {
@@ -153,8 +147,16 @@ export const InvoicesPage = () => {
           <CardContent className="p-4 space-y-3">
             <h3 className="font-semibold">New invoice</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Input placeholder="Client name" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-              <Input placeholder="Client email (optional)" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+              <Input
+                placeholder="Client name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
+              <Input
+                placeholder="Client email (optional)"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input

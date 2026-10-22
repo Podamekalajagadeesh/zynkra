@@ -13,8 +13,8 @@ const DonationDrivesTab = () => {
         <Button onClick={() => setIsModalOpen(true)}>Create Drive</Button>
       </div>
       <p>
-        This is where the donation drives tool will be displayed. This feature
-        is currently under construction.
+        This is where the donation drives tool will be displayed. This feature is currently under
+        construction.
       </p>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="p-4">

@@ -6,13 +6,13 @@ How to run the Zynkra project on a fresh machine, from zero to working client + 
 
 ## 1. Prerequisites
 
-| Tool              | Version / Notes                                              |
-| ----------------- | ------------------------------------------------------------ |
-| Node.js           | **v22** (tested on 22.23.2). Use `nvm use 22` if you have nvm. |
-| npm               | Comes with Node.                                              |
-| Docker            | Required for Postgres, Redis, and IPFS.                       |
-| Docker Compose    | `docker compose` (v2).                                        |
-| Build tools       | Needed to compile the `canvas` native module on first install (Python 3, `make`, `g++`, plus `libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev` on Debian/Ubuntu). |
+| Tool           | Version / Notes                                                                                                                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js        | **v22** (tested on 22.23.2). Use `nvm use 22` if you have nvm.                                                                                                                                      |
+| npm            | Comes with Node.                                                                                                                                                                                    |
+| Docker         | Required for Postgres, Redis, and IPFS.                                                                                                                                                             |
+| Docker Compose | `docker compose` (v2).                                                                                                                                                                              |
+| Build tools    | Needed to compile the `canvas` native module on first install (Python 3, `make`, `g++`, plus `libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev libpixman-1-dev` on Debian/Ubuntu). |
 
 > The `canvas` package is a compiled C++ addon. If the Node version changes, it must be rebuilt (see [section 8](#8-common-issues-and-gotchas)).
 
@@ -58,9 +58,11 @@ docker run -d --name ipfs --restart unless-stopped \
 Verify: `curl -s -X POST -F "file=@-;filename=t.txt" http://localhost:5001/api/v0/add` returns a JSON object with a `Hash`.
 
 > **After a machine/container restart**, the containers stay stopped. Restart them with:
+>
 > ```bash
 > docker start zynkra-postgres-1 zynkra-redis-1 ipfs
 > ```
+>
 > (or `docker compose --env-file server/.env up -d postgres redis`).
 
 ---

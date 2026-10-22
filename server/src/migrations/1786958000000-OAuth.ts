@@ -37,19 +37,19 @@ export class OAuth1786958000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "oauth_apps" ADD CONSTRAINT "FK_oauth_apps_developer" FOREIGN KEY ("developerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "oauth_apps" ADD CONSTRAINT "FK_oauth_apps_developer" FOREIGN KEY ("developerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "oauth_authorizations" ADD CONSTRAINT "FK_oauth_auth_app" FOREIGN KEY ("appId") REFERENCES "oauth_apps"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "oauth_authorizations" ADD CONSTRAINT "FK_oauth_auth_app" FOREIGN KEY ("appId") REFERENCES "oauth_apps"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "oauth_authorizations" ADD CONSTRAINT "FK_oauth_auth_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "oauth_authorizations" ADD CONSTRAINT "FK_oauth_auth_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_oauth_auth_codeHash" ON "oauth_authorizations" ("codeHash")`,
+      `CREATE INDEX "IDX_oauth_auth_codeHash" ON "oauth_authorizations" ("codeHash")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_oauth_auth_app" ON "oauth_authorizations" ("appId")`,
+      `CREATE INDEX "IDX_oauth_auth_app" ON "oauth_authorizations" ("appId")`
     );
   }
 

@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, Matches, Validate } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  Validate,
+} from 'class-validator';
 import { PasswordStrengthValidator } from './password-strength.validator';
 
 export class SignUpDto {

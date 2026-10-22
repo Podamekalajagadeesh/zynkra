@@ -63,24 +63,24 @@ export class BiasDetectionService {
       userId: string;
       timeframe: string;
       contentTypes: string[];
-    },
+    }
   ): Promise<BiasDetectionResult> {
     const analysisId = this.generateId();
 
     const representationMetrics = this.analyzeRepresentation(feedContent);
     const algorithmicBiasFindings = this.detectAlgorithmicBiases(
       feedContent,
-      representationMetrics,
+      representationMetrics
     );
     const humanBiasFindings = await this.detectHumanBiases(feedContent);
     const overallBiasScore = this.calculateOverallBiasScore(
       algorithmicBiasFindings,
-      humanBiasFindings,
+      humanBiasFindings
     );
     const mitigationRecommendations = await this.generateMitigationRecommendations(
       algorithmicBiasFindings,
       humanBiasFindings,
-      representationMetrics,
+      representationMetrics
     );
 
     const detectedBiasTypes = [
@@ -151,7 +151,8 @@ export class BiasDetectionService {
     Object.keys(demographicCounts).forEach((demo) => {
       const expectedInteraction = demographicRepresentation[demo];
       const totalInteractions = Object.values(interactionCounts).reduce((a, b) => a + b, 0);
-      const actualInteraction = totalInteractions > 0 ? interactionCounts[demo] / totalInteractions : 0;
+      const actualInteraction =
+        totalInteractions > 0 ? interactionCounts[demo] / totalInteractions : 0;
       interactionDisparities[demo] = actualInteraction - expectedInteraction;
     });
 
@@ -171,7 +172,7 @@ export class BiasDetectionService {
 
   private detectAlgorithmicBiases(
     feedContent: any[],
-    metrics: RepresentationMetrics,
+    metrics: RepresentationMetrics
   ): AlgorithmicBiasFinding[] {
     const findings: AlgorithmicBiasFinding[] = [];
 
@@ -256,7 +257,9 @@ export class BiasDetectionService {
       const content = item.content.toLowerCase();
 
       Object.entries(biasPatterns).forEach(([biasType, pattern]) => {
-        const matches = pattern.keywords.filter((keyword) => content.includes(keyword.toLowerCase()));
+        const matches = pattern.keywords.filter((keyword) =>
+          content.includes(keyword.toLowerCase())
+        );
         if (matches.length > 0) {
           const existingFinding = findings.find((f) => f.biasType === biasType);
           if (!existingFinding) {
@@ -282,7 +285,7 @@ export class BiasDetectionService {
 
   private calculateOverallBiasScore(
     algorithmicFindings: AlgorithmicBiasFinding[],
-    humanFindings: HumanBiasFinding[],
+    humanFindings: HumanBiasFinding[]
   ): number {
     const severityWeights = { low: 0.2, medium: 0.5, high: 0.8, critical: 1.0 };
     let totalWeight = 0;
@@ -303,7 +306,7 @@ export class BiasDetectionService {
   private async generateMitigationRecommendations(
     algorithmicFindings: AlgorithmicBiasFinding[],
     humanFindings: HumanBiasFinding[],
-    metrics: RepresentationMetrics,
+    metrics: RepresentationMetrics
   ): Promise<MitigationRecommendation[]> {
     if (
       this.openRouter.isAvailable &&
@@ -352,7 +355,9 @@ Return valid JSON ONLY with this exact shape:
           }));
         }
       } catch (error: any) {
-        this.logger.warn(`LLM mitigation recommendations failed: ${error.message}, using heuristic fallback`);
+        this.logger.warn(
+          `LLM mitigation recommendations failed: ${error.message}, using heuristic fallback`
+        );
       }
     }
 
@@ -363,12 +368,12 @@ Return valid JSON ONLY with this exact shape:
   private generateMitigationFallback(
     algorithmicFindings: AlgorithmicBiasFinding[],
     humanFindings: HumanBiasFinding[],
-    metrics: RepresentationMetrics,
+    metrics: RepresentationMetrics
   ): MitigationRecommendation[] {
     const recommendations: MitigationRecommendation[] = [];
 
     const underrepresentationFindings = algorithmicFindings.filter(
-      (f) => f.biasType === 'underrepresentation',
+      (f) => f.biasType === 'underrepresentation'
     );
     if (underrepresentationFindings.length > 0) {
       recommendations.push({
@@ -404,8 +409,7 @@ Return valid JSON ONLY with this exact shape:
       recommendations.push({
         id: this.generateId(),
         type: 'human',
-        description:
-          'Provide bias awareness education to users who repeatedly post biased content',
+        description: 'Provide bias awareness education to users who repeatedly post biased content',
         implementationComplexity: 'medium',
         expectedImpact: 0.6,
         priority: 3,
@@ -443,6 +447,8 @@ Return valid JSON ONLY with this exact shape:
   }
 
   private generateId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    );
   }
 }

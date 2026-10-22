@@ -31,6 +31,7 @@ client/src/components/
 ## 🚀 Key Features
 
 ### 1. Document Processing
+
 - **OCR Text Extraction** - Tesseract.js for reading document text
 - **Document Type Detection** - AI-based classification (passport, license, ID, visa)
 - **Image Quality Assessment** - Resolution and legibility analysis
@@ -39,7 +40,9 @@ client/src/components/
 - **Encryption** - AES-256-CBC for secure storage
 
 ### 2. Advanced Validation Engine
+
 8 validation rules with configurable severity:
+
 - ✅ **Expiry Check** (Critical) - Document expiration validation
 - ✅ **Legibility Check** (Critical) - Text readability verification
 - ✅ **Facial Image Detection** (Critical) - Photo identification
@@ -50,6 +53,7 @@ client/src/components/
 - ✅ **Fraud Pattern Detection** (Critical) - Anomaly detection
 
 ### 3. Storage & Database
+
 - Document records with full metadata
 - Validation rules configuration
 - Audit logs for compliance
@@ -57,6 +61,7 @@ client/src/components/
 - Daily statistics aggregation
 
 ### 4. Admin Dashboard
+
 - Real-time document queue
 - Batch approval/rejection
 - Quality score visualization
@@ -67,6 +72,7 @@ client/src/components/
 - Export for audit
 
 ### 5. Security Features
+
 - AES-256-CBC encryption
 - SHA-256 integrity hashing
 - File type validation
@@ -131,11 +137,7 @@ import { DocumentValidationEngine } from './document-validation.engine';
 
 @Module({
   controllers: [DocumentVerificationController],
-  providers: [
-    DocumentProcessingService,
-    DocumentStorageService,
-    DocumentValidationEngine,
-  ],
+  providers: [DocumentProcessingService, DocumentStorageService, DocumentValidationEngine],
   exports: [DocumentProcessingService, DocumentStorageService, DocumentValidationEngine],
 })
 export class VerificationModule {}
@@ -239,12 +241,7 @@ export function VerificationPage() {
 import { AdvancedAdminVerificationDashboard } from '@/components/AdvancedAdminVerificationDashboard';
 
 export function AdminVerificationPage() {
-  return (
-    <AdvancedAdminVerificationDashboard
-      userId={currentUserId}
-      role="admin"
-    />
-  );
+  return <AdvancedAdminVerificationDashboard userId={currentUserId} role="admin" />;
 }
 ```
 
@@ -264,11 +261,13 @@ export function AdminVerificationPage() {
 ## 📈 Validation Scoring
 
 Overall score is weighted average of 8 rules:
+
 - Critical rules: weight 3
-- Warning rules: weight 2  
+- Warning rules: weight 2
 - Info rules: weight 1
 
 **Scoring Thresholds:**
+
 - ≥ 80% - Excellent, auto-approve ready
 - 70-80% - Good, approve with verification
 - 50-70% - Fair, requires review
@@ -277,23 +276,27 @@ Overall score is weighted average of 8 rules:
 ## 🔐 Security Considerations
 
 ### Encryption
+
 - All documents encrypted at rest using AES-256-CBC
 - Separate encryption key from application secrets
 - Decryption only available to authorized admins
 
 ### File Handling
+
 - Uploaded files stored in isolated directory
 - Temporary files cleaned up after processing
 - Original uploads deleted after encryption
 - Integrity verified via SHA-256 hashing
 
 ### Access Control
+
 - User can only access their own documents
 - Admin functions require explicit role check
 - All actions logged in audit trail
 - Document deletion requires audit trail
 
 ### Privacy
+
 - Extracted data stored separately from files
 - Sensitive fields can be masked in UI
 - Export includes compliance timestamps
@@ -302,28 +305,33 @@ Overall score is weighted average of 8 rules:
 ## 📝 Database Schema
 
 ### DocumentVerificationRecord
+
 - Stores document metadata and extracted data
 - Tracks status through verification pipeline
 - Maintains review history and notes
 - Stores expiration dates for approved docs
 
 ### DocumentValidationRule
+
 - Configurable validation rules
 - Enables/disables rule enforcement
 - Stores rule configuration and severity
 
 ### DocumentVerificationAuditLog
+
 - Immutable audit trail
 - Tracks all actions and status changes
 - Stores admin notes and decisions
 - Used for compliance and troubleshooting
 
 ### DocumentVerificationAppeal
+
 - Tracks appeals of rejected documents
 - Stores appeal reason and supporting links
 - Maintains appeal decision history
 
 ### DocumentVerificationStats
+
 - Daily aggregated statistics
 - Review time metrics
 - Quality score trends
@@ -338,7 +346,7 @@ Overall score is weighted average of 8 rules:
 const metadata = await processingService.processDocument(
   '/path/to/document.jpg',
   'passport.jpg',
-  'passport',
+  'passport'
 );
 expect(metadata.documentType).toBe('passport');
 expect(metadata.validationResults).toBeDefined();
@@ -353,11 +361,7 @@ expect(report.overallScore).toBeLessThanOrEqual(100);
 
 ```typescript
 // Test full upload flow
-const response = await uploadService.uploadAndProcess(
-  file,
-  accountId,
-  'passport',
-);
+const response = await uploadService.uploadAndProcess(file, accountId, 'passport');
 expect(response.documentId).toBeDefined();
 expect(response.validationScore).toBeGreaterThanOrEqual(0);
 ```
@@ -367,11 +371,7 @@ expect(response.validationScore).toBeGreaterThanOrEqual(0);
 ```typescript
 // Test admin approval flow
 const docs = await storageService.getPendingDocuments();
-await storageService.updateDocumentStatus(
-  docs[0].id,
-  'approved',
-  'Admin notes',
-);
+await storageService.updateDocumentStatus(docs[0].id, 'approved', 'Admin notes');
 const updated = await storageService.getDocumentById(docs[0].id);
 expect(updated.status).toBe('approved');
 ```
@@ -379,6 +379,7 @@ expect(updated.status).toBe('approved');
 ## 📊 Monitoring & Analytics
 
 ### Key Metrics
+
 - Average validation score
 - Approval rate (% approved vs rejected)
 - Average review time
@@ -387,6 +388,7 @@ expect(updated.status).toBe('approved');
 - Processing time by document type
 
 ### Dashboards
+
 - Daily submission volume
 - Approval/rejection rates
 - Validation rule performance
@@ -395,27 +397,30 @@ expect(updated.status).toBe('approved');
 
 ## 🚨 Error Handling
 
-| Error | Status | Message | Action |
-|-------|--------|---------|--------|
-| Invalid file type | 400 | "File format not accepted" | Retry with valid format |
-| File too large | 413 | "File size exceeds limit" | Upload smaller file |
-| Processing failed | 500 | "Failed to process document" | Retry or contact support |
-| Unauthorized access | 403 | "Unauthorized" | Check admin status |
-| Document not found | 404 | "Document not found" | Verify document ID |
+| Error               | Status | Message                      | Action                   |
+| ------------------- | ------ | ---------------------------- | ------------------------ |
+| Invalid file type   | 400    | "File format not accepted"   | Retry with valid format  |
+| File too large      | 413    | "File size exceeds limit"    | Upload smaller file      |
+| Processing failed   | 500    | "Failed to process document" | Retry or contact support |
+| Unauthorized access | 403    | "Unauthorized"               | Check admin status       |
+| Document not found  | 404    | "Document not found"         | Verify document ID       |
 
 ## 🔄 Maintenance Tasks
 
 ### Daily
+
 - Monitor queue length
 - Review failed validations
 - Check error logs
 
 ### Weekly
+
 - Analyze approval rates
 - Review validation rule performance
 - Archive old documents
 
 ### Monthly
+
 - Generate compliance reports
 - Update security rules
 - Review and update validation thresholds
@@ -423,18 +428,21 @@ expect(updated.status).toBe('approved');
 ## 🎓 Training & Documentation
 
 ### For Users
+
 - Upload requirements (file size, format, quality)
 - Document positioning tips
 - Common rejection reasons
 - Appeal process
 
 ### For Admins
+
 - Validation rule explanations
 - Quality score interpretation
 - Decision guidelines
 - Appeal review process
 
 ### For Developers
+
 - API integration guide
 - Error handling patterns
 - Database query examples
@@ -459,16 +467,19 @@ expect(updated.status).toBe('approved');
 ### Common Issues
 
 **OCR not extracting text:**
+
 - Ensure Tesseract.js is installed
 - Check image quality (≥3MP recommended)
 - Verify document is clear and well-lit
 
 **Validation failing unexpectedly:**
+
 - Review validation rule configuration
 - Check if rules need adjustment for document type
 - Verify extracted data format
 
 **Storage issues:**
+
 - Ensure upload directory exists
 - Check disk space availability
 - Verify file permissions

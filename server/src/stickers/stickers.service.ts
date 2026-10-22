@@ -16,7 +16,7 @@ export class StickersService {
     private readonly userStickerRepository: Repository<UserSticker>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentsService: PaymentsService
   ) {}
 
   async createSticker(creatorId: string, createStickerDto: CreateStickerDto): Promise<Sticker> {
@@ -34,7 +34,8 @@ export class StickersService {
   }
 
   async getAllStickers(category?: string): Promise<Sticker[]> {
-    const query = this.stickerRepository.createQueryBuilder('sticker')
+    const query = this.stickerRepository
+      .createQueryBuilder('sticker')
       .leftJoinAndSelect('sticker.creator', 'creator')
       .where('sticker.isActive = :active', { active: true });
 
@@ -83,7 +84,7 @@ export class StickersService {
     }
 
     const sticker = await this.getStickerById(stickerId);
-    
+
     // Process payment (90% to creator, 10% platform fee - standard creator economy split)
     const creatorEarnings = sticker.price * 0.9;
     const platformFee = sticker.price * 0.1;
@@ -106,7 +107,9 @@ export class StickersService {
     return this.userStickerRepository.save(userSticker);
   }
 
-  async getCreatorEarnings(creatorId: string): Promise<{ totalEarnings: number; stickerSales: number }> {
+  async getCreatorEarnings(
+    creatorId: string
+  ): Promise<{ totalEarnings: number; stickerSales: number }> {
     const stickers = await this.stickerRepository.find({ where: { creatorId } });
     let totalEarnings = 0;
     let totalSales = 0;
@@ -120,15 +123,20 @@ export class StickersService {
   }
 
   async searchStickers(query: string): Promise<Sticker[]> {
-    return this.stickerRepository.createQueryBuilder('sticker')
+    return this.stickerRepository
+      .createQueryBuilder('sticker')
       .leftJoinAndSelect('sticker.creator', 'creator')
       .where('sticker.isActive = :active', { active: true })
-      .andWhere('(sticker.name ILIKE :query OR sticker.description ILIKE :query OR sticker.category ILIKE :query)', { query: `%${query}%` })
+      .andWhere(
+        '(sticker.name ILIKE :query OR sticker.description ILIKE :query OR sticker.category ILIKE :query)',
+        { query: `%${query}%` }
+      )
       .getMany();
   }
 
   async getTrendingStickers(limit: number = 24): Promise<Sticker[]> {
-    return this.stickerRepository.createQueryBuilder('sticker')
+    return this.stickerRepository
+      .createQueryBuilder('sticker')
       .leftJoinAndSelect('sticker.creator', 'creator')
       .where('sticker.isActive = :active', { active: true })
       .orderBy('sticker.totalSales', 'DESC')

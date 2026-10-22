@@ -8,10 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Sticker, UserSticker, User]),
-    PaymentsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Sticker, UserSticker, User]), PaymentsModule],
   controllers: [StickersController],
   providers: [StickersService],
   exports: [StickersService],

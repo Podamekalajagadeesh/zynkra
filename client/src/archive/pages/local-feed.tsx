@@ -21,16 +21,20 @@ export default function LocalFeedPage() {
       setLoading(true);
       setError(null);
       const localPosts = await getLocalFeed(radius);
-      
+
       // Apply sorting based on user preference
       if (feedSort === 'chronological') {
         // Sort by createdAt in descending order (newest first)
-        localPosts.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        localPosts.sort(
+          (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
       setPosts(localPosts);
     } catch (err) {
       console.error('Error fetching local feed:', err);
-      setError('Failed to load local content. Please ensure location sharing is enabled in your SnapMap settings.');
+      setError(
+        'Failed to load local content. Please ensure location sharing is enabled in your SnapMap settings.'
+      );
     } finally {
       setLoading(false);
     }
@@ -69,29 +73,29 @@ export default function LocalFeedPage() {
           Local Feed
         </h1>
         <p className="text-gray-600 mt-2">Posts from users within {radius}km of your location</p>
-        
+
         <div className="flex gap-2 mt-4 flex-wrap justify-between items-center">
           <div className="flex gap-2 flex-wrap">
-            <Button 
-              variant={radius === 10 ? 'default' : 'outline'} 
+            <Button
+              variant={radius === 10 ? 'default' : 'outline'}
               onClick={() => handleRadiusChange(10)}
             >
               10km
             </Button>
-            <Button 
-              variant={radius === 50 ? 'default' : 'outline'} 
+            <Button
+              variant={radius === 50 ? 'default' : 'outline'}
               onClick={() => handleRadiusChange(50)}
             >
               50km
             </Button>
-            <Button 
-              variant={radius === 100 ? 'default' : 'outline'} 
+            <Button
+              variant={radius === 100 ? 'default' : 'outline'}
               onClick={() => handleRadiusChange(100)}
             >
               100km
             </Button>
-            <Button 
-              variant={radius === 500 ? 'default' : 'outline'} 
+            <Button
+              variant={radius === 500 ? 'default' : 'outline'}
               onClick={() => handleRadiusChange(500)}
             >
               500km
@@ -100,16 +104,16 @@ export default function LocalFeedPage() {
           <div className="flex items-center gap-2 mt-2 sm:mt-0">
             <ArrowUpDown size={16} className="text-dark-500 dark:text-dark-400" />
             <span className="text-sm text-dark-600 dark:text-dark-300">Sort:</span>
-            <Button 
-              variant={feedSort === 'algorithmic' ? 'default' : 'outline'} 
+            <Button
+              variant={feedSort === 'algorithmic' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFeedSort('algorithmic')}
               className="text-xs"
             >
               Algorithmic
             </Button>
-            <Button 
-              variant={feedSort === 'chronological' ? 'default' : 'outline'} 
+            <Button
+              variant={feedSort === 'chronological' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFeedSort('chronological')}
               className="text-xs"
@@ -123,7 +127,9 @@ export default function LocalFeedPage() {
       {error && (
         <Card className="p-4 mb-6 bg-red-50 border-red-200">
           <p className="text-red-700">{error}</p>
-          <Button className="mt-2" onClick={fetchLocalFeed}>Try Again</Button>
+          <Button className="mt-2" onClick={fetchLocalFeed}>
+            Try Again
+          </Button>
         </Card>
       )}
 
@@ -138,7 +144,8 @@ export default function LocalFeedPage() {
           <MapPin className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No local posts found</h3>
           <p className="text-gray-600 mb-4">
-            There are no posts within {radius}km of your location yet. Make sure location sharing is enabled in your SnapMap settings to see local content.
+            There are no posts within {radius}km of your location yet. Make sure location sharing is
+            enabled in your SnapMap settings to see local content.
           </p>
           <Button asChild>
             <a href="/snapmap">Go to SnapMap Settings</a>

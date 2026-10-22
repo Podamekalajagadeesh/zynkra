@@ -7,7 +7,11 @@ interface CommunityListProps {
   selectedId?: string;
 }
 
-export const CommunityList = ({ communities, onSelectCommunity, selectedId }: CommunityListProps) => {
+export const CommunityList = ({
+  communities,
+  onSelectCommunity,
+  selectedId,
+}: CommunityListProps) => {
   return (
     <div className="space-y-2">
       <h3 className="font-semibold text-lg mb-4">Your Communities</h3>

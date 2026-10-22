@@ -29,7 +29,7 @@ const ReadLaterPage = () => {
   const handleRemoveFromReadLater = async (postId: string) => {
     try {
       await removeFromReadLater(postId);
-      setReadLaterPosts(readLaterPosts.filter(post => post.id !== postId));
+      setReadLaterPosts(readLaterPosts.filter((post) => post.id !== postId));
       addToast('Removed from read later', 'success');
     } catch (error) {
       console.error('Failed to remove post from read later:', error);
@@ -58,7 +58,9 @@ const ReadLaterPage = () => {
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h2 className="text-xl font-semibold mb-2">Your read later list is empty</h2>
-          <p className="text-gray-500 mb-4">Save articles to read later by clicking the "Add to Read Later" button on any post.</p>
+          <p className="text-gray-500 mb-4">
+            Save articles to read later by clicking the "Add to Read Later" button on any post.
+          </p>
           <Link to="/">
             <Button>Browse posts</Button>
           </Link>
@@ -66,15 +68,20 @@ const ReadLaterPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {readLaterPosts.map((item: any) => (
-            <div key={item.id} className="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden">
+            <div
+              key={item.id}
+              className="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden"
+            >
               <Link to={`/posts/${item.post.id}`}>
-                {item.post.media && item.post.media.length > 0 && item.post.media[0].type === 'image' && (
-                  <img 
-                    src={item.post.media[0].url} 
-                    alt={item.post.altText || 'Post content'}
-                    className="w-full h-48 object-cover"
-                  />
-                )}
+                {item.post.media &&
+                  item.post.media.length > 0 &&
+                  item.post.media[0].type === 'image' && (
+                    <img
+                      src={item.post.media[0].url}
+                      alt={item.post.altText || 'Post content'}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
               </Link>
               <div className="p-4">
                 <Link to={`/posts/${item.post.id}`}>
@@ -84,8 +91,8 @@ const ReadLaterPage = () => {
                   <span className="text-xs text-gray-500">
                     Saved on {new Date(item.createdAt).toLocaleDateString()}
                   </span>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleRemoveFromReadLater(item.post.id)}
                   >

@@ -54,12 +54,12 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
 function HeatmapCircles({ regions }: { regions: GeographicRegion[] }) {
   // Convert kilometers to meters for Leaflet (since radius is in meters)
   const kmToMeters = (km: number) => km * 1000;
-  
+
   // Calculate circle opacity based on engagement score (0-1)
   const getOpacity = (score: number) => {
-    return Math.min(0.7, Math.max(0.2, score / 100 * 0.7));
+    return Math.min(0.7, Math.max(0.2, (score / 100) * 0.7));
   };
-  
+
   // Calculate radius based on post count (scaled)
   const getRadius = (baseRadius: number, postCount: number) => {
     const multiplier = Math.min(2, Math.max(1, postCount / 1000));
@@ -78,7 +78,7 @@ function HeatmapCircles({ regions }: { regions: GeographicRegion[] }) {
             fillOpacity: getOpacity(region.engagementScore),
             stroke: true,
             color: getHeatmapColor(region.engagementScore),
-            weight: 2
+            weight: 2,
           }}
         >
           <Popup>
@@ -143,15 +143,17 @@ function TrendingTopicsSidebar({ topics, title }: { topics: TrendingTopic[]; tit
       </h3>
       <ul className="space-y-3">
         {topics.map((topic, index) => (
-          <li key={topic.tag} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <li
+            key={topic.tag}
+            className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
             <span className="text-lg font-bold text-gray-400 w-6">{index + 1}</span>
             <div className="flex-1">
               <p className="font-semibold text-blue-600">{topic.tag}</p>
               <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                 <span>{topic.posts.toLocaleString()} posts</span>
                 <span className="text-green-600 flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  +{topic.growth}% 24h
+                  <Clock className="h-3 w-3" />+{topic.growth}% 24h
                 </span>
               </div>
             </div>
@@ -179,7 +181,7 @@ export default function TrendingHeatmapPage() {
         (position) => {
           const newLocation: [number, number] = [
             position.coords.latitude,
-            position.coords.longitude
+            position.coords.longitude,
           ];
           setUserLocation(newLocation);
           setMapZoom(8); // Zoom in to user's location
@@ -213,9 +215,9 @@ export default function TrendingHeatmapPage() {
   // Get filtered topics for sidebar
   const getSidebarTopics = () => {
     if (!heatmapData) return [];
-    
+
     if (selectedRegion) {
-      const region = heatmapData.regions.find(r => r.id === selectedRegion);
+      const region = heatmapData.regions.find((r) => r.id === selectedRegion);
       return region ? region.topTrendingTopics : heatmapData.globalTopTopics;
     }
     return heatmapData.globalTopTopics;
@@ -229,15 +231,15 @@ export default function TrendingHeatmapPage() {
           id: 'nyc',
           name: 'New York City',
           latitude: 40.7128,
-          longitude: -74.0060,
+          longitude: -74.006,
           radius: 50,
           postCount: 125000,
           engagementScore: 85,
           topTrendingTopics: [
             { tag: '#NYCFashionWeek', posts: 45000, growth: 120 },
             { tag: '#CentralPark', posts: 32000, growth: 45 },
-            { tag: '#BrooklynNets', posts: 28000, growth: 78 }
-          ]
+            { tag: '#BrooklynNets', posts: 28000, growth: 78 },
+          ],
         },
         {
           id: 'la',
@@ -250,8 +252,8 @@ export default function TrendingHeatmapPage() {
           topTrendingTopics: [
             { tag: '#Hollywood', posts: 38000, growth: 65 },
             { tag: '#LALifestyle', posts: 29000, growth: 52 },
-            { tag: '#BeachLife', posts: 21000, growth: 38 }
-          ]
+            { tag: '#BeachLife', posts: 21000, growth: 38 },
+          ],
         },
         {
           id: 'chicago',
@@ -264,22 +266,22 @@ export default function TrendingHeatmapPage() {
           topTrendingTopics: [
             { tag: '#ChicagoBears', posts: 18000, growth: 95 },
             { tag: '#DeepDishPizza', posts: 15000, growth: 42 },
-            { tag: '#WindCity', posts: 12000, growth: 35 }
-          ]
+            { tag: '#WindCity', posts: 12000, growth: 35 },
+          ],
         },
         {
           id: 'dallas',
           name: 'Dallas/Fort Worth',
           latitude: 32.7767,
-          longitude: -96.7970,
+          longitude: -96.797,
           radius: 60,
           postCount: 38000,
           engagementScore: 55,
           topTrendingTopics: [
             { tag: '#DallasCowboys', posts: 22000, growth: 88 },
             { tag: '#TexasLive', posts: 10000, growth: 32 },
-            { tag: '#DFWEvents', posts: 6000, growth: 45 }
-          ]
+            { tag: '#DFWEvents', posts: 6000, growth: 45 },
+          ],
         },
         {
           id: 'miami',
@@ -292,9 +294,9 @@ export default function TrendingHeatmapPage() {
           topTrendingTopics: [
             { tag: '#MiamiBeach', posts: 28000, growth: 58 },
             { tag: '#SouthBeach', posts: 16000, growth: 41 },
-            { tag: '#FloridaLife', posts: 8000, growth: 29 }
-          ]
-        }
+            { tag: '#FloridaLife', posts: 8000, growth: 29 },
+          ],
+        },
       ],
       globalTopTopics: [
         { tag: '#TechNews', posts: 250000, growth: 150 },
@@ -302,15 +304,15 @@ export default function TrendingHeatmapPage() {
         { tag: '#WorldCup', posts: 178000, growth: 210 },
         { tag: '#MusicAwards', posts: 145000, growth: 98 },
         { tag: '#NewAlbum', posts: 120000, growth: 76 },
-        { tag: '#MoviePremiere', posts: 98000, growth: 65 }
-      ]
+        { tag: '#MoviePremiere', posts: 98000, growth: 65 },
+      ],
     };
   }
 
   return (
-    <PageShell 
-      eyebrow="Discover" 
-      title="Trending Heatmap" 
+    <PageShell
+      eyebrow="Discover"
+      title="Trending Heatmap"
       description="Explore popular local content tracked by geographic region with real-time trending topic heatmaps"
     >
       <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-12rem)]">
@@ -318,7 +320,12 @@ export default function TrendingHeatmapPage() {
         <div className="flex-1 flex flex-col">
           {/* Filters bar */}
           <div className="bg-white dark:bg-gray-900 p-4 rounded-t-lg border border-b-0 border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-4">
-            <Tabs defaultValue="world" value={activeTab} onValueChange={setActiveTab} className="w-auto">
+            <Tabs
+              defaultValue="world"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-auto"
+            >
               <TabsList>
                 <TabsTrigger value="world">Worldwide</TabsTrigger>
                 <TabsTrigger value="usa">United States</TabsTrigger>
@@ -326,7 +333,7 @@ export default function TrendingHeatmapPage() {
                 <TabsTrigger value="europe">Europe</TabsTrigger>
               </TabsList>
             </Tabs>
-            
+
             <div className="flex items-center gap-2 ml-auto">
               <Filter className="h-4 w-4 text-gray-500" />
               <Select value={timeRange} onValueChange={setTimeRange}>
@@ -342,7 +349,7 @@ export default function TrendingHeatmapPage() {
               </Select>
             </div>
           </div>
-          
+
           {/* Map container */}
           <div className="flex-1 relative border border-gray-200 dark:border-gray-700 rounded-b-lg overflow-hidden">
             {loading ? (
@@ -374,7 +381,7 @@ export default function TrendingHeatmapPage() {
             )}
           </div>
         </div>
-        
+
         {/* Sidebar with trending topics */}
         <div className="w-full lg:w-80 overflow-y-auto">
           {loading ? (
@@ -385,9 +392,13 @@ export default function TrendingHeatmapPage() {
               ))}
             </Card>
           ) : (
-            <TrendingTopicsSidebar 
-              topics={getSidebarTopics()} 
-              title={selectedRegion ? `${heatmapData?.regions.find(r => r.id === selectedRegion)?.name} Trends` : 'Global Top Trends'} 
+            <TrendingTopicsSidebar
+              topics={getSidebarTopics()}
+              title={
+                selectedRegion
+                  ? `${heatmapData?.regions.find((r) => r.id === selectedRegion)?.name} Trends`
+                  : 'Global Top Trends'
+              }
             />
           )}
         </div>

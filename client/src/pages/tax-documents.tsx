@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../hooks/useToast';
-import {
-  api,
-  getTaxDocuments,
-  generateTaxDocument,
-} from '../lib/api';
+import { api, getTaxDocuments, generateTaxDocument } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -98,8 +94,7 @@ export const TaxDocumentsPage = () => {
       </div>
 
       <p className="text-xs text-dark-500 mb-4">
-        These are income summaries for your own tax preparation. They are not
-        filed with the IRS.
+        These are income summaries for your own tax preparation. They are not filed with the IRS.
       </p>
 
       {isLoading ? (

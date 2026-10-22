@@ -2,10 +2,7 @@ import { useState, useEffect, ReactNode, useCallback } from 'react';
 import { getProfile, setAuthToken, uploadPublicKey, logoutFromServer } from '../lib/api';
 import { UserProfile } from '../lib/types';
 import { Account, AuthContext } from './AuthContextDef';
-import {
-  generateAndStoreKeys,
-  getKeys,
-} from '../services/encryption.service';
+import { generateAndStoreKeys, getKeys } from '../services/encryption.service';
 
 const ZYNKRA_ACCOUNTS = 'zynkra_accounts';
 
@@ -22,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedAccounts = JSON.parse(storedAccounts);
         setAccounts(parsedAccounts.accounts || []);
         const active = parsedAccounts.accounts.find(
-          (a: Account) => a.user.id === parsedAccounts.activeAccountId,
+          (a: Account) => a.user.id === parsedAccounts.activeAccountId
         );
         setActiveAccount(active || parsedAccounts.accounts[0] || null);
         if (active) {
@@ -44,22 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [loadAccounts]);
 
-  const updateStoredAccounts = (
-    updatedAccounts: Account[],
-    activeId: string | null,
-  ) => {
+  const updateStoredAccounts = (updatedAccounts: Account[], activeId: string | null) => {
     localStorage.setItem(
       ZYNKRA_ACCOUNTS,
       JSON.stringify({
         accounts: updatedAccounts,
         activeAccountId: activeId,
-      }),
+      })
     );
     setAccounts(updatedAccounts);
     const newActive =
-      updatedAccounts.find((a) => a.user.id === activeId) ||
-      updatedAccounts[0] ||
-      null;
+      updatedAccounts.find((a) => a.user.id === activeId) || updatedAccounts[0] || null;
     setActiveAccount(newActive);
     if (newActive) {
       setAuthToken(newActive.token);
@@ -69,13 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event('authchange'));
   };
 
-// ... (rest of the file)
+  // ... (rest of the file)
 
   const addAccount = useCallback(
     async (newAccount: Account) => {
-      const existingAccountIndex = accounts.findIndex(
-        (acc) => acc.user.id === newAccount.user.id,
-      );
+      const existingAccountIndex = accounts.findIndex((acc) => acc.user.id === newAccount.user.id);
       let updatedAccounts;
       if (existingAccountIndex > -1) {
         updatedAccounts = [...accounts];
@@ -100,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (newKeys) {
             // Convert Uint8Array to base64 string for transport
             const publicKeyBase64 = btoa(
-              String.fromCharCode.apply(null, Array.from(newKeys.publicKey)),
+              String.fromCharCode.apply(null, Array.from(newKeys.publicKey))
             );
             await uploadPublicKey(publicKeyBase64);
           }
@@ -109,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Failed to manage encryption keys:', error);
       }
     },
-    [accounts],
+    [accounts]
   );
 
   const switchAccount = useCallback(
@@ -121,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       updateStoredAccounts(accounts, accountId);
     },
-    [accounts],
+    [accounts]
   );
 
   const logout = useCallback(async () => {
@@ -132,12 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('Server logout failed, cleaning up locally anyway:', error);
       }
 
-      const remainingAccounts = accounts.filter(
-        (a) => a.user.id !== activeAccount.user.id,
-      );
-      const newActiveId = remainingAccounts.length
-        ? remainingAccounts[0].user.id
-        : null;
+      const remainingAccounts = accounts.filter((a) => a.user.id !== activeAccount.user.id);
+      const newActiveId = remainingAccounts.length ? remainingAccounts[0].user.id : null;
       updateStoredAccounts(remainingAccounts, newActiveId);
     }
   }, [accounts, activeAccount]);
@@ -147,12 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (activeAccount) {
         const updatedAccount = { ...activeAccount, user };
         const updatedAccounts = accounts.map((acc) =>
-          acc.user.id === user.id ? updatedAccount : acc,
+          acc.user.id === user.id ? updatedAccount : acc
         );
         updateStoredAccounts(updatedAccounts, user.id);
       }
     },
-    [accounts, activeAccount],
+    [accounts, activeAccount]
   );
 
   const isLoggedIn = Boolean(activeAccount?.token);

@@ -41,7 +41,7 @@ export async function lookupEnsName(address: string): Promise<string | null> {
 
 export function useEnsName(address: string | null | undefined): string | null {
   const [name, setName] = useState<string | null>(
-    address ? cache.get(address.toLowerCase()) ?? null : null,
+    address ? (cache.get(address.toLowerCase()) ?? null) : null
   );
 
   useEffect(() => {

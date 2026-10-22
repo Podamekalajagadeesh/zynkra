@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  fullSensoryMetaverseService, 
+import {
+  fullSensoryMetaverseService,
   FullSensoryState,
   FullSensoryEnvironmentConfig,
   HapticFeedback,
   OlfactoryStimulus,
   GustatoryStimulus,
-  VisualEffect
+  VisualEffect,
 } from '../services/fullSensoryMetaverse';
 
 export function useFullSensoryMetaverse() {
@@ -54,9 +54,12 @@ export function useFullSensoryMetaverse() {
   };
 
   // Add custom stimuli
-  const addHaptic = (haptic: HapticFeedback) => fullSensoryMetaverseService.addHapticFeedback(haptic);
-  const addScent = (scent: OlfactoryStimulus) => fullSensoryMetaverseService.addOlfactoryStimulus(scent);
-  const addTaste = (taste: GustatoryStimulus) => fullSensoryMetaverseService.addGustatoryStimulus(taste);
+  const addHaptic = (haptic: HapticFeedback) =>
+    fullSensoryMetaverseService.addHapticFeedback(haptic);
+  const addScent = (scent: OlfactoryStimulus) =>
+    fullSensoryMetaverseService.addOlfactoryStimulus(scent);
+  const addTaste = (taste: GustatoryStimulus) =>
+    fullSensoryMetaverseService.addGustatoryStimulus(taste);
   const addVisual = (visual: VisualEffect) => fullSensoryMetaverseService.addVisualEffect(visual);
 
   // Update environment sensory parameters (sensory content editing feature)
@@ -64,8 +67,12 @@ export function useFullSensoryMetaverse() {
     environmentId: string,
     updates: {
       ambientTemperature?: number;
-      scentModifications?: Array<{sourceId: string; newIntensity?: number; newConcentration?: number}>;
-      hapticModifications?: Array<{sourceId: string; newValue?: number; newIntensity?: number}>;
+      scentModifications?: Array<{
+        sourceId: string;
+        newIntensity?: number;
+        newConcentration?: number;
+      }>;
+      hapticModifications?: Array<{ sourceId: string; newValue?: number; newIntensity?: number }>;
       lightIntensity?: number;
     }
   ) => fullSensoryMetaverseService.updateEnvironmentParameters(environmentId, updates);

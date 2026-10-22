@@ -1,7 +1,16 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('commerce_inventory_stock')
-@Index('IDX_commerce_inventory_stock_warehouse_variant', ['warehouseId', 'productVariantId'], { unique: true })
+@Index('IDX_commerce_inventory_stock_warehouse_variant', ['warehouseId', 'productVariantId'], {
+  unique: true,
+})
 export class InventoryStock {
   @PrimaryGeneratedColumn('uuid')
   id: string;

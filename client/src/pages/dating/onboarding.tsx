@@ -3,8 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 
 const INTEREST_OPTIONS = [
-  'Music', 'Movies', 'Travel', 'Fitness', 'Food', 'Art',
-  'Gaming', 'Reading', 'Outdoors', 'Tech', 'Sports', 'Pets',
+  'Music',
+  'Movies',
+  'Travel',
+  'Fitness',
+  'Food',
+  'Art',
+  'Gaming',
+  'Reading',
+  'Outdoors',
+  'Tech',
+  'Sports',
+  'Pets',
 ];
 
 const DatingOnboardingPage = () => {
@@ -33,7 +43,7 @@ const DatingOnboardingPage = () => {
 
   const toggleInterest = (interest: string) => {
     setInterests((prev) =>
-      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest],
+      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
     );
   };
 
@@ -55,7 +65,9 @@ const DatingOnboardingPage = () => {
       <h1 className="text-2xl font-bold mb-4">Dating Profile</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="dating-bio">Bio</label>
+          <label className="block text-sm font-medium mb-1" htmlFor="dating-bio">
+            Bio
+          </label>
           <textarea
             id="dating-bio"
             value={bio}
@@ -69,7 +81,9 @@ const DatingOnboardingPage = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="dating-gender">Gender</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="dating-gender">
+              Gender
+            </label>
             <select
               id="dating-gender"
               value={gender}
@@ -84,7 +98,9 @@ const DatingOnboardingPage = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="dating-age">Age</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="dating-age">
+              Age
+            </label>
             <input
               id="dating-age"
               type="number"
@@ -99,7 +115,9 @@ const DatingOnboardingPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="dating-location">Location</label>
+          <label className="block text-sm font-medium mb-1" htmlFor="dating-location">
+            Location
+          </label>
           <input
             id="dating-location"
             value={location}

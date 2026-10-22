@@ -1,4 +1,3 @@
-
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MemoriesService } from './memories.service';
@@ -47,24 +46,21 @@ export class MemoriesController {
   createMemoryRevision(
     @Param('id') id: string,
     @CurrentUser() user: User,
-    @Body() body: {
+    @Body()
+    body: {
       editType: MemoryEditType;
       title?: string;
       annotation?: string;
       sensoryNote?: string;
       sensoryEnhancements?: any;
       contextNote?: string;
-    },
+    }
   ) {
     return this.memoriesService.createMemoryRevision(id, user, body);
   }
 
   @Post(':id/port')
-  portMemory(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-    @Body() body: PortMemoryDto,
-  ) {
+  portMemory(@Param('id') id: string, @CurrentUser() user: User, @Body() body: PortMemoryDto) {
     return this.memoriesService.portMemory(id, user, body);
   }
 
@@ -74,7 +70,17 @@ export class MemoriesController {
   }
 
   @Post('projects')
-  createMemoryProject(@CurrentUser() user: User, @Body() body: { title: string; topic?: string; description?: string; memoryIds?: string[]; contributorNames?: string[] }) {
+  createMemoryProject(
+    @CurrentUser() user: User,
+    @Body()
+    body: {
+      title: string;
+      topic?: string;
+      description?: string;
+      memoryIds?: string[];
+      contributorNames?: string[];
+    }
+  ) {
     return this.memoriesService.createMemoryProject(user, body);
   }
 
@@ -84,7 +90,11 @@ export class MemoriesController {
   }
 
   @Post('documentaries')
-  createDocumentary(@CurrentUser() user: User, @Body() body: { eventName: string; title?: string; memoryIds?: string[]; participantNames?: string[] }) {
+  createDocumentary(
+    @CurrentUser() user: User,
+    @Body()
+    body: { eventName: string; title?: string; memoryIds?: string[]; participantNames?: string[] }
+  ) {
     return this.memoriesService.createDocumentary(user, body);
   }
 }

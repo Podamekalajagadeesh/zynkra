@@ -16,7 +16,17 @@ interface WebAuthnProps {
   children?: React.ReactNode;
 }
 
-const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, className, variant, children }: WebAuthnProps) => {
+const WebAuthn = ({
+  onSuccess,
+  onError,
+  email,
+  mode,
+  biometric,
+  rememberMe,
+  className,
+  variant,
+  children,
+}: WebAuthnProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,9 +72,7 @@ const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, clas
     } catch (err) {
       console.error(err);
       const errorMessage =
-        err instanceof AxiosError && err.response
-          ? err.response.data.message
-          : 'Login failed';
+        err instanceof AxiosError && err.response ? err.response.data.message : 'Login failed';
       setError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -76,7 +84,7 @@ const WebAuthn = ({ onSuccess, onError, email, mode, biometric, rememberMe, clas
     variant === 'outline'
       ? 'inline-flex w-full items-center justify-center rounded-xl border border-dark-200 bg-white/90 px-4 py-3 font-medium text-dark-900 shadow-sm transition-colors hover:bg-dark-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:hover:bg-dark-700'
       : 'inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-600 to-cyan-500 px-4 py-3 font-medium text-white shadow-lg shadow-primary-500/20 transition-colors hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50',
-    className,
+    className
   );
 
   return (

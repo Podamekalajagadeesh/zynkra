@@ -114,9 +114,9 @@ describe('ThreadsService', () => {
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockResolvedValue([
-          { threadId: 'thread-1', messageCount: 3, lastMessageAt: last },
-        ]),
+        getRawMany: jest
+          .fn()
+          .mockResolvedValue([{ threadId: 'thread-1', messageCount: 3, lastMessageAt: last }]),
       });
 
       const result = await service.findAll();
@@ -124,7 +124,7 @@ describe('ThreadsService', () => {
       expect(result[0].messageCount).toBe(3);
       expect(result[0].lastMessageAt).toBe(last);
       expect(threadsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ relations: ['user'], order: { createdAt: 'DESC' } }),
+        expect.objectContaining({ relations: ['user'], order: { createdAt: 'DESC' } })
       );
     });
   });
@@ -155,9 +155,9 @@ describe('ThreadsService', () => {
     it('throws NotFoundException when thread is missing', async () => {
       threadsRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.sendMessage('bad-id', { content: 'Hi' }, 'user-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.sendMessage('bad-id', { content: 'Hi' }, 'user-1')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('throws BadRequestException when the parent is outside the thread', async () => {
@@ -165,7 +165,7 @@ describe('ThreadsService', () => {
       messagesRepo.findOne.mockResolvedValue(makeMessage({ threadId: 'other-thread' }));
 
       await expect(
-        service.sendMessage('thread-1', { content: 'Hi', parentMessageId: 'msg-1' }, 'user-1'),
+        service.sendMessage('thread-1', { content: 'Hi', parentMessageId: 'msg-1' }, 'user-1')
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -175,18 +175,18 @@ describe('ThreadsService', () => {
       messagesRepo.create.mockReturnValue(makeMessage({ parentMessageId: 'msg-1' }));
       messagesRepo.save.mockResolvedValue(makeMessage({ parentMessageId: 'msg-1' }));
       messagesRepo.findOne.mockResolvedValue(
-        makeMessage({ parentMessageId: 'msg-1', user: { id: 'user-1' } as any }),
+        makeMessage({ parentMessageId: 'msg-1', user: { id: 'user-1' } as any })
       );
 
       const result = await service.sendMessage(
         'thread-1',
         { content: 'Reply', parentMessageId: 'msg-1' },
-        'user-1',
+        'user-1'
       );
 
       expect(result.parentMessageId).toBe('msg-1');
       expect(messagesRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ threadId: 'thread-1', parentMessageId: 'msg-1' }),
+        expect.objectContaining({ threadId: 'thread-1', parentMessageId: 'msg-1' })
       );
     });
   });
@@ -218,17 +218,17 @@ describe('ThreadsService', () => {
     it('throws NotFoundException when the message is not in the thread', async () => {
       messagesRepo.findOne.mockResolvedValue(makeMessage({ threadId: 'other' }));
 
-      await expect(
-        service.deleteMessage('thread-1', 'msg-1', 'user-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.deleteMessage('thread-1', 'msg-1', 'user-1')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('forbids non-authors', async () => {
       messagesRepo.findOne.mockResolvedValue(makeMessage({ userId: 'author-1' }));
 
-      await expect(
-        service.deleteMessage('thread-1', 'msg-1', 'user-1'),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.deleteMessage('thread-1', 'msg-1', 'user-1')).rejects.toThrow(
+        ForbiddenException
+      );
     });
 
     it('removes the message for its author', async () => {

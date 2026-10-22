@@ -41,7 +41,7 @@ describe('PaymentsService payouts', () => {
       usersRepository as any,
       walletService as any,
       configService as any,
-      webhooksService as any,
+      webhooksService as any
     );
 
     const result = await service.requestPayout('creator-1', 25, 'monthly-payout');
@@ -72,9 +72,9 @@ describe('PaymentsService payouts', () => {
       findOne: jest.fn().mockResolvedValue({ id: 'creator-1' }),
     };
     const walletService = {
-      debit: jest.fn().mockRejectedValue(
-        Object.assign(new Error('Insufficient balance'), { status: 400 }),
-      ),
+      debit: jest
+        .fn()
+        .mockRejectedValue(Object.assign(new Error('Insufficient balance'), { status: 400 })),
       credit: jest.fn(),
     };
     const configService = { get: jest.fn().mockReturnValue(undefined) };
@@ -86,11 +86,11 @@ describe('PaymentsService payouts', () => {
       usersRepository as any,
       walletService as any,
       configService as any,
-      webhooksService as any,
+      webhooksService as any
     );
 
     await expect(service.requestPayout('creator-1', 1000, 'monthly-payout')).rejects.toThrow(
-      'Insufficient balance',
+      'Insufficient balance'
     );
     // Debit failed → no payout row may be created.
     expect(payoutRepository.create).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe('PaymentsService payouts', () => {
         creditError?: Error;
         updateErrorAfterClaim?: Error;
         transferError?: Error;
-      } = {},
+      } = {}
     ) {
       const currentPayout: any = {
         ...payout,
@@ -155,7 +155,7 @@ describe('PaymentsService payouts', () => {
         { findOne: jest.fn() } as any,
         walletService as any,
         configService as any,
-        { dispatchEvent: jest.fn().mockResolvedValue(undefined) } as any,
+        { dispatchEvent: jest.fn().mockResolvedValue(undefined) } as any
       );
       let stripe: any = null;
       if (options.connect) {
@@ -189,14 +189,14 @@ describe('PaymentsService payouts', () => {
 
       expect(h.payoutRepository.update).toHaveBeenCalledWith(
         { id: 'payout-1', status: 'pending' },
-        { status: 'processing' },
+        { status: 'processing' }
       );
       expect(result.status).toBe('paid');
       expect(result.mode).toBe('manual');
       expect(h.payoutRepository.update).toHaveBeenNthCalledWith(
         2,
         { id: 'payout-1', status: 'processing' },
-        { status: 'paid', processedAt: expect.any(Date) },
+        { status: 'paid', processedAt: expect.any(Date) }
       );
     });
 
@@ -204,7 +204,7 @@ describe('PaymentsService payouts', () => {
       const h = buildService(0);
 
       await expect(h.service.approvePayout('payout-1')).rejects.toThrow(
-        'Payout is not pending (status: processing)',
+        'Payout is not pending (status: processing)'
       );
       expect(h.payoutRepository.save).not.toHaveBeenCalled();
       expect(h.walletService.credit).not.toHaveBeenCalled();
@@ -217,7 +217,7 @@ describe('PaymentsService payouts', () => {
 
       expect(h.payoutRepository.update).toHaveBeenCalledWith(
         { id: 'payout-1', status: 'pending' },
-        { status: 'processing' },
+        { status: 'processing' }
       );
       expect(h.walletService.credit).toHaveBeenCalledWith('creator-1', 25, {
         purpose: 'payout-rejected',

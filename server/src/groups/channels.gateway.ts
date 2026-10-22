@@ -21,9 +21,7 @@ import { applyWsCors } from '../common/ws-auth/ws-cors';
 
 // CORS is applied in afterInit, not the decorator — see ws-cors.ts.
 @WebSocketGateway({ namespace: '/channels' })
-export class ChannelsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class ChannelsGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server: Server;
 
@@ -38,7 +36,7 @@ export class ChannelsGateway
     @InjectRepository(Group)
     private readonly groupsRepository: Repository<Group>,
     @InjectRepository(GroupMember)
-    private readonly groupMembersRepository: Repository<GroupMember>,
+    private readonly groupMembersRepository: Repository<GroupMember>
   ) {}
 
   afterInit(server: Server) {

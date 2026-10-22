@@ -9,7 +9,12 @@ jest.mock('bcrypt', () => ({
 }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -47,8 +52,11 @@ function createTestingModule() {
     ],
     controllers: [UsersController],
     providers: [
-    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
-    { provide: AccountManagementService, useValue: {} },
+      {
+        provide: VisibilityService,
+        useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) },
+      },
+      { provide: AccountManagementService, useValue: {} },
       {
         provide: UsersService,
         useValue: {
@@ -65,13 +73,21 @@ function createTestingModule() {
       { provide: PagesService, useValue: {} },
       {
         provide: ConfigService,
-        useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined },
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
       },
       {
         provide: getRepositoryToken(LoginSession),
-        useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn(), find: jest.fn(), save: jest.fn() },
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+          find: jest.fn(),
+          save: jest.fn(),
+        },
       },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue(makeMockUser()) } },
+      {
+        provide: getRepositoryToken(User),
+        useValue: { findOne: jest.fn().mockResolvedValue(makeMockUser()) },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -90,7 +106,9 @@ describe('GET /users/me', () => {
   it('returns 200 with profile for valid JWT', async () => {
     const { app, usersService, token } = await setupApp();
     usersService.findOneById.mockResolvedValue(makeMockUser() as any);
-    const response = await request(app.getHttpServer()).get('/users/me').set('Authorization', `Bearer ${token}`);
+    const response = await request(app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body.username).toBe('testuser');
     await app.close();
@@ -108,7 +126,10 @@ describe('PATCH /users/profile', () => {
   it('returns 200 with updated profile', async () => {
     const { app, usersService, token } = await setupApp();
     usersService.updateProfile.mockResolvedValue(makeMockUser({ displayName: 'Updated' }) as any);
-    const response = await request(app.getHttpServer()).patch('/users/profile').set('Authorization', `Bearer ${token}`).field('displayName', 'Updated');
+    const response = await request(app.getHttpServer())
+      .patch('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .field('displayName', 'Updated');
     expect(response.status).toBe(200);
     await app.close();
   });
@@ -116,7 +137,10 @@ describe('PATCH /users/profile', () => {
   it('returns 404 when user not found', async () => {
     const { app, usersService, token } = await setupApp();
     usersService.updateProfile.mockRejectedValue(new NotFoundException('User not found'));
-    const response = await request(app.getHttpServer()).patch('/users/profile').set('Authorization', `Bearer ${token}`).field('displayName', 'Updated');
+    const response = await request(app.getHttpServer())
+      .patch('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .field('displayName', 'Updated');
     expect(response.status).toBe(404);
     await app.close();
   });
@@ -124,7 +148,10 @@ describe('PATCH /users/profile', () => {
   it('returns 409 when username is taken', async () => {
     const { app, usersService, token } = await setupApp();
     usersService.updateProfile.mockRejectedValue(new ConflictException('Username already exists'));
-    const response = await request(app.getHttpServer()).patch('/users/profile').set('Authorization', `Bearer ${token}`).field('username', 'taken');
+    const response = await request(app.getHttpServer())
+      .patch('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .field('username', 'taken');
     expect(response.status).toBe(409);
     await app.close();
   });

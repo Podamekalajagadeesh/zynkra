@@ -12,17 +12,17 @@ interface ModMailConversationListProps {
   selectedId?: string;
 }
 
-export function ModMailConversationList({ 
-  groupId, 
-  onSelectConversation, 
-  selectedId 
+export function ModMailConversationList({
+  groupId,
+  onSelectConversation,
+  selectedId,
 }: ModMailConversationListProps) {
   const [conversations, setConversations] = useState<ModMailThread[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (groupId) {
-      getModMailConversations(groupId).then(data => {
+      getModMailConversations(groupId).then((data) => {
         setConversations(data);
         setLoading(false);
       });
@@ -46,13 +46,13 @@ export function ModMailConversationList({
         {conversations.length === 0 ? (
           <li className="px-4 py-2 text-sm text-gray-500">No modmail conversations</li>
         ) : (
-          conversations.map(conversation => (
+          conversations.map((conversation) => (
             <li
               key={conversation.id}
               onClick={() => onSelectConversation(conversation)}
               className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${
-                selectedId === conversation.id 
-                  ? 'bg-primary-100 dark:bg-primary-900' 
+                selectedId === conversation.id
+                  ? 'bg-primary-100 dark:bg-primary-900'
                   : 'hover:bg-dark-100 dark:hover:bg-dark-800'
               }`}
             >

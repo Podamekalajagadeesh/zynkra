@@ -9,9 +9,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * columns (`reputation.score`, `reputation_log.cryptocurrencyEarned`) are
  * already numeric(10,2); this aligns `points` with them.
  */
-export class ReputationLogPointsFractional1792325581000
-  implements MigrationInterface
-{
+export class ReputationLogPointsFractional1792325581000 implements MigrationInterface {
   name = 'ReputationLogPointsFractional1792325581000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

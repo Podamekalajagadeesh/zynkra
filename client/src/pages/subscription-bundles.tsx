@@ -140,7 +140,11 @@ export const SubscriptionBundlesPage = () => {
           <Card>
             <CardContent className="p-4 space-y-3">
               <h3 className="font-semibold">New bundle</h3>
-              <Input placeholder="Bundle name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                placeholder="Bundle name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
               <Textarea
                 placeholder="Description"
                 value={description}
@@ -170,7 +174,7 @@ export const SubscriptionBundlesPage = () => {
                           setSelectedTierIds((prev) =>
                             e.target.checked
                               ? [...prev, tier.id]
-                              : prev.filter((id) => id !== tier.id),
+                              : prev.filter((id) => id !== tier.id)
                           )
                         }
                       />
@@ -215,10 +219,7 @@ export const SubscriptionBundlesPage = () => {
                         >
                           {bundle.isActive ? 'Pause' : 'Resume'}
                         </button>
-                        <button
-                          onClick={() => handleDelete(bundle.id)}
-                          aria-label="Delete bundle"
-                        >
+                        <button onClick={() => handleDelete(bundle.id)} aria-label="Delete bundle">
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </button>
                       </div>

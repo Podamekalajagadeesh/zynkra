@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  Column,
-  Unique,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, Unique } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Page } from './page.entity';
 import { PageRole } from '../roles.enum';

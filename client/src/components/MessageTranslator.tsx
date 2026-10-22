@@ -59,7 +59,10 @@ const MessageTranslator: React.FC<MessageTranslatorProps> = ({ content, onTransl
   return (
     <div className="relative inline-block">
       <button
-        onClick={() => { setIsOpen(!isOpen); loadLanguages(); }}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          loadLanguages();
+        }}
         className="flex items-center gap-1 text-xs text-dark-400 hover:text-primary-500 transition-colors"
         title="Translate message (cloud API)"
       >
@@ -75,8 +78,10 @@ const MessageTranslator: React.FC<MessageTranslatorProps> = ({ content, onTransl
               onChange={(e) => setSelectedLang(e.target.value)}
               className="flex-1 text-sm border rounded-lg px-2 py-1 dark:bg-dark-700 dark:border-dark-600"
             >
-              {languages.map(lang => (
-                <option key={lang.code} value={lang.code}>{lang.name}</option>
+              {languages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
               ))}
             </select>
             <button

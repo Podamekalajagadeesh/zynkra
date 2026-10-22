@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import {
-  Card,
-  CardContent,
-} from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import {
   BarChart,
   Bar,
@@ -154,9 +146,7 @@ export function CollabTrackingModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {collab ? 'Edit Collab Tracking' : 'Track New Brand Collab'}
-          </DialogTitle>
+          <DialogTitle>{collab ? 'Edit Collab Tracking' : 'Track New Brand Collab'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -259,7 +249,9 @@ export function CollabTrackingModal({
               <Card>
                 <CardContent className="p-4">
                   <h4 className="text-sm font-medium text-gray-600">ROI</h4>
-                  <p className={`text-2xl font-bold mt-1 ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <p
+                    className={`text-2xl font-bold mt-1 ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
                     {roi.toFixed(2)}%
                   </p>
                 </CardContent>
@@ -276,10 +268,12 @@ export function CollabTrackingModal({
                 <CardContent className="p-4">
                   <h4 className="text-sm font-medium text-gray-600">Cost Per Conversion</h4>
                   <p className="text-2xl font-bold mt-1 text-purple-600">
-                    ${parseInt(formData.conversions) > 0 
-                      ? (parseFloat(formData.investment) / parseInt(formData.conversions)).toFixed(2)
-                      : '0.00'
-                    }
+                    $
+                    {parseInt(formData.conversions) > 0
+                      ? (parseFloat(formData.investment) / parseInt(formData.conversions)).toFixed(
+                          2
+                        )
+                      : '0.00'}
                   </p>
                 </CardContent>
               </Card>
@@ -323,13 +317,22 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
       totalClicks: acc.totalClicks + collab.clicks,
       totalConversions: acc.totalConversions + collab.conversions,
     }),
-    { totalInvestment: 0, totalRevenue: 0, totalImpressions: 0, totalClicks: 0, totalConversions: 0 }
+    {
+      totalInvestment: 0,
+      totalRevenue: 0,
+      totalImpressions: 0,
+      totalClicks: 0,
+      totalConversions: 0,
+    }
   );
 
-  const overallROI = ((overallStats.totalRevenue - overallStats.totalInvestment) / overallStats.totalInvestment) * 100;
-  const overallConversionRate = overallStats.totalClicks > 0 
-    ? (overallStats.totalConversions / overallStats.totalClicks) * 100 
-    : 0;
+  const overallROI =
+    ((overallStats.totalRevenue - overallStats.totalInvestment) / overallStats.totalInvestment) *
+    100;
+  const overallConversionRate =
+    overallStats.totalClicks > 0
+      ? (overallStats.totalConversions / overallStats.totalClicks) * 100
+      : 0;
 
   const performanceData = trackedCollabs.map((collab) => ({
     name: collab.brandName,
@@ -348,13 +351,15 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
     return ((collab.revenue - collab.investment) / collab.investment) * 100;
   }
 
-  const dailyPerformance = trackedCollabs.flatMap((collab) => 
-    collab.posts.map(post => ({
-      date: post.date,
-      impressions: post.impressions,
-      engagement: post.engagement,
-    }))
-  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const dailyPerformance = trackedCollabs
+    .flatMap((collab) =>
+      collab.posts.map((post) => ({
+        date: post.date,
+        impressions: post.impressions,
+        engagement: post.engagement,
+      }))
+    )
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <div className="space-y-8">
@@ -379,7 +384,9 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
         <Card className={`${overallROI >= 0 ? 'bg-emerald-50' : 'bg-red-50'} border-0`}>
           <CardContent className="p-6">
             <h3 className="text-sm font-medium text-gray-600">Overall ROI</h3>
-            <p className={`text-3xl font-bold mt-2 ${overallROI >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p
+              className={`text-3xl font-bold mt-2 ${overallROI >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+            >
               {overallROI.toFixed(2)}%
             </p>
           </CardContent>
@@ -480,29 +487,38 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
         <h3 className="text-xl font-semibold">All Tracked Collabs</h3>
         {trackedCollabs.map((collab) => {
           const collabROI = calculateCollabROI(collab);
-          const collabConversionRate = collab.clicks > 0 ? (collab.conversions / collab.clicks) * 100 : 0;
-          
+          const collabConversionRate =
+            collab.clicks > 0 ? (collab.conversions / collab.clicks) * 100 : 0;
+
           return (
             <Card key={collab.id} className="overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-semibold text-gray-900">{collab.opportunityTitle}</h4>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        {collab.opportunityTitle}
+                      </h4>
                       <span className="text-sm text-gray-500">by {collab.brandName}</span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                       <div>
                         <p className="text-xs text-gray-500">Investment</p>
-                        <p className="text-lg font-semibold">${collab.investment.toLocaleString()}</p>
+                        <p className="text-lg font-semibold">
+                          ${collab.investment.toLocaleString()}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Revenue</p>
-                        <p className="text-lg font-semibold text-green-600">${collab.revenue.toLocaleString()}</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          ${collab.revenue.toLocaleString()}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">ROI</p>
-                        <p className={`text-lg font-semibold ${collabROI >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <p
+                          className={`text-lg font-semibold ${collabROI >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                        >
                           {collabROI.toFixed(2)}%
                         </p>
                       </div>
@@ -512,7 +528,9 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Impressions</p>
-                        <p className="text-lg font-semibold">{collab.impressions.toLocaleString()}</p>
+                        <p className="text-lg font-semibold">
+                          {collab.impressions.toLocaleString()}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Clicks</p>
@@ -520,12 +538,15 @@ export function CollabROIDashboard({ trackedCollabs }: CollabROIDashboardProps) 
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Conversion Rate</p>
-                        <p className="text-lg font-semibold text-purple-600">{collabConversionRate.toFixed(2)}%</p>
+                        <p className="text-lg font-semibold text-purple-600">
+                          {collabConversionRate.toFixed(2)}%
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Duration</p>
                         <p className="text-lg font-semibold">
-                          {new Date(collab.startDate).toLocaleDateString()} - {new Date(collab.endDate).toLocaleDateString()}
+                          {new Date(collab.startDate).toLocaleDateString()} -{' '}
+                          {new Date(collab.endDate).toLocaleDateString()}
                         </p>
                       </div>
                     </div>

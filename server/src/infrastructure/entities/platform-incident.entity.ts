@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export type PlatformIncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
 export type PlatformIncidentImpact = 'minor' | 'major' | 'critical';

@@ -81,7 +81,11 @@ async function unregisterStaleMockServiceWorker() {
         removed = true;
       }
     }
-    if (removed && navigator.serviceWorker.controller && !sessionStorage.getItem('msw-sw-reloaded')) {
+    if (
+      removed &&
+      navigator.serviceWorker.controller &&
+      !sessionStorage.getItem('msw-sw-reloaded')
+    ) {
       sessionStorage.setItem('msw-sw-reloaded', '1');
       window.location.reload();
     }
@@ -112,17 +116,17 @@ root.render(
           <PreferencesProvider>
             <AuthProvider>
               <SocketProvider>
-              <NotificationsProvider>
-                <ColorBlindFilters />
-                <App />
-              </NotificationsProvider>
+                <NotificationsProvider>
+                  <ColorBlindFilters />
+                  <App />
+                </NotificationsProvider>
               </SocketProvider>
             </AuthProvider>
           </PreferencesProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
 
 // enableMocking();

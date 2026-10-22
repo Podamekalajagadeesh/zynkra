@@ -9,7 +9,7 @@ const CONTENT_REGISTRY_ABI = [
   'function verifyOwnership(uint256 tokenId) external view returns (address)',
   'function getContentByOwner(address owner) external view returns (uint256[] memory)',
   'function transferContent(uint256 tokenId, address to) external',
-  'event ContentRegistered(uint256 indexed tokenId, address indexed owner, string contentHash, uint256 timestamp)'
+  'event ContentRegistered(uint256 indexed tokenId, address indexed owner, string contentHash, uint256 timestamp)',
 ];
 
 export interface ContentMetadata {
@@ -91,7 +91,7 @@ class ContentOwnershipService {
     }
 
     this.signer = await this.provider.getSigner(wallet.address);
-    
+
     // Content Registry contract address - would be deployed on mainnet
     const registryAddress = import.meta.env.VITE_CONTENT_REGISTRY_ADDRESS || '0x...';
     this.registryContract = new ethers.Contract(registryAddress, CONTENT_REGISTRY_ABI, this.signer);
@@ -106,12 +106,16 @@ class ContentOwnershipService {
   // Upload content metadata to IPFS
   private async uploadToIPFS(metadata: any): Promise<string> {
     try {
-      const response = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS', metadata, {
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_PINATA_JWT}`,
-          'Content-Type': 'application/json'
+      const response = await axios.post(
+        'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+        metadata,
+        {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_PINATA_JWT}`,
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
       return response.data.IpfsHash;
     } catch (error) {
       console.error('Failed to upload to IPFS:', error);
@@ -120,16 +124,19 @@ class ContentOwnershipService {
   }
 
   // Register content on-chain to establish immutable ownership
-  async registerContent(content: any, contentType: ContentMetadata['contentType']): Promise<OwnershipProof> {
+  async registerContent(
+    content: any,
+    contentType: ContentMetadata['contentType']
+  ): Promise<OwnershipProof> {
     await this.ensureContract();
-    
+
     const wallet = walletService.getConnectedWallet();
     if (!wallet) throw new Error('No wallet connected');
 
     // Create metadata
     const contentId = uuidv4();
     const contentHash = this.generateContentHash(content);
-    
+
     const metadata: ContentMetadata = {
       id: contentId,
       title: content.title || 'Untitled Content',
@@ -140,7 +147,7 @@ class ContentOwnershipService {
       ipfsHash: '',
       creatorAddress: wallet.address,
       tags: content.tags || [],
-      license: content.license || 'all-rights-reserved'
+      license: content.license || 'all-rights-reserved',
     };
 
     // Upload metadata to IPFS
@@ -150,7 +157,7 @@ class ContentOwnershipService {
     // Register on-chain
     const tx = await this.registryContract!.registerContent(contentHash, `ipfs://${ipfsHash}`);
     const receipt = await tx.wait();
-    
+
     const proof: OwnershipProof = {
       tokenId: receipt.events[0].args.tokenId.toString(),
       transactionHash: receipt.transactionHash,
@@ -158,24 +165,26 @@ class ContentOwnershipService {
       contentHash,
       ownerAddress: wallet.address,
       timestamp: Date.now(),
-      metadataURI: `ipfs://${ipfsHash}`
+      metadataURI: `ipfs://${ipfsHash}`,
     };
 
     // Store proof locally
     this.storeOwnershipProof(proof);
-    
+
     return proof;
   }
 
   // Verify content ownership
-  async verifyContentOwnership(tokenId: string): Promise<{isOwner: boolean; ownerAddress: string}> {
+  async verifyContentOwnership(
+    tokenId: string
+  ): Promise<{ isOwner: boolean; ownerAddress: string }> {
     await this.ensureContract();
     const wallet = walletService.getConnectedWallet();
-    
+
     const ownerAddress = await this.registryContract!.verifyOwnership(tokenId);
     return {
       isOwner: ownerAddress.toLowerCase() === wallet?.address.toLowerCase(),
-      ownerAddress
+      ownerAddress,
     };
   }
 
@@ -186,16 +195,16 @@ class ContentOwnershipService {
     if (!wallet) return [];
 
     const tokenIds = await this.registryContract!.getContentByOwner(wallet.address);
-    
+
     // Fetch metadata for each token
     const proofs: OwnershipProof[] = [];
     for (const tokenId of tokenIds) {
       // This would fetch from chain or local storage
       const storedProofs = this.getStoredProofs();
-      const stored = storedProofs.find(p => p.tokenId === tokenId.toString());
+      const stored = storedProofs.find((p) => p.tokenId === tokenId.toString());
       if (stored) proofs.push(stored);
     }
-    
+
     return proofs;
   }
 
@@ -208,7 +217,10 @@ class ContentOwnershipService {
   }
 
   // Create self-sovereign identity claim
-  async createIdentityClaim(claimType: IdentityClaim['claimType'], data: any): Promise<IdentityClaim> {
+  async createIdentityClaim(
+    claimType: IdentityClaim['claimType'],
+    data: any
+  ): Promise<IdentityClaim> {
     const wallet = walletService.getConnectedWallet();
     if (!wallet) throw new Error('No wallet connected');
 
@@ -221,7 +233,7 @@ class ContentOwnershipService {
     }
 
     const signer = await this.provider.getSigner();
-    
+
     const claim: IdentityClaim = {
       id: uuidv4(),
       claimType,
@@ -230,16 +242,16 @@ class ContentOwnershipService {
       data,
       signature: '',
       timestamp: Date.now(),
-      validUntil: Date.now() + 365 * 24 * 60 * 60 * 1000 // 1 year
+      validUntil: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
     };
 
     // Sign the claim
     const claimString = JSON.stringify({ ...claim, signature: undefined });
     claim.signature = await signer.signMessage(claimString);
-    
+
     // Store claim
     this.storeIdentityClaim(claim);
-    
+
     return claim;
   }
 
@@ -262,7 +274,7 @@ class ContentOwnershipService {
     const ownedContent = await this.getUserOwnedContent();
     const claims = this.getIdentityClaims();
     const socialGraph = this.getSocialGraph();
-    
+
     // Calculate reputation score (simplified)
     const reputationScore = ownedContent.length * 10 + claims.length * 5 + socialGraph.length * 2;
 
@@ -273,7 +285,7 @@ class ContentOwnershipService {
       socialGraph,
       reputationScore,
       dataVault: this.getDataVault(),
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     };
   }
 
@@ -318,7 +330,7 @@ class ContentOwnershipService {
   addSocialConnection(connection: SocialGraphConnection) {
     const graph = this.getSocialGraph();
     // Only add if not already exists
-    if (!graph.some(c => c.address === connection.address && c.type === connection.type)) {
+    if (!graph.some((c) => c.address === connection.address && c.type === connection.type)) {
       graph.push(connection);
       this.storeSocialGraph(graph);
     }
@@ -339,7 +351,7 @@ class ContentOwnershipService {
     try {
       // Parse the imported identity data
       const importedIdentity: UserDigitalIdentity = JSON.parse(identityData);
-      
+
       // Validate the imported data structure
       if (!importedIdentity.claims || !Array.isArray(importedIdentity.claims)) {
         throw new Error('Invalid identity format: claims must be an array');
@@ -353,36 +365,41 @@ class ContentOwnershipService {
       }
 
       // Verify all identity claims are cryptographically valid
-      const verifiedClaims = importedIdentity.claims.filter(claim => this.verifyIdentityClaim(claim));
-      
+      const verifiedClaims = importedIdentity.claims.filter((claim) =>
+        this.verifyIdentityClaim(claim)
+      );
+
       // Merge with existing local storage
       const existingClaims = this.getIdentityClaims();
       const existingProofs = this.getStoredProofs();
       const existingSocialGraph = this.getSocialGraph();
-      
+
       // Add new claims that don't already exist
       const newClaims = verifiedClaims.filter(
-        newClaim => !existingClaims.some(existing => existing.id === newClaim.id)
+        (newClaim) => !existingClaims.some((existing) => existing.id === newClaim.id)
       );
       const allClaims = [...existingClaims, ...newClaims];
-      
+
       // Add new content ownership proofs that don't already exist
       const newProofs = importedIdentity.ownedContent.filter(
-        newProof => !existingProofs.some(existing => existing.tokenId === newProof.tokenId)
+        (newProof) => !existingProofs.some((existing) => existing.tokenId === newProof.tokenId)
       );
       const allProofs = [...existingProofs, ...newProofs];
-      
+
       // Add new social graph connections that don't already exist (merge social graph)
       const newConnections = importedIdentity.socialGraph.filter(
-        newConn => !existingSocialGraph.some(existing => existing.address === newConn.address && existing.type === newConn.type)
+        (newConn) =>
+          !existingSocialGraph.some(
+            (existing) => existing.address === newConn.address && existing.type === newConn.type
+          )
       );
       const allSocialGraph = [...existingSocialGraph, ...newConnections];
-      
+
       // Save merged data to local storage
       localStorage.setItem('identityClaims', JSON.stringify(allClaims));
       localStorage.setItem('ownershipProofs', JSON.stringify(allProofs));
       this.storeSocialGraph(allSocialGraph);
-      
+
       // Upload all imported data to IPFS to create a new data vault
       const vaultData = {
         walletAddress: wallet.address,
@@ -390,12 +407,12 @@ class ContentOwnershipService {
         ownedContent: allProofs,
         socialGraph: allSocialGraph,
         importedFrom: importedIdentity.walletAddress,
-        importTimestamp: Date.now()
+        importTimestamp: Date.now(),
       };
-      
+
       const ipfsHash = await this.uploadToIPFS(vaultData);
       localStorage.setItem('dataVault', ipfsHash);
-      
+
       // Return the merged identity with full social graph, data, and assets
       return {
         walletAddress: wallet.address,
@@ -404,7 +421,7 @@ class ContentOwnershipService {
         socialGraph: allSocialGraph,
         reputationScore: allProofs.length * 10 + allClaims.length * 5 + allSocialGraph.length * 2,
         dataVault: ipfsHash,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       };
     } catch (error) {
       console.error('Failed to import identity:', error);
@@ -413,18 +430,22 @@ class ContentOwnershipService {
   }
 
   // Verify imported identity from any compatible platform
-  async verifyImportedIdentity(identityData: string): Promise<{valid: boolean; stats: any}> {
+  async verifyImportedIdentity(identityData: string): Promise<{ valid: boolean; stats: any }> {
     try {
       const importedIdentity: UserDigitalIdentity = JSON.parse(identityData);
-      
+
       // Verify claims
-      const verifiedClaims = importedIdentity.claims.filter(claim => this.verifyIdentityClaim(claim));
-      
+      const verifiedClaims = importedIdentity.claims.filter((claim) =>
+        this.verifyIdentityClaim(claim)
+      );
+
       // Count social graph connections
       const socialConnections = importedIdentity.socialGraph?.length || 0;
-      const followers = importedIdentity.socialGraph?.filter(c => c.type === 'follower').length || 0;
-      const following = importedIdentity.socialGraph?.filter(c => c.type === 'following').length || 0;
-      
+      const followers =
+        importedIdentity.socialGraph?.filter((c) => c.type === 'follower').length || 0;
+      const following =
+        importedIdentity.socialGraph?.filter((c) => c.type === 'following').length || 0;
+
       return {
         valid: true,
         stats: {
@@ -434,14 +455,14 @@ class ContentOwnershipService {
           socialConnections,
           followers,
           following,
-          sourceAddress: importedIdentity.walletAddress
-        }
+          sourceAddress: importedIdentity.walletAddress,
+        },
       };
     } catch (error) {
       console.error('Failed to verify identity:', error);
       return {
         valid: false,
-        stats: null
+        stats: null,
       };
     }
   }

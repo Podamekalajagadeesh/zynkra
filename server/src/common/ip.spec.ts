@@ -1,10 +1,4 @@
-import {
-  parseIp,
-  parseCidr,
-  ipMatchesCidr,
-  ipInAllowlist,
-  isValidIpOrCidr,
-} from './ip';
+import { parseIp, parseCidr, ipMatchesCidr, ipInAllowlist, isValidIpOrCidr } from './ip';
 
 describe('parseIpv4 / parseIp', () => {
   it('parses dotted quads', () => {
@@ -39,7 +33,7 @@ describe('parseIpv4 / parseIp', () => {
     expect(parseIp('::1')?.bits).toBe(1n);
     expect(parseIp('2001:db8::1')?.width).toBe(128);
     expect(parseIp('2001:0db8:0000:0000:0000:0000:0000:0001')?.bits).toBe(
-      parseIp('2001:db8::1')!.bits,
+      parseIp('2001:db8::1')!.bits
     );
   });
 

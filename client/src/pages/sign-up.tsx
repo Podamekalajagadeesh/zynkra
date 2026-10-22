@@ -28,8 +28,12 @@ export function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>(
+    'idle'
+  );
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>(
+    'idle'
+  );
   const [usernameMessage, setUsernameMessage] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +86,9 @@ export function SignUpPage() {
         const result = await checkUsernameAvailability(normalizedUsername);
         const nextStatus = result.available ? 'available' : 'taken';
         setUsernameStatus(nextStatus);
-        setUsernameMessage(nextStatus === 'available' ? 'Username available.' : 'Username is already taken.');
+        setUsernameMessage(
+          nextStatus === 'available' ? 'Username available.' : 'Username is already taken.'
+        );
       } catch {
         setUsernameStatus('idle');
         setUsernameMessage('');
@@ -107,7 +113,9 @@ export function SignUpPage() {
         const result = await checkEmailAvailability(normalizedEmail);
         const nextStatus = result.available ? 'available' : 'taken';
         setEmailStatus(nextStatus);
-        setEmailMessage(nextStatus === 'available' ? 'Email available.' : 'Email is already in use.');
+        setEmailMessage(
+          nextStatus === 'available' ? 'Email available.' : 'Email is already in use.'
+        );
       } catch {
         setEmailStatus('idle');
         setEmailMessage('');
@@ -128,9 +136,10 @@ export function SignUpPage() {
       addToast('Logged in as guest.', 'success');
       navigate('/');
     } catch (err) {
-      const message = axios.isAxiosError(err) && err.response
-        ? (err.response.data.message || 'Guest sign-up failed')
-        : 'Guest sign-up failed';
+      const message =
+        axios.isAxiosError(err) && err.response
+          ? err.response.data.message || 'Guest sign-up failed'
+          : 'Guest sign-up failed';
       setIsLoading(false);
       setError(message);
       addToast(message, 'error');
@@ -148,9 +157,10 @@ export function SignUpPage() {
       addToast('Signed in anonymously.', 'success');
       navigate('/');
     } catch (err) {
-      const message = axios.isAxiosError(err) && err.response
-        ? (err.response.data.message || 'Anonymous sign-up failed')
-        : 'Anonymous sign-up failed';
+      const message =
+        axios.isAxiosError(err) && err.response
+          ? err.response.data.message || 'Anonymous sign-up failed'
+          : 'Anonymous sign-up failed';
       setIsLoading(false);
       setError(message);
       addToast(message, 'error');
@@ -194,9 +204,13 @@ export function SignUpPage() {
       setError('Password must be at least 8 characters');
       return;
     }
-    const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^a-zA-Z0-9]/].filter((re) => re.test(password)).length;
+    const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^a-zA-Z0-9]/].filter((re) =>
+      re.test(password)
+    ).length;
     if (password.length < 8 || classes < 3) {
-      setError('Password must be at least 8 characters and include at least 3 of: lowercase, uppercase, number, symbol.');
+      setError(
+        'Password must be at least 8 characters and include at least 3 of: lowercase, uppercase, number, symbol.'
+      );
       return;
     }
     if (!captcha || !captchaAnswer) {
@@ -233,10 +247,7 @@ export function SignUpPage() {
 
   if (isSignedUp) {
     return (
-      <AuthLayout
-        title="Verify your email"
-        subtitle={`Enter the 6-digit code sent to ${email}`}
-      >
+      <AuthLayout title="Verify your email" subtitle={`Enter the 6-digit code sent to ${email}`}>
         {error && (
           <p className="mb-5 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
             {error}
@@ -258,7 +269,13 @@ export function SignUpPage() {
               className="text-center text-2xl tracking-[8px]"
             />
           </div>
-          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isVerifying}>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={isVerifying}
+          >
             {isVerifying ? 'Verifying...' : 'Verify Email'}
           </Button>
         </form>
@@ -291,7 +308,9 @@ export function SignUpPage() {
             placeholder="e.g. zynkra"
           />
           {usernameMessage && (
-            <p className={`text-xs ${usernameStatus === 'available' ? 'text-green-600' : usernameStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}>
+            <p
+              className={`text-xs ${usernameStatus === 'available' ? 'text-green-600' : usernameStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}
+            >
               {usernameMessage}
             </p>
           )}
@@ -307,7 +326,9 @@ export function SignUpPage() {
             placeholder="you@example.com"
           />
           {emailMessage && (
-            <p className={`text-xs ${emailStatus === 'available' ? 'text-green-600' : emailStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}>
+            <p
+              className={`text-xs ${emailStatus === 'available' ? 'text-green-600' : emailStatus === 'taken' ? 'text-red-600' : 'text-dark-500 dark:text-dark-400'}`}
+            >
               {emailMessage}
             </p>
           )}
@@ -376,17 +397,11 @@ export function SignUpPage() {
             </button>
           </div>
         </div>
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full"
-          disabled={isLoading}
-        >
+        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
           {isLoading ? 'Creating Account...' : 'Sign Up'}
         </Button>
       </form>
-      
+
       <div className="my-6 flex items-center">
         <div className="flex-grow border-t border-dark-200 dark:border-dark-700"></div>
         <span className="mx-4 text-sm text-dark-500 dark:text-dark-400">or</span>

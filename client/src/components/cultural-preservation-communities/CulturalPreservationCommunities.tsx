@@ -113,10 +113,11 @@ export const CulturalPreservationCommunities: React.FC = () => {
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === archiveForm.communityId),
-    [communities, archiveForm.communityId],
+    [communities, archiveForm.communityId]
   );
 
-  const isMember = (communityId: string) => myMemberships.some((membership) => membership.communityId === communityId);
+  const isMember = (communityId: string) =>
+    myMemberships.some((membership) => membership.communityId === communityId);
 
   const joinCommunity = async (id: string) => {
     try {
@@ -203,7 +204,8 @@ export const CulturalPreservationCommunities: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold">Cultural Preservation Communities</h2>
         <p className="text-gray-500 mt-2">
-          Groups that archive endangered languages, traditions, and family memories with searchable digital records
+          Groups that archive endangered languages, traditions, and family memories with searchable
+          digital records
         </p>
       </div>
 
@@ -214,7 +216,12 @@ export const CulturalPreservationCommunities: React.FC = () => {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Community</Label>
-            <Select value={archiveForm.communityId} onValueChange={(value) => setArchiveForm((current) => ({ ...current, communityId: value }))}>
+            <Select
+              value={archiveForm.communityId}
+              onValueChange={(value) =>
+                setArchiveForm((current) => ({ ...current, communityId: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Choose a community" />
               </SelectTrigger>
@@ -229,7 +236,12 @@ export const CulturalPreservationCommunities: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label>Material type</Label>
-            <Select value={archiveForm.materialType} onValueChange={(value) => setArchiveForm((current) => ({ ...current, materialType: value }))}>
+            <Select
+              value={archiveForm.materialType}
+              onValueChange={(value) =>
+                setArchiveForm((current) => ({ ...current, materialType: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -244,17 +256,31 @@ export const CulturalPreservationCommunities: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label>Title</Label>
-            <Input value={archiveForm.title} onChange={(event) => setArchiveForm((current) => ({ ...current, title: event.target.value }))} placeholder="Grandmother's harvest song" />
+            <Input
+              value={archiveForm.title}
+              onChange={(event) =>
+                setArchiveForm((current) => ({ ...current, title: event.target.value }))
+              }
+              placeholder="Grandmother's harvest song"
+            />
           </div>
           <div className="space-y-2">
             <Label>Language</Label>
-            <Input value={archiveForm.language} onChange={(event) => setArchiveForm((current) => ({ ...current, language: event.target.value }))} placeholder="Quechua" />
+            <Input
+              value={archiveForm.language}
+              onChange={(event) =>
+                setArchiveForm((current) => ({ ...current, language: event.target.value }))
+              }
+              placeholder="Quechua"
+            />
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Description</Label>
             <Textarea
               value={archiveForm.description}
-              onChange={(event) => setArchiveForm((current) => ({ ...current, description: event.target.value }))}
+              onChange={(event) =>
+                setArchiveForm((current) => ({ ...current, description: event.target.value }))
+              }
               placeholder="Describe the language sample, tradition, or memory in detail"
               rows={4}
             />
@@ -263,14 +289,25 @@ export const CulturalPreservationCommunities: React.FC = () => {
             <Label>Transcript or source notes</Label>
             <Textarea
               value={archiveForm.sourceOrTranscript}
-              onChange={(event) => setArchiveForm((current) => ({ ...current, sourceOrTranscript: event.target.value }))}
+              onChange={(event) =>
+                setArchiveForm((current) => ({
+                  ...current,
+                  sourceOrTranscript: event.target.value,
+                }))
+              }
               placeholder="Optional transcription, translation, or source context"
               rows={3}
             />
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Media URL</Label>
-            <Input value={archiveForm.mediaUrl} onChange={(event) => setArchiveForm((current) => ({ ...current, mediaUrl: event.target.value }))} placeholder="https://..." />
+            <Input
+              value={archiveForm.mediaUrl}
+              onChange={(event) =>
+                setArchiveForm((current) => ({ ...current, mediaUrl: event.target.value }))
+              }
+              placeholder="https://..."
+            />
           </div>
           <div className="md:col-span-2 flex justify-end">
             <Button onClick={createArchiveEntry} disabled={!isMember(archiveForm.communityId)}>
@@ -291,14 +328,20 @@ export const CulturalPreservationCommunities: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(CommunityRole).map(([key, value]) => (
-                    <SelectItem key={key} value={value}>{key.replaceAll('_', ' ')}</SelectItem>
+                    <SelectItem key={key} value={value}>
+                      {key.replaceAll('_', ' ')}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Your preferred language</Label>
-              <Input value={selectedLanguage} onChange={(event) => setSelectedLanguage(event.target.value)} placeholder="English" />
+              <Input
+                value={selectedLanguage}
+                onChange={(event) => setSelectedLanguage(event.target.value)}
+                placeholder="English"
+              />
             </div>
           </CardContent>
         </Card>
@@ -309,7 +352,9 @@ export const CulturalPreservationCommunities: React.FC = () => {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="text-lg">{community.name}</CardTitle>
-                  {community.description && <p className="text-sm text-gray-500 mt-1">{community.description}</p>}
+                  {community.description && (
+                    <p className="text-sm text-gray-500 mt-1">{community.description}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {community.focusAreas.map((focus) => (
@@ -358,7 +403,9 @@ export const CulturalPreservationCommunities: React.FC = () => {
                       <p className="text-sm text-gray-600 mt-2">{entry.description}</p>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
                         {entry.language && <span>Language: {entry.language}</span>}
-                        {entry.author?.username && <span>Contributor: {entry.author.username}</span>}
+                        {entry.author?.username && (
+                          <span>Contributor: {entry.author.username}</span>
+                        )}
                       </div>
                       {entry.librarySummary && (
                         <div className="mt-3 rounded-md border border-teal-200 bg-teal-50 p-2 text-sm text-teal-900">
@@ -369,7 +416,9 @@ export const CulturalPreservationCommunities: React.FC = () => {
                     </div>
                   ))}
                   {(community.archiveEntries ?? []).length === 0 && (
-                    <p className="text-sm text-gray-500">No archive entries yet. Add the first oral history, translation, or memory.</p>
+                    <p className="text-sm text-gray-500">
+                      No archive entries yet. Add the first oral history, translation, or memory.
+                    </p>
                   )}
                 </div>
               </div>
@@ -396,7 +445,9 @@ export const CulturalPreservationCommunities: React.FC = () => {
         )}
       </div>
       {selectedCommunity && !isMember(selectedCommunity.id) && (
-        <p className="text-sm text-gray-500">Join {selectedCommunity.name} to publish archive entries there.</p>
+        <p className="text-sm text-gray-500">
+          Join {selectedCommunity.name} to publish archive entries there.
+        </p>
       )}
     </div>
   );

@@ -31,7 +31,7 @@ export class InsightsService {
     @InjectRepository(Comment)
     private readonly commentsRepository: Repository<Comment>,
     @InjectRepository(Mention)
-    private readonly mentionsRepository: Repository<Mention>,
+    private readonly mentionsRepository: Repository<Mention>
   ) {}
 
   async getSentimentInsights(pageId: string): Promise<SentimentInsights> {
@@ -44,7 +44,7 @@ export class InsightsService {
 
     // Get all comments for page posts
     const pagePosts = page.posts || [];
-    const postIds = pagePosts.map(post => post.id);
+    const postIds = pagePosts.map((post) => post.id);
 
     const comments = await this.commentsRepository.find({
       where: postIds.length > 0 ? { post: { id: In(postIds) } } : {},
@@ -58,19 +58,26 @@ export class InsightsService {
 
     // Calculate comment sentiment stats
     const totalComments = comments.length;
-    const positiveComments = comments.filter(c => c.sentiment === CommentSentimentType.POSITIVE).length;
-    const neutralComments = comments.filter(c => c.sentiment === CommentSentimentType.NEUTRAL).length;
-    const negativeComments = comments.filter(c => c.sentiment === CommentSentimentType.NEGATIVE).length;
-    
-    const averageSentimentScore = comments.length > 0 
-      ? comments.reduce((sum, c) => sum + (c.sentimentScore || 0), 0) / comments.length
-      : 0;
+    const positiveComments = comments.filter(
+      (c) => c.sentiment === CommentSentimentType.POSITIVE
+    ).length;
+    const neutralComments = comments.filter(
+      (c) => c.sentiment === CommentSentimentType.NEUTRAL
+    ).length;
+    const negativeComments = comments.filter(
+      (c) => c.sentiment === CommentSentimentType.NEGATIVE
+    ).length;
+
+    const averageSentimentScore =
+      comments.length > 0
+        ? comments.reduce((sum, c) => sum + (c.sentimentScore || 0), 0) / comments.length
+        : 0;
 
     // Calculate mention sentiment stats
     const totalMentions = mentions.length;
-    const positiveMentions = mentions.filter(m => m.sentiment === 'positive').length;
-    const neutralMentions = mentions.filter(m => m.sentiment === 'neutral').length;
-    const negativeMentions = mentions.filter(m => m.sentiment === 'negative').length;
+    const positiveMentions = mentions.filter((m) => m.sentiment === 'positive').length;
+    const neutralMentions = mentions.filter((m) => m.sentiment === 'neutral').length;
+    const negativeMentions = mentions.filter((m) => m.sentiment === 'negative').length;
 
     return {
       totalComments,

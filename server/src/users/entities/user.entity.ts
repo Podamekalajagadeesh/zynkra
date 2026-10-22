@@ -1,4 +1,3 @@
-
 import { Exclude } from 'class-transformer';
 import { RelationshipStatus } from './relationship-status.enum';
 import { LifeEvent } from './life-event.entity';
@@ -64,8 +63,6 @@ import { Order } from '../../marketplace/entities/order.entity';
 // import { ScheduledStream } from '../../../broken-modules/livestream/entities/scheduled-stream.entity';
 import { SavedMarketplaceListing } from '../../saved-marketplace-listings/entities/saved-marketplace-listing.entity';
 import { Trend } from '../../trends/entities/trend.entity';
-
-
 
 export enum EmailSearchPrivacy {
   EVERYONE = 'everyone',
@@ -589,7 +586,14 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   accountPreferences: {
     theme?: 'light' | 'dark' | 'system';
-    appIcon?: 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
+    appIcon?:
+      | 'default'
+      | 'neon'
+      | 'ocean'
+      | 'sunset'
+      | 'creator-classic'
+      | 'creator-vibrant'
+      | 'creator-minimal';
     language?: string;
     timezone?: string;
     defaultPrivacy?: 'public' | 'friends' | 'private';
@@ -702,10 +706,10 @@ export class User {
   @OneToMany(() => Sticker, (sticker) => sticker.creator)
   stickers: Sticker[];
 
-  @OneToMany(() => UserSticker, userSticker => userSticker.user)
+  @OneToMany(() => UserSticker, (userSticker) => userSticker.user)
   userStickers: UserSticker[];
 
-  @OneToMany(() => DigitalAsset, digitalAsset => digitalAsset.owner)
+  @OneToMany(() => DigitalAsset, (digitalAsset) => digitalAsset.owner)
   digitalAssets: DigitalAsset[];
 
   @OneToMany(() => Page, (page) => page.owner)
@@ -821,6 +825,10 @@ export class User {
   @Column({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 }

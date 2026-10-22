@@ -36,7 +36,9 @@ export function buildDocumentarySummary(payload: {
 
   const summary = [
     `A full-sensory documentary for ${eventName} compiled from ${memories.length} memories.`,
-    participantNames.length > 0 ? `Participants: ${participantNames.join(', ')}.` : 'Multiple perspectives were woven into the narrative.',
+    participantNames.length > 0
+      ? `Participants: ${participantNames.join(', ')}.`
+      : 'Multiple perspectives were woven into the narrative.',
     `Highlights: ${highlights.join(' | ')}`,
   ].join(' ');
 

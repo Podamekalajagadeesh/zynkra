@@ -70,7 +70,7 @@ describe('ScheduledPostsService', () => {
 
       expect(result.status).toBe('scheduled');
       expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'user-1', content: 'Hello', status: 'scheduled' }),
+        expect.objectContaining({ userId: 'user-1', content: 'Hello', status: 'scheduled' })
       );
     });
 
@@ -94,7 +94,7 @@ describe('ScheduledPostsService', () => {
       await service.findAll('user-1');
 
       expect(repo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { userId: 'user-1' } }),
+        expect.objectContaining({ where: { userId: 'user-1' } })
       );
     });
 
@@ -102,7 +102,7 @@ describe('ScheduledPostsService', () => {
       repo.findOne.mockResolvedValue(makeScheduled({ userId: 'owner-1' }));
 
       await expect(service.update('user-1', 'sp-1', { content: 'x' })).rejects.toThrow(
-        ForbiddenException,
+        ForbiddenException
       );
     });
 
@@ -126,14 +126,18 @@ describe('ScheduledPostsService', () => {
     it('publishes due posts via PostsService and marks them published', async () => {
       const due = makeScheduled({ status: 'scheduled' as const });
       repo.find.mockResolvedValue([due]);
-      postsService.create.mockResolvedValue({ id: "post-1" } as any);
+      postsService.create.mockResolvedValue({ id: 'post-1' } as any);
       repo.save.mockImplementation(async (post: any) => post as ScheduledPost);
 
       await service.publishDue();
 
       expect(postsService.create).toHaveBeenCalledWith(
         { userId: 'user-1' },
-        expect.objectContaining({ content: 'Scheduled content', postType: 'post', visibility: 'public' }),
+        expect.objectContaining({
+          content: 'Scheduled content',
+          postType: 'post',
+          visibility: 'public',
+        })
       );
       expect(repo.save).toHaveBeenCalledWith(expect.objectContaining({ status: 'published' }));
     });
@@ -141,12 +145,15 @@ describe('ScheduledPostsService', () => {
     it('normalizes "feed" postType to "post" when publishing', async () => {
       const due = makeScheduled({ status: 'scheduled' as const, postType: 'feed' });
       repo.find.mockResolvedValue([due]);
-      postsService.create.mockResolvedValue({ id: "post-1" } as any);
+      postsService.create.mockResolvedValue({ id: 'post-1' } as any);
       repo.save.mockImplementation(async (post: any) => post as ScheduledPost);
 
       await service.publishDue();
 
-      const [, dto] = postsService.create.mock.calls[0] as [{ userId: string }, Record<string, unknown>];
+      const [, dto] = postsService.create.mock.calls[0] as [
+        { userId: string },
+        Record<string, unknown>,
+      ];
       expect(dto.postType).toBe('post');
     });
 

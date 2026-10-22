@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Session, Req, Res, Logger, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Session,
+  Req,
+  Res,
+  Logger,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { SiweMessage, generateNonce } from 'siwe';
 import { Request } from 'express';
 import { UsersService } from '../users/users.service';
@@ -18,7 +29,7 @@ export class SiweController {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectRepository(LoginSession)
-    private readonly loginSessionsRepository: Repository<LoginSession>,
+    private readonly loginSessionsRepository: Repository<LoginSession>
   ) {}
 
   /**
@@ -31,7 +42,7 @@ export class SiweController {
   @Get('nonce')
   getNonce(
     @Session() session: Record<string, any>,
-    @Res({ passthrough: true }) res: import('express').Response,
+    @Res({ passthrough: true }) res: import('express').Response
   ): string {
     // generateNonce() is cryptographically secure (Math.random is guessable).
     const nonce = generateNonce();
@@ -51,7 +62,7 @@ export class SiweController {
   async verify(
     @Body() { message, signature }: { message: string; signature: string },
     @Session() session: Record<string, any>,
-    @Req() req: Request,
+    @Req() req: Request
   ) {
     // The nonce is single-use: clear it before any await so a failed or
     // replayed attempt cannot reuse it.
@@ -71,7 +82,7 @@ export class SiweController {
       }));
     } catch (error) {
       this.logger.warn(
-        `SIWE signature verification failed: ${error instanceof Error ? error.message : String(error)}`,
+        `SIWE signature verification failed: ${error instanceof Error ? error.message : String(error)}`
       );
       throw new UnauthorizedException('Invalid SIWE signature.');
     }
@@ -103,7 +114,7 @@ export class SiweController {
         typ: 'access',
         aud: this.configService.get<string>('JWT_AUDIENCE', 'zynkra-api'),
       },
-      { expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '60m') as any },
+      { expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '60m') as any }
     );
 
     session.siwe = fields;

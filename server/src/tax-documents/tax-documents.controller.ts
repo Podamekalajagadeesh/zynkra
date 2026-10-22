@@ -33,7 +33,7 @@ export class TaxDocumentsController {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="zynkra-1099-${document.taxYear}.txt"`,
+      `attachment; filename="zynkra-1099-${document.taxYear}.txt"`
     );
     res.send(this.taxDocumentsService.renderAsText(document));
   }

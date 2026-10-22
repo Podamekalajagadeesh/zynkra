@@ -69,7 +69,7 @@ describe('NotesService', () => {
           user,
           helpfulnessUpvotes: 0,
           helpfulnessDownvotes: 0,
-        }),
+        })
       );
     });
 
@@ -78,7 +78,10 @@ describe('NotesService', () => {
       notesRepo.create.mockReturnValue(makeNote({ postId: 'post-1' }));
       notesRepo.save.mockResolvedValue(makeNote({ postId: 'post-1' }));
 
-      const result = await service.create({ content: 'Note on post', postId: 'post-1' } as any, user);
+      const result = await service.create(
+        { content: 'Note on post', postId: 'post-1' } as any,
+        user
+      );
 
       expect(result.postId).toBe('post-1');
     });
@@ -132,10 +135,9 @@ describe('NotesService', () => {
       const result = await service.findFollowingNotes('user-1', ['user-2', 'user-3']);
 
       expect(result).toHaveLength(1);
-      expect(mockQB.where).toHaveBeenCalledWith(
-        'note.userId IN (:...followingIds)',
-        { followingIds: ['user-2', 'user-3'] },
-      );
+      expect(mockQB.where).toHaveBeenCalledWith('note.userId IN (:...followingIds)', {
+        followingIds: ['user-2', 'user-3'],
+      });
     });
   });
 
@@ -192,7 +194,7 @@ describe('NotesService', () => {
       expect(notesRepo.delete).toHaveBeenCalledWith(
         expect.objectContaining({
           expiresAt: expect.any(Object),
-        }),
+        })
       );
     });
   });

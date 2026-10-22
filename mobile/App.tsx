@@ -81,7 +81,8 @@ const starterPosts: Post[] = [
     id: '1',
     author: 'Mina',
     handle: '@mina',
-    content: 'Zynkra is now running as a real mobile experience with live content and instant posting.',
+    content:
+      'Zynkra is now running as a real mobile experience with live content and instant posting.',
     likes: 24,
     comments: 7,
     time: 'now',
@@ -90,7 +91,8 @@ const starterPosts: Post[] = [
     id: '2',
     author: 'Ayo',
     handle: '@ayo',
-    content: 'The mobile experience now supports polished feed refresh, posting, and offline recovery.',
+    content:
+      'The mobile experience now supports polished feed refresh, posting, and offline recovery.',
     likes: 18,
     comments: 3,
     time: '10m ago',
@@ -104,7 +106,11 @@ export default function App() {
   const [statusMessage, setStatusMessage] = useState('Connected to the Zynkra feed');
   const [statusTone, setStatusTone] = useState<'info' | 'success' | 'warning' | 'error'>('info');
   const [connectionState, setConnectionState] = useState<'online' | 'offline'>(
-    typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? (navigator.onLine ? 'online' : 'offline') : 'online',
+    typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean'
+      ? navigator.onLine
+        ? 'online'
+        : 'offline'
+      : 'online'
   );
   const [queuedPosts, setQueuedPosts] = useState<QueuedPost[]>(() => readQueuedPosts());
   const queuedPostsRef = useRef<QueuedPost[]>([]);
@@ -173,39 +179,44 @@ export default function App() {
     } catch (error) {
       console.warn('Using offline sample feed:', error);
       setPosts(starterPosts);
-      setStatusMessage(`Offline mode: ${error instanceof Error ? error.message : 'sample feed is active'}`);
+      setStatusMessage(
+        `Offline mode: ${error instanceof Error ? error.message : 'sample feed is active'}`
+      );
       setStatusTone('warning');
     } finally {
       setLoading(false);
     }
   }, [checkBackendHealth]);
 
-  const postToBackend = useCallback(async (payload: { content: string; author: string; handle: string }) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const postToBackend = useCallback(
+    async (payload: { content: string; author: string; handle: string }) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/mobile/posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/mobile/posts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
 
-      if (!response.ok) {
-        throw new Error(`Request failed with ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`Request failed with ${response.status}`);
+        }
+
+        return true;
+      } catch (error) {
+        console.warn('Mobile post sync failed:', error);
+        return false;
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      return true;
-    } catch (error) {
-      console.warn('Mobile post sync failed:', error);
-      return false;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }, []);
+    },
+    []
+  );
 
   const syncQueuedPosts = useCallback(async () => {
     if (!queuedPostsRef.current.length) {
@@ -213,7 +224,9 @@ export default function App() {
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      setStatusMessage('Offline: queued posts will retry automatically when the connection returns.');
+      setStatusMessage(
+        'Offline: queued posts will retry automatically when the connection returns.'
+      );
       setStatusTone('warning');
       return;
     }
@@ -255,7 +268,9 @@ export default function App() {
       return;
     }
 
-    setStatusMessage(`${remaining.length} post${remaining.length === 1 ? '' : 's'} remain queued for recovery`);
+    setStatusMessage(
+      `${remaining.length} post${remaining.length === 1 ? '' : 's'} remain queued for recovery`
+    );
     setStatusTone('warning');
   }, [loadPosts, postToBackend]);
 
@@ -289,7 +304,10 @@ export default function App() {
     let intervalId: number | undefined;
     if (typeof setInterval !== 'undefined') {
       intervalId = setInterval(() => {
-        if ((typeof navigator === 'undefined' || navigator.onLine) && AppState.currentState === 'active') {
+        if (
+          (typeof navigator === 'undefined' || navigator.onLine) &&
+          AppState.currentState === 'active'
+        ) {
           void syncQueuedPosts();
         }
       }, 15_000) as unknown as number; // every 15s while active
@@ -369,16 +387,37 @@ export default function App() {
           <Text style={styles.subtitle}>Universal social app for iOS and Android</Text>
         </View>
         <TouchableOpacity style={styles.refreshButton} onPress={() => void loadPosts()}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.refreshButtonText}>Refresh</Text>}
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.refreshButtonText}>Refresh</Text>
+          )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.statusCard}>
-        <Text style={styles.statusTitle}>{connectionState === 'online' ? '● Online' : '● Offline'}</Text>
-        <Text style={styles.statusText}>{queuedPosts.length > 0 ? `${queuedPosts.length} queued for sync` : 'All changes synced'}</Text>
+        <Text style={styles.statusTitle}>
+          {connectionState === 'online' ? '● Online' : '● Offline'}
+        </Text>
+        <Text style={styles.statusText}>
+          {queuedPosts.length > 0 ? `${queuedPosts.length} queued for sync` : 'All changes synced'}
+        </Text>
       </View>
 
-      <Text style={[styles.status, statusTone === 'error' ? styles.statusError : statusTone === 'success' ? styles.statusSuccess : statusTone === 'warning' ? styles.statusWarning : styles.statusInfo]}>{statusMessage}</Text>
+      <Text
+        style={[
+          styles.status,
+          statusTone === 'error'
+            ? styles.statusError
+            : statusTone === 'success'
+              ? styles.statusSuccess
+              : statusTone === 'warning'
+                ? styles.statusWarning
+                : styles.statusInfo,
+        ]}
+      >
+        {statusMessage}
+      </Text>
 
       <View style={styles.composeCard}>
         <TextInput

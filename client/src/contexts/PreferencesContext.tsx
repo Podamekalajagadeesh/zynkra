@@ -67,8 +67,23 @@ export function useAppPreferences() {
 }
 
 const themeOptions: ThemePreference[] = ['light', 'dark'];
-const languageOptions: LanguagePreference[] = LANGUAGE_OPTIONS.map((option) => option.value as LanguagePreference);
-const regionOptions: RegionPreference[] = ['system', 'US', 'GB', 'CA', 'AU', 'IN', 'JP', 'BR', 'MX', 'ES', 'FR', 'DE'];
+const languageOptions: LanguagePreference[] = LANGUAGE_OPTIONS.map(
+  (option) => option.value as LanguagePreference
+);
+const regionOptions: RegionPreference[] = [
+  'system',
+  'US',
+  'GB',
+  'CA',
+  'AU',
+  'IN',
+  'JP',
+  'BR',
+  'MX',
+  'ES',
+  'FR',
+  'DE',
+];
 
 const isEditableElement = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) {
@@ -76,12 +91,19 @@ const isEditableElement = (target: EventTarget | null) => {
   }
 
   const tagName = target.tagName.toLowerCase();
-  return target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select';
+  return (
+    target.isContentEditable ||
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select'
+  );
 };
 
 const readStoredTheme = (): ThemePreference => {
   const storedTheme = localStorage.getItem(PREFERENCE_STORAGE_KEYS.theme);
-  return themeOptions.includes(storedTheme as ThemePreference) ? (storedTheme as ThemePreference) : 'light';
+  return themeOptions.includes(storedTheme as ThemePreference)
+    ? (storedTheme as ThemePreference)
+    : 'light';
 };
 
 const readStoredLanguage = (): LanguagePreference => {
@@ -93,10 +115,13 @@ const readStoredLanguage = (): LanguagePreference => {
 
 const readStoredRegion = (): RegionPreference => {
   const storedRegion = localStorage.getItem(PREFERENCE_STORAGE_KEYS.region);
-  return regionOptions.includes(storedRegion as RegionPreference) ? (storedRegion as RegionPreference) : 'system';
+  return regionOptions.includes(storedRegion as RegionPreference)
+    ? (storedRegion as RegionPreference)
+    : 'system';
 };
 
-const readStoredKeyboardNavigation = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.keyboardNavigation) === 'true';
+const readStoredKeyboardNavigation = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.keyboardNavigation) === 'true';
 const readStoredAutoTranslate = (): boolean => {
   const stored = localStorage.getItem(PREFERENCE_STORAGE_KEYS.autoTranslate);
   return stored === null ? true : stored === 'true'; // Default to enabled
@@ -107,7 +132,8 @@ const readStoredFeedSort = (): FeedSortPreference => {
   return (stored as FeedSortPreference) === 'chronological' ? 'chronological' : 'algorithmic'; // Default to algorithmic
 };
 
-const readStoredScreenTimeEnabled = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.screenTimeEnabled) === 'true';
+const readStoredScreenTimeEnabled = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.screenTimeEnabled) === 'true';
 const readStoredDailyScreenTimeLimit = () => {
   const stored = localStorage.getItem(PREFERENCE_STORAGE_KEYS.dailyScreenTimeLimit);
   return stored ? parseInt(stored, 10) : 120; // Default to 2 hours (120 minutes)
@@ -118,19 +144,24 @@ const readStoredContentWarningsEnabled = () => {
 };
 
 // Accessibility preference readers
-const readStoredHighContrastMode = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.highContrastMode) === 'true';
-const readStoredReducedMotion = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.reducedMotion) === 'true';
-const readStoredScreenReaderOptimized = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.screenReaderOptimized) === 'true';
-const readStoredVoiceControlEnabled = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.voiceControlEnabled) === 'true';
-const readStoredLargeTextMode = () => localStorage.getItem(PREFERENCE_STORAGE_KEYS.largeTextMode) === 'true';
+const readStoredHighContrastMode = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.highContrastMode) === 'true';
+const readStoredReducedMotion = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.reducedMotion) === 'true';
+const readStoredScreenReaderOptimized = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.screenReaderOptimized) === 'true';
+const readStoredVoiceControlEnabled = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.voiceControlEnabled) === 'true';
+const readStoredLargeTextMode = () =>
+  localStorage.getItem(PREFERENCE_STORAGE_KEYS.largeTextMode) === 'true';
 const readStoredColorBlindMode = (): ColorBlindMode => {
   const stored = localStorage.getItem(PREFERENCE_STORAGE_KEYS.colorBlindMode) as ColorBlindMode;
-  return COLOR_BLIND_OPTIONS.find(option => option.value === stored) ? stored : 'none'; // Default to none
+  return COLOR_BLIND_OPTIONS.find((option) => option.value === stored) ? stored : 'none'; // Default to none
 };
 
 const readStoredAppIcon = (): AppIconPreference => {
   const stored = localStorage.getItem(PREFERENCE_STORAGE_KEYS.appIcon) as AppIconPreference;
-  const validIcons = APP_ICON_OPTIONS.map(option => option.value);
+  const validIcons = APP_ICON_OPTIONS.map((option) => option.value);
   return validIcons.includes(stored) ? stored : 'default'; // Default to default icon
 };
 
@@ -139,33 +170,50 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const shortcutPrefixRef = useRef<string | null>(null);
   const shortcutTimeoutRef = useRef<number | null>(null);
-  
+
   // Core state
   const [theme, setThemeState] = useState<ThemePreference>(readStoredTheme());
   const [appIcon, setAppIconState] = useState<AppIconPreference>(readStoredAppIcon());
   const [language, setLanguageState] = useState<LanguagePreference>(readStoredLanguage());
   const [region, setRegionState] = useState<RegionPreference>(readStoredRegion());
-  const [keyboardNavigationEnabled, setKeyboardNavigationEnabledState] = useState<boolean>(readStoredKeyboardNavigation());
+  const [keyboardNavigationEnabled, setKeyboardNavigationEnabledState] = useState<boolean>(
+    readStoredKeyboardNavigation()
+  );
   const [autoTranslate, setAutoTranslateState] = useState<boolean>(readStoredAutoTranslate());
   const [feedSort, setFeedSortState] = useState<FeedSortPreference>(readStoredFeedSort());
-  const [screenTimeEnabled, setScreenTimeEnabledState] = useState<boolean>(readStoredScreenTimeEnabled());
-  const [dailyScreenTimeLimit, setDailyScreenTimeLimitState] = useState<number>(readStoredDailyScreenTimeLimit());
-  const [contentWarningsEnabled, setContentWarningsEnabledState] = useState<boolean>(readStoredContentWarningsEnabled());
-  
+  const [screenTimeEnabled, setScreenTimeEnabledState] = useState<boolean>(
+    readStoredScreenTimeEnabled()
+  );
+  const [dailyScreenTimeLimit, setDailyScreenTimeLimitState] = useState<number>(
+    readStoredDailyScreenTimeLimit()
+  );
+  const [contentWarningsEnabled, setContentWarningsEnabledState] = useState<boolean>(
+    readStoredContentWarningsEnabled()
+  );
+
   // Accessibility state
-  const [highContrastMode, setHighContrastModeState] = useState<boolean>(readStoredHighContrastMode());
+  const [highContrastMode, setHighContrastModeState] = useState<boolean>(
+    readStoredHighContrastMode()
+  );
   const [reducedMotion, setReducedMotionState] = useState<boolean>(readStoredReducedMotion());
-  const [screenReaderOptimized, setScreenReaderOptimizedState] = useState<boolean>(readStoredScreenReaderOptimized());
-  const [voiceControlEnabled, setVoiceControlEnabledState] = useState<boolean>(readStoredVoiceControlEnabled());
+  const [screenReaderOptimized, setScreenReaderOptimizedState] = useState<boolean>(
+    readStoredScreenReaderOptimized()
+  );
+  const [voiceControlEnabled, setVoiceControlEnabledState] = useState<boolean>(
+    readStoredVoiceControlEnabled()
+  );
   const [largeTextMode, setLargeTextModeState] = useState<boolean>(readStoredLargeTextMode());
-  const [colorBlindMode, setColorBlindModeState] = useState<ColorBlindMode>(readStoredColorBlindMode());
+  const [colorBlindMode, setColorBlindModeState] = useState<ColorBlindMode>(
+    readStoredColorBlindMode()
+  );
 
   // Core setters
   const setTheme = (newTheme: ThemePreference) => setThemeState(newTheme);
   const setAppIcon = (newIcon: AppIconPreference) => setAppIconState(newIcon);
   const setLanguage = (newLanguage: LanguagePreference) => setLanguageState(newLanguage);
   const setRegion = (newRegion: RegionPreference) => setRegionState(newRegion);
-  const setKeyboardNavigationEnabled = (enabled: boolean) => setKeyboardNavigationEnabledState(enabled);
+  const setKeyboardNavigationEnabled = (enabled: boolean) =>
+    setKeyboardNavigationEnabledState(enabled);
   const setAutoTranslate = (enabled: boolean) => setAutoTranslateState(enabled);
   const setFeedSort = (sort: FeedSortPreference) => setFeedSortState(sort);
   const setScreenTimeEnabled = (enabled: boolean) => setScreenTimeEnabledState(enabled);
@@ -188,7 +236,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const locale = buildLocale(language, region);
-    const isRtl = isRtlLanguage(language === 'system' ? (navigator.language.split('-')[0] || 'en') : language);
+    const isRtl = isRtlLanguage(
+      language === 'system' ? navigator.language.split('-')[0] || 'en' : language
+    );
     document.documentElement.lang = locale;
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('data-locale', locale);
@@ -198,7 +248,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [language, region]);
 
   useEffect(() => {
-    localStorage.setItem(PREFERENCE_STORAGE_KEYS.keyboardNavigation, String(keyboardNavigationEnabled));
+    localStorage.setItem(
+      PREFERENCE_STORAGE_KEYS.keyboardNavigation,
+      String(keyboardNavigationEnabled)
+    );
   }, [keyboardNavigationEnabled]);
 
   useEffect(() => {
@@ -214,11 +267,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [screenTimeEnabled]);
 
   useEffect(() => {
-    localStorage.setItem(PREFERENCE_STORAGE_KEYS.dailyScreenTimeLimit, String(dailyScreenTimeLimit));
+    localStorage.setItem(
+      PREFERENCE_STORAGE_KEYS.dailyScreenTimeLimit,
+      String(dailyScreenTimeLimit)
+    );
   }, [dailyScreenTimeLimit]);
 
   useEffect(() => {
-    localStorage.setItem(PREFERENCE_STORAGE_KEYS.contentWarningsEnabled, String(contentWarningsEnabled));
+    localStorage.setItem(
+      PREFERENCE_STORAGE_KEYS.contentWarningsEnabled,
+      String(contentWarningsEnabled)
+    );
   }, [contentWarningsEnabled]);
 
   useEffect(() => {
@@ -237,7 +296,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [reducedMotion]);
 
   useEffect(() => {
-    localStorage.setItem(PREFERENCE_STORAGE_KEYS.screenReaderOptimized, String(screenReaderOptimized));
+    localStorage.setItem(
+      PREFERENCE_STORAGE_KEYS.screenReaderOptimized,
+      String(screenReaderOptimized)
+    );
     document.documentElement.setAttribute('data-screen-reader', String(screenReaderOptimized));
   }, [screenReaderOptimized]);
 
@@ -343,11 +405,15 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   // Voice control implementation
   useEffect(() => {
-    if (!voiceControlEnabled || !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    if (
+      !voiceControlEnabled ||
+      !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+    ) {
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
@@ -355,19 +421,44 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     recognition.onresult = (event: any) => {
       const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
       console.log('Voice command received:', command);
-      
+
       // Navigation commands
-      if (command.includes('go home') || command.includes('home') || command.includes('open home')) {
+      if (
+        command.includes('go home') ||
+        command.includes('home') ||
+        command.includes('open home')
+      ) {
         navigate('/');
-      } else if (command.includes('settings') || command.includes('go to settings') || command.includes('open settings')) {
+      } else if (
+        command.includes('settings') ||
+        command.includes('go to settings') ||
+        command.includes('open settings')
+      ) {
         navigate('/settings');
-      } else if (command.includes('profile') || command.includes('go to profile') || command.includes('open my profile')) {
+      } else if (
+        command.includes('profile') ||
+        command.includes('go to profile') ||
+        command.includes('open my profile')
+      ) {
         navigate('/profile');
-      } else if (command.includes('messages') || command.includes('go to messages') || command.includes('open messages') || command.includes('go to dms')) {
+      } else if (
+        command.includes('messages') ||
+        command.includes('go to messages') ||
+        command.includes('open messages') ||
+        command.includes('go to dms')
+      ) {
         navigate('/dms');
-      } else if (command.includes('notifications') || command.includes('go to notifications') || command.includes('open notifications')) {
+      } else if (
+        command.includes('notifications') ||
+        command.includes('go to notifications') ||
+        command.includes('open notifications')
+      ) {
         navigate('/notifications');
-      } else if (command.includes('search') || command.includes('open search') || command.includes('search for')) {
+      } else if (
+        command.includes('search') ||
+        command.includes('open search') ||
+        command.includes('search for')
+      ) {
         const searchInput = document.getElementById('global-search') as HTMLInputElement | null;
         if (searchInput) {
           searchInput.focus();
@@ -377,15 +468,35 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
             searchInput.value = searchMatch[1];
           }
         }
-      } else if (command.includes('explore') || command.includes('go to explore') || command.includes('open explore')) {
+      } else if (
+        command.includes('explore') ||
+        command.includes('go to explore') ||
+        command.includes('open explore')
+      ) {
         navigate('/explore');
-      } else if (command.includes('login') || command.includes('go to login') || command.includes('open login')) {
+      } else if (
+        command.includes('login') ||
+        command.includes('go to login') ||
+        command.includes('open login')
+      ) {
         navigate('/login');
-      } else if (command.includes('back') || command.includes('go back') || command.includes('previous page')) {
+      } else if (
+        command.includes('back') ||
+        command.includes('go back') ||
+        command.includes('previous page')
+      ) {
         window.history.back();
-      } else if (command.includes('forward') || command.includes('next page') || command.includes('go forward')) {
+      } else if (
+        command.includes('forward') ||
+        command.includes('next page') ||
+        command.includes('go forward')
+      ) {
         window.history.forward();
-      } else if (command.includes('refresh') || command.includes('reload page') || command.includes('refresh page')) {
+      } else if (
+        command.includes('refresh') ||
+        command.includes('reload page') ||
+        command.includes('refresh page')
+      ) {
         window.location.reload();
       } else if (command.includes('scroll up') || command.includes('move up')) {
         window.scrollBy({ top: -200, behavior: 'smooth' });
@@ -395,7 +506,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (command.includes('scroll to bottom') || command.includes('go to bottom')) {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      } else if (command.includes('click') || command.includes('select') || command.includes('activate')) {
+      } else if (
+        command.includes('click') ||
+        command.includes('select') ||
+        command.includes('activate')
+      ) {
         // Try to find and click a button or link with text matching the command
         const elements = document.querySelectorAll('button, a, [role="button"]');
         for (const element of elements) {
@@ -454,7 +569,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     largeTextMode,
     colorBlindMode,
     setTheme,
-    toggleTheme: () => setThemeState((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light')),
+    toggleTheme: () =>
+      setThemeState((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light')),
     setLanguage,
     setRegion,
     setKeyboardNavigationEnabled,

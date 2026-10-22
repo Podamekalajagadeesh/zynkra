@@ -1,7 +1,24 @@
 import axios from 'axios';
 import { getAuthToken, setAuthTokenStorage } from './auth-storage';
 import { enqueueOfflineOperation } from './offlineSync';
-import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, Story, StoryElementInput, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
+import {
+  AuthData,
+  CrossRealityPort,
+  Post,
+  PostVisibility,
+  RealityContext,
+  FriendRequestPrivacy,
+  Story,
+  StoryElementInput,
+  UserProfile,
+  EmailSearchPrivacy,
+  CommentPrivacy,
+  TagPrivacy,
+  MessagePrivacy,
+  MarketplaceListing,
+  SavedListing,
+  ThemeDefinition,
+} from './types';
 import type { NotificationItem as NotificationData } from '../providers/notifications-provider';
 
 export type PersonalizationControls = {
@@ -30,8 +47,8 @@ export const DEFAULT_PERSONALIZATION_CONTROLS: PersonalizationControls = {
   activityPersonalization: true,
 };
 
-export const updatePrivacy = async (privacy: { 
-  postVisibility?: PostVisibility; 
+export const updatePrivacy = async (privacy: {
+  postVisibility?: PostVisibility;
   friendRequestPrivacy?: FriendRequestPrivacy;
   emailSearchPrivacy?: EmailSearchPrivacy;
   commentPrivacy?: CommentPrivacy;
@@ -59,9 +76,8 @@ export const updatePrivacy = async (privacy: {
   };
 }) => {
   // If it's just profilePrivacy, use the general user endpoint, otherwise use the privacy-specific endpoint
-  const endpoint = privacy.profilePrivacy && Object.keys(privacy).length === 1 
-    ? '/users/me' 
-    : '/users/me/privacy';
+  const endpoint =
+    privacy.profilePrivacy && Object.keys(privacy).length === 1 ? '/users/me' : '/users/me/privacy';
   const response = await api.patch(endpoint, privacy);
   return response.data;
 };
@@ -90,7 +106,7 @@ export enum ContributionStatus {
   IN_REVIEW = 'in_review',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  MERGED = 'merged'
+  MERGED = 'merged',
 }
 
 export enum ContributionType {
@@ -99,7 +115,7 @@ export enum ContributionType {
   DOCUMENTATION = 'documentation',
   UI_IMPROVEMENT = 'ui_improvement',
   PERFORMANCE = 'performance',
-  SECURITY = 'security'
+  SECURITY = 'security',
 }
 
 export interface Contribution {
@@ -169,11 +185,14 @@ export const createContribution = async (data: CreateContributionDto): Promise<C
   return response.data;
 };
 
-export const getContributions = async (filters?: { status?: ContributionStatus; type?: ContributionType }): Promise<Contribution[]> => {
+export const getContributions = async (filters?: {
+  status?: ContributionStatus;
+  type?: ContributionType;
+}): Promise<Contribution[]> => {
   const params = new URLSearchParams();
   if (filters?.status) params.append('status', filters.status);
   if (filters?.type) params.append('type', filters.type);
-  
+
   const url = `${API_BASE_URL}/opensource/contributions${params.toString() ? `?${params.toString()}` : ''}`;
   const response = await axios.get(url);
   return response.data;
@@ -196,7 +215,10 @@ export const getContribution = async (id: string): Promise<Contribution> => {
   return response.data;
 };
 
-export const updateContribution = async (id: string, data: UpdateContributionDto): Promise<Contribution> => {
+export const updateContribution = async (
+  id: string,
+  data: UpdateContributionDto
+): Promise<Contribution> => {
   const response = await axios.put(`${API_BASE_URL}/opensource/contributions/${id}`, data, {
     headers: getAuthHeaders(),
   });
@@ -204,9 +226,13 @@ export const updateContribution = async (id: string, data: UpdateContributionDto
 };
 
 export const assignReviewer = async (id: string, reviewerId: string): Promise<Contribution> => {
-  const response = await axios.post(`${API_BASE_URL}/opensource/contributions/${id}/assign-reviewer`, { reviewerId }, {
-    headers: getAuthHeaders(),
-  });
+  const response = await axios.post(
+    `${API_BASE_URL}/opensource/contributions/${id}/assign-reviewer`,
+    { reviewerId },
+    {
+      headers: getAuthHeaders(),
+    }
+  );
   return response.data;
 };
 
@@ -215,7 +241,7 @@ export const deleteContribution = async (id: string): Promise<{ success: boolean
     headers: getAuthHeaders(),
   });
   return { success: true };
-}
+};
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -240,7 +266,11 @@ export const getChangelog = async (): Promise<ChangelogEntry[]> => {
   return response.data;
 };
 
-export const publishChangelog = async (input: Omit<ChangelogEntry, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'> & { publishedAt?: string }): Promise<ChangelogEntry> => {
+export const publishChangelog = async (
+  input: Omit<ChangelogEntry, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt'> & {
+    publishedAt?: string;
+  }
+): Promise<ChangelogEntry> => {
   const response = await api.post<ChangelogEntry>('/admin/changelog', input);
   return response.data;
 };
@@ -271,38 +301,50 @@ export const post = api.post;
 export const del = api.delete;
 
 // Fitness segment API functions
-export const getNearbyFitnessSegments = async (latitude: number, longitude: number, radius: number = 50) => {
-  const response = await api.get(`/fitness/segments?lat=${latitude}&lng=${longitude}&radius=${radius}`);
+export const getNearbyFitnessSegments = async (
+  latitude: number,
+  longitude: number,
+  radius: number = 50
+) => {
+  const response = await api.get(
+    `/fitness/segments?lat=${latitude}&lng=${longitude}&radius=${radius}`
+  );
   return response.data;
 };
 
 export const getSegmentLeaderboard = async (segmentId: string, radius?: number) => {
-  const url = radius 
-    ? `/fitness/segments/${segmentId}/leaderboard?radius=${radius}` 
+  const url = radius
+    ? `/fitness/segments/${segmentId}/leaderboard?radius=${radius}`
     : `/fitness/segments/${segmentId}/leaderboard`;
   const response = await api.get(url);
   return response.data;
 };
 
-export const createSegmentAttempt = async (segmentId: string, duration: number, latitude?: number, longitude?: number) => {
-  const response = await api.post(`/fitness/segments/${segmentId}/attempts`, { 
+export const createSegmentAttempt = async (
+  segmentId: string,
+  duration: number,
+  latitude?: number,
+  longitude?: number
+) => {
+  const response = await api.post(`/fitness/segments/${segmentId}/attempts`, {
     duration,
     latitude,
-    longitude
+    longitude,
   });
   return response.data;
 };
 
 export const getUserSegmentPRs = async (userId?: string) => {
-  const url = userId 
-    ? `/fitness/users/${userId}/prs` 
-    : '/fitness/users/me/prs';
+  const url = userId ? `/fitness/users/${userId}/prs` : '/fitness/users/me/prs';
   const response = await api.get(url);
   return response.data;
 };
 
 // Trending heatmap API functions for geographic trending topics
-export const getTrendingHeatmapData = async (timeRange: string = '24h', region: string = 'world') => {
+export const getTrendingHeatmapData = async (
+  timeRange: string = '24h',
+  region: string = 'world'
+) => {
   const response = await api.get(`/trends/heatmap?timeRange=${timeRange}&region=${region}`);
   return response.data;
 };
@@ -312,9 +354,7 @@ const CSRF_COOKIE_NAME = 'zynkra.csrf';
 /** Read the CSRF token the server mirrors into a JS-readable cookie. */
 export function getCsrfToken(): string | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|;\\s*)${CSRF_COOKIE_NAME}=([^;]*)`),
-  );
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${CSRF_COOKIE_NAME}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
 }
 
@@ -375,7 +415,8 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Skip refresh for auth endpoints (signup, signin, refresh itself) to avoid loops
-    const isAuthEndpoint = originalRequest.url?.includes('/auth/signin') ||
+    const isAuthEndpoint =
+      originalRequest.url?.includes('/auth/signin') ||
       originalRequest.url?.includes('/auth/signup') ||
       originalRequest.url?.includes('/auth/refresh') ||
       originalRequest.url?.includes('/auth/recover') ||
@@ -412,7 +453,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export const setAuthToken = (token: string | null) => {
@@ -462,7 +503,9 @@ export const checkEmailAvailability = async (email: string): Promise<{ available
   return response.data as { available: boolean };
 };
 
-export const checkUsernameAvailability = async (username: string): Promise<{ available: boolean }> => {
+export const checkUsernameAvailability = async (
+  username: string
+): Promise<{ available: boolean }> => {
   const response = await api.get('/auth/check-username', { params: { username } });
   return response.data as { available: boolean };
 };
@@ -567,7 +610,11 @@ export const disable2FA = async (data: { token: string }) => {
   return response.data;
 };
 
-export const verify2FA = async (data: { tempToken: string; token: string; rememberMe?: boolean }) => {
+export const verify2FA = async (data: {
+  tempToken: string;
+  token: string;
+  rememberMe?: boolean;
+}) => {
   const response = await api.post('/auth/2fa/verify', data);
   return response.data;
 };
@@ -608,26 +655,18 @@ export const getProfile = async () => {
   }
   const postsResponse = await api.get(`/posts/users/${profile.id}/posts`);
   profile.posts = postsResponse.data;
-  profile.featuredPosts = postsResponse.data.filter(
-    (p: { isFeatured?: boolean }) => p.isFeatured,
-  );
+  profile.featuredPosts = postsResponse.data.filter((p: { isFeatured?: boolean }) => p.isFeatured);
   return profile;
 };
 
-export const getUserProfile = async (
-  userId: string,
-  take = 10,
-  skip = 0,
-) => {
+export const getUserProfile = async (userId: string, take = 10, skip = 0) => {
   const response = await api.get(`/users/${userId}`, {
     params: { take, skip },
   });
   const profile = normalizeUserProfile(response.data);
   const postsResponse = await api.get(`/posts/users/${userId}/posts`);
   profile.posts = postsResponse.data;
-  profile.featuredPosts = postsResponse.data.filter(
-    (p: { isFeatured?: boolean }) => p.isFeatured,
-  );
+  profile.featuredPosts = postsResponse.data.filter((p: { isFeatured?: boolean }) => p.isFeatured);
   return profile;
 };
 
@@ -666,7 +705,14 @@ export const generateRecoveryCodes = async () => {
 
 export interface AccountPreferences {
   theme: 'light' | 'dark' | 'system';
-  appIcon: 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
+  appIcon:
+    | 'default'
+    | 'neon'
+    | 'ocean'
+    | 'sunset'
+    | 'creator-classic'
+    | 'creator-vibrant'
+    | 'creator-minimal';
   language: string;
   timezone: string;
   defaultPrivacy: 'public' | 'friends' | 'private';
@@ -694,55 +740,127 @@ export const getAccountPreferences = async () => {
 export const updateAccountPreferences = async (
   preferences: Partial<Omit<AccountPreferences, 'updatedAt' | 'customSettings'>> & {
     customSettings?: Record<string, unknown>;
-  },
+  }
 ) => {
   const response = await api.put('/account/preferences', preferences);
   return response.data as AccountPreferences;
 };
 
 export const ACCOUNT_PERMISSIONS = [
-  { value: 'profile:read', label: 'Read profile', description: 'Allow profile information to be viewed.' },
-  { value: 'profile:write', label: 'Edit profile', description: 'Allow profile information to be changed.' },
+  {
+    value: 'profile:read',
+    label: 'Read profile',
+    description: 'Allow profile information to be viewed.',
+  },
+  {
+    value: 'profile:write',
+    label: 'Edit profile',
+    description: 'Allow profile information to be changed.',
+  },
   { value: 'posts:read', label: 'Read posts', description: 'Allow posts to be viewed.' },
-  { value: 'posts:write', label: 'Create and edit posts', description: 'Allow posts to be created or changed.' },
-  { value: 'messages:read', label: 'Read messages', description: 'Allow direct messages to be viewed.' },
-  { value: 'messages:write', label: 'Send messages', description: 'Allow direct messages to be sent.' },
-  { value: 'data:export', label: 'Export account data', description: 'Allow account data exports to be requested.' },
-  { value: 'account:settings', label: 'Manage account settings', description: 'Allow account settings to be changed.' },
+  {
+    value: 'posts:write',
+    label: 'Create and edit posts',
+    description: 'Allow posts to be created or changed.',
+  },
+  {
+    value: 'messages:read',
+    label: 'Read messages',
+    description: 'Allow direct messages to be viewed.',
+  },
+  {
+    value: 'messages:write',
+    label: 'Send messages',
+    description: 'Allow direct messages to be sent.',
+  },
+  {
+    value: 'data:export',
+    label: 'Export account data',
+    description: 'Allow account data exports to be requested.',
+  },
+  {
+    value: 'account:settings',
+    label: 'Manage account settings',
+    description: 'Allow account settings to be changed.',
+  },
 ] as const;
 
 export type AccountPermission = (typeof ACCOUNT_PERMISSIONS)[number]['value'];
 
 export const getAccountPermissions = async () => {
   const response = await api.get('/account/permissions');
-  return response.data as { accountId: string; permissions: AccountPermission[]; updatedAt: string };
+  return response.data as {
+    accountId: string;
+    permissions: AccountPermission[];
+    updatedAt: string;
+  };
 };
 
 export const updateAccountPermissions = async (permissions: AccountPermission[]) => {
   const response = await api.put('/account/permissions', { permissions });
-  return response.data as { accountId: string; permissions: AccountPermission[]; updatedAt: string };
+  return response.data as {
+    accountId: string;
+    permissions: AccountPermission[];
+    updatedAt: string;
+  };
 };
 
 export const DATA_PERMISSIONS = [
-  { value: 'profile', label: 'Profile data', description: 'Allow your profile information to be used by account features.' },
-  { value: 'posts', label: 'Posts and media', description: 'Allow your posts, photos, and videos to power your account experience.' },
-  { value: 'messages', label: 'Messages', description: 'Allow message data to be used for messaging features and search.' },
-  { value: 'personalization', label: 'Personalization', description: 'Allow activity data to personalize your feed and recommendations.' },
-  { value: 'analytics', label: 'Analytics', description: 'Allow usage data to improve reliability and product insights.' },
-  { value: 'connected_services', label: 'Connected services', description: 'Allow connected services to access the data you explicitly authorize.' },
-  { value: 'settings', label: 'Account settings', description: 'Allow account settings to be included in account management features.' },
+  {
+    value: 'profile',
+    label: 'Profile data',
+    description: 'Allow your profile information to be used by account features.',
+  },
+  {
+    value: 'posts',
+    label: 'Posts and media',
+    description: 'Allow your posts, photos, and videos to power your account experience.',
+  },
+  {
+    value: 'messages',
+    label: 'Messages',
+    description: 'Allow message data to be used for messaging features and search.',
+  },
+  {
+    value: 'personalization',
+    label: 'Personalization',
+    description: 'Allow activity data to personalize your feed and recommendations.',
+  },
+  {
+    value: 'analytics',
+    label: 'Analytics',
+    description: 'Allow usage data to improve reliability and product insights.',
+  },
+  {
+    value: 'connected_services',
+    label: 'Connected services',
+    description: 'Allow connected services to access the data you explicitly authorize.',
+  },
+  {
+    value: 'settings',
+    label: 'Account settings',
+    description: 'Allow account settings to be included in account management features.',
+  },
 ] as const;
 
 export type DataPermission = (typeof DATA_PERMISSIONS)[number]['value'];
 
 export const getDataPermissions = async () => {
   const response = await api.get('/account/data-permissions');
-  return response.data as { accountId: string; dataPermissions: DataPermission[]; updatedAt: string };
+  return response.data as {
+    accountId: string;
+    dataPermissions: DataPermission[];
+    updatedAt: string;
+  };
 };
 
 export const updateDataPermissions = async (dataPermissions: DataPermission[]) => {
   const response = await api.put('/account/data-permissions', { dataPermissions });
-  return response.data as { accountId: string; dataPermissions: DataPermission[]; updatedAt: string };
+  return response.data as {
+    accountId: string;
+    dataPermissions: DataPermission[];
+    updatedAt: string;
+  };
 };
 
 export const recoverAccount = async (data: { identifier: string; recoveryCode: string }) => {
@@ -756,9 +874,19 @@ export const getAccountDashboard = async () => {
     account: { accountId: string; deactivated: boolean; switchingEnabled: boolean };
     preferences: { theme?: string; language?: string; timezone?: string };
     notifications: { emailDigest?: boolean; pushAlerts?: boolean; securityAlerts?: boolean };
-    linkedAccounts: Array<{ provider: string; displayName?: string; email?: string; isPrimary?: boolean }>;
+    linkedAccounts: Array<{
+      provider: string;
+      displayName?: string;
+      email?: string;
+      isPrimary?: boolean;
+    }>;
     history: Array<{ summary: string; occurredAt: string; type: string }>;
-    privacy: { showOnlineStatus?: boolean; readReceipts?: boolean; mentions?: string; activityVisibility?: string };
+    privacy: {
+      showOnlineStatus?: boolean;
+      readReceipts?: boolean;
+      mentions?: string;
+      activityVisibility?: string;
+    };
     recoveryStatus: { status?: string; method?: string } | null;
     appeals: Array<{ status?: string; reason?: string }>;
     securityCenter: {
@@ -852,7 +980,9 @@ export const getPendingLoginSessions = async () => {
   return response.data as LoginSession[];
 };
 
-export const startAccountRecovery = async (method: 'email' | 'trusted_contact' | 'passkey' = 'email') => {
+export const startAccountRecovery = async (
+  method: 'email' | 'trusted_contact' | 'passkey' = 'email'
+) => {
   const response = await api.post('/users/me/account-recovery', { method });
   return response.data as {
     accountId: string;
@@ -892,7 +1022,13 @@ export interface SecurityAuditLogEntry {
   createdAt: string;
 }
 
-export const getSecurityLogs = async (params?: { take?: number; skip?: number; eventType?: string; severity?: string; fromDate?: string }) => {
+export const getSecurityLogs = async (params?: {
+  take?: number;
+  skip?: number;
+  eventType?: string;
+  severity?: string;
+  fromDate?: string;
+}) => {
   const response = await api.get('/security-audit/me/logs', { params });
   return response.data as { logs: SecurityAuditLogEntry[]; total: number };
 };
@@ -964,12 +1100,19 @@ export const setTrustedRecoveryContacts = async (contacts: string[]) => {
   return response.data as { contacts: string[]; message: string };
 };
 
-export const requestTrustedContactRecovery = async (data: { identifier: string; contactEmail: string }) => {
+export const requestTrustedContactRecovery = async (data: {
+  identifier: string;
+  contactEmail: string;
+}) => {
   const response = await api.post('/auth/recovery/contact/request', data);
   return response.data as { message: string };
 };
 
-export const verifyTrustedContactRecovery = async (data: { identifier: string; contactEmail: string; code: string }) => {
+export const verifyTrustedContactRecovery = async (data: {
+  identifier: string;
+  contactEmail: string;
+  code: string;
+}) => {
   const response = await api.post('/auth/recovery/contact/verify', data);
   return response.data as { access_token: string };
 };
@@ -986,9 +1129,7 @@ export const getCloseFriends = async (): Promise<UserProfile[]> => {
   return response.data.map(normalizeUserProfile);
 };
 
-export const updateCloseFriends = async (
-  closeFriendIds: string[],
-): Promise<UserProfile> => {
+export const updateCloseFriends = async (closeFriendIds: string[]): Promise<UserProfile> => {
   const response = await api.put('/users/me/close-friends', {
     closeFriendIds,
   });
@@ -998,7 +1139,7 @@ export const updateCloseFriends = async (
 export const snooze = async (
   snoozedId: string,
   snoozedType: 'user' | 'group' | 'page',
-  snoozeEndDate: string,
+  snoozeEndDate: string
 ) => {
   const response = await api.post('/snooze', {
     snoozedId,
@@ -1042,7 +1183,7 @@ import { AutoTag } from '../lib/types';
 
 export const createPost = async (
   content: string,
-  media: { file: File, altText: string, captionsFile?: File }[] = [],
+  media: { file: File; altText: string; captionsFile?: File }[] = [],
   visibility?: CreatePostVisibility,
   filter = '',
   subscriptionGated = false,
@@ -1059,7 +1200,7 @@ export const createPost = async (
   isSensitive = false,
   requiresScreenshotProtection = false,
   autoTags?: AutoTag[], // AI-generated auto-tags for content categorization
-  quotedPostId?: string,
+  quotedPostId?: string
 ) => {
   const mediaPayload = await Promise.all(
     media.map(async (mediaFile) => {
@@ -1076,7 +1217,7 @@ export const createPost = async (
         type,
         altText: mediaFile.altText,
       };
-    }),
+    })
   );
 
   const payload = {
@@ -1163,7 +1304,6 @@ export const discoverContacts = async (contacts: string[]) => {
 // Alias for backward compatibility
 export { searchUsersApi as searchUsers };
 
-
 export const getPosts = async (take = 10, skip = 0) => {
   const response = await api.get('/feed/for-you', { params: { take, skip } });
   return response.data;
@@ -1194,7 +1334,17 @@ export const getRecommendedFeed = async (limit = 20) => {
   return response.data;
 };
 
-export const getFeedView = async (view: 'for-you' | 'recommended' | 'friends' | 'subscriptions' | 'favorites' | 'chronological' | 'trending' = 'for-you', limit = 20) => {
+export const getFeedView = async (
+  view:
+    | 'for-you'
+    | 'recommended'
+    | 'friends'
+    | 'subscriptions'
+    | 'favorites'
+    | 'chronological'
+    | 'trending' = 'for-you',
+  limit = 20
+) => {
   const response = await api.get('/feed', { params: { view, limit } });
   return response.data;
 };
@@ -1306,7 +1456,10 @@ export const buildImageTextSearchPath = (query: string) =>
 
 export const webSearch = async (query: string) => {
   const response = await api.get('/search/web', { params: { q: query } });
-  return response.data as { query: string; results: { title: string; snippet?: string; url: string }[] };
+  return response.data as {
+    query: string;
+    results: { title: string; snippet?: string; url: string }[];
+  };
 };
 
 export const getExploreFeed = async (category?: string) => {
@@ -1394,7 +1547,6 @@ export const revokeSession = async (sessionId: string) => {
   return response.data;
 };
 
-
 export const getFollowers = async (userId: string) => {
   const response = await api.get(`/users/${userId}/followers`);
   return response.data;
@@ -1427,10 +1579,7 @@ export const markMessageAsRead = async (messageId: string) => {
   return response.data;
 };
 
-export const createConversation = async (
-  recipientIds: string[],
-  name?: string,
-) => {
+export const createConversation = async (recipientIds: string[], name?: string) => {
   const response = await api.post('/dms/conversations', { recipientIds, name });
   return response.data;
 };
@@ -1457,10 +1606,7 @@ export const uploadMedia = async (file: File) => {
  * key/nonce must be delivered inside the Signal-encrypted envelope — never
  * alongside this request.
  */
-export const uploadE2eeAttachment = async (
-  ciphertext: Blob,
-  type: 'image' | 'video' | 'audio',
-) => {
+export const uploadE2eeAttachment = async (ciphertext: Blob, type: 'image' | 'video' | 'audio') => {
   const formData = new FormData();
   formData.append('file', ciphertext, `${type}.enc`);
 
@@ -1502,7 +1648,7 @@ export const sendMessage = async (
   replyToId?: string,
   media?: { url: string; type: 'image' | 'video' | 'audio'; enc?: string }[],
   voiceNote?: { durationSeconds: number; waveform: number[] },
-  senderPublicKey?: string,
+  senderPublicKey?: string
 ) => {
   if (conversationId) {
     const response = await api.post(`/dms/${conversationId}/messages`, {
@@ -1536,14 +1682,9 @@ export const markConversationAsRead = async (conversationId: string) => {
   return response.data as { conversationId: string; markedCount: number };
 };
 
-export const getMessages = async (
-  conversationId?: string,
-  channelId?: string,
-) => {
+export const getMessages = async (conversationId?: string, channelId?: string) => {
   if (conversationId) {
-    const response = await api.get(
-      `/dms/conversations/${conversationId}/messages`,
-    );
+    const response = await api.get(`/dms/conversations/${conversationId}/messages`);
     return response.data;
   }
   if (channelId) {
@@ -1562,8 +1703,20 @@ export const getGifts = async () => {
   return response.data;
 };
 
-export const sendGift = async (recipientId: string, giftId: string, postId?: string, commentId?: string, message?: string) => {
-  const response = await api.post('/monetization/gifts/send', { recipientId, giftId, postId, commentId, message });
+export const sendGift = async (
+  recipientId: string,
+  giftId: string,
+  postId?: string,
+  commentId?: string,
+  message?: string
+) => {
+  const response = await api.post('/monetization/gifts/send', {
+    recipientId,
+    giftId,
+    postId,
+    commentId,
+    message,
+  });
   return response.data;
 };
 
@@ -1575,7 +1728,7 @@ export const assignBadge = async (badgeId: string) => {
 export const createGroup = async (
   name: string,
   privacy: 'public' | 'private' | 'secret',
-  allowAnonymousPosting?: boolean,
+  allowAnonymousPosting?: boolean
 ) => {
   const response = await api.post('/groups', {
     name,
@@ -1612,7 +1765,11 @@ export const getChannels = async (groupId: string) => {
 
 export const enableGroupLockdown = async (
   groupId: string,
-  data: { mode: 'approval' | 'mute_new' | 'full'; durationHours?: number; newMemberMuteHours?: number },
+  data: {
+    mode: 'approval' | 'mute_new' | 'full';
+    durationHours?: number;
+    newMemberMuteHours?: number;
+  }
 ) => {
   const response = await api.post(`/groups/${groupId}/lockdown`, data);
   return response.data;
@@ -1636,7 +1793,7 @@ export const detectGroupRaid = async (groupId: string) => {
 export const createChannel = async (
   groupId: string,
   name: string,
-  type: 'group' | 'broadcast' = 'group',
+  type: 'group' | 'broadcast' = 'group'
 ) => {
   const response = await api.post(`/groups/${groupId}/channels`, { name, type });
   return response.data;
@@ -1647,11 +1804,7 @@ export const getGroupMembers = async (groupId: string) => {
   return response.data;
 };
 
-export const updateMemberRole = async (
-  groupId: string,
-  userId: string,
-  role: string,
-) => {
+export const updateMemberRole = async (groupId: string, userId: string, role: string) => {
   const response = await api.put(`/groups/${groupId}/members/${userId}`, {
     role,
   });
@@ -1689,7 +1842,7 @@ export const sendModMailMessage = async (
 ) => {
   const response = await api.post(`/groups/${groupId}/modmail/${conversationId}/messages`, {
     content,
-    isInternal
+    isInternal,
   });
   return response.data;
 };
@@ -1699,11 +1852,7 @@ export const addPostReaction = async (postId: string, reaction: string) => {
   return response.data;
 };
 
-export const createComment = async (
-  postId: string,
-  content: string,
-  parentId?: string,
-) => {
+export const createComment = async (postId: string, content: string, parentId?: string) => {
   const response = await api.post(`/posts/${postId}/comments`, {
     content,
     parentId,
@@ -1821,10 +1970,7 @@ export const sendEventReminders = async (eventId: string) => {
   return response.data;
 };
 
-export const createReplay = async (replayData: {
-  title: string;
-  videoUrl: string;
-}) => {
+export const createReplay = async (replayData: { title: string; videoUrl: string }) => {
   const response = await api.post('/livestream-replays', replayData);
   return response.data;
 };
@@ -1844,7 +1990,10 @@ export const getPublicKey = async (userId: string) => {
   return response.data;
 };
 
-export const updatePage = async (pageId: string, pageData: { automatedResponseEnabled?: boolean; automatedResponseMessage?: string; }) => {
+export const updatePage = async (
+  pageId: string,
+  pageData: { automatedResponseEnabled?: boolean; automatedResponseMessage?: string }
+) => {
   const response = await api.patch(`/pages/${pageId}`, pageData);
   return response.data;
 };
@@ -1859,29 +2008,21 @@ export const getPageConversations = async (pageId: string) => {
   return response.data;
 };
 
-export const getPageConversation = async (
-  pageId: string,
-  conversationId: string,
-) => {
-  const response = await api.get(
-    `/pages/${pageId}/inbox/${conversationId}`,
-  );
+export const getPageConversation = async (pageId: string, conversationId: string) => {
+  const response = await api.get(`/pages/${pageId}/inbox/${conversationId}`);
   return response.data;
 };
 
 export const createPageMessage = async (
   pageId: string,
   conversationId: string,
-  content: string,
+  content: string
 ) => {
-  const response = await api.post(
-    `/pages/${pageId}/inbox/${conversationId}/messages`,
-    { content },
-  );
+  const response = await api.post(`/pages/${pageId}/inbox/${conversationId}/messages`, { content });
   return response.data;
 };
 
-export const createPage = async (pageData: { name: string; description: string; }) => {
+export const createPage = async (pageData: { name: string; description: string }) => {
   const response = await api.post('/pages', pageData);
   return response.data;
 };
@@ -1896,11 +2037,14 @@ export const sendMessageToPage = async (pageId: string, content: string) => {
   return response.data;
 };
 
-export const createScheduledStream = async (data: { title: string; description: string; scheduledTime: Date }) => {
+export const createScheduledStream = async (data: {
+  title: string;
+  description: string;
+  scheduledTime: Date;
+}) => {
   const response = await api.post('/livestream/schedule', data);
   return response.data;
 };
-
 
 export const resetPassword = async (data: { token: string; password: string }) => {
   const response = await api.post('/auth/reset-password', data);
@@ -1927,7 +2071,13 @@ export const deletePasskey = async (id: string) => {
   return response.data;
 };
 
-export const createStory = async (file: File, elements?: StoryElementInput[], audience?: string, isBoosted?: boolean, isExtendedDuration?: boolean) => {
+export const createStory = async (
+  file: File,
+  elements?: StoryElementInput[],
+  audience?: string,
+  isBoosted?: boolean,
+  isExtendedDuration?: boolean
+) => {
   const formData = new FormData();
   formData.append('file', file);
   if (elements) {
@@ -2000,11 +2150,9 @@ export const sendTip = async (data: {
 
 export const getTippingLeaderboard = async (
   period: 'all' | 'weekly' | 'monthly' = 'all',
-  limit = 50,
+  limit = 50
 ) => {
-  const response = await api.get(
-    `/tipping/leaderboard?period=${period}&limit=${limit}`,
-  );
+  const response = await api.get(`/tipping/leaderboard?period=${period}&limit=${limit}`);
   return response.data;
 };
 
@@ -2155,13 +2303,19 @@ export const disconnectAccount = async (accountId: string): Promise<void> => {
   await api.delete(`/connected-accounts/${accountId}`);
 };
 
-export const setConnectedAccountActive = async (accountId: string, isActive: boolean): Promise<ConnectedAccount> => {
+export const setConnectedAccountActive = async (
+  accountId: string,
+  isActive: boolean
+): Promise<ConnectedAccount> => {
   const response = await api.patch(`/connected-accounts/${accountId}`, { isActive });
   return response.data;
 };
 
 // Scheduling API functions
-export const getOptimalPostingTime = async (): Promise<{ recommendedHour: number; confidence: number }> => {
+export const getOptimalPostingTime = async (): Promise<{
+  recommendedHour: number;
+  confidence: number;
+}> => {
   const response = await api.get('/analytics/optimal-time');
   return response.data;
 };
@@ -2180,7 +2334,10 @@ export const cancelScheduledPost = async (postId: string): Promise<void> => {
   await api.delete(`/scheduled-posts/${postId}`);
 };
 
-export const updateScheduledPost = async (postId: string, updates: Partial<SchedulePostRequest>): Promise<ScheduledPost> => {
+export const updateScheduledPost = async (
+  postId: string,
+  updates: Partial<SchedulePostRequest>
+): Promise<ScheduledPost> => {
   const response = await api.patch(`/scheduled-posts/${postId}`, updates);
   return response.data;
 };
@@ -2281,7 +2438,10 @@ export const getAdSets = async (campaignId: string) => {
   return response.data;
 };
 
-export const createAdSet = async (campaignId: string, data: { name: string; dailyBudget: number; targeting: any }) => {
+export const createAdSet = async (
+  campaignId: string,
+  data: { name: string; dailyBudget: number; targeting: any }
+) => {
   const response = await api.post(`/ads/campaigns/${campaignId}/adsets`, data);
   return response.data;
 };
@@ -2296,7 +2456,10 @@ export const getAds = async (adSetId: string) => {
   return response.data;
 };
 
-export const createAd = async (adSetId: string, data: { name: string; creative: { postId: string } }) => {
+export const createAd = async (
+  adSetId: string,
+  data: { name: string; creative: { postId: string } }
+) => {
   const response = await api.post(`/ads/adsets/${adSetId}/ads`, data);
   return response.data;
 };
@@ -2307,7 +2470,13 @@ export const getMarketplaceListings = async (query?: string): Promise<Marketplac
   return response.data;
 };
 
-export const createMarketplaceListing = async (listingData: { title: string; description: string; price: number; location: string; imageUrls: string[] }) => {
+export const createMarketplaceListing = async (listingData: {
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  imageUrls: string[];
+}) => {
   const response = await api.post('/marketplace/listings', listingData);
   return response.data;
 };
@@ -2317,7 +2486,16 @@ export const getMarketplaceListing = async (id: string): Promise<MarketplaceList
   return response.data;
 };
 
-export const updateMarketplaceListing = async (id: string, listingData: { title: string; description: string; price: number; location: string; imageUrls: string[] }) => {
+export const updateMarketplaceListing = async (
+  id: string,
+  listingData: {
+    title: string;
+    description: string;
+    price: number;
+    location: string;
+    imageUrls: string[];
+  }
+) => {
   const response = await api.patch(`/marketplace/listings/${id}`, listingData);
   return response.data;
 };
@@ -2347,9 +2525,11 @@ export const deletePage = async (pageId: string) => {
   return response.data;
 };
 
-
-
-export const createSubscription = async (creatorId: string, tier: string, paymentMethodId?: string) => {
+export const createSubscription = async (
+  creatorId: string,
+  tier: string,
+  paymentMethodId?: string
+) => {
   const response = await api.post('/subscriptions', { creatorId, tier, paymentMethodId });
   return response.data;
 };
@@ -2389,7 +2569,10 @@ export const getCreatorSubscriptionTiers = async (creatorId: string) => {
   return response.data;
 };
 
-export const updateSubscriptionTier = async (tierId: string, updates: { name?: string; price?: number }) => {
+export const updateSubscriptionTier = async (
+  tierId: string,
+  updates: { name?: string; price?: number }
+) => {
   const response = await api.patch(`/subscriptions/tiers/${tierId}`, updates);
   return response.data;
 };
@@ -2427,7 +2610,7 @@ export const updateSubscriptionBundle = async (
     price?: number;
     tierIds?: string[];
     isActive?: boolean;
-  },
+  }
 ) => {
   const response = await api.patch(`/subscription-bundles/${bundleId}`, updates);
   return response.data;
@@ -2439,7 +2622,9 @@ export const deleteSubscriptionBundle = async (bundleId: string) => {
 };
 
 export const purchaseSubscriptionBundle = async (bundleId: string, paymentMethodId?: string) => {
-  const response = await api.post(`/subscription-bundles/${bundleId}/purchase`, { paymentMethodId });
+  const response = await api.post(`/subscription-bundles/${bundleId}/purchase`, {
+    paymentMethodId,
+  });
   return response.data;
 };
 
@@ -2476,7 +2661,7 @@ export const updateInvoice = async (
     taxRate: number;
     dueDate: string;
     status: string;
-  }>,
+  }>
 ) => {
   const response = await api.patch(`/invoices/${invoiceId}`, updates);
   return response.data;
@@ -2612,15 +2797,22 @@ export const setPrimaryAccountProfile = async (profileId: string) => {
 
 export const switchAccountProfile = async (profileId: string) => {
   const response = await api.post('/users/me/account-switch', { profileId });
-  return response.data as { accountId: string; profileId: string; switched: boolean; message: string };
+  return response.data as {
+    accountId: string;
+    profileId: string;
+    switched: boolean;
+    message: string;
+  };
 };
 
-export const requestAccountExport = async (options: {
-  includeSecurityLog?: boolean;
-  includeLinkedAccounts?: boolean;
-  includePrivacySettings?: boolean;
-  includeHistory?: boolean;
-} = {}) => {
+export const requestAccountExport = async (
+  options: {
+    includeSecurityLog?: boolean;
+    includeLinkedAccounts?: boolean;
+    includePrivacySettings?: boolean;
+    includeHistory?: boolean;
+  } = {}
+) => {
   const response = await api.post('/account/data/export', { format: 'json', ...options });
   return response.data as { status: string; format: 'json'; fileUrl?: string; generatedAt: string };
 };
@@ -2653,7 +2845,8 @@ export const downloadApiFile = async (url: string, filename?: string): Promise<v
   }
 };
 
-export type LinkedIdentityProvider = 'google' | 'facebook' | 'twitter' | 'github' | 'apple' | 'discord';
+export type LinkedIdentityProvider =
+  'google' | 'facebook' | 'twitter' | 'github' | 'apple' | 'discord';
 
 export type LinkedIdentityAccount = {
   id: string;
@@ -2673,7 +2866,9 @@ export const getLinkedIdentityAccounts = async (): Promise<LinkedIdentityAccount
   return response.data;
 };
 
-export const startLinkedIdentityOAuth = async (provider: LinkedIdentityProvider): Promise<string> => {
+export const startLinkedIdentityOAuth = async (
+  provider: LinkedIdentityProvider
+): Promise<string> => {
   const response = await api.post(`/account/linked-accounts/oauth/${provider}`);
   return response.data.authorizationUrl;
 };
@@ -2707,12 +2902,23 @@ export const requestAccountDeletion = async (reason = 'not_using', additionalInf
     deleteLinkedAccounts: true,
     deleteAllData: true,
   });
-  return response.data as { accountId: string; status: 'pending'; message: string; reason: string; createdAt: string };
+  return response.data as {
+    accountId: string;
+    status: 'pending';
+    message: string;
+    reason: string;
+    createdAt: string;
+  };
 };
 
 export const confirmAccountDeletion = async (confirmationCode: string) => {
   const response = await api.post('/account/delete/confirm', { confirmationCode });
-  return response.data as { accountId: string; status: 'deleted'; message: string; deletedAt: string };
+  return response.data as {
+    accountId: string;
+    status: 'deleted';
+    message: string;
+    deletedAt: string;
+  };
 };
 
 export const getPrivacySettings = async () => {
@@ -2735,12 +2941,20 @@ export const unblockUser = async (userId: string) => {
   return response.data;
 };
 
-export const createLifeEvent = async (data: { title: string; description?: string; date: string; type: string }) => {
+export const createLifeEvent = async (data: {
+  title: string;
+  description?: string;
+  date: string;
+  type: string;
+}) => {
   const response = await api.post('/users/me/life-events', data);
   return response.data;
 };
 
-export const updateLifeEvent = async (id: string, data: { title?: string; description?: string; date?: string; type?: string }) => {
+export const updateLifeEvent = async (
+  id: string,
+  data: { title?: string; description?: string; date?: string; type?: string }
+) => {
   const response = await api.patch(`/users/me/life-events/${id}`, data);
   return response.data;
 };
@@ -2753,7 +2967,7 @@ export const deleteLifeEvent = async (id: string) => {
 export const forwardMessage = async (
   messageId: string,
   conversationId?: string,
-  channelId?: string,
+  channelId?: string
 ) => {
   const response = await api.post(`/dms/messages/${messageId}/forward`, {
     conversationId,
@@ -2804,10 +3018,7 @@ export const setVanishMode = async (conversationId: string, vanishMode: boolean)
   return response.data;
 };
 
-export const setMessageTtl = async (
-  conversationId: string,
-  messageTtlSeconds: number | null,
-) => {
+export const setMessageTtl = async (conversationId: string, messageTtlSeconds: number | null) => {
   const response = await api.patch(`/dms/conversations/${conversationId}/message-ttl`, {
     messageTtlSeconds,
   });
@@ -2883,7 +3094,7 @@ export const getThread = async (threadId: string) => {
 
 export const sendThreadMessage = async (
   threadId: string,
-  input: { content: string; parentMessageId?: string | null },
+  input: { content: string; parentMessageId?: string | null }
 ) => {
   const response = await api.post(`/threads/${threadId}/messages`, input);
   return response.data;
@@ -2906,7 +3117,11 @@ export const getLinkPreview = async (url: string) => {
 };
 
 // ---- Post drafts ----
-export const createDraft = async (input: { content: string; postType?: string; visibility?: string }) => {
+export const createDraft = async (input: {
+  content: string;
+  postType?: string;
+  visibility?: string;
+}) => {
   const response = await api.post('/posts/drafts', input);
   return response.data;
 };
@@ -2921,7 +3136,10 @@ export const getDraft = async (id: string) => {
   return response.data;
 };
 
-export const updateDraft = async (id: string, input: { content: string; postType?: string; visibility?: string }) => {
+export const updateDraft = async (
+  id: string,
+  input: { content: string; postType?: string; visibility?: string }
+) => {
   const response = await api.patch(`/posts/drafts/${id}`, input);
   return response.data;
 };
@@ -2981,10 +3199,7 @@ export const deleteCollection = async (id: string) => {
   return response.data;
 };
 
-export const addBookmarkToCollection = async (
-  postId: string,
-  collectionId: string,
-) => {
+export const addBookmarkToCollection = async (postId: string, collectionId: string) => {
   const response = await api.post('/bookmarks', { postId, collectionId });
   return response.data;
 };
@@ -3066,8 +3281,6 @@ export const getMutualFollows = async (userId: string) => {
   return response.data;
 };
 
-
-
 export const uploadProfilePicture = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -3086,11 +3299,7 @@ export interface WalletBalance {
   walletBalance: number;
 }
 
-export type LedgerEntryType =
-  | 'earning'
-  | 'payout'
-  | 'payout_reversal'
-  | 'adjustment';
+export type LedgerEntryType = 'earning' | 'payout' | 'payout_reversal' | 'adjustment';
 
 export interface LedgerEntry {
   id: string;
@@ -3104,12 +3313,7 @@ export interface LedgerEntry {
   createdAt: string;
 }
 
-export type PayoutStatus =
-  | 'pending'
-  | 'processing'
-  | 'paid'
-  | 'rejected'
-  | 'failed';
+export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'rejected' | 'failed';
 
 export interface Payout {
   id: string;
@@ -3169,7 +3373,7 @@ export const getMyPayouts = async (): Promise<Payout[]> => {
 
 export const requestPayout = async (
   amount: number,
-  purpose = 'creator-payout',
+  purpose = 'creator-payout'
 ): Promise<PayoutResult> => {
   const response = await api.post('/payments/payouts/request', { amount, purpose });
   return response.data;
@@ -3202,7 +3406,7 @@ export const getCryptoPayoutChains = async (): Promise<{
 
 export const requestCryptoPayout = async (
   amount: number,
-  chainId = 8453,
+  chainId = 8453
 ): Promise<CryptoPayoutResult> => {
   const response = await api.post('/wallet/crypto/payout', { amount, chainId });
   return response.data;
@@ -3271,7 +3475,10 @@ export const analyzeContent = async (content: string) => {
   return response.data;
 };
 
-export const generateCaption = async (mediaType: 'image' | 'video' | 'audio', keywords?: string[]) => {
+export const generateCaption = async (
+  mediaType: 'image' | 'video' | 'audio',
+  keywords?: string[]
+) => {
   const response = await api.post('/ai/content/caption', { mediaType, keywords });
   return response.data;
 };
@@ -3308,7 +3515,10 @@ export interface Article {
   isGated: boolean;
 }
 
-export const getArticleFeed = async (page = 1, tag?: string): Promise<{ articles: Article[]; total: number }> => {
+export const getArticleFeed = async (
+  page = 1,
+  tag?: string
+): Promise<{ articles: Article[]; total: number }> => {
   const params = new URLSearchParams({ page: String(page) });
   if (tag) params.set('tag', tag);
   const response = await api.get(`/articles/feed?${params}`);
@@ -3335,7 +3545,10 @@ export interface Podcast {
   playCount: number;
 }
 
-export const getPodcastFeed = async (page = 1, tag?: string): Promise<{ podcasts: Podcast[]; total: number }> => {
+export const getPodcastFeed = async (
+  page = 1,
+  tag?: string
+): Promise<{ podcasts: Podcast[]; total: number }> => {
   const params = new URLSearchParams({ page: String(page) });
   if (tag) params.set('tag', tag);
   const response = await api.get(`/podcasts/feed?${params}`);
@@ -3434,7 +3647,9 @@ export interface SubmitAppealPayload {
 /**
  * Submit a verification appeal for a rejected verification request
  */
-export const submitVerificationAppeal = async (payload: SubmitAppealPayload): Promise<VerificationAppeal> => {
+export const submitVerificationAppeal = async (
+  payload: SubmitAppealPayload
+): Promise<VerificationAppeal> => {
   const response = await api.post('/verification/appeals', payload);
   return response.data;
 };
@@ -3458,7 +3673,9 @@ export const getVerificationAppeal = async (appealId: string): Promise<Verificat
 /**
  * Admin: Get pending appeals (requires admin role)
  */
-export const getAdminPendingAppeals = async (status: string = 'pending'): Promise<VerificationAppeal[]> => {
+export const getAdminPendingAppeals = async (
+  status: string = 'pending'
+): Promise<VerificationAppeal[]> => {
   const response = await api.get(`/verification/admin/appeals?status=${status}`);
   return response.data;
 };
@@ -3476,7 +3693,7 @@ export const approveVerificationAppeal = async (appealId: string): Promise<Verif
  */
 export const rejectVerificationAppeal = async (
   appealId: string,
-  notes: string,
+  notes: string
 ): Promise<VerificationAppeal> => {
   const response = await api.post(`/verification/admin/appeals/${appealId}/reject`, {
     notes,
@@ -3540,7 +3757,7 @@ export const createWebhookEndpoint = async (data: { url: string; events: string[
 
 export const updateWebhookEndpoint = async (
   endpointId: string,
-  data: { url?: string; events?: string[]; active?: boolean },
+  data: { url?: string; events?: string[]; active?: boolean }
 ) => {
   const response = await api.patch(`/webhooks/endpoints/${endpointId}`, data);
   return response.data;
@@ -3587,8 +3804,13 @@ export interface DemandForecast {
   createdAt: string;
 }
 
-export const generateDemandForecast = async (productVariantId: string, days = 30): Promise<DemandForecast> => {
-  const response = await api.post(`/commerce/demand-forecast/${productVariantId}`, undefined, { params: { days } });
+export const generateDemandForecast = async (
+  productVariantId: string,
+  days = 30
+): Promise<DemandForecast> => {
+  const response = await api.post(`/commerce/demand-forecast/${productVariantId}`, undefined, {
+    params: { days },
+  });
   return response.data;
 };
 
@@ -3614,7 +3836,7 @@ export const purchasePayPerView = async (data: {
 export const submitModerationAppeal = async (
   reviewId: string,
   appealReason: string,
-  additionalContext?: string,
+  additionalContext?: string
 ) => {
   const response = await api.post(`/moderation/neural/${reviewId}/appeal`, {
     flagId: reviewId,
@@ -3739,7 +3961,7 @@ export const likeFederatedPost = async (activityId: string): Promise<FederationR
   const response = await api.post<FederationReport>(
     '/federation/likes',
     { activityId },
-    { headers: federationAuthHeaders() },
+    { headers: federationAuthHeaders() }
   );
   return response.data;
 };
@@ -3749,7 +3971,7 @@ export const unlikeFederatedPost = async (activityId: string): Promise<Federatio
   const response = await api.post<FederationReport>(
     '/federation/likes/undo',
     { activityId },
-    { headers: federationAuthHeaders() },
+    { headers: federationAuthHeaders() }
   );
   return response.data;
 };
@@ -3759,7 +3981,7 @@ export const announceFederatedPost = async (activityId: string): Promise<Federat
   const response = await api.post<FederationReport>(
     '/federation/announces',
     { activityId },
-    { headers: federationAuthHeaders() },
+    { headers: federationAuthHeaders() }
   );
   return response.data;
 };
@@ -3769,8 +3991,7 @@ export const undoAnnounceFederatedPost = async (activityId: string): Promise<Fed
   const response = await api.post<FederationReport>(
     '/federation/announces/undo',
     { activityId },
-    { headers: federationAuthHeaders() },
+    { headers: federationAuthHeaders() }
   );
   return response.data;
 };
-

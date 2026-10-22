@@ -3,28 +3,28 @@ import { useState, useEffect, useCallback } from 'react';
 export interface NeuralState {
   // Emotional states
   emotions: {
-    happiness: number;      // 0-100
-    sadness: number;        // 0-100
-    excitement: number;     // 0-100
-    calmness: number;       // 0-100
-    anxiety: number;        // 0-100
-    anger: number;          // 0-100
-    surprise: number;       // 0-100
-    empathy: number;        // 0-100
+    happiness: number; // 0-100
+    sadness: number; // 0-100
+    excitement: number; // 0-100
+    calmness: number; // 0-100
+    anxiety: number; // 0-100
+    anger: number; // 0-100
+    surprise: number; // 0-100
+    empathy: number; // 0-100
   };
   // Focus states
   focus: {
-    attention: number;      // 0-100 - current attention level
-    engagement: number;     // 0-100 - how engaged user is with content
+    attention: number; // 0-100 - current attention level
+    engagement: number; // 0-100 - how engaged user is with content
     cognitive_load: number; // 0-100 - mental workload
-    mindfulness: number;    // 0-100 - present moment awareness
+    mindfulness: number; // 0-100 - present moment awareness
   };
   // Physical sensations
   physical: {
-    heart_rate: number;     // BPM
+    heart_rate: number; // BPM
     breathing_rate: number; // breaths per minute
     muscle_tension: number; // 0-100
-    energy_level: number;   // 0-100
+    energy_level: number; // 0-100
     posture: 'sitting' | 'standing' | 'walking' | 'lying';
   };
   // Metadata
@@ -71,9 +71,9 @@ const defaultNeuralState: NeuralState = {
 // Simulate real-time neural data fluctuations
 const simulateNeuralFluctuations = (state: NeuralState): NeuralState => {
   const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-  
+
   const randomChange = () => (Math.random() - 0.5) * 10;
-  
+
   return {
     ...state,
     emotions: {
@@ -112,14 +112,14 @@ export function useNeuralState() {
     if (!isTracking) return;
 
     const interval = setInterval(() => {
-      setNeuralState(prev => simulateNeuralFluctuations(prev));
+      setNeuralState((prev) => simulateNeuralFluctuations(prev));
     }, 1000); // Update every second
 
     return () => clearInterval(interval);
   }, [isTracking]);
 
   const updateNeuralState = useCallback((updates: NeuralStateUpdate) => {
-    setNeuralState(prev => ({
+    setNeuralState((prev) => ({
       ...prev,
       emotions: { ...prev.emotions, ...updates.emotions },
       focus: { ...prev.focus, ...updates.focus },
@@ -134,16 +134,16 @@ export function useNeuralState() {
   const getDominantEmotion = useCallback(() => {
     const emotions = neuralState.emotions;
     const emotionEntries = Object.entries(emotions);
-    return emotionEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+    return emotionEntries.reduce((a, b) => (a[1] > b[1] ? a : b));
   }, [neuralState.emotions]);
 
   const getOverallState = useCallback(() => {
     const avgEmotional = Object.values(neuralState.emotions).reduce((a, b) => a + b, 0) / 8;
     const avgFocus = Object.values(neuralState.focus).reduce((a, b) => a + b, 0) / 4;
     const energyNorm = neuralState.physical.energy_level / 100;
-    
+
     return {
-      overallWellness: (avgEmotional + avgFocus + (energyNorm * 100)) / 3,
+      overallWellness: (avgEmotional + avgFocus + energyNorm * 100) / 3,
       isStressed: neuralState.emotions.anxiety > 60 || neuralState.physical.muscle_tension > 70,
       isFocused: neuralState.focus.attention > 70 && neuralState.focus.engagement > 60,
       isEnergetic: neuralState.physical.energy_level > 70,

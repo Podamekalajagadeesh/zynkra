@@ -19,7 +19,7 @@ class SetThemeDto {
 export class ThemesController {
   constructor(
     private readonly themesService: ThemesService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   // Public catalog of available creator/profile themes.

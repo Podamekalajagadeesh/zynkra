@@ -1,4 +1,3 @@
-
 import { CampaignsList } from '../../components/ads/CampaignsList';
 
 export function AdsManagerPage() {

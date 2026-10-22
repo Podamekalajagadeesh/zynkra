@@ -83,7 +83,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
           },
         ],
       }),
-      true,
+      true
     );
 
     // Create indexes for document_verification_records
@@ -92,7 +92,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_doc_records_accountId',
         columnNames: ['accountId'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -100,7 +100,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_doc_records_status',
         columnNames: ['status'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -108,7 +108,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_doc_records_documentId',
         columnNames: ['documentId'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -116,7 +116,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_doc_records_submittedAt',
         columnNames: ['submittedAt'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -124,7 +124,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_doc_records_accountId_status',
         columnNames: ['accountId', 'status'],
-      }),
+      })
     );
 
     // Create document_validation_rules table
@@ -180,7 +180,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
           },
         ],
       }),
-      true,
+      true
     );
 
     await queryRunner.createIndex(
@@ -188,7 +188,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_rules_enabled',
         columnNames: ['enabled'],
-      }),
+      })
     );
 
     // Create document_verification_audit_logs table
@@ -256,7 +256,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
           },
         ],
       }),
-      true,
+      true
     );
 
     await queryRunner.createIndex(
@@ -264,7 +264,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_audit_logs_accountId',
         columnNames: ['accountId'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -272,7 +272,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_audit_logs_action',
         columnNames: ['action'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -280,7 +280,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_audit_logs_createdAt',
         columnNames: ['createdAt'],
-      }),
+      })
     );
 
     // Create document_verification_appeals table
@@ -354,7 +354,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
           },
         ],
       }),
-      true,
+      true
     );
 
     await queryRunner.createIndex(
@@ -362,7 +362,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_appeals_documentRecordId',
         columnNames: ['documentRecordId'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -370,7 +370,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_appeals_status',
         columnNames: ['status'],
-      }),
+      })
     );
 
     await queryRunner.createIndex(
@@ -378,7 +378,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_appeals_createdAt',
         columnNames: ['submittedAt'],
-      }),
+      })
     );
 
     // Create document_verification_stats table
@@ -427,7 +427,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
           },
         ],
       }),
-      true,
+      true
     );
 
     await queryRunner.createIndex(
@@ -435,7 +435,7 @@ export class CreateDocumentVerificationTables1704067200000 implements MigrationI
       new TableIndex({
         name: 'IDX_stats_date',
         columnNames: ['date'],
-      }),
+      })
     );
   }
 

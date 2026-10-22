@@ -21,7 +21,7 @@ export class CommentsController {
   constructor(
     private readonly commentsService: CommentsService,
     private readonly postsService: PostsService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -29,7 +29,7 @@ export class CommentsController {
   async create(
     @Request() req,
     @Param('postId') postId: string,
-    @Body() createCommentDto: CreateCommentDto,
+    @Body() createCommentDto: CreateCommentDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId, ['following']);
     const post = await this.postsService.findOne(postId);
@@ -37,7 +37,7 @@ export class CommentsController {
       createCommentDto.content,
       user,
       post,
-      createCommentDto.parentId,
+      createCommentDto.parentId
     );
   }
 

@@ -45,10 +45,26 @@ interface CrisisEvent {
 /* -------------------------------------------------------------------------- */
 
 const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; bg: string }> = {
-  low: { label: 'Low', color: 'text-emerald-700', bg: 'bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300' },
-  medium: { label: 'Medium', color: 'text-amber-700', bg: 'bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300' },
-  high: { label: 'High', color: 'text-orange-700', bg: 'bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300' },
-  critical: { label: 'Critical', color: 'text-red-700', bg: 'bg-red-100 dark:bg-red-900/40 dark:text-red-300' },
+  low: {
+    label: 'Low',
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300',
+  },
+  medium: {
+    label: 'Medium',
+    color: 'text-amber-700',
+    bg: 'bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300',
+  },
+  high: {
+    label: 'High',
+    color: 'text-orange-700',
+    bg: 'bg-orange-100 dark:bg-orange-900/40 dark:text-orange-300',
+  },
+  critical: {
+    label: 'Critical',
+    color: 'text-red-700',
+    bg: 'bg-red-100 dark:bg-red-900/40 dark:text-red-300',
+  },
 };
 
 const STATUS_CONFIG: Record<EventStatus, { label: string; dot: string }> = {
@@ -92,7 +108,9 @@ function LoadingSkeleton() {
 function SeverityBadge({ severity }: { severity: Severity }) {
   const cfg = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.low;
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.color}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.color}`}
+    >
       {severity === 'critical' && <AlertTriangle className="w-3 h-3 mr-1" />}
       {cfg.label}
     </span>
@@ -103,7 +121,9 @@ function StatusIndicator({ status }: { status: EventStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-dark-600 dark:text-dark-300">
-      <span className={`w-2 h-2 rounded-full ${cfg.dot} ${status === 'active' ? 'animate-pulse' : ''}`} />
+      <span
+        className={`w-2 h-2 rounded-full ${cfg.dot} ${status === 'active' ? 'animate-pulse' : ''}`}
+      />
       {cfg.label}
     </span>
   );
@@ -118,10 +138,13 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
       <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-1">
         Failed to load crisis events
       </h3>
-      <p className="text-sm text-dark-500 dark:text-dark-400 mb-4 max-w-xs">
-        {message}
-      </p>
-      <Button variant="outline" size="sm" onClick={onRetry} icon={<RefreshCw className="h-4 w-4" />}>
+      <p className="text-sm text-dark-500 dark:text-dark-400 mb-4 max-w-xs">{message}</p>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRetry}
+        icon={<RefreshCw className="h-4 w-4" />}
+      >
         Try again
       </Button>
     </div>
@@ -195,7 +218,9 @@ const CrisisEventsDashboard: React.FC = () => {
 
   const activeCount = events.filter((e) => e.status === 'active').length;
   const monitoringCount = events.filter((e) => e.status === 'monitoring').length;
-  const criticalCount = events.filter((e) => e.severity === 'critical' && e.status !== 'resolved').length;
+  const criticalCount = events.filter(
+    (e) => e.severity === 'critical' && e.status !== 'resolved'
+  ).length;
 
   const hasActiveFilters =
     statusFilter !== 'all' || severityFilter !== 'all' || locationFilter !== '';
@@ -294,7 +319,9 @@ const CrisisEventsDashboard: React.FC = () => {
           <Card className="p-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 space-y-1">
-                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">Status</label>
+                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">
+                  Status
+                </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as EventStatus | 'all')}
@@ -307,7 +334,9 @@ const CrisisEventsDashboard: React.FC = () => {
                 </select>
               </div>
               <div className="flex-1 space-y-1">
-                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">Severity</label>
+                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">
+                  Severity
+                </label>
                 <select
                   value={severityFilter}
                   onChange={(e) => setSeverityFilter(e.target.value as Severity | 'all')}
@@ -321,7 +350,9 @@ const CrisisEventsDashboard: React.FC = () => {
                 </select>
               </div>
               <div className="flex-1 space-y-1">
-                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">Location</label>
+                <label className="text-xs font-medium text-dark-600 dark:text-dark-300">
+                  Location
+                </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
                   <Input
@@ -334,7 +365,12 @@ const CrisisEventsDashboard: React.FC = () => {
               </div>
               {hasActiveFilters && (
                 <div className="flex items-end">
-                  <Button variant="ghost" size="sm" onClick={clearFilters} icon={<X className="h-4 w-4" />}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    icon={<X className="h-4 w-4" />}
+                  >
                     Clear
                   </Button>
                 </div>
@@ -359,11 +395,7 @@ const CrisisEventsDashboard: React.FC = () => {
               ? 'There are currently no active crisis events in your area. Stay safe.'
               : 'Try adjusting your search or filters to find what you are looking for.'
           }
-          action={
-            hasActiveFilters
-              ? { label: 'Clear Filters', onClick: clearFilters }
-              : undefined
-          }
+          action={hasActiveFilters ? { label: 'Clear Filters', onClick: clearFilters } : undefined}
         />
       )}
 
@@ -371,11 +403,7 @@ const CrisisEventsDashboard: React.FC = () => {
       {filteredEvents.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredEvents.map((event) => (
-            <Link
-              key={event.id}
-              to={`/crisis-events/${event.id}`}
-              className="group block"
-            >
+            <Link key={event.id} to={`/crisis-events/${event.id}`} className="group block">
               <Card className="h-full transition-all duration-200 group-hover:shadow-lg group-hover:border-primary-300 dark:group-hover:border-primary-700">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
@@ -414,10 +442,20 @@ const CrisisEventsDashboard: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2 pt-2 border-t border-dark-100 dark:border-dark-700">
-                    <Button size="sm" variant="outline" className="flex-1" icon={<Shield className="h-3.5 w-3.5" />}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      icon={<Shield className="h-3.5 w-3.5" />}
+                    >
                       Mark Safe
                     </Button>
-                    <Button size="sm" variant="ghost" className="flex-1" icon={<Eye className="h-3.5 w-3.5" />}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1"
+                      icon={<Eye className="h-3.5 w-3.5" />}
+                    >
                       Details
                     </Button>
                   </div>

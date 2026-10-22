@@ -25,7 +25,10 @@ export class WsRateLimiter {
   private readonly closeAfter: number;
   private readonly sweepTimer: NodeJS.Timeout;
 
-  private readonly state = new Map<string, { userId: string; count: number; windowStart: number; strikes: number }>();
+  private readonly state = new Map<
+    string,
+    { userId: string; count: number; windowStart: number; strikes: number }
+  >();
 
   constructor(configService: ConfigService) {
     this.limit = configService.get<number>('WS_RATE_LIMIT_PER_MINUTE', 240);
@@ -50,7 +53,7 @@ export class WsRateLimiter {
       emit?: (event: string, payload: { message: string }) => unknown;
       disconnect?: (close?: boolean) => unknown;
     },
-    userId: string | undefined,
+    userId: string | undefined
   ): boolean {
     const key = client.id;
     const now = Date.now();
@@ -70,7 +73,7 @@ export class WsRateLimiter {
     if (existing.strikes >= this.closeAfter) {
       this.logger.warn(
         `Dropping socket ${key} (user ${existing.userId}): ${existing.count} messages/min, ` +
-          `${existing.strikes} consecutive violations`,
+          `${existing.strikes} consecutive violations`
       );
       this.state.delete(key);
       this.emitError(client, 'Rate limit exceeded. Reconnect later.');
@@ -84,7 +87,7 @@ export class WsRateLimiter {
 
   private emitError(
     client: { emit?: (event: string, payload: { message: string }) => unknown },
-    message: string,
+    message: string
   ): void {
     try {
       client.emit?.('error', { message });

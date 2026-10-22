@@ -10,7 +10,7 @@ export class ConnectedAccountsService {
   constructor(
     @InjectRepository(ConnectedAccount)
     private readonly repository: Repository<ConnectedAccount>,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
   ) {}
 
   async listForUser(userId: string) {
@@ -24,7 +24,7 @@ export class ConnectedAccountsService {
 
   async create(
     userId: string,
-    data: { platform: string; apiKey?: string; apiSecret?: string; accessToken?: string },
+    data: { platform: string; apiKey?: string; apiSecret?: string; accessToken?: string }
   ) {
     await this.dataPermissions.require(userId, DataPermission.CONNECTED_SERVICES);
     const account = this.repository.create({

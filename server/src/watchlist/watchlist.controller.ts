@@ -1,4 +1,3 @@
-
 import { Controller, Post, Delete, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { WatchlistService } from './watchlist.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

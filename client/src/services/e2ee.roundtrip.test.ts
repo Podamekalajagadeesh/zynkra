@@ -121,8 +121,7 @@ vi.mock('../lib/api', () => ({
 
 vi.mock('../lib/signal-protocol-store', () => {
   class MemStore {
-    identity: { privKey: ArrayBuffer; pubKey: ArrayBuffer } | undefined =
-      undefined;
+    identity: { privKey: ArrayBuffer; pubKey: ArrayBuffer } | undefined = undefined;
     registrationId = 1;
     preKeys = new Map<number, { privKey: ArrayBuffer; pubKey: ArrayBuffer }>();
     signedPreKeys = new Map<number, { privKey: ArrayBuffer; pubKey: ArrayBuffer }>();
@@ -146,10 +145,7 @@ vi.mock('../lib/signal-protocol-store', () => {
     async loadPreKey(keyId: number) {
       return this.preKeys.get(keyId);
     }
-    async storePreKey(
-      keyId: number,
-      keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer },
-    ) {
+    async storePreKey(keyId: number, keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer }) {
       this.preKeys.set(keyId, keyPair);
     }
     async removePreKey(keyId: number) {
@@ -158,10 +154,7 @@ vi.mock('../lib/signal-protocol-store', () => {
     async loadSignedPreKey(keyId: number) {
       return this.signedPreKeys.get(keyId);
     }
-    async storeSignedPreKey(
-      keyId: number,
-      keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer },
-    ) {
+    async storeSignedPreKey(keyId: number, keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer }) {
       this.signedPreKeys.set(keyId, keyPair);
     }
     async loadSession(identifier: string) {
@@ -185,13 +178,10 @@ vi.mock('../lib/signal-protocol-store', () => {
       return store;
     },
     saveIdentityKeyPair: vi.fn(
-      async (
-        userId: string,
-        keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer },
-      ) => {
+      async (userId: string, keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer }) => {
         const store = h.memStores.get(userId);
         if (store) store.identity = keyPair;
-      },
+      }
     ),
     getPeerIdentityKey: vi.fn(async (identifier: string) => {
       const store = h.memStores.get(h.state.actor);
@@ -244,28 +234,20 @@ describe('two-party E2EE round-trip (real Signal Protocol)', () => {
     const bob = await bootstrap('bob');
 
     // Alice → Bob (pre-key message, first contact)
-    const m1 = await runAs('alice', () =>
-      alice.encryptMessage('bob', 'hello bob, it is alice'),
-    );
-    expect(await bob.decryptMessage('alice', m1)).toBe(
-      'hello bob, it is alice',
-    );
+    const m1 = await runAs('alice', () => alice.encryptMessage('bob', 'hello bob, it is alice'));
+    expect(await bob.decryptMessage('alice', m1)).toBe('hello bob, it is alice');
 
     // Bob → Alice (reply under the session created by the inbound message)
     const m2 = await runAs('bob', () =>
-      bob.encryptMessage('alice', 'hi alice, got you loud and clear'),
+      bob.encryptMessage('alice', 'hi alice, got you loud and clear')
     );
-    expect(await alice.decryptMessage('bob', m2)).toBe(
-      'hi alice, got you loud and clear',
-    );
+    expect(await alice.decryptMessage('bob', m2)).toBe('hi alice, got you loud and clear');
 
     // Round two — the ratchet must advance and stay in sync.
     const m3 = await runAs('alice', () =>
-      alice.encryptMessage('bob', 'second message (ratcheted)'),
+      alice.encryptMessage('bob', 'second message (ratcheted)')
     );
-    expect(await bob.decryptMessage('alice', m3)).toBe(
-      'second message (ratcheted)',
-    );
+    expect(await bob.decryptMessage('alice', m3)).toBe('second message (ratcheted)');
     const m4 = await runAs('bob', () => bob.encryptMessage('alice', 'and back'));
     expect(await alice.decryptMessage('bob', m4)).toBe('and back');
 

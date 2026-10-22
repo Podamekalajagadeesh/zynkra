@@ -61,9 +61,7 @@ describe('DM E2EE media (server enforcement)', () => {
       findBy: jest.fn(async ({ id }: any) => {
         const ids = id?._value ?? id ?? [];
         const arr = Array.isArray(ids) ? ids : [ids];
-        return arr
-          .map((value: string) => profiles.get(value))
-          .filter(Boolean) as User[];
+        return arr.map((value: string) => profiles.get(value)).filter(Boolean) as User[];
       }),
     };
 
@@ -107,14 +105,26 @@ describe('DM E2EE media (server enforcement)', () => {
         { provide: getRepositoryToken(User), useValue: usersRepository },
         {
           provide: getRepositoryToken(MessageReaction),
-          useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
         },
         {
           provide: getRepositoryToken(MessageReceipt),
           useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn() },
         },
-        { provide: VisibilityService, useValue: { isBlockedEither: jest.fn().mockResolvedValue(false) } },
-        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: VisibilityService,
+          useValue: { isBlockedEither: jest.fn().mockResolvedValue(false) },
+        },
+        {
+          provide: DataPermissionsService,
+          useValue: { require: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -126,9 +136,13 @@ describe('DM E2EE media (server enforcement)', () => {
   function attachmentEnvelope(
     attachment: { url: string; type: string; key: string; nonce: string },
     recipientPub: Uint8Array,
-    senderPriv: Uint8Array,
+    senderPriv: Uint8Array
   ) {
-    return buildEnvelope(JSON.stringify({ v: 1, text: '', attachments: [attachment] }), recipientPub, senderPriv);
+    return buildEnvelope(
+      JSON.stringify({ v: 1, text: '', attachments: [attachment] }),
+      recipientPub,
+      senderPriv
+    );
   }
 
   it('accepts ciphertext media with an enc tag and an envelope carrying the keys', async () => {
@@ -144,7 +158,7 @@ describe('DM E2EE media (server enforcement)', () => {
     const envelope = attachmentEnvelope(
       { url: '/uploads/audio/voice.enc', type: 'audio', key, nonce },
       bobDevice.publicKey,
-      aliceDevice.privateKey,
+      aliceDevice.privateKey
     );
 
     const saved = await service.sendMessage(alice, conv.id, {
@@ -174,7 +188,7 @@ describe('DM E2EE media (server enforcement)', () => {
       service.sendMessage(alice, conv.id, {
         content: envelope,
         media: [{ url: '/uploads/images/photo.jpg', type: 'image' }],
-      }),
+      })
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -186,7 +200,7 @@ describe('DM E2EE media (server enforcement)', () => {
       service.sendMessage(alice, conv.id, {
         content: '',
         media: [{ url: '/uploads/audio/voice.enc', type: 'audio', enc: 'xchacha20poly1305' }],
-      }),
+      })
     ).rejects.toThrow(BadRequestException);
   });
 

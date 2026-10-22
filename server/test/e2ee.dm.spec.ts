@@ -31,12 +31,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
   /** Produce the exact envelope shape client/src/services/e2ee.service.ts writes. */
   function buildEnvelope(plaintext: string, recipientPub: Uint8Array, senderPriv: Uint8Array) {
     const nonce = sodium.randombytes_buf(sodium.crypto_box_NONCEBYTES);
-    const body = sodium.crypto_box_easy(
-      plaintext,
-      nonce,
-      recipientPub,
-      senderPriv,
-    );
+    const body = sodium.crypto_box_easy(plaintext, nonce, recipientPub, senderPriv);
     return {
       envelope: JSON.stringify({
         type: 1,
@@ -80,9 +75,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
       findBy: jest.fn(async ({ id }: any) => {
         const ids = id?._value ?? id ?? [];
         const arr = Array.isArray(ids) ? ids : [ids];
-        return arr
-          .map((value: string) => profiles.get(value))
-          .filter(Boolean) as User[];
+        return arr.map((value: string) => profiles.get(value)).filter(Boolean) as User[];
       }),
     };
 
@@ -92,9 +85,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
         // Re-resolve participants from the current profiles, mirroring a fresh
         // DB join (so a user who publishes keys later shows up with them).
         if (found && Array.isArray(found.participants)) {
-          found.participants = found.participants.map(
-            (p) => profiles.get(p.id) ?? p,
-          );
+          found.participants = found.participants.map((p) => profiles.get(p.id) ?? p);
         }
         return found;
       }),
@@ -119,8 +110,8 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
         const conditions = Array.isArray(where) ? where : [where];
         return messages.filter((m) =>
           conditions.some(
-            (c: any) => c?.conversation?.id && m.conversation?.id === c.conversation.id,
-          ),
+            (c: any) => c?.conversation?.id && m.conversation?.id === c.conversation.id
+          )
         );
       }),
       create: jest.fn((value: any) => value),
@@ -141,14 +132,26 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
         { provide: getRepositoryToken(User), useValue: usersRepository },
         {
           provide: getRepositoryToken(MessageReaction),
-          useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
         },
         {
           provide: getRepositoryToken(MessageReceipt),
           useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn() },
         },
-        { provide: VisibilityService, useValue: { isBlockedEither: jest.fn().mockResolvedValue(false) } },
-        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: VisibilityService,
+          useValue: { isBlockedEither: jest.fn().mockResolvedValue(false) },
+        },
+        {
+          provide: DataPermissionsService,
+          useValue: { require: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -164,7 +167,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
     const { envelope, nonce } = buildEnvelope(
       plaintext,
       bobDevice.publicKey,
-      aliceDevice.privateKey,
+      aliceDevice.privateKey
     );
 
     const conv = await service.createConversation(alice, [bob.id]);
@@ -184,7 +187,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
       sodium.from_base64(parsed.body),
       nonce,
       aliceDevice.publicKey,
-      bobDevice.privateKey,
+      bobDevice.privateKey
     );
     expect(sodium.to_string(clear)).toBe(plaintext);
     expect(parsed.version).toBe(1);
@@ -196,7 +199,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
     expect(conv.isEncrypted).toBe(true);
 
     await expect(
-      service.sendMessage(alice, conv.id, { content: 'hi bob, this is readable plaintext' }),
+      service.sendMessage(alice, conv.id, { content: 'hi bob, this is readable plaintext' })
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -209,9 +212,9 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
     const conv = await service.createConversation(alice, [bob.id]);
     const message = await service.sendMessage(alice, conv.id, { content: sent.envelope });
 
-    await expect(
-      service.updateMessage(alice, message.id, 'edited plaintext'),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.updateMessage(alice, message.id, 'edited plaintext')).rejects.toThrow(
+      BadRequestException
+    );
   });
 
   it('allows legacy plaintext while a participant has no identity key', async () => {
@@ -220,7 +223,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
 
     expect(conv.isEncrypted).toBe(false);
     await expect(
-      service.sendMessage(alice, conv.id, { content: 'legacy plaintext is still allowed here' }),
+      service.sendMessage(alice, conv.id, { content: 'legacy plaintext is still allowed here' })
     ).resolves.toBeDefined();
   });
 
@@ -234,14 +237,18 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
 
     const carolDevice = sodium.crypto_box_keypair();
     const aliceDevice = sodium.crypto_box_keypair();
-    const { envelope } = buildEnvelope('now encrypted', carolDevice.publicKey, aliceDevice.privateKey);
+    const { envelope } = buildEnvelope(
+      'now encrypted',
+      carolDevice.publicKey,
+      aliceDevice.privateKey
+    );
 
     await service.sendMessage(alice, conv.id, { content: envelope });
 
     expect(conv.isEncrypted).toBe(true);
     // After the upgrade, plaintext is rejected on the same thread.
     await expect(
-      service.sendMessage(alice, conv.id, { content: 'this must now fail' }),
+      service.sendMessage(alice, conv.id, { content: 'this must now fail' })
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -252,7 +259,7 @@ describe('DMs end-to-end encryption (server enforcement)', () => {
     expect(conv.isEncrypted).toBe(false);
 
     await expect(
-      service.sendMessage(alice, conv.id, { content: 'group message stays plaintext' }),
+      service.sendMessage(alice, conv.id, { content: 'group message stays plaintext' })
     ).resolves.toBeDefined();
   });
 });

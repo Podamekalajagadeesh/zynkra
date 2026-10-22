@@ -12,13 +12,7 @@ import { User } from '../../users/entities/user.entity';
  *   rejected    — admin declined; wallet balance refunded
  *   failed      — Stripe transfer failed; wallet balance refunded
  */
-export type PayoutStatus =
-  | 'pending'
-  | 'processing'
-  | 'reversing'
-  | 'paid'
-  | 'rejected'
-  | 'failed';
+export type PayoutStatus = 'pending' | 'processing' | 'reversing' | 'paid' | 'rejected' | 'failed';
 
 @Entity('payouts')
 export class Payout {

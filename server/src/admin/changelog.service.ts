@@ -8,7 +8,7 @@ import { CreateChangelogEntryDto } from './dto/create-changelog-entry.dto';
 export class ChangelogService {
   constructor(
     @InjectRepository(ChangelogEntryEntity)
-    private readonly repository: Repository<ChangelogEntryEntity>,
+    private readonly repository: Repository<ChangelogEntryEntity>
   ) {}
 
   async list(limit = 50): Promise<ChangelogEntryEntity[]> {
@@ -28,12 +28,14 @@ export class ChangelogService {
       throw new ConflictException(`Changelog version ${input.version} already exists`);
     }
 
-    return this.repository.save(this.repository.create({
-      version: input.version,
-      title: input.title,
-      body: input.body,
-      changes: input.changes,
-      publishedAt: input.publishedAt ? new Date(input.publishedAt) : new Date(),
-    }));
+    return this.repository.save(
+      this.repository.create({
+        version: input.version,
+        title: input.title,
+        body: input.body,
+        changes: input.changes,
+        publishedAt: input.publishedAt ? new Date(input.publishedAt) : new Date(),
+      })
+    );
   }
 }

@@ -42,7 +42,7 @@ const CreatorTiersPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await getCreatorSubscriptionTiers(user.id);
-      setTiers(Array.isArray(data) ? data : data.tiers ?? []);
+      setTiers(Array.isArray(data) ? data : (data.tiers ?? []));
     } catch {
       addToast('Failed to load subscription tiers', 'error');
     } finally {
@@ -100,9 +100,7 @@ const CreatorTiersPage: React.FC = () => {
       {/* Create tier form */}
       <Card className="mb-8">
         <CardContent className="p-5">
-          <h2 className="font-semibold text-dark-900 dark:text-white mb-4">
-            Create New Tier
-          </h2>
+          <h2 className="font-semibold text-dark-900 dark:text-white mb-4">Create New Tier</h2>
           <form onSubmit={handleCreateTier} className="space-y-3">
             <Input
               placeholder="Tier name (e.g., Bronze, Silver, Gold)"
@@ -137,9 +135,7 @@ const CreatorTiersPage: React.FC = () => {
       </Card>
 
       {/* Tier list */}
-      <h2 className="font-semibold text-dark-900 dark:text-white mb-4">
-        Your Tiers
-      </h2>
+      <h2 className="font-semibold text-dark-900 dark:text-white mb-4">Your Tiers</h2>
 
       {loading ? (
         <div className="space-y-4">
@@ -175,16 +171,12 @@ const CreatorTiersPage: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-dark-900 dark:text-white">
-                        {tier.name}
-                      </h3>
+                      <h3 className="font-semibold text-dark-900 dark:text-white">{tier.name}</h3>
                       <Badge variant="default">${Number(tier.price).toFixed(2)}/mo</Badge>
                     </div>
                     {tier.benefits && (
                       <p className="text-sm text-dark-500 mt-1">
-                        {Array.isArray(tier.benefits)
-                          ? tier.benefits.join(', ')
-                          : tier.benefits}
+                        {Array.isArray(tier.benefits) ? tier.benefits.join(', ') : tier.benefits}
                       </p>
                     )}
                     {tier.subscriberCount != null && (
@@ -214,14 +206,12 @@ const CreatorTiersPage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Tier?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this subscription tier. Existing subscribers
-              may be affected. This action cannot be undone.
+              This will permanently delete this subscription tier. Existing subscribers may be
+              affected. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteId(null)}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteId(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTier}>
               {deleting ? 'Deleting...' : 'Delete Tier'}
             </AlertDialogAction>

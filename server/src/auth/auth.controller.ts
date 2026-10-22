@@ -1,4 +1,21 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request, Session, BadRequestException, UnauthorizedException, Get, Delete, Param, Req, Res, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Request,
+  Session,
+  BadRequestException,
+  UnauthorizedException,
+  Get,
+  Delete,
+  Param,
+  Req,
+  Res,
+  Query,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
@@ -50,7 +67,7 @@ export class AuthController {
     private readonly webauthnService: WebauthnService,
     private readonly usersService: UsersService,
     private readonly accountLinkingService: AccountLinkingService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -211,10 +228,7 @@ export class AuthController {
 
   @Throttle(STRICT)
   @Post('recover')
-  async recoverAccount(
-    @Req() req,
-    @Body() body: { identifier: string; recoveryCode: string },
-  ) {
+  async recoverAccount(@Req() req, @Body() body: { identifier: string; recoveryCode: string }) {
     return this.authService.recoverAccount(body.identifier, body.recoveryCode, req);
   }
 
@@ -245,9 +259,14 @@ export class AuthController {
   @Post('recovery/contact/verify')
   async verifyTrustedContactRecovery(
     @Req() req,
-    @Body() body: { identifier: string; contactEmail: string; code: string },
+    @Body() body: { identifier: string; contactEmail: string; code: string }
   ) {
-    return this.authService.verifyTrustedContactRecovery(body.identifier, body.contactEmail, body.code, req);
+    return this.authService.verifyTrustedContactRecovery(
+      body.identifier,
+      body.contactEmail,
+      body.code,
+      req
+    );
   }
 
   /**
@@ -329,37 +348,31 @@ export class AuthController {
   @Throttle(STRICT)
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.authService.resetPassword(
-      resetPasswordDto.token,
-      resetPasswordDto.password,
-    );
+    return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.password);
   }
 
   @Throttle(EMAIL_SENDING)
-    @Post('magic-link/request')
-    async requestMagicLink(@Body() magicLinkRequestDto: MagicLinkRequestDto) {
-        return this.authService.requestMagicLink(magicLinkRequestDto.email);
-    }
+  @Post('magic-link/request')
+  async requestMagicLink(@Body() magicLinkRequestDto: MagicLinkRequestDto) {
+    return this.authService.requestMagicLink(magicLinkRequestDto.email);
+  }
 
-    @Post('guest')
-    @HttpCode(HttpStatus.CREATED)
-    async createGuestUser(@Req() req: any) {
-        return this.authService.guestSignIn(req);
-    }
+  @Post('guest')
+  @HttpCode(HttpStatus.CREATED)
+  async createGuestUser(@Req() req: any) {
+    return this.authService.guestSignIn(req);
+  }
 
-    @Post('anonymous')
-    @HttpCode(HttpStatus.CREATED)
-    async createAnonymousUser(@Req() req: any) {
-        return this.authService.anonymousSignIn(req);
-    }
+  @Post('anonymous')
+  @HttpCode(HttpStatus.CREATED)
+  async createAnonymousUser(@Req() req: any) {
+    return this.authService.anonymousSignIn(req);
+  }
 
   @Throttle(STRICT)
   @Post('magic-link/verify')
   @HttpCode(HttpStatus.OK)
-  async verifyMagicLink(
-    @Req() req,
-    @Body() magicLinkVerifyDto: MagicLinkVerifyDto,
-  ) {
+  async verifyMagicLink(@Req() req, @Body() magicLinkVerifyDto: MagicLinkVerifyDto) {
     return this.authService.verifyMagicLink(magicLinkVerifyDto.token, req);
   }
 
@@ -378,7 +391,11 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard, CsrfGuard)
   @Post('webauthn/registration/verify')
-  async verifyWebAuthnRegistration(@Request() req, @Body() body, @Session() session: Record<string, any>) {
+  async verifyWebAuthnRegistration(
+    @Request() req,
+    @Body() body,
+    @Session() session: Record<string, any>
+  ) {
     return this.webauthnService.verifyRegistration(req.user, body, session.challenge);
   }
 
@@ -404,7 +421,11 @@ export class AuthController {
       throw new UnauthorizedException('User not found for session.');
     }
 
-    const verification = await this.webauthnService.verifyAuthentication(user, body, session.challenge);
+    const verification = await this.webauthnService.verifyAuthentication(
+      user,
+      body,
+      session.challenge
+    );
 
     if (verification.verified) {
       // After successful verification, update the authenticator counter in the database to prevent replay attacks.

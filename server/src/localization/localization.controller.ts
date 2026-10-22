@@ -36,6 +36,8 @@ export class LocalizationController {
 
   @Post('format-currency')
   formatCurrency(@Body() body: { value: number; currency: string; locale: string }) {
-    return { value: this.localizationService.formatCurrency(body.value, body.currency, body.locale) };
+    return {
+      value: this.localizationService.formatCurrency(body.value, body.currency, body.locale),
+    };
   }
 }

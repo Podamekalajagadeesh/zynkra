@@ -76,10 +76,12 @@ export class SecuritySettingsService {
   constructor(
     private readonly securityAuditService?: SecurityAuditService,
     @InjectRepository(User) private readonly usersRepository?: Repository<User>,
-    @InjectRepository(Authenticator) private readonly authenticatorsRepository?: Repository<Authenticator>,
+    @InjectRepository(Authenticator)
+    private readonly authenticatorsRepository?: Repository<Authenticator>,
     @InjectRepository(SecurityAuditLogEntity)
     private readonly auditRepository?: Repository<SecurityAuditLogEntity>,
-    @InjectRepository(LoginSession) private readonly loginSessionsRepository?: Repository<LoginSession>,
+    @InjectRepository(LoginSession)
+    private readonly loginSessionsRepository?: Repository<LoginSession>
   ) {}
 
   private mapEventType(eventType: string): SecurityEventType {
@@ -138,7 +140,9 @@ export class SecuritySettingsService {
    * `notEnforced` names the second group so a caller can tell the difference.
    * Setting a flag in the second group does not make the account safer.
    */
-  async getSecuritySettings(accountId: string): Promise<SecuritySetting & { notEnforced: readonly string[] }> {
+  async getSecuritySettings(
+    accountId: string
+  ): Promise<SecuritySetting & { notEnforced: readonly string[] }> {
     const stored = this.securitySettings.get(accountId) ?? this.createDefaultSettings(accountId);
     this.securitySettings.set(accountId, stored);
 
@@ -164,7 +168,7 @@ export class SecuritySettingsService {
   async updateSecuritySettings(
     accountId: string,
     updates: Partial<SecuritySetting>,
-    modifiedBy?: string,
+    modifiedBy?: string
   ): Promise<SecuritySetting> {
     let settings = this.securitySettings.get(accountId);
 
@@ -178,18 +182,29 @@ export class SecuritySettingsService {
     }
 
     // Update settings
-    if (updates.twoFactorAuthentication !== undefined) settings.twoFactorAuthentication = updates.twoFactorAuthentication;
-    if (updates.biometricAuthentication !== undefined) settings.biometricAuthentication = updates.biometricAuthentication;
+    if (updates.twoFactorAuthentication !== undefined)
+      settings.twoFactorAuthentication = updates.twoFactorAuthentication;
+    if (updates.biometricAuthentication !== undefined)
+      settings.biometricAuthentication = updates.biometricAuthentication;
     if (updates.passkeysEnabled !== undefined) settings.passkeysEnabled = updates.passkeysEnabled;
-    if (updates.recoveryCodesEnabled !== undefined) settings.recoveryCodesEnabled = updates.recoveryCodesEnabled;
-    if (updates.loginApprovalsEnabled !== undefined) settings.loginApprovalsEnabled = updates.loginApprovalsEnabled;
-    if (updates.suspiciousLoginAlertsEnabled !== undefined) settings.suspiciousLoginAlertsEnabled = updates.suspiciousLoginAlertsEnabled;
-    if (updates.deviceManagementEnabled !== undefined) settings.deviceManagementEnabled = updates.deviceManagementEnabled;
-    if (updates.sessionManagementEnabled !== undefined) settings.sessionManagementEnabled = updates.sessionManagementEnabled;
-    if (updates.accountRecoveryEnabled !== undefined) settings.accountRecoveryEnabled = updates.accountRecoveryEnabled;
-    if (updates.securityCenterEnabled !== undefined) settings.securityCenterEnabled = updates.securityCenterEnabled;
-    if (updates.loginNotifications !== undefined) settings.loginNotifications = updates.loginNotifications;
-    if (updates.unknownLocationAlerts !== undefined) settings.unknownLocationAlerts = updates.unknownLocationAlerts;
+    if (updates.recoveryCodesEnabled !== undefined)
+      settings.recoveryCodesEnabled = updates.recoveryCodesEnabled;
+    if (updates.loginApprovalsEnabled !== undefined)
+      settings.loginApprovalsEnabled = updates.loginApprovalsEnabled;
+    if (updates.suspiciousLoginAlertsEnabled !== undefined)
+      settings.suspiciousLoginAlertsEnabled = updates.suspiciousLoginAlertsEnabled;
+    if (updates.deviceManagementEnabled !== undefined)
+      settings.deviceManagementEnabled = updates.deviceManagementEnabled;
+    if (updates.sessionManagementEnabled !== undefined)
+      settings.sessionManagementEnabled = updates.sessionManagementEnabled;
+    if (updates.accountRecoveryEnabled !== undefined)
+      settings.accountRecoveryEnabled = updates.accountRecoveryEnabled;
+    if (updates.securityCenterEnabled !== undefined)
+      settings.securityCenterEnabled = updates.securityCenterEnabled;
+    if (updates.loginNotifications !== undefined)
+      settings.loginNotifications = updates.loginNotifications;
+    if (updates.unknownLocationAlerts !== undefined)
+      settings.unknownLocationAlerts = updates.unknownLocationAlerts;
     if (updates.sessionTimeout !== undefined) settings.sessionTimeout = updates.sessionTimeout;
     if (updates.sessionTimeoutMinutes !== undefined) {
       if (updates.sessionTimeoutMinutes < 5 || updates.sessionTimeoutMinutes > 1440) {
@@ -198,9 +213,12 @@ export class SecuritySettingsService {
       settings.sessionTimeoutMinutes = updates.sessionTimeoutMinutes;
     }
     if (updates.securityLevel !== undefined) settings.securityLevel = updates.securityLevel;
-    if (updates.verifyNewDevices !== undefined) settings.verifyNewDevices = updates.verifyNewDevices;
-    if (updates.allowRememberDevice !== undefined) settings.allowRememberDevice = updates.allowRememberDevice;
-    if (updates.trustedIpAddresses !== undefined) settings.trustedIpAddresses = updates.trustedIpAddresses;
+    if (updates.verifyNewDevices !== undefined)
+      settings.verifyNewDevices = updates.verifyNewDevices;
+    if (updates.allowRememberDevice !== undefined)
+      settings.allowRememberDevice = updates.allowRememberDevice;
+    if (updates.trustedIpAddresses !== undefined)
+      settings.trustedIpAddresses = updates.trustedIpAddresses;
 
     settings.updatedAt = new Date();
     settings.lastModifiedBy = modifiedBy;
@@ -208,10 +226,16 @@ export class SecuritySettingsService {
     this.securitySettings.set(accountId, settings);
 
     // Log the change
-    this.recordSecurityAuditLog(accountId, 'security_settings_updated', 'success', 'Security settings updated', {
-      changes: updates,
-      modifiedBy,
-    });
+    this.recordSecurityAuditLog(
+      accountId,
+      'security_settings_updated',
+      'success',
+      'Security settings updated',
+      {
+        changes: updates,
+        modifiedBy,
+      }
+    );
 
     return settings;
   }
@@ -258,7 +282,12 @@ export class SecuritySettingsService {
     settings.updatedAt = new Date();
 
     this.securitySettings.set(accountId, settings);
-    this.recordSecurityAuditLog(accountId, 'biometric_enabled', 'success', 'Biometric authentication enabled');
+    this.recordSecurityAuditLog(
+      accountId,
+      'biometric_enabled',
+      'success',
+      'Biometric authentication enabled'
+    );
 
     return { success: true, message: 'Biometric authentication enabled' };
   }
@@ -271,7 +300,10 @@ export class SecuritySettingsService {
    * suspicious-login prompt (`AuthService.isTrustedIp`). Previously the list was
    * memory-only and consulted by nothing, so this endpoint was cosmetic.
    */
-  async addTrustedIpAddress(accountId: string, ipAddress: string): Promise<{ success: boolean; trustedIps: string[] }> {
+  async addTrustedIpAddress(
+    accountId: string,
+    ipAddress: string
+  ): Promise<{ success: boolean; trustedIps: string[] }> {
     if (!this.isValidIpAddress(ipAddress)) {
       throw new BadRequestException('Invalid IP address format');
     }
@@ -285,14 +317,23 @@ export class SecuritySettingsService {
     if (!current.includes(ipAddress)) {
       user.trustedIpAddresses = [...current, ipAddress];
       await this.usersRepository!.save(user);
-      this.recordSecurityAuditLog(accountId, 'trusted_ip_added', 'success', `Trusted IP added: ${ipAddress}`, { ipAddress });
+      this.recordSecurityAuditLog(
+        accountId,
+        'trusted_ip_added',
+        'success',
+        `Trusted IP added: ${ipAddress}`,
+        { ipAddress }
+      );
     }
 
     return { success: true, trustedIps: user.trustedIpAddresses ?? [] };
   }
 
   /** Remove a trusted IP address. */
-  async removeTrustedIpAddress(accountId: string, ipAddress: string): Promise<{ success: boolean; trustedIps: string[] }> {
+  async removeTrustedIpAddress(
+    accountId: string,
+    ipAddress: string
+  ): Promise<{ success: boolean; trustedIps: string[] }> {
     const user = await this.usersRepository?.findOne({ where: { id: accountId } });
     if (!user) {
       throw new NotFoundException('Account not found');
@@ -302,7 +343,13 @@ export class SecuritySettingsService {
     if (current.includes(ipAddress)) {
       user.trustedIpAddresses = current.filter((ip) => ip !== ipAddress);
       await this.usersRepository!.save(user);
-      this.recordSecurityAuditLog(accountId, 'trusted_ip_removed', 'success', `Trusted IP removed: ${ipAddress}`, { ipAddress });
+      this.recordSecurityAuditLog(
+        accountId,
+        'trusted_ip_removed',
+        'success',
+        `Trusted IP removed: ${ipAddress}`,
+        { ipAddress }
+      );
     }
 
     return { success: true, trustedIps: user.trustedIpAddresses ?? [] };
@@ -345,7 +392,9 @@ export class SecuritySettingsService {
           metadata: log.metadata ?? undefined,
         }));
       } catch (error) {
-        this.logger.warn(`Failed to load persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(
+          `Failed to load persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -361,7 +410,7 @@ export class SecuritySettingsService {
     eventType: string,
     status: 'success' | 'failed' | 'warning',
     description: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ): Promise<SecurityAuditLog> {
     const log: SecurityAuditLog = {
       eventId: `audit-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -395,7 +444,9 @@ export class SecuritySettingsService {
         });
       }
     } catch (error) {
-      this.logger.warn(`Failed to persist security audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Failed to persist security audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     this.logger.log(`Security audit: ${eventType} for account ${accountId} - ${description}`);
@@ -406,7 +457,10 @@ export class SecuritySettingsService {
   /**
    * Clear old logs (older than specified days)
    */
-  async clearOldAuditLogs(accountId: string, olderThanDays: number): Promise<{ success: boolean; clearedCount: number }> {
+  async clearOldAuditLogs(
+    accountId: string,
+    olderThanDays: number
+  ): Promise<{ success: boolean; clearedCount: number }> {
     if (this.securityAuditService) {
       try {
         const cleared = await this.securityAuditService.cleanupOldLogs(olderThanDays);
@@ -422,7 +476,9 @@ export class SecuritySettingsService {
         this.logger.log(`Cleared ${cleared} persisted audit logs for account ${accountId}`);
         return { success: true, clearedCount: cleared };
       } catch (error) {
-        this.logger.warn(`Failed to clear persisted audit logs for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(
+          `Failed to clear persisted audit logs for ${accountId}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -430,7 +486,7 @@ export class SecuritySettingsService {
     const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
 
     const originalLength = logs.length;
-    const filtered = logs.filter(log => log.timestamp >= cutoffDate);
+    const filtered = logs.filter((log) => log.timestamp >= cutoffDate);
 
     if (filtered.length > 0) {
       this.securityLogs.set(accountId, filtered);
@@ -448,7 +504,9 @@ export class SecuritySettingsService {
   /**
    * Export security audit log
    */
-  async exportAuditLog(accountId: string): Promise<{ accountId: string; exportUrl: string; logCount: number; generatedAt: string }> {
+  async exportAuditLog(
+    accountId: string
+  ): Promise<{ accountId: string; exportUrl: string; logCount: number; generatedAt: string }> {
     if (this.securityAuditService) {
       try {
         const logs = await this.securityAuditService.exportUserAuditLog(accountId);
@@ -460,7 +518,9 @@ export class SecuritySettingsService {
           generatedAt: new Date().toISOString(),
         };
       } catch (error) {
-        this.logger.warn(`Failed to export persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
+        this.logger.warn(
+          `Failed to export persisted audit log for ${accountId}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -480,7 +540,10 @@ export class SecuritySettingsService {
   /**
    * Set security level
    */
-  async setSecurityLevel(accountId: string, level: 'standard' | 'enhanced' | 'maximum'): Promise<SecuritySetting> {
+  async setSecurityLevel(
+    accountId: string,
+    level: 'standard' | 'enhanced' | 'maximum'
+  ): Promise<SecuritySetting> {
     const settings = await this.getSecuritySettings(accountId);
 
     if (level === 'maximum' && !settings.twoFactorAuthentication) {
@@ -492,7 +555,12 @@ export class SecuritySettingsService {
 
     this.securitySettings.set(accountId, settings);
 
-    this.recordSecurityAuditLog(accountId, 'security_level_changed', 'success', `Security level changed to ${level}`);
+    this.recordSecurityAuditLog(
+      accountId,
+      'security_level_changed',
+      'success',
+      `Security level changed to ${level}`
+    );
 
     return settings;
   }
@@ -524,7 +592,8 @@ export class SecuritySettingsService {
 
     const [user, passkeyCount, failedLogins, liveSessions] = await Promise.all([
       this.usersRepository?.findOne({ where: { id: accountId } }) ?? Promise.resolve(null),
-      this.authenticatorsRepository?.count({ where: { user: { id: accountId } } }) ?? Promise.resolve(0),
+      this.authenticatorsRepository?.count({ where: { user: { id: accountId } } }) ??
+        Promise.resolve(0),
       this.auditRepository?.count({
         where: {
           userId: accountId,
@@ -585,13 +654,15 @@ export class SecuritySettingsService {
     if (failedLogins > 5) {
       score -= 15;
       recommendations.push(
-        `${failedLogins} failed sign-in attempts in the last 7 days — review your account security`,
+        `${failedLogins} failed sign-in attempts in the last 7 days — review your account security`
       );
     }
 
     if (liveSessions > 10) {
       score -= 5;
-      recommendations.push(`${liveSessions} active sessions — revoke the ones you do not recognise`);
+      recommendations.push(
+        `${liveSessions} active sessions — revoke the ones you do not recognise`
+      );
     }
 
     score = Math.max(0, score);

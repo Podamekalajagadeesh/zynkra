@@ -1,13 +1,16 @@
 # Zynkra — Universal Social Media
+
 **Universal social media platform.**
 
 ## Quick Links
+
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Setup & running locally
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design & tech stack
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Backend API reference
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines
 
 ## Project Structure
+
 ```
 client/              # React + Vite frontend
 ├── src/
@@ -33,10 +36,10 @@ server/              # NestJS backend (105 feature dirs; ~20 load-bearing)
 
 The directory count is large but most of it is not shipped. Of the 105 feature directories,
 **~20 are load-bearing**, ~12 are labeled Preview, and 64 under `server/src/features/` are
-`console.log` stubs that are never registered — they are not reachable at all, not even as a
-404. See [ROADMAP.md](ROADMAP.md) §1.
+`console.log` stubs that are never registered — they are not reachable at all, not even as a 404. See [ROADMAP.md](ROADMAP.md) §1.
 
 ## Tech Stack
+
 - **Frontend**: React 18, Vite, TypeScript, Tailwind CSS
 - **Backend**: NestJS, TypeScript, PostgreSQL
 - **Real-time**: Socket.io, LiveKit
@@ -46,11 +49,13 @@ The directory count is large but most of it is not shipped. Of the 105 feature d
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - PostgreSQL 14+
 - Git
 
 ### Installation
+
 ```bash
 # Clone repo
 git clone https://github.com/Podamekalajagadeesh/zynkra.git
@@ -64,6 +69,7 @@ cd ../server && npm install
 ```
 
 ### Running Locally
+
 ```bash
 # Terminal 1: Backend (NestJS)
 cd server
@@ -78,6 +84,7 @@ npm run dev
 ```
 
 ## Key Features
+
 ✅ Core social (posts, comments, reactions, stories, reels, polls, bookmarks)
 ✅ User auth (JWT, OAuth, Passkeys, 2FA, Sign-In with Ethereum)
 ✅ DMs with Signal Protocol key infrastructure — 1:1 conversations are E2EE (ciphertext-only at rest); group/media/modmail are not
@@ -93,9 +100,11 @@ npm run dev
 ✅ Offline-first (IndexedDB queue + Service Worker)
 
 ## Development Status
+
 See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assessment.
 
 ### ✅ Working (Core loop)
+
 - [x] Authentication (JWT, OAuth, Passkeys, 2FA, SIWE)
 - [x] User profiles, follows, blocking
 - [x] Posts, comments, reactions, bookmarks
@@ -108,6 +117,7 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assess
 - [x] Admin dashboard, moderation
 
 ### 🔄 Working (Differentiators)
+
 - [x] Creator payouts (Stripe Connect, wallet ledger)
 - [x] ActivityPub federation — outbound HTTP Signatures **and inbound verification** (unsigned or forged activities are rejected), persisted inbound follows, post fan-out on create, retraction on delete, cross-instance boosts, a readable federated timeline at `GET /federation/timeline`, WebFinger, NodeInfo. Requires `FEDERATION_ENABLED=true`; interop test vs Mastodon still pending
 - [x] Offline sync queue
@@ -115,9 +125,11 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assess
 - [x] Real-time translation (26 languages)
 
 ### 🔄 Preview (visible but shallow)
+
 - Stories, Reels, Marketplace, Dating, Courses, Newsletters, Podcasts
 
 ### ❌ Not started
+
 - Mobile apps (iOS/Android native)
 - Per-recipient media encryption in DMs (attachments are stored server-side and served to
   anyone with the URL)
@@ -131,7 +143,9 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan and honest baseline assess
 > covers the useful part of "blockchain identity").
 
 ## Contributing
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Branch strategy
 - Commit conventions
 - Code style guidelines
@@ -139,13 +153,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Testing requirements
 
 ## Documentation
+
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Setup, debugging, troubleshooting
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design, module structure
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Backend API endpoints
 
 ## License
+
 MIT
 
 ## Support
+
 - GitHub Issues: [Report bugs](https://github.com/Podamekalajagadeesh/zynkra/issues)
 - Discussions: [Ask questions](https://github.com/Podamekalajagadeesh/zynkra/discussions)

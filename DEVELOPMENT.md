@@ -1,7 +1,9 @@
 # DEVELOPMENT.md
+
 **Local Development Setup & Running Guide**
 
 ## Table of Contents
+
 1. [Prerequisites](#prerequisites)
 2. [Installation](#installation)
 3. [Environment Setup](#environment-setup)
@@ -15,18 +17,21 @@
 ## Prerequisites
 
 ### Required
+
 - **Node.js** 18.0.0+ ([download](https://nodejs.org/))
 - **npm** 9.0.0+ (comes with Node.js)
 - **PostgreSQL** 14+ ([download](https://www.postgresql.org/download/))
 - **Git** ([download](https://git-scm.com/))
 
 ### Optional (but recommended)
+
 - **Docker** - for running PostgreSQL in container
 - **VS Code** - recommended IDE
 - **Postman** - for testing API endpoints
 - **pgAdmin** - for database management
 
 ### Verify Installation
+
 ```bash
 node --version    # Should be 18+
 npm --version     # Should be 9+
@@ -39,18 +44,21 @@ git --version     # Any recent version
 ## Installation
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/Podamekalajagadeesh/zynkra.git
 cd zynkra
 ```
 
 ### 2. Install Backend Dependencies
+
 ```bash
 cd server
 npm install
 ```
 
 ### 3. Install Frontend Dependencies
+
 ```bash
 cd ../client
 npm install
@@ -59,6 +67,7 @@ npm install
 ### 4. Set Up PostgreSQL Database
 
 #### Option A: Using Docker (Recommended)
+
 ```bash
 # From project root
 docker run --name zynkra-db \
@@ -73,6 +82,7 @@ docker ps | grep zynkra-db
 ```
 
 #### Option B: Local PostgreSQL Installation
+
 ```bash
 # macOS (via Homebrew)
 brew install postgresql@15
@@ -94,6 +104,7 @@ GRANT ALL PRIVILEGES ON DATABASE zynkra_dev TO zynkra;
 ```
 
 ### 5. Verify Database Connection
+
 ```bash
 psql -h localhost -U zynkra -d zynkra_dev -c "SELECT 1;"
 # Should output: ?column?
@@ -105,7 +116,9 @@ psql -h localhost -U zynkra -d zynkra_dev -c "SELECT 1;"
 ## Environment Setup
 
 ### Backend (.env)
+
 Create `server/.env`:
+
 ```env
 # Database
 DATABASE_URL=postgresql://zynkra:zynkra123@localhost:5432/zynkra_dev
@@ -133,7 +146,9 @@ AP_SIGNATURE_KEY_ID=http://localhost:3000/users/zynkra#main-key
 ```
 
 ### Frontend (.env.local)
+
 Create `client/.env.local`:
+
 ```env
 # API
 VITE_API_URL=http://localhost:3000
@@ -150,6 +165,7 @@ VITE_ENVIRONMENT=development
 ## Running Locally
 
 ### Database Migrations
+
 ```bash
 cd server
 
@@ -161,15 +177,17 @@ npx typeorm migration:run -d dist/database.js
 ```
 
 ### Terminal 1: Backend
+
 ```bash
 cd server
 npm run dev
-# Should output: 
+# Should output:
 # Listening on port 3000
 # Database: zynkra_dev connected
 ```
 
 ### Terminal 2: Frontend
+
 ```bash
 cd client
 npm run dev
@@ -179,6 +197,7 @@ npm run dev
 ```
 
 ### Terminal 3: (Optional) Database Monitor
+
 ```bash
 docker exec -it zynkra-db psql -U zynkra -d zynkra_dev
 
@@ -187,6 +206,7 @@ psql -h localhost -U zynkra -d zynkra_dev
 ```
 
 ### Testing & QA
+
 ```bash
 cd server
 npm run test:unit
@@ -208,6 +228,7 @@ npm run beta:internal
 These commands run the real backend unit, integration, and smoke tests plus the security audit script so release readiness is measured from the repository rather than assumed. The client offline smoke check and the mobile internal beta build manifest now provide concrete validation artifacts for Week 4 release work.
 
 ### Access the App
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000
 - **API Docs**: http://localhost:3000/api
@@ -220,11 +241,13 @@ These commands run the real backend unit, integration, and smoke tests plus the 
 ### Adding a New Feature
 
 #### 1. Create Feature Branch
+
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
 #### 2. Backend Development
+
 ```bash
 # Create a new module
 cd server/src
@@ -242,6 +265,7 @@ npm run typeorm migration:create -- -n AddYourFeature
 ```
 
 #### 3. Frontend Development
+
 ```bash
 # Create component
 mkdir -p client/src/components/YourFeature
@@ -257,6 +281,7 @@ touch client/src/services/yourFeature.service.ts
 ```
 
 #### 4. Testing
+
 ```bash
 # Backend tests
 cd server
@@ -268,6 +293,7 @@ npm run test
 ```
 
 #### 5. Git Commit
+
 ```bash
 git add .
 git commit -m "feat: add your feature name
@@ -286,7 +312,9 @@ git push origin feature/your-feature-name
 ### Backend Debugging
 
 #### VS Code Debugger
+
 Create `.vscode/launch.json`:
+
 ```json
 {
   "version": "0.2.0",
@@ -307,6 +335,7 @@ Create `.vscode/launch.json`:
 Press F5 to start debugging. Set breakpoints by clicking on line numbers.
 
 #### Logging
+
 ```typescript
 // In any service or controller
 import { Logger } from '@nestjs/common';
@@ -326,12 +355,14 @@ export class YourService {
 ### Frontend Debugging
 
 #### React DevTools Browser Extension
+
 1. Install [React DevTools](https://chrome.google.com/webstore/detail/react-developer-tools)
 2. Open DevTools (F12)
 3. Components tab shows React component tree
 4. Profiler tab shows performance metrics
 
 #### Console Logging
+
 ```typescript
 console.log('Variable:', myVar);
 console.table([{ id: 1, name: 'Test' }]);
@@ -339,6 +370,7 @@ console.trace('Stack trace');
 ```
 
 #### Network Inspection
+
 1. Open DevTools (F12)
 2. Network tab
 3. Perform action to see API calls
@@ -347,7 +379,9 @@ console.trace('Stack trace');
 ### Database Debugging
 
 #### Query Logging
+
 Enable query logging in `server/.env`:
+
 ```env
 DB_LOGGING=true
 ```
@@ -355,6 +389,7 @@ DB_LOGGING=true
 View logs in terminal where backend is running.
 
 #### pgAdmin UI (Optional)
+
 ```bash
 docker run --name pgadmin \
   -e PGADMIN_DEFAULT_EMAIL=admin@example.com \
@@ -362,6 +397,7 @@ docker run --name pgadmin \
   -p 5050:80 \
   -d dpage/pgadmin4
 ```
+
 Access at http://localhost:5050
 
 ---
@@ -369,14 +405,18 @@ Access at http://localhost:5050
 ## Common Issues
 
 ### Issue: "Cannot find module" errors after installation
+
 **Solution**: Clear node_modules and reinstall
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 ### Issue: Database connection refused
+
 **Solution**: Verify PostgreSQL is running
+
 ```bash
 # Docker
 docker ps | grep zynkra-db
@@ -387,7 +427,9 @@ brew services list                # macOS
 ```
 
 ### Issue: Port 3000 already in use
+
 **Solution**: Change port in `.env` or kill existing process
+
 ```bash
 # Find what's using port 3000
 lsof -i :3000
@@ -400,17 +442,21 @@ PORT=3001
 ```
 
 ### Issue: Port 5173 already in use
+
 **Solution**: Vite will auto-increment, or change in `client/vite.config.ts`
+
 ```typescript
 export default defineConfig({
   server: {
-    port: 5174
-  }
-})
+    port: 5174,
+  },
+});
 ```
 
 ### Issue: "EACCES: permission denied" on macOS/Linux
+
 **Solution**: Check npm permissions
+
 ```bash
 npm config get prefix
 # Should be ~/.npm-global or /usr/local
@@ -420,14 +466,18 @@ sudo chown -R $(whoami) ~/.npm-global
 ```
 
 ### Issue: React component not updating
+
 **Solution**: Check for:
+
 1. Missing `useCallback` or `useMemo` dependencies
 2. State mutation (don't mutate state directly)
 3. Missing key props in lists
 4. Component in strict mode (expected double-render)
 
 ### Issue: TypeScript errors but code runs
+
 **Solution**: Run type check
+
 ```bash
 # Backend
 cd server
@@ -439,7 +489,9 @@ npm run type-check
 ```
 
 ### Issue: Database migrations failed
+
 **Solution**: Rollback and redo
+
 ```bash
 cd server
 
@@ -458,6 +510,7 @@ npm run typeorm migration:run
 ## Performance Tips
 
 ### Frontend
+
 - Use React.memo for expensive components
 - Use useMemo for expensive computations
 - Lazy-load routes with React.lazy
@@ -465,15 +518,17 @@ npm run typeorm migration:run
 - Use Chrome DevTools Lighthouse for metrics
 
 ### Backend
+
 - Enable query caching in Redis
 - Use database indexes for frequently queried columns
 - Monitor slow queries: `npm run typeorm query:show`
 - Use pagination for large datasets
 
 ### Database
+
 ```sql
 -- Check slow queries
-SELECT query, calls, mean_time FROM pg_stat_statements 
+SELECT query, calls, mean_time FROM pg_stat_statements
 ORDER BY mean_time DESC LIMIT 10;
 
 -- Create indexes
@@ -486,6 +541,7 @@ CREATE INDEX idx_comments_post_id ON comments(post_id);
 ## Useful Commands
 
 ### Backend
+
 ```bash
 cd server
 
@@ -499,6 +555,7 @@ npm run typeorm       # TypeORM CLI
 ```
 
 ### Frontend
+
 ```bash
 cd client
 

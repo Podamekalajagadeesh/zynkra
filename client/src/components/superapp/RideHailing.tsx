@@ -51,15 +51,15 @@ export function RideHailing() {
       date: new Date(Date.now() - 86400000 * 7),
       pickup: '123 Main St, New York, NY',
       dropoff: '456 Park Ave, New York, NY',
-      price: 24.50,
+      price: 24.5,
       driver: 'Sarah Johnson',
-      rating: 4.9
-    }
+      rating: 4.9,
+    },
   ]);
 
   const savedAddresses: SavedAddress[] = [
     { id: '1', type: 'home', address: '123 Main St, New York, NY', label: 'Home' },
-    { id: '2', type: 'work', address: '789 Business Blvd, New York, NY', label: 'Work' }
+    { id: '2', type: 'work', address: '789 Business Blvd, New York, NY', label: 'Work' },
   ];
 
   const rideOptions: RideOption[] = [
@@ -70,7 +70,8 @@ export function RideHailing() {
       price: 15.99,
       eta: 5,
       capacity: 4,
-      image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=200&h=120'
+      image:
+        'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=200&h=120',
     },
     {
       id: 'comfort',
@@ -79,7 +80,8 @@ export function RideHailing() {
       price: 22.99,
       eta: 3,
       capacity: 4,
-      image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=200&h=120'
+      image:
+        'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=200&h=120',
     },
     {
       id: 'premium',
@@ -88,7 +90,8 @@ export function RideHailing() {
       price: 39.99,
       eta: 8,
       capacity: 4,
-      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=200&h=120'
+      image:
+        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=200&h=120',
     },
     {
       id: 'suv',
@@ -97,8 +100,9 @@ export function RideHailing() {
       price: 32.99,
       eta: 6,
       capacity: 6,
-      image: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&q=80&w=200&h=120'
-    }
+      image:
+        'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&q=80&w=200&h=120',
+    },
   ];
 
   const handleQuickFill = (address: string, field: 'pickup' | 'dropoff') => {
@@ -115,14 +119,14 @@ export function RideHailing() {
       return;
     }
 
-    const ride = rideOptions.find(r => r.id === selectedRide);
+    const ride = rideOptions.find((r) => r.id === selectedRide);
     if (!ride) return;
 
     setIsBooking(true);
-    
+
     // Simulate finding a driver
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     const newActiveRide: ActiveRide = {
       id: Date.now().toString(),
       driverName: 'Michael Chen',
@@ -134,7 +138,7 @@ export function RideHailing() {
       status: 'driver-assigned',
       pickup,
       dropoff,
-      price: ride.price
+      price: ride.price,
     };
 
     setActiveRide(newActiveRide);
@@ -144,9 +148,9 @@ export function RideHailing() {
 
   const cancelRide = async () => {
     if (!activeRide) return;
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setActiveRide(null);
     addToast('Ride cancelled successfully', 'info');
   };
@@ -157,9 +161,11 @@ export function RideHailing() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold">Your ride is on the way!</h3>
-            <Button variant="secondary" size="sm" onClick={cancelRide}>Cancel Ride</Button>
+            <Button variant="secondary" size="sm" onClick={cancelRide}>
+              Cancel Ride
+            </Button>
           </div>
-          
+
           <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 mb-4">
             <div className="flex items-center gap-4 mb-4">
               <img
@@ -179,7 +185,7 @@ export function RideHailing() {
                 <p className="text-xs text-gray-500">min away</p>
               </div>
             </div>
-            
+
             <div className="border-t pt-4">
               <p className="font-medium">{activeRide.vehicleModel}</p>
               <p className="text-sm text-gray-500">License plate: {activeRide.licensePlate}</p>
@@ -219,12 +225,15 @@ export function RideHailing() {
     <div className="space-y-6">
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Book a Ride</h3>
-        
+
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Pickup Location</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <MapPin
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <Input
                 className="pl-10"
                 placeholder="Enter pickup location"
@@ -237,7 +246,10 @@ export function RideHailing() {
           <div>
             <label className="text-sm font-medium mb-2 block">Dropoff Location</label>
             <div className="relative">
-              <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Navigation
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <Input
                 className="pl-10"
                 placeholder="Enter destination"
@@ -250,7 +262,7 @@ export function RideHailing() {
           <div>
             <p className="text-sm text-gray-500 mb-2">Saved Places</p>
             <div className="flex gap-2">
-              {savedAddresses.map(addr => (
+              {savedAddresses.map((addr) => (
                 <Button
                   key={addr.id}
                   variant="secondary"
@@ -269,7 +281,7 @@ export function RideHailing() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Select Ride Option</h3>
           <div className="space-y-4">
-            {rideOptions.map(ride => (
+            {rideOptions.map((ride) => (
               <button
                 key={ride.id}
                 onClick={() => setSelectedRide(ride.id)}
@@ -323,14 +335,16 @@ export function RideHailing() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Rides</h3>
           <div className="space-y-4">
-            {rideHistory.map(ride => (
+            {rideHistory.map((ride) => (
               <div key={ride.id} className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium">{ride.date.toLocaleDateString()}</p>
                   <p className="font-semibold">${ride.price.toFixed(2)}</p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  <p>{ride.pickup} → {ride.dropoff}</p>
+                  <p>
+                    {ride.pickup} → {ride.dropoff}
+                  </p>
                 </div>
               </div>
             ))}

@@ -26,16 +26,16 @@ export class FederationFollows1790000000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "federation_follows" ADD CONSTRAINT "FK_federation_follows_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "federation_follows" ADD CONSTRAINT "FK_federation_follows_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "federation_follows" ADD CONSTRAINT "FK_federation_follows_remote_user" FOREIGN KEY ("remoteUserId") REFERENCES "federated_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "federation_follows" ADD CONSTRAINT "FK_federation_follows_remote_user" FOREIGN KEY ("remoteUserId") REFERENCES "federated_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_follows_local_user" ON "federation_follows" ("localUserId")`,
+      `CREATE INDEX "IDX_federation_follows_local_user" ON "federation_follows" ("localUserId")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_follows_remote_user" ON "federation_follows" ("remoteUserId")`,
+      `CREATE INDEX "IDX_federation_follows_remote_user" ON "federation_follows" ("remoteUserId")`
     );
   }
 

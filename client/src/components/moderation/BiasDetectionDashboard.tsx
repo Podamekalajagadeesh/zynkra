@@ -10,7 +10,7 @@ import {
   analyzeBias,
   getFeedRepresentationMetrics,
   applyBiasMitigations,
-  BiasAnalysisResult
+  BiasAnalysisResult,
 } from '../../services/contentModerationService';
 
 export function BiasDetectionDashboard() {
@@ -44,15 +44,15 @@ export function BiasDetectionDashboard() {
         authorId: `user-${i}`,
         contentType: 'post',
         moderationDecision: Math.random() > 0.9 ? 'removed' : 'approved',
-        moderatedGroup: Math.random() > 0.8 ? 'marginalized' : null
+        moderatedGroup: Math.random() > 0.8 ? 'marginalized' : null,
       }));
 
       const analysis = await analyzeBias(sampleFeedContent, {
         userId: 'current-admin-id',
         timeframe: '7d',
-        contentTypes: ['post', 'comment', 'reel']
+        contentTypes: ['post', 'comment', 'reel'],
       });
-      
+
       setBiasAnalysis(analysis);
       addToast('Bias analysis completed successfully', 'success');
     } catch (error) {
@@ -127,11 +127,13 @@ export function BiasDetectionDashboard() {
               <Users className="h-5 w-5 text-blue-500" />
               <h3 className="text-lg font-medium">Feed Representation Score</h3>
             </div>
-            <span className="text-2xl font-bold">{Math.round(metrics.overallRepresentationScore)}%</span>
+            <span className="text-2xl font-bold">
+              {Math.round(metrics.overallRepresentationScore)}%
+            </span>
           </div>
-          
+
           <Progress value={metrics.overallRepresentationScore} className="h-3 mb-6" />
-          
+
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             {Object.entries(metrics.demographicBreakdown).map(([group, percentage]) => (
               <div key={group} className="text-center">
@@ -149,8 +151,8 @@ export function BiasDetectionDashboard() {
             </div>
             <div className="flex items-end gap-1 h-32">
               {metrics.historicalTrends.slice(-30).map((day: any, i: number) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="flex-1 bg-blue-500 rounded-t"
                   style={{ height: `${day.score}%` }}
                   title={`${day.date}: ${day.score}%`}
@@ -178,7 +180,9 @@ export function BiasDetectionDashboard() {
                 <h4 className="font-medium mb-2">Detected Bias Types</h4>
                 <div className="flex flex-wrap gap-2">
                   {biasAnalysis.detectedBiasTypes.map((type, i) => (
-                    <Badge key={i} variant="outline">{type.replace('_', ' ')}</Badge>
+                    <Badge key={i} variant="outline">
+                      {type.replace('_', ' ')}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -187,7 +191,9 @@ export function BiasDetectionDashboard() {
                 <h4 className="font-medium mb-2">Affected Groups</h4>
                 <div className="flex flex-wrap gap-2">
                   {biasAnalysis.affectedGroups.map((group, i) => (
-                    <Badge key={i} className="bg-red-100 text-red-800">{group}</Badge>
+                    <Badge key={i} className="bg-red-100 text-red-800">
+                      {group}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -196,10 +202,13 @@ export function BiasDetectionDashboard() {
                 <h4 className="font-medium mb-2">Recommended Mitigations</h4>
                 <div className="space-y-2">
                   {biasAnalysis.mitigationSuggestions.map((suggestion, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    >
                       <span>{suggestion}</span>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => handleApplyMitigation(suggestion)}
                         disabled={applyingMitigation}
                         className="gap-1"
@@ -216,7 +225,9 @@ export function BiasDetectionDashboard() {
             <div className="text-center py-8">
               <Shield className="h-12 w-12 mx-auto text-green-500 mb-4" />
               <h3 className="text-lg font-medium">No significant bias detected</h3>
-              <p className="text-gray-500 mt-1">Your content feeds maintain good demographic representation.</p>
+              <p className="text-gray-500 mt-1">
+                Your content feeds maintain good demographic representation.
+              </p>
             </div>
           )}
         </Card>

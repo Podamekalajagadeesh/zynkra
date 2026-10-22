@@ -1,4 +1,3 @@
-
 import { ethers, Eip1193Provider } from 'ethers';
 import { SiweMessage } from 'siwe';
 import axios from 'axios';
@@ -26,7 +25,10 @@ class WalletService {
   }
 
   private saveState(): void {
-    localStorage.setItem('connectedWallets', JSON.stringify(Array.from(this.connectedWallets.entries())));
+    localStorage.setItem(
+      'connectedWallets',
+      JSON.stringify(Array.from(this.connectedWallets.entries()))
+    );
     localStorage.setItem('activeWalletAddress', this.activeWalletAddress || '');
   }
 
@@ -48,7 +50,9 @@ class WalletService {
     return true;
   }
 
-  public async connectWallet(providerType: 'metamask' | 'walletconnect'): Promise<{ walletInfo: WalletInfo; accessToken: string }> {
+  public async connectWallet(
+    providerType: 'metamask' | 'walletconnect'
+  ): Promise<{ walletInfo: WalletInfo; accessToken: string }> {
     if (providerType === 'metamask') {
       return this.connectMetaMask();
     } else if (providerType === 'walletconnect') {
@@ -64,7 +68,7 @@ class WalletService {
 
     try {
       await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
+
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
@@ -89,7 +93,11 @@ class WalletService {
         signature,
       });
 
-      const newWalletInfo: WalletInfo = { address, chainId: Number(chainId), providerType: 'metamask' };
+      const newWalletInfo: WalletInfo = {
+        address,
+        chainId: Number(chainId),
+        providerType: 'metamask',
+      };
       this.connectedWallets.set(address, newWalletInfo);
       this.activeWalletAddress = address;
       this.saveState();
@@ -103,7 +111,10 @@ class WalletService {
   private async connectWalletConnect(): Promise<{ walletInfo: WalletInfo; accessToken: string }> {
     try {
       const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-      const isPlaceholder = !projectId || projectId === 'dev-placeholder' || projectId === 'your-walletconnect-project-id';
+      const isPlaceholder =
+        !projectId ||
+        projectId === 'dev-placeholder' ||
+        projectId === 'your-walletconnect-project-id';
       if (isPlaceholder) {
         throw new Error(
           'WalletConnect is not configured. Add a valid VITE_WALLETCONNECT_PROJECT_ID to client/.env.local (see client/.env.example).'
@@ -143,7 +154,11 @@ class WalletService {
         signature,
       });
 
-      const newWalletInfo: WalletInfo = { address, chainId: Number(chainId), providerType: 'walletconnect' };
+      const newWalletInfo: WalletInfo = {
+        address,
+        chainId: Number(chainId),
+        providerType: 'walletconnect',
+      };
       this.connectedWallets.set(address, newWalletInfo);
       this.activeWalletAddress = address;
       this.saveState();

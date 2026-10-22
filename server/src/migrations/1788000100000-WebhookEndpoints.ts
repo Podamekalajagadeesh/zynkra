@@ -33,13 +33,13 @@ export class WebhookEndpoints1788000100000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "webhook_endpoints" ADD CONSTRAINT "FK_webhook_endpoints_developer" FOREIGN KEY ("developerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "webhook_endpoints" ADD CONSTRAINT "FK_webhook_endpoints_developer" FOREIGN KEY ("developerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "webhook_deliveries" ADD CONSTRAINT "FK_webhook_deliveries_endpoint" FOREIGN KEY ("endpointId") REFERENCES "webhook_endpoints"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "webhook_deliveries" ADD CONSTRAINT "FK_webhook_deliveries_endpoint" FOREIGN KEY ("endpointId") REFERENCES "webhook_endpoints"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_webhook_deliveries_endpoint" ON "webhook_deliveries" ("endpointId")`,
+      `CREATE INDEX "IDX_webhook_deliveries_endpoint" ON "webhook_deliveries" ("endpointId")`
     );
   }
 

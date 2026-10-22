@@ -45,7 +45,7 @@ export function decidePeerRotation(
   remoteKey: string | null,
   lastCheckedAt: number,
   now: number,
-  ttlMs: number = PEER_IDENTITY_CHECK_TTL_MS,
+  ttlMs: number = PEER_IDENTITY_CHECK_TTL_MS
 ): RotationDecision {
   if (lastCheckedAt > 0 && now - lastCheckedAt < ttlMs) {
     return 'throttled';

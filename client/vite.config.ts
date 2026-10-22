@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -18,19 +18,18 @@ export default defineConfig({
   },
   ssr: {
     noExternal: [],
-    external: ['@privacyresearch/libsignal-protocol-typescript', '@privacyresearch/curve25519-typescript'],
+    external: [
+      '@privacyresearch/libsignal-protocol-typescript',
+      '@privacyresearch/curve25519-typescript',
+    ],
   },
   publicDir: 'public',
   build: {
     commonjsOptions: {
-      include: [
-        /node_modules/,
-      ],
+      include: [/node_modules/],
     },
     rollupOptions: {
-      external: [
-        /@privacyresearch/,
-      ],
+      external: [/@privacyresearch/],
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) {
@@ -68,7 +67,12 @@ export default defineConfig({
             return `vendor-${pkgName.replace('@', '').replace('/', '-')}`;
           }
 
-          if (pkgName === 'ethers' || pkgName === 'viem' || pkgName === 'siwe' || pkgName === 'ox') {
+          if (
+            pkgName === 'ethers' ||
+            pkgName === 'viem' ||
+            pkgName === 'siwe' ||
+            pkgName === 'ox'
+          ) {
             return `vendor-${pkgName}`;
           }
 
@@ -126,7 +130,12 @@ export default defineConfig({
       '/federation': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/places': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
       '/uploads': { target: 'http://localhost:3000', changeOrigin: true, ws: true },
-      '/api': { target: 'http://localhost:3000', changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, ''), ws: true },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ''),
+        ws: true,
+      },
     },
   },
-})
+});

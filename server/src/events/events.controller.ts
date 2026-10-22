@@ -19,7 +19,7 @@ import { UsersService } from '../users/users.service';
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   @UseGuards(JwtAuthGuard)

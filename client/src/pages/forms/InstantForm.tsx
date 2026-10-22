@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -28,7 +27,13 @@ const fetchForm = async (id: string | undefined): Promise<FormData> => {
   return res.json();
 };
 
-const submitForm = async ({ id, answers }: { id: string | undefined; answers: SubmissionAnswer[] }) => {
+const submitForm = async ({
+  id,
+  answers,
+}: {
+  id: string | undefined;
+  answers: SubmissionAnswer[];
+}) => {
   const res = await fetch(`/api/forms/${id}/submissions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -44,7 +49,11 @@ export const InstantForm = () => {
   const { id } = useParams();
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
 
-  const { data: form, isLoading, error } = useQuery({
+  const {
+    data: form,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['form', id],
     queryFn: () => fetchForm(id),
   });

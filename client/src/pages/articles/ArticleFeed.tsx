@@ -89,9 +89,7 @@ const ArticleFeed: React.FC = () => {
     return num.toString();
   };
 
-  const allTags = Array.from(
-    new Set(feed?.articles.flatMap((a) => a.tags) || [])
-  );
+  const allTags = Array.from(new Set(feed?.articles.flatMap((a) => a.tags) || []));
 
   return (
     <PageShell
@@ -104,7 +102,10 @@ const ArticleFeed: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -115,9 +116,7 @@ const ArticleFeed: React.FC = () => {
             </div>
           </div>
           <Link to="/articles/new">
-            <Button icon={<Plus size={16} />}>
-              Write Article
-            </Button>
+            <Button icon={<Plus size={16} />}>Write Article</Button>
           </Link>
         </div>
 
@@ -169,9 +168,7 @@ const ArticleFeed: React.FC = () => {
               Be the first to share a story!
             </p>
             <Link to="/articles/new">
-              <Button icon={<Plus size={16} />}>
-                Write First Article
-              </Button>
+              <Button icon={<Plus size={16} />}>Write First Article</Button>
             </Link>
           </div>
         ) : (
@@ -201,9 +198,7 @@ const ArticleFeed: React.FC = () => {
                       )}
                     </h2>
                     {article.subtitle && (
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        {article.subtitle}
-                      </p>
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">{article.subtitle}</p>
                     )}
                     <p className="text-gray-500 dark:text-gray-500 text-sm mb-3 line-clamp-2">
                       {article.excerpt}
@@ -211,7 +206,10 @@ const ArticleFeed: React.FC = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-500">
                       <span className="flex items-center gap-1">
                         <img
-                          src={article.author.avatar || `https://ui-avatars.com/api/?name=${article.author.username}`}
+                          src={
+                            article.author.avatar ||
+                            `https://ui-avatars.com/api/?name=${article.author.username}`
+                          }
                           alt={article.author.username}
                           className="w-5 h-5 rounded-full"
                         />
@@ -239,10 +237,7 @@ const ArticleFeed: React.FC = () => {
                 {article.tags.length > 0 && (
                   <div className="flex gap-2 mt-3">
                     {article.tags.slice(0, 3).map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="text-xs text-gray-500 dark:text-gray-500"
-                      >
+                      <span key={tag} className="text-xs text-gray-500 dark:text-gray-500">
                         #{tag}
                       </span>
                     ))}
@@ -256,11 +251,7 @@ const ArticleFeed: React.FC = () => {
         {/* Pagination */}
         {feed && feed.total > feed.limit && (
           <div className="flex justify-center gap-2 mt-8">
-            <Button
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
+            <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
               Previous
             </Button>
             <span className="py-2 px-4 text-sm text-gray-600 dark:text-gray-400">

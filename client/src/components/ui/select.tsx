@@ -32,16 +32,21 @@ export function Select({ value, onValueChange, children }: SelectProps) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<Record<string, string>>({});
 
-  const contextValue = useMemo<SelectContextValue>(() => ({
-    value,
-    open,
-    setOpen,
-    onValueChange,
-    registerOption: (optionValue: string, label: string) => {
-      setOptions((current) => (current[optionValue] === label ? current : { ...current, [optionValue]: label }));
-    },
-    getLabel: (optionValue?: string) => (optionValue ? options[optionValue] : undefined),
-  }), [value, open, onValueChange, options]);
+  const contextValue = useMemo<SelectContextValue>(
+    () => ({
+      value,
+      open,
+      setOpen,
+      onValueChange,
+      registerOption: (optionValue: string, label: string) => {
+        setOptions((current) =>
+          current[optionValue] === label ? current : { ...current, [optionValue]: label }
+        );
+      },
+      getLabel: (optionValue?: string) => (optionValue ? options[optionValue] : undefined),
+    }),
+    [value, open, onValueChange, options]
+  );
 
   return <SelectContext.Provider value={contextValue}>{children}</SelectContext.Provider>;
 }
@@ -64,8 +69,8 @@ export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
         className={twMerge(
           clsx(
             'inline-flex w-full items-center justify-between gap-2 rounded-xl border border-dark-200 bg-white px-4 py-2 text-left text-sm text-dark-900 shadow-sm transition-colors hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-900 dark:text-white dark:hover:bg-dark-800',
-            className,
-          ),
+            className
+          )
         )}
         {...props}
       >
@@ -73,7 +78,7 @@ export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
         <ChevronDown size={16} className="shrink-0 opacity-70" />
       </button>
     );
-  },
+  }
 );
 
 SelectTrigger.displayName = 'SelectTrigger';
@@ -107,8 +112,8 @@ export function SelectContent({ children, className }: SelectContentProps) {
       className={twMerge(
         clsx(
           'mt-2 rounded-xl border border-dark-200 bg-white p-1 shadow-lg dark:border-dark-700 dark:bg-dark-900',
-          className,
-        ),
+          className
+        )
       )}
     >
       {children}
@@ -141,16 +146,17 @@ export const SelectItem = forwardRef<HTMLButtonElement, SelectItemProps>(
         className={twMerge(
           clsx(
             'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-dark-900 transition-colors hover:bg-dark-100 dark:text-white dark:hover:bg-dark-800',
-            context.value === value && 'bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-200',
-            className,
-          ),
+            context.value === value &&
+              'bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-200',
+            className
+          )
         )}
         {...props}
       >
         {children}
       </button>
     );
-  },
+  }
 );
 
 SelectItem.displayName = 'SelectItem';

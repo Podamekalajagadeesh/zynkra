@@ -12,7 +12,7 @@ export class ArticlesService {
     @InjectRepository(Article)
     private readonly articlesRepository: Repository<Article>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async create(
@@ -27,7 +27,7 @@ export class ArticlesService {
       scheduledAt?: string;
       isGated?: boolean;
       tokenPrice?: number;
-    },
+    }
   ): Promise<Article> {
     const author = await this.usersRepository.findOne({ where: { id: authorId } });
     if (!author) throw new NotFoundException('User not found');
@@ -66,14 +66,15 @@ export class ArticlesService {
       coverImage: string;
       isGated: boolean;
       tokenPrice: number | null;
-    }>,
+    }>
   ): Promise<Article> {
     const article = await this.articlesRepository.findOne({
       where: { id },
       relations: ['author'],
     });
     if (!article) throw new NotFoundException('Article not found');
-    if (article.author.id !== userId) throw new BadRequestException('You can only edit your own articles');
+    if (article.author.id !== userId)
+      throw new BadRequestException('You can only edit your own articles');
 
     if (data.title !== undefined) {
       article.slug = this.generateSlug(data.title);
@@ -99,7 +100,8 @@ export class ArticlesService {
       relations: ['author'],
     });
     if (!article) throw new NotFoundException('Article not found');
-    if (article.author.id !== userId) throw new BadRequestException('You can only publish your own articles');
+    if (article.author.id !== userId)
+      throw new BadRequestException('You can only publish your own articles');
 
     article.status = ArticleStatus.PUBLISHED;
     article.publishedAt = new Date();
@@ -113,7 +115,8 @@ export class ArticlesService {
       relations: ['author'],
     });
     if (!article) throw new NotFoundException('Article not found');
-    if (article.author.id !== userId) throw new BadRequestException('You can only archive your own articles');
+    if (article.author.id !== userId)
+      throw new BadRequestException('You can only archive your own articles');
 
     article.status = ArticleStatus.ARCHIVED;
 
@@ -144,7 +147,9 @@ export class ArticlesService {
     return article;
   }
 
-  async getFeed(options: { page?: number; limit?: number; tag?: string; authorId?: string } = {}): Promise<{
+  async getFeed(
+    options: { page?: number; limit?: number; tag?: string; authorId?: string } = {}
+  ): Promise<{
     articles: Article[];
     total: number;
     page: number;
@@ -185,7 +190,8 @@ export class ArticlesService {
       relations: ['author'],
     });
     if (!article) throw new NotFoundException('Article not found');
-    if (article.author.id !== userId) throw new BadRequestException('You can only delete your own articles');
+    if (article.author.id !== userId)
+      throw new BadRequestException('You can only delete your own articles');
 
     await this.articlesRepository.remove(article);
   }

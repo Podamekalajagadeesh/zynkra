@@ -75,7 +75,18 @@ describe('Media upload pipeline (integration)', () => {
             update: jest.fn(),
           },
         },
-        { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn().mockResolvedValue({
+              id: 'user-1',
+              email: 'user-1@test.com',
+              status: 'active',
+              banned: false,
+              role: 'user',
+            }),
+          },
+        },
         JwtStrategy,
       ],
     }).compile();
@@ -165,9 +176,7 @@ describe('Media upload pipeline (integration)', () => {
     const mediaId = uploadRes.body.id;
 
     // findOne is mocked — return owned media for delete
-    const findOne = (
-      app.get(getRepositoryToken(Media)) as any
-    ).findOne as jest.Mock;
+    const findOne = (app.get(getRepositoryToken(Media)) as any).findOne as jest.Mock;
     findOne.mockResolvedValueOnce({
       id: mediaId,
       url: uploadRes.body.url,

@@ -84,9 +84,7 @@ describe('follow request API helpers', () => {
   it('getFollowRequests fetches pending requests', async () => {
     server.use(
       http.get('*/users/me/follow-requests/pending', () => {
-        return HttpResponse.json([
-          { id: 'req-1', user: { id: 'user-2', username: 'follower' } },
-        ]);
+        return HttpResponse.json([{ id: 'req-1', user: { id: 'user-2', username: 'follower' } }]);
       })
     );
 
@@ -208,9 +206,7 @@ describe('getMyFollowers API helper', () => {
   it('fetches current user followers', async () => {
     server.use(
       http.get('*/users/me/followers', () => {
-        return HttpResponse.json([
-          { id: 'f1', username: 'alice', displayName: 'Alice' },
-        ]);
+        return HttpResponse.json([{ id: 'f1', username: 'alice', displayName: 'Alice' }]);
       })
     );
 
@@ -297,9 +293,7 @@ describe('getMutualFollows API helper', () => {
   it('fetches mutual follows between two users', async () => {
     server.use(
       http.get('*/users/user-1/mutual', () => {
-        return HttpResponse.json([
-          { id: 'mutual-1', username: 'alice', displayName: 'Alice' },
-        ]);
+        return HttpResponse.json([{ id: 'mutual-1', username: 'alice', displayName: 'Alice' }]);
       })
     );
 

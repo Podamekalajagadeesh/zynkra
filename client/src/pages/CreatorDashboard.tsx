@@ -146,9 +146,7 @@ const CreatorDashboard: React.FC = () => {
                 <p className="text-2xl font-bold text-dark-900 dark:text-white">
                   {stat.value.toLocaleString()}
                 </p>
-                <p className="text-sm text-dark-500 dark:text-dark-400">
-                  {stat.label}
-                </p>
+                <p className="text-sm text-dark-500 dark:text-dark-400">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -167,7 +165,10 @@ const CreatorDashboard: React.FC = () => {
             {data.topContent.posts.length > 0 ? (
               <ul className="space-y-3">
                 {data.topContent.posts.map((post) => (
-                  <li key={post.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg">
+                  <li
+                    key={post.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg"
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-dark-900 dark:text-white truncate">
                         {post.content?.slice(0, 60) || 'Untitled'}
@@ -196,13 +197,19 @@ const CreatorDashboard: React.FC = () => {
             {data.topContent.articles.length > 0 ? (
               <ul className="space-y-3">
                 {data.topContent.articles.map((article) => (
-                  <li key={article.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg">
+                  <li
+                    key={article.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg"
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-dark-900 dark:text-white truncate">
                         {article.title}
                       </p>
                       <p className="text-xs text-dark-500">
-                        {article.readingTime || 1} min read · {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Draft'}
+                        {article.readingTime || 1} min read ·{' '}
+                        {article.publishedAt
+                          ? new Date(article.publishedAt).toLocaleDateString()
+                          : 'Draft'}
                       </p>
                     </div>
                     <span className="ml-3 text-sm font-semibold text-dark-600 dark:text-dark-300">
@@ -222,16 +229,16 @@ const CreatorDashboard: React.FC = () => {
       <div className="mt-8 surface p-6">
         <h3 className="section-title mb-4">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" onClick={() => window.location.href = '/articles/new'}>
+          <Button variant="outline" onClick={() => (window.location.href = '/articles/new')}>
             Write Article
           </Button>
-          <Button variant="outline" onClick={() => window.location.href = '/explore'}>
+          <Button variant="outline" onClick={() => (window.location.href = '/explore')}>
             View Explore
           </Button>
-          <Button variant="outline" onClick={() => window.location.href = '/earnings'}>
+          <Button variant="outline" onClick={() => (window.location.href = '/earnings')}>
             Check Earnings
           </Button>
-          <Button variant="outline" onClick={() => window.location.href = '/settings'}>
+          <Button variant="outline" onClick={() => (window.location.href = '/settings')}>
             Settings
           </Button>
         </div>

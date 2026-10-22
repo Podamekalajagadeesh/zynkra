@@ -12,10 +12,13 @@ export class OpenSourceService {
     @InjectRepository(Contribution)
     private readonly contributionRepository: Repository<Contribution>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
-  async createContribution(userId: string, createDto: CreateContributionDto): Promise<Contribution> {
+  async createContribution(
+    userId: string,
+    createDto: CreateContributionDto
+  ): Promise<Contribution> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -30,8 +33,12 @@ export class OpenSourceService {
     return this.contributionRepository.save(contribution);
   }
 
-  async findAll(filters?: { status?: ContributionStatus; type?: ContributionType }): Promise<Contribution[]> {
-    const query = this.contributionRepository.createQueryBuilder('contribution')
+  async findAll(filters?: {
+    status?: ContributionStatus;
+    type?: ContributionType;
+  }): Promise<Contribution[]> {
+    const query = this.contributionRepository
+      .createQueryBuilder('contribution')
       .leftJoinAndSelect('contribution.author', 'author')
       .leftJoinAndSelect('contribution.reviewer', 'reviewer')
       .orderBy('contribution.createdAt', 'DESC');
@@ -71,7 +78,7 @@ export class OpenSourceService {
     id: string,
     userId: string,
     isAdmin: boolean,
-    updateDto: UpdateContributionDto,
+    updateDto: UpdateContributionDto
   ): Promise<Contribution> {
     const contribution = await this.findOne(id);
 
@@ -116,9 +123,15 @@ export class OpenSourceService {
 
   async getContributionStats() {
     const total = await this.contributionRepository.count();
-    const pending = await this.contributionRepository.count({ where: { status: ContributionStatus.PENDING } });
-    const inReview = await this.contributionRepository.count({ where: { status: ContributionStatus.IN_REVIEW } });
-    const merged = await this.contributionRepository.count({ where: { status: ContributionStatus.MERGED } });
+    const pending = await this.contributionRepository.count({
+      where: { status: ContributionStatus.PENDING },
+    });
+    const inReview = await this.contributionRepository.count({
+      where: { status: ContributionStatus.IN_REVIEW },
+    });
+    const merged = await this.contributionRepository.count({
+      where: { status: ContributionStatus.MERGED },
+    });
     const byType = await this.contributionRepository
       .createQueryBuilder('contribution')
       .select('contribution.type, COUNT(*) as count')

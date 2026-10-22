@@ -21,26 +21,63 @@ import { User } from '../src/users/entities/user.entity';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    follow: jest.fn(), unfollow: jest.fn(), getFollowers: jest.fn(),
-    block: jest.fn(), unblock: jest.fn(), getBlockedUsers: jest.fn(),
-    findOneById: jest.fn(), updateProfile: jest.fn(), update: jest.fn(),
-    updateAvatar: jest.fn(), findByUsername: jest.fn(), findOneWithPosts: jest.fn(),
-    search: jest.fn(), updatePrivacy: jest.fn(),
-    createFollowRequest: jest.fn(), acceptFollowRequest: jest.fn(), denyFollowRequest: jest.fn(),
+    follow: jest.fn(),
+    unfollow: jest.fn(),
+    getFollowers: jest.fn(),
+    block: jest.fn(),
+    unblock: jest.fn(),
+    getBlockedUsers: jest.fn(),
+    findOneById: jest.fn(),
+    updateProfile: jest.fn(),
+    update: jest.fn(),
+    updateAvatar: jest.fn(),
+    findByUsername: jest.fn(),
+    findOneWithPosts: jest.fn(),
+    search: jest.fn(),
+    updatePrivacy: jest.fn(),
+    createFollowRequest: jest.fn(),
+    acceptFollowRequest: jest.fn(),
+    denyFollowRequest: jest.fn(),
     findMutualFollows: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [UsersController],
     providers: [
-    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
-    { provide: AccountManagementService, useValue: {} },
+      {
+        provide: VisibilityService,
+        useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) },
+      },
+      { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: { ...defaultService, ...overrides } },
       { provide: PagesService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -62,7 +99,9 @@ describe('GET /users/:id/mutual', () => {
       { id: 'mutual-1', username: 'alice' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/user-2/mutual').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/user-2/mutual')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     expect(r.body[0].username).toBe('alice');
@@ -73,7 +112,9 @@ describe('GET /users/:id/mutual', () => {
     const { app, usersService, token } = await buildApp();
     usersService.findMutualFollows.mockResolvedValue([]);
 
-    const r = await request(app.getHttpServer()).get('/users/user-2/mutual').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/user-2/mutual')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(0);
     await app.close();
@@ -90,7 +131,9 @@ describe('GET /users/:id/mutual', () => {
     const { app, usersService, token } = await buildApp();
     usersService.findMutualFollows.mockRejectedValue(new NotFoundException('User not found.'));
 
-    const r = await request(app.getHttpServer()).get('/users/missing/mutual').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/missing/mutual')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(404);
     await app.close();
   });

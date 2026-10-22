@@ -45,7 +45,7 @@ export class BrandCollabsController {
     @Query('minBudget') minBudget?: string,
     @Query('maxBudget') maxBudget?: string,
     @Query('minFollowers') minFollowers?: string,
-    @Query('search') search?: string,
+    @Query('search') search?: string
   ) {
     const filters: any = {};
     if (category) filters.category = category;
@@ -53,7 +53,7 @@ export class BrandCollabsController {
     if (maxBudget) filters.maxBudget = parseFloat(maxBudget);
     if (minFollowers) filters.minFollowers = parseInt(minFollowers);
     if (search) filters.search = search;
-    
+
     return this.brandCollabsService.getOpportunities(filters);
   }
 

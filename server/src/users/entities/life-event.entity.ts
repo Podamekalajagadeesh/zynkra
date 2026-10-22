@@ -6,7 +6,7 @@ export class LifeEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, user => user.lifeEvents, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.lifeEvents, { onDelete: 'CASCADE' })
   user: User;
 
   @Column()

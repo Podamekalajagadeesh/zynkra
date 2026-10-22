@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -90,13 +95,45 @@ describe('PostsService', () => {
             federatePostDeletion: jest.fn(),
           },
         },
-        { provide: getRepositoryToken(Post), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), delete: jest.fn(), increment: jest.fn(), count: jest.fn(), createQueryBuilder: jest.fn() } },
-        { provide: getRepositoryToken(PostReaction), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn(), delete: jest.fn(), count: jest.fn() } },
+        {
+          provide: getRepositoryToken(Post),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
+            delete: jest.fn(),
+            increment: jest.fn(),
+            count: jest.fn(),
+            createQueryBuilder: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(PostReaction),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+            delete: jest.fn(),
+            count: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(Comment), useValue: { delete: jest.fn(), count: jest.fn() } },
         { provide: getRepositoryToken(Report), useValue: { delete: jest.fn() } },
         { provide: getRepositoryToken(Poll), useValue: {} },
         { provide: getRepositoryToken(PollOption), useValue: {} },
-        { provide: getRepositoryToken(Media), useValue: { findOne: jest.fn().mockResolvedValue(null), create: jest.fn(), save: jest.fn(), remove: jest.fn() } },
+        {
+          provide: getRepositoryToken(Media),
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(null),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(ReelEffect), useValue: { findOne: jest.fn() } },
         { provide: getRepositoryToken(TimelineReview), useValue: {} },
         { provide: getRepositoryToken(Subscription), useValue: { find: jest.fn() } },
@@ -108,20 +145,40 @@ describe('PostsService', () => {
         { provide: NotificationsService, useValue: { createNotification: jest.fn() } },
         { provide: TrendsService, useValue: { extractAndScoreHashtags: jest.fn() } },
         { provide: MentionsService, useValue: { createMentions: jest.fn().mockResolvedValue([]) } },
-        { provide: TagsService, useValue: { parseAndCreateTags: jest.fn().mockResolvedValue([]), findPostsByTagName: jest.fn().mockResolvedValue([]) } },
+        {
+          provide: TagsService,
+          useValue: {
+            parseAndCreateTags: jest.fn().mockResolvedValue([]),
+            findPostsByTagName: jest.fn().mockResolvedValue([]),
+          },
+        },
         { provide: UserInterestsService, useValue: { recordInteraction: jest.fn() } },
         { provide: GroupsService, useValue: { getGroupById: jest.fn() } },
         { provide: TimelineReviewService, useValue: {} },
         { provide: ProfileReviewService, useValue: { createForPost: jest.fn() } },
-        { provide: VisibilityService, useValue: { filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts), filterVisiblePostsForViewer: jest.fn().mockImplementation(async (_uid, posts) => posts), isBlockedEither: jest.fn().mockResolvedValue(false), isFollowing: jest.fn().mockResolvedValue(false), canViewAuthor: jest.fn().mockResolvedValue(true) } },
+        {
+          provide: VisibilityService,
+          useValue: {
+            filterVisiblePosts: jest.fn().mockImplementation((_uid, posts) => posts),
+            filterVisiblePostsForViewer: jest.fn().mockImplementation(async (_uid, posts) => posts),
+            isBlockedEither: jest.fn().mockResolvedValue(false),
+            isFollowing: jest.fn().mockResolvedValue(false),
+            canViewAuthor: jest.fn().mockResolvedValue(true),
+          },
+        },
         { provide: WebhooksService, useValue: { dispatchEvent: jest.fn() } },
-        { provide: DataPermissionsService, useValue: { require: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: DataPermissionsService,
+          useValue: { require: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
     service = module.get<PostsService>(PostsService);
     postsRepo = module.get(getRepositoryToken(Post)) as jest.Mocked<Repository<Post>>;
-    postReactionsRepo = module.get(getRepositoryToken(PostReaction)) as jest.Mocked<Repository<PostReaction>>;
+    postReactionsRepo = module.get(getRepositoryToken(PostReaction)) as jest.Mocked<
+      Repository<PostReaction>
+    >;
     commentsRepo = module.get(getRepositoryToken(Comment)) as jest.Mocked<Repository<Comment>>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
@@ -152,7 +209,7 @@ describe('PostsService', () => {
 
       const result = await service.create(
         { userId: user.id },
-        { content: 'With media', media: [{ url: 'https://example.com/img.jpg', type: 'image' }] },
+        { content: 'With media', media: [{ url: 'https://example.com/img.jpg', type: 'image' }] }
       );
 
       expect(result.content).toBe('With media');
@@ -169,10 +226,7 @@ describe('PostsService', () => {
         { url: 'https://cdn.example.com/3.jpg', type: 'image', altText: 'Third' },
       ];
 
-      await service.create(
-        { userId: user.id },
-        { content: 'Gallery', media },
-      );
+      await service.create({ userId: user.id }, { content: 'Gallery', media });
 
       expect(postsRepo.save).toHaveBeenCalled();
       const savedPost = postsRepo.save.mock.calls[0][0];
@@ -186,10 +240,7 @@ describe('PostsService', () => {
       usersService.findOneById.mockResolvedValue(user);
       postsRepo.save.mockResolvedValue(makePost({ content: 'Text only' }));
 
-      const result = await service.create(
-        { userId: user.id },
-        { content: 'Text only' },
-      );
+      const result = await service.create({ userId: user.id }, { content: 'Text only' });
 
       expect(result.content).toBe('Text only');
       expect(postsRepo.save).toHaveBeenCalled();
@@ -199,16 +250,14 @@ describe('PostsService', () => {
       usersService.findOneById.mockResolvedValue(makeUser());
 
       await expect(
-        service.create({ userId: 'u1' }, { content: 'secret', isEncrypted: true }),
+        service.create({ userId: 'u1' }, { content: 'secret', isEncrypted: true })
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws Error when user not found', async () => {
       usersService.findOneById.mockResolvedValue(null);
 
-      await expect(
-        service.create({ userId: 'bad-id' }, { content: 'Hello' }),
-      ).rejects.toThrow();
+      await expect(service.create({ userId: 'bad-id' }, { content: 'Hello' })).rejects.toThrow();
     });
 
     it('creates a post with visibility setting', async () => {
@@ -219,7 +268,7 @@ describe('PostsService', () => {
 
       const result = await service.create(
         { userId: user.id },
-        { content: 'Friends only', visibility: 'friends' as any },
+        { content: 'Friends only', visibility: 'friends' as any }
       );
 
       expect(result.content).toBe('Friends only');
@@ -230,10 +279,7 @@ describe('PostsService', () => {
       usersService.findOneById.mockResolvedValue(user);
       postsRepo.save.mockImplementation(async (post) => post as Post);
 
-      const result = await service.create(
-        { userId: user.id },
-        { content: 'Private by default' },
-      );
+      const result = await service.create({ userId: user.id }, { content: 'Private by default' });
 
       expect(result.visibility).toBe(PostVisibility.PRIVATE);
     });
@@ -245,7 +291,10 @@ describe('PostsService', () => {
 
       const result = await service.create(
         { userId: user.id },
-        { content: 'Vote!', poll: { question: 'Fav color?', options: [{ text: 'Blue' }, { text: 'Red' }] } },
+        {
+          content: 'Vote!',
+          poll: { question: 'Fav color?', options: [{ text: 'Blue' }, { text: 'Red' }] },
+        }
       );
 
       expect(result.content).toBe('Vote!');
@@ -264,10 +313,7 @@ describe('PostsService', () => {
       usersService.findOneById.mockResolvedValue(user);
       postsRepo.save.mockResolvedValue(makePost({ content: 'No poll' }));
 
-      const result = await service.create(
-        { userId: user.id },
-        { content: 'No poll' },
-      );
+      const result = await service.create({ userId: user.id }, { content: 'No poll' });
 
       expect(result.content).toBe('No poll');
       const savedPost = postsRepo.save.mock.calls[0][0];
@@ -281,7 +327,7 @@ describe('PostsService', () => {
 
       const result = await service.create(
         { userId: user.id },
-        { content: 'Empty poll', poll: { question: 'Any?', options: [] } },
+        { content: 'Empty poll', poll: { question: 'Any?', options: [] } }
       );
 
       expect(result.content).toBe('Empty poll');
@@ -402,12 +448,16 @@ describe('PostsService', () => {
       const authorId = 'author-22';
       const author = makeUser({ id: authorId });
       const publicPost = makePost({ id: 'post-public', user: author });
-      const friendsPost = makePost({ id: 'post-friends', visibility: PostVisibility.FRIENDS, user: author });
+      const friendsPost = makePost({
+        id: 'post-friends',
+        visibility: PostVisibility.FRIENDS,
+        user: author,
+      });
       postsRepo.find.mockResolvedValue([publicPost, friendsPost]);
       // VisibilityService contract: a friends-only post is not visible to a
       // viewer who is not mutual friends with the author, so it is dropped.
       visibilityService.filterVisiblePostsForViewer.mockImplementation(async (_viewer, posts) =>
-        posts.filter((post) => post.visibility === PostVisibility.PUBLIC),
+        posts.filter((post) => post.visibility === PostVisibility.PUBLIC)
       );
 
       const result = await service.findPostsByUserId(authorId, 'viewer-9');
@@ -492,7 +542,9 @@ describe('PostsService', () => {
       const post = makePost({ user: owner });
       postsRepo.findOne.mockResolvedValue(post);
 
-      await expect(service.update('post-id', 'hacked', { userId: 'other-id' })).rejects.toThrow('not authorized');
+      await expect(service.update('post-id', 'hacked', { userId: 'other-id' })).rejects.toThrow(
+        'not authorized'
+      );
     });
 
     it('throws when post not found', async () => {
@@ -526,7 +578,9 @@ describe('PostsService', () => {
       const post = makePost({ user: owner });
       postsRepo.findOne.mockResolvedValue(post);
 
-      await expect(service.remove('post-id', { userId: 'other-id' })).rejects.toThrow('not authorized');
+      await expect(service.remove('post-id', { userId: 'other-id' })).rejects.toThrow(
+        'not authorized'
+      );
     });
 
     it('throws when post not found', async () => {
@@ -556,18 +610,17 @@ describe('PostsService', () => {
     it('creates a repost', async () => {
       const user = makeUser();
       const original = makePost();
-       postsRepo.findOne.mockResolvedValueOnce(original); // findOne
-       usersService.findOneById.mockResolvedValue(user);
-       postsRepo.findOne.mockResolvedValueOnce(null); // no existing repost
+      postsRepo.findOne.mockResolvedValueOnce(original); // findOne
+      usersService.findOneById.mockResolvedValue(user);
+      postsRepo.findOne.mockResolvedValueOnce(null); // no existing repost
 
       postsRepo.create.mockReturnValue({} as any);
       postsRepo.save.mockResolvedValue({} as any);
 
-       const result = await service.repost('post-id', user.id);
-       expect(result).toBe(original);
-       expect(postsRepo.create).toHaveBeenCalled();
-       expect(postsRepo.save).toHaveBeenCalled();
-
+      const result = await service.repost('post-id', user.id);
+      expect(result).toBe(original);
+      expect(postsRepo.create).toHaveBeenCalled();
+      expect(postsRepo.save).toHaveBeenCalled();
     });
   });
 
@@ -577,10 +630,9 @@ describe('PostsService', () => {
       const original = makePost();
       const repost = { id: 'repost-id' } as any;
       // undoRepost calls findOne(original) → find repost → remove repost
-       postsRepo.findOne.mockResolvedValueOnce(original); // findOne(original)
-       usersService.findOneById.mockResolvedValue(user);
-       postsRepo.findOne.mockResolvedValueOnce(repost); // find existing repost
-
+      postsRepo.findOne.mockResolvedValueOnce(original); // findOne(original)
+      usersService.findOneById.mockResolvedValue(user);
+      postsRepo.findOne.mockResolvedValueOnce(repost); // find existing repost
 
       await service.undoRepost('post-id', user.id);
       expect(postsRepo.remove).toHaveBeenCalled();
@@ -658,7 +710,9 @@ describe('PostsService', () => {
       const post = makePost({ user: makeUser({ id: 'owner-id' }) });
       postsRepo.findOne.mockResolvedValue(post);
 
-      await expect(service.feature('post-id', { userId: 'other-id' })).rejects.toThrow(UnauthorizedException);
+      await expect(service.feature('post-id', { userId: 'other-id' })).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 
@@ -676,7 +730,7 @@ describe('PostsService', () => {
 
       expect(result.isDraft).toBe(true);
       expect(postsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ content: 'work in progress', isDraft: true }),
+        expect.objectContaining({ content: 'work in progress', isDraft: true })
       );
     });
 
@@ -686,7 +740,7 @@ describe('PostsService', () => {
       await service.findDrafts('user-id');
 
       expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { user: { id: 'user-id' }, isDraft: true } }),
+        expect.objectContaining({ where: { user: { id: 'user-id' }, isDraft: true } })
       );
     });
 
@@ -739,9 +793,13 @@ describe('PostsService', () => {
       const saved = makePost({ user: author });
       saved.collaborators = [makeUser({ id: 'collab-1' })];
       postsRepo.save.mockResolvedValue(saved);
-      postsRepo.findOne.mockResolvedValue(makePost({ user: author, collaborators: [makeUser({ id: 'collab-1' })] }));
+      postsRepo.findOne.mockResolvedValue(
+        makePost({ user: author, collaborators: [makeUser({ id: 'collab-1' })] })
+      );
 
-      const result = await service.setCollaborators('post-id', author.id, { userIds: ['collab-1'] });
+      const result = await service.setCollaborators('post-id', author.id, {
+        userIds: ['collab-1'],
+      });
 
       expect(usersService.findOneById).toHaveBeenCalledWith('collab-1');
       expect(postsRepo.save).toHaveBeenCalled();
@@ -752,7 +810,7 @@ describe('PostsService', () => {
       postsRepo.findOne.mockResolvedValue(makePost({ user: makeUser({ id: 'owner-id' }) }));
 
       await expect(
-        service.setCollaborators('post-id', 'other-id', { userIds: ['collab-1'] }),
+        service.setCollaborators('post-id', 'other-id', { userIds: ['collab-1'] })
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -761,7 +819,7 @@ describe('PostsService', () => {
       usersService.findOneById.mockResolvedValue(null);
 
       await expect(
-        service.setCollaborators('post-id', makeUser().id, { userIds: ['ghost'] }),
+        service.setCollaborators('post-id', makeUser().id, { userIds: ['ghost'] })
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -771,7 +829,9 @@ describe('PostsService', () => {
   describe('getPostAnalytics', () => {
     it('returns aggregate stats for the owner', async () => {
       const author = makeUser();
-      postsRepo.findOne.mockResolvedValue(makePost({ user: author, viewCount: 100, shareCount: 4, quoteCount: 2, repostCount: 1 }));
+      postsRepo.findOne.mockResolvedValue(
+        makePost({ user: author, viewCount: 100, shareCount: 4, quoteCount: 2, repostCount: 1 })
+      );
       postReactionsRepo.count.mockResolvedValue(10);
       commentsRepo.count.mockResolvedValue(5);
 
@@ -787,7 +847,7 @@ describe('PostsService', () => {
           quotes: 2,
           reposts: 1,
           engagements: 22,
-        }),
+        })
       );
     });
 
@@ -795,14 +855,16 @@ describe('PostsService', () => {
       postsRepo.findOne.mockResolvedValue(makePost({ user: makeUser({ id: 'owner-id' }) }));
 
       await expect(service.getPostAnalytics('other-id', 'post-id')).rejects.toThrow(
-        ForbiddenException,
+        ForbiddenException
       );
     });
 
     it('throws NotFoundException when the post is missing', async () => {
       postsRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getPostAnalytics('user-id', 'bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getPostAnalytics('user-id', 'bad-id')).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -823,7 +885,7 @@ describe('PostsService', () => {
 
       expect(result).toHaveLength(1);
       expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { visibility: PostVisibility.PUBLIC, isDraft: false } }),
+        expect.objectContaining({ where: { visibility: PostVisibility.PUBLIC, isDraft: false } })
       );
     });
 
@@ -835,11 +897,13 @@ describe('PostsService', () => {
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          makePost({ id: 'p-1', content: 'two matches' }),
-          makePost({ id: 'p-1', content: 'two matches' }),
-          makePost({ id: 'p-2', content: 'one match' }),
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([
+            makePost({ id: 'p-1', content: 'two matches' }),
+            makePost({ id: 'p-1', content: 'two matches' }),
+            makePost({ id: 'p-2', content: 'one match' }),
+          ]),
       };
       postsRepo.createQueryBuilder.mockReturnValue(qb as any);
 
@@ -855,7 +919,9 @@ describe('PostsService', () => {
 
   describe('getOEmbed', () => {
     it('returns an oEmbed response with an iframe', async () => {
-      postsRepo.findOne.mockResolvedValue(makePost({ content: 'Hello embed', user: makeUser({ username: 'jsh' }) }));
+      postsRepo.findOne.mockResolvedValue(
+        makePost({ content: 'Hello embed', user: makeUser({ username: 'jsh' }) })
+      );
 
       const result = await service.getOEmbed('post-id');
 

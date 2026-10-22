@@ -1,4 +1,11 @@
-import { Injectable, Logger, UnauthorizedException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Post, PostType, PostVisibility } from './entities/post.entity';
@@ -26,14 +33,13 @@ import { GroupsService } from '../groups/groups.service';
 import { TimelineReview, ReviewStatus } from '../timeline-review/entities/timeline-review.entity';
 import { TimelineReviewService } from '../timeline-review/timeline-review.service';
 import { ProfileReviewService } from '../tags/profile-review.service';
-import {     WebhooksService } from '../webhooks/webhooks.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { PostFederationService } from '../federation/post-federation.service';
 import { User } from '../users/entities/user.entity';
 import { CreateDraftDto } from './dto/create-draft.dto';
 import { UpdateDraftDto } from './dto/update-draft.dto';
 import { SetCollaboratorsDto } from './dto/set-collaborators.dto';
-
 
 import { ReelEffect } from '../reels/entities/reel-effect.entity';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
@@ -80,14 +86,14 @@ export class PostsService {
     private readonly visibilityService: VisibilityService,
     private readonly webhooksService: WebhooksService,
     private readonly dataPermissions: DataPermissionsService,
-    private readonly postFederationService: PostFederationService,
+    private readonly postFederationService: PostFederationService
   ) {}
 
   async create(
     userPayload: { userId: string },
     createPostDto: any,
     reelEffectId?: string,
-    groupId?: string,
+    groupId?: string
   ): Promise<Post> {
     await this.dataPermissions.require(userPayload.userId, DataPermission.POSTS);
     const user = await this.usersService.findOneById(userPayload.userId, ['following']);
@@ -102,7 +108,11 @@ export class PostsService {
     // }
 
     if (createPostDto.isEncrypted) {
-      if (!createPostDto.encryptedContent || typeof createPostDto.encryptedContent !== 'string' || !createPostDto.encryptedContent.trim()) {
+      if (
+        !createPostDto.encryptedContent ||
+        typeof createPostDto.encryptedContent !== 'string' ||
+        !createPostDto.encryptedContent.trim()
+      ) {
         throw new BadRequestException('Encrypted posts require encryptedContent');
       }
     }
@@ -133,7 +143,10 @@ export class PostsService {
     }
     post.user = user;
     post.tags = tags;
-    post.visibility = createPostDto.visibility ?? (user.postVisibility as unknown as PostVisibility) ?? PostVisibility.PUBLIC;
+    post.visibility =
+      createPostDto.visibility ??
+      (user.postVisibility as unknown as PostVisibility) ??
+      PostVisibility.PUBLIC;
     post.filter = createPostDto.filter;
     post.showLikes = createPostDto.showLikes;
     post.locationName = createPostDto.locationName;
@@ -171,7 +184,10 @@ export class PostsService {
       if (!quoted) {
         throw new NotFoundException('Quoted post not found.');
       }
-      if (quoted.user?.id && !(await this.visibilityService.canViewAuthor(user.id, quoted.user.id))) {
+      if (
+        quoted.user?.id &&
+        !(await this.visibilityService.canViewAuthor(user.id, quoted.user.id))
+      ) {
         throw new NotFoundException('Quoted post not found.');
       }
       if (quoted.visibility !== PostVisibility.PUBLIC) {
@@ -193,16 +209,14 @@ export class PostsService {
       }
       post.media = [];
       for (const [index, mediaDto] of createPostDto.media.entries()) {
-        post.media.push(
-          await this.attachMediaForPost(mediaDto, user.id, index),
-        );
+        post.media.push(await this.attachMediaForPost(mediaDto, user.id, index));
       }
     }
 
     if (createPostDto.poll) {
       const poll = new Poll();
       poll.question = createPostDto.poll.question;
-      poll.options = createPostDto.poll.options.map(optionDto => {
+      poll.options = createPostDto.poll.options.map((optionDto) => {
         const option = new PollOption();
         option.text = optionDto.text;
         return option;
@@ -228,7 +242,7 @@ export class PostsService {
       savedPost.content,
       savedPost,
       null,
-      user,
+      user
     );
 
     for (const mentionedUser of mentionedUsers) {
@@ -272,9 +286,7 @@ export class PostsService {
     if (dto.media) {
       post.media = [];
       for (const [index, mediaDto] of dto.media.entries()) {
-        post.media.push(
-          await this.attachMediaForPost(mediaDto, userId, index),
-        );
+        post.media.push(await this.attachMediaForPost(mediaDto, userId, index));
       }
     }
     return this.postsRepository.save(post);
@@ -288,7 +300,7 @@ export class PostsService {
   private async attachMediaForPost(
     mediaDto: { id?: string; url: string; type: 'image' | 'video' | 'audio'; altText?: string },
     userId: string,
-    index: number,
+    index: number
   ): Promise<Media> {
     let media: Media | null = null;
 
@@ -391,7 +403,7 @@ export class PostsService {
               })),
             }
           : {}),
-      },
+      }
     );
     await this.postsRepository.remove(draft);
     return published;
@@ -536,9 +548,11 @@ export class PostsService {
     if (!post) {
       throw new NotFoundException('Post not found');
     }
-    await this.visibilityService.filterVisiblePostsForViewer(viewerId ?? null, [post]).then((visible) => {
-      if (visible.length === 0) throw new NotFoundException('Post not found');
-    });
+    await this.visibilityService
+      .filterVisiblePostsForViewer(viewerId ?? null, [post])
+      .then((visible) => {
+        if (visible.length === 0) throw new NotFoundException('Post not found');
+      });
 
     const clientUrl = process.env.CLIENT_URL || 'http://127.0.0.1:5173';
     const embedUrl = `${clientUrl.replace(/\/+$/, '')}/embed/post/${post.id}`;
@@ -565,8 +579,8 @@ export class PostsService {
         'collaborators',
         'reactions',
         'reactions.user',
-        'comments', 
-        'comments.user', 
+        'comments',
+        'comments.user',
         'comments.awards',
         'comments.awards.gift',
         'comments.awards.sender',
@@ -575,7 +589,7 @@ export class PostsService {
         'awards.sender',
         'tags',
         'quotedPost',
-        'quotedPost.user'
+        'quotedPost.user',
       ],
     });
 
@@ -584,18 +598,29 @@ export class PostsService {
     }
 
     // Blocked either way → act as if the post doesn't exist (don't leak existence).
-    if (userId && post.user?.id && (await this.visibilityService.isBlockedEither(userId, post.user.id))) {
+    if (
+      userId &&
+      post.user?.id &&
+      (await this.visibilityService.isBlockedEither(userId, post.user.id))
+    ) {
       throw new NotFoundException('Post not found.');
     }
 
     // Private accounts: only the owner and accepted followers may view.
-    if (post.user?.id && !(await this.visibilityService.canViewAuthor(userId ?? null, post.user.id))) {
+    if (
+      post.user?.id &&
+      !(await this.visibilityService.canViewAuthor(userId ?? null, post.user.id))
+    ) {
       throw new NotFoundException('Post not found.');
     }
 
     if ([PostVisibility.PRIVATE, PostVisibility.FRIENDS].includes(post.visibility)) {
-      const followsAuthor = userId ? await this.visibilityService.isFollowing(userId, post.user.id) : false;
-      const followsViewer = userId ? await this.visibilityService.isFollowing(post.user.id, userId) : false;
+      const followsAuthor = userId
+        ? await this.visibilityService.isFollowing(userId, post.user.id)
+        : false;
+      const followsViewer = userId
+        ? await this.visibilityService.isFollowing(post.user.id, userId)
+        : false;
       if (!userId || (post.user.id !== userId && !(followsAuthor && followsViewer))) {
         throw new UnauthorizedException('This post is private.');
       }
@@ -617,8 +642,8 @@ export class PostsService {
           where: {
             creator: { id: post.user.id },
             subscriber: { id: userId },
-            status: SubscriptionStatus.ACTIVE
-          }
+            status: SubscriptionStatus.ACTIVE,
+          },
         });
         if (subscriptions.length > 0) {
           // Record view interaction for content recommendation
@@ -645,9 +670,7 @@ export class PostsService {
     // Sensitive content: viewers under 18 (or unverified) get a stripped post
     // with sensitiveLocked set — the existence is never revealed, only hidden.
     if (post.isSensitive && post.user.id !== userId) {
-      const verified = userId
-        ? await this.usersService.isAgeVerified(userId)
-        : false;
+      const verified = userId ? await this.usersService.isAgeVerified(userId) : false;
       if (!verified) {
         return {
           ...post,
@@ -659,7 +682,8 @@ export class PostsService {
     }
 
     // Record view interaction for content recommendation
-    if (userId && post.user.id !== userId) { // Don't increment view count when owner views their own post
+    if (userId && post.user.id !== userId) {
+      // Don't increment view count when owner views their own post
       await this.postsRepository.increment({ id }, 'viewCount', 1);
       if (post.tags) {
         const user = await this.usersService.findOneById(userId);
@@ -670,11 +694,7 @@ export class PostsService {
     return post;
   }
 
-  async findAll(
-    userId?: string,
-    take = 10,
-    skip = 0,
-  ): Promise<Post[]> {
+  async findAll(userId?: string, take = 10, skip = 0): Promise<Post[]> {
     let posts: Post[];
     let followingIds: string[] = [];
     if (userId) {
@@ -760,11 +780,10 @@ export class PostsService {
 
     if (post.user?.id !== user.id) {
       await this.reputationService.addReputation(ReputationEvent.INTERACTION_RECEIVED, post.user);
-      await this.notificationsService.createNotification(
-        post.user,
-        NotificationType.LIKE,
-        { userId: user.id, postId: post.id },
-      );
+      await this.notificationsService.createNotification(post.user, NotificationType.LIKE, {
+        userId: user.id,
+        postId: post.id,
+      });
     }
 
     return this.findOne(postId, userPayload.userId);
@@ -815,20 +834,15 @@ export class PostsService {
     await this.reputationService.addReputation(ReputationEvent.POST_LIKED, user);
 
     // Send notification to post owner
-    await this.notificationsService.createNotification(
-      post.user,
-      NotificationType.SHARE,
-      { userId: user.id, postId: post.id }
-    );
+    await this.notificationsService.createNotification(post.user, NotificationType.SHARE, {
+      userId: user.id,
+      postId: post.id,
+    });
 
     return this.findOne(postId, userId);
   }
 
-  async update(
-    id: string,
-    content: string,
-    userPayload: { userId: string },
-  ): Promise<Post> {
+  async update(id: string, content: string, userPayload: { userId: string }): Promise<Post> {
     await this.dataPermissions.require(userPayload.userId, DataPermission.POSTS);
     const post = await this.findOne(id, userPayload.userId);
     if (!post) {
@@ -854,7 +868,7 @@ export class PostsService {
     return saved;
   }
 
-  async remove(id: string, userPayload: { userId: string, role?: string }): Promise<void> {
+  async remove(id: string, userPayload: { userId: string; role?: string }): Promise<void> {
     const post = await this.findOne(id, userPayload.userId);
     if (!post) {
       throw new Error('Post not found');
@@ -925,7 +939,7 @@ export class PostsService {
     //   const response = await firstValueFrom(this.httpService.get(post.mediaUrl, { responseType: 'arraybuffer' }));
     //   cid = await this.storageService.upload(response.data);
     // } else {
-      const cid = await this.storageService.upload(Buffer.from(post.content));
+    const cid = await this.storageService.upload(Buffer.from(post.content));
     // }
 
     post.ipfsCid = cid;
@@ -1023,7 +1037,7 @@ export class PostsService {
         }
 
         return null;
-      }),
+      })
     );
 
     return allowedPosts.filter((post): post is Post => Boolean(post));
@@ -1041,9 +1055,14 @@ export class PostsService {
     }
 
     if (!post.isPinned) {
-      const pinnedPostsCount = await this.postsRepository.count({ where: { user: { id: userId }, isPinned: true } });
+      const pinnedPostsCount = await this.postsRepository.count({
+        where: { user: { id: userId }, isPinned: true },
+      });
       if (pinnedPostsCount >= 6) {
-        const oldestPinnedPost = await this.postsRepository.findOne({ where: { user: { id: userId }, isPinned: true }, order: { pinnedAt: 'ASC' } });
+        const oldestPinnedPost = await this.postsRepository.findOne({
+          where: { user: { id: userId }, isPinned: true },
+          order: { pinnedAt: 'ASC' },
+        });
         if (oldestPinnedPost) {
           oldestPinnedPost.isPinned = false;
           oldestPinnedPost.pinnedAt = null;

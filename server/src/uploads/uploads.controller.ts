@@ -74,7 +74,7 @@ export class UploadsController {
           cb(new BadRequestException('Only image files are allowed'), false);
         }
       },
-    }),
+    })
   )
   async uploadProfilePicture(@UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) throw new BadRequestException('No file uploaded');

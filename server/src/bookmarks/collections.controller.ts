@@ -1,15 +1,4 @@
-
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { BookmarksService } from './bookmarks.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCollectionDto } from './dto/create-collection.dto';
@@ -36,16 +25,8 @@ export class CollectionsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateCollectionDto: UpdateCollectionDto,
-    @Req() req,
-  ) {
-    return this.bookmarksService.updateCollection(
-      id,
-      updateCollectionDto,
-      req.user.id,
-    );
+  update(@Param('id') id: string, @Body() updateCollectionDto: UpdateCollectionDto, @Req() req) {
+    return this.bookmarksService.updateCollection(id, updateCollectionDto, req.user.id);
   }
 
   @Delete(':id')

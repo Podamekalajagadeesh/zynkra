@@ -43,7 +43,34 @@ import {
 } from '../lib/api';
 import { Button } from './ui/button';
 import Avatar from './ui/avatar';
-import { MessageCircle, Flag, Edit2, Trash2, X, Check, DollarSign, ShieldOff, Bookmark, Repeat, BarChart, Pin, Star, Scissors, Reply, Lock, Unlock, Award, Info, Clock, BookOpen, Globe, Brain, Megaphone, Quote, Music2 } from 'lucide-react';
+import {
+  MessageCircle,
+  Flag,
+  Edit2,
+  Trash2,
+  X,
+  Check,
+  DollarSign,
+  ShieldOff,
+  Bookmark,
+  Repeat,
+  BarChart,
+  Pin,
+  Star,
+  Scissors,
+  Reply,
+  Lock,
+  Unlock,
+  Award,
+  Info,
+  Clock,
+  BookOpen,
+  Globe,
+  Brain,
+  Megaphone,
+  Quote,
+  Music2,
+} from 'lucide-react';
 import { User as UserType } from '../lib/types';
 import { formatDateTime } from '../lib/preferences';
 import { ReactionButtons } from './ReactionButtons';
@@ -203,12 +230,15 @@ export function PostCard({
     return null;
   }
   // Apply screenshot protection if enabled for this post
-  const shouldApplyProtection = post.enableScreenshotProtection || 
+  const shouldApplyProtection =
+    post.enableScreenshotProtection ||
     (post.user.screenshotProtection?.enabled && post.user.screenshotProtection?.applyToPosts);
-  
+
   const { protectionRef } = useScreenshotProtection({
     enabled: !!shouldApplyProtection,
-    level: (post.user.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
+    level:
+      (post.user.screenshotProtection?.level as ScreenshotProtectionLevel) ||
+      ScreenshotProtectionLevel.WARNING_ONLY,
     contentTitle: 'this post',
   });
   const { autoTranslate, language, contentWarningsEnabled } = useAppPreferences();
@@ -297,25 +327,27 @@ export function PostCard({
       setIsNeuralConsumptionActive(true);
       setIsNeuralProcessing(true);
       addToast('Neural implant connected! Beginning direct content consumption...', 'success');
-      
+
       // Simulate neural transmission that sends the content directly to the user's brain
       // In a real implementation, this would connect to the neural implant's API to transmit the full sensory content
       const neuralProcessingTimeout = setTimeout(() => {
         // Generate full sensory metadata for neural consumption
         const sensoryMetadata = {
           contentTransmitted: post.content,
-          mediaUrls: post.media?.map(m => m.url) ?? [],
+          mediaUrls: post.media?.map((m) => m.url) ?? [],
           emotionalContext: extractEmotionalContext(post.content),
           sensoryCues: generateSensoryCues(post.content),
           transmissionComplete: true,
-          consumedAt: new Date().toISOString()
+          consumedAt: new Date().toISOString(),
         };
-        
+
         setNeuralConsumptionMetadata(sensoryMetadata);
         setIsNeuralProcessing(false);
-        addToast('Content fully consumed! The post has been directly transmitted to your neural implant.', 'success');
+        addToast(
+          'Content fully consumed! The post has been directly transmitted to your neural implant.',
+          'success'
+        );
       }, 4000);
-      
     } catch (error) {
       console.error('Failed to initialize neural consumption:', error);
       addToast('Failed to connect to neural implant. Please check your device settings.', 'error');
@@ -339,32 +371,38 @@ export function PostCard({
       calm: ['calm', 'quiet', 'sunlight', 'peaceful', 'serene'],
       surprise: ['caught me off guard', 'still processing', 'incredible', 'unbelievable'],
       sadness: ['stressed', 'worried', 'angry', 'hurt', 'sad'],
-      anticipation: ['looking forward', 'can\'t stop thinking', 'excited']
+      anticipation: ['looking forward', "can't stop thinking", 'excited'],
     };
 
     const detectedEmotions: Record<string, number> = {};
     Object.entries(emotionKeywords).forEach(([emotion, keywords]) => {
-      const matches = keywords.filter(keyword => content.toLowerCase().includes(keyword)).length;
+      const matches = keywords.filter((keyword) => content.toLowerCase().includes(keyword)).length;
       if (matches > 0) {
         detectedEmotions[emotion] = Math.min(matches * 0.2, 0.95);
       }
     });
-    
+
     return detectedEmotions;
   };
 
   // Generate sensory cues based on post content
   const generateSensoryCues = (content: string) => {
     const cues: string[] = [];
-    if (content.includes('coffee') || content.includes('café')) cues.push('warmth of coffee', 'rich aroma');
-    if (content.includes('hiking') || content.includes('mountains')) cues.push('fresh mountain air', 'crunch of leaves underfoot');
-    if (content.includes('beach') || content.includes('sunset')) cues.push('ocean breeze', 'warm sand', 'sunset colors');
-    if (content.includes('music') || content.includes('album')) cues.push('rich audio frequencies', 'rhythmic vibration');
-    if (content.includes('friends') || content.includes('reunion')) cues.push('laughter vibration', 'warm embrace sensation');
-    
+    if (content.includes('coffee') || content.includes('café'))
+      cues.push('warmth of coffee', 'rich aroma');
+    if (content.includes('hiking') || content.includes('mountains'))
+      cues.push('fresh mountain air', 'crunch of leaves underfoot');
+    if (content.includes('beach') || content.includes('sunset'))
+      cues.push('ocean breeze', 'warm sand', 'sunset colors');
+    if (content.includes('music') || content.includes('album'))
+      cues.push('rich audio frequencies', 'rhythmic vibration');
+    if (content.includes('friends') || content.includes('reunion'))
+      cues.push('laughter vibration', 'warm embrace sensation');
+
     // Add default cues if none detected
-    if (cues.length === 0) cues.push('neutral baseline sensory transmission', 'text-to-neural conversion complete');
-    
+    if (cues.length === 0)
+      cues.push('neutral baseline sensory transmission', 'text-to-neural conversion complete');
+
     return cues;
   };
 
@@ -373,7 +411,6 @@ export function PostCard({
       setShowInstantForm(true);
     }
   };
-
 
   const handleAddBookmark = async (collectionId: string | null = null) => {
     try {
@@ -391,7 +428,7 @@ export function PostCard({
     if (isBookmarked) {
       handleRemoveBookmark();
     } else {
-        setShowSaveOptions(true);
+      setShowSaveOptions(true);
     }
   };
 
@@ -476,7 +513,7 @@ export function PostCard({
   const [userSearchResults, setUserSearchResults] = useState<UserType[]>([]);
   const [repostCount, setRepostCount] = useState(post.repostCount || 0);
   const [isReposted, setIsReposted] = useState(
-    post.reposts?.some((repost) => repost.user.id === currentUser?.id) || false,
+    post.reposts?.some((repost) => repost.user.id === currentUser?.id) || false
   );
   const [isPinned, setIsPinned] = useState(post.isPinned || false);
 
@@ -538,7 +575,7 @@ export function PostCard({
     try {
       const updatedPoll = await voteOnPoll(pollOptionId);
       // Find the poll in the post and update it
-      const newPolls = (post.poll ?? []).map(p => p.id === updatedPoll.id ? updatedPoll : p);
+      const newPolls = (post.poll ?? []).map((p) => (p.id === updatedPoll.id ? updatedPoll : p));
       // This is a bit of a hack, but it's the easiest way to update the post
       // without having to refetch the entire post
       post.poll = newPolls;
@@ -576,12 +613,12 @@ export function PostCard({
         // Build nested comment structure
         const commentMap = new Map<string, Comment>();
         const rootComments: Comment[] = [];
-        
+
         // First pass: add all comments to map
         fetchedComments.forEach((comment: Comment) => {
           commentMap.set(comment.id, { ...comment, replies: [] });
         });
-        
+
         // Second pass: build hierarchy
         fetchedComments.forEach((comment: Comment) => {
           const commentWithReplies = commentMap.get(comment.id)!;
@@ -594,14 +631,14 @@ export function PostCard({
             rootComments.push(commentWithReplies);
           }
         });
-        
+
         // Sort comments: pinned first, then by date (newest first)
         const sortedComments = rootComments.sort((a, b) => {
           if (a.isPinned && !b.isPinned) return -1;
           if (!a.isPinned && b.isPinned) return 1;
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
-        
+
         setComments(sortedComments);
       } catch (error) {
         console.error('Failed to fetch comments:', error);
@@ -677,9 +714,7 @@ export function PostCard({
     try {
       await pinComment(post.id, commentId);
       // Update comment's pinned status
-      setComments(comments.map(c => 
-        c.id === commentId ? { ...c, isPinned: !c.isPinned } : c
-      ));
+      setComments(comments.map((c) => (c.id === commentId ? { ...c, isPinned: !c.isPinned } : c)));
       addToast('Comment pin status updated', 'success');
     } catch (error) {
       console.error('Failed to pin comment:', error);
@@ -691,10 +726,11 @@ export function PostCard({
     try {
       await lockComment(post.id, commentId);
       // Update comment's locked status
-      setComments(comments.map(c => 
-        c.id === commentId ? { ...c, isLocked: !c.isLocked } : c
-      ));
-      addToast(`Comment ${!comments.find(c => c.id === commentId)?.isLocked ? 'locked' : 'unlocked'}`, 'success');
+      setComments(comments.map((c) => (c.id === commentId ? { ...c, isLocked: !c.isLocked } : c)));
+      addToast(
+        `Comment ${!comments.find((c) => c.id === commentId)?.isLocked ? 'locked' : 'unlocked'}`,
+        'success'
+      );
     } catch (error) {
       console.error('Failed to lock comment:', error);
       addToast('Failed to update comment lock status', 'error');
@@ -705,7 +741,7 @@ export function PostCard({
     if (!window.confirm('Are you sure you want to delete this comment?')) return;
     try {
       await deleteComment(post.id, commentId);
-      setComments(comments.filter(c => c.id !== commentId));
+      setComments(comments.filter((c) => c.id !== commentId));
       addToast('Comment deleted successfully', 'success');
     } catch (error) {
       console.error('Failed to delete comment:', error);
@@ -843,7 +879,7 @@ export function PostCard({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -877,15 +913,15 @@ export function PostCard({
                 fallbackText="Image content is hidden to save bandwidth."
               />
             )}
-        <div className="absolute top-2 right-2 flex items-center gap-2">
-          {post.isFeatured && <Star size={16} className="text-white" />}
-          {post.isPinned && <Pin size={16} className="text-white" />}
-          {post.media.length > 1 && (
-            <span className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-              {post.media.length}
-            </span>
-          )}
-        </div>
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              {post.isFeatured && <Star size={16} className="text-white" />}
+              {post.isPinned && <Pin size={16} className="text-white" />}
+              {post.media.length > 1 && (
+                <span className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  {post.media.length}
+                </span>
+              )}
+            </div>
           </>
         )}
       </Link>
@@ -895,7 +931,9 @@ export function PostCard({
   const originalPost = post.repostedFrom || post;
   // Prefer ENS name over raw wallet address for wallet-only accounts.
   const authorEns = useEnsName(
-    originalPost.user.displayName || originalPost.user.email ? null : originalPost.user.walletAddress,
+    originalPost.user.displayName || originalPost.user.email
+      ? null
+      : originalPost.user.walletAddress
   );
   const displayName =
     originalPost.user.displayName ||
@@ -910,11 +948,7 @@ export function PostCard({
       if (part.match(/#\w+/)) {
         const tagName = part.substring(1);
         return (
-          <Link
-            key={i}
-            to={`/hashtag/${tagName}`}
-            className="text-blue-500 hover:underline"
-          >
+          <Link key={i} to={`/hashtag/${tagName}`} className="text-blue-500 hover:underline">
             {part}
           </Link>
         );
@@ -922,11 +956,7 @@ export function PostCard({
       if (part.match(/@\w+/)) {
         const username = part.substring(1);
         return (
-          <Link
-            key={i}
-            to={`/profile/${username}`}
-            className="text-primary-600 hover:underline"
-          >
+          <Link key={i} to={`/profile/${username}`} className="text-primary-600 hover:underline">
             {part}
           </Link>
         );
@@ -935,7 +965,11 @@ export function PostCard({
     });
   };
 
-  const InstantFormModal = ({ form, onClose, onSubmit }: {
+  const InstantFormModal = ({
+    form,
+    onClose,
+    onSubmit,
+  }: {
     form: NonNullable<NonNullable<Post['creative']>['instantForm']>;
     onClose: () => void;
     onSubmit: (data: Record<string, string>) => void | Promise<void>;
@@ -958,7 +992,9 @@ export function PostCard({
           <form onSubmit={handleSubmit}>
             {form.fields.map((field) => (
               <div key={field.name} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{field.label}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {field.label}
+                </label>
                 {field.type === 'text' && (
                   <input
                     type="text"
@@ -1010,35 +1046,46 @@ export function PostCard({
     );
   };
 
-
   // `post.media` is optional in the API payload; normalise once for the
   // render paths that iterate or read the first item unconditionally.
   const media = post.media ?? [];
 
   return (
-    <div className="card-hover mb-lg p-5 animate-fade-in sm:p-6" role="article" aria-labelledby={`post-content-${post.id}`}>
+    <div
+      className="card-hover mb-lg p-5 animate-fade-in sm:p-6"
+      role="article"
+      aria-labelledby={`post-content-${post.id}`}
+    >
       {post.repostedFrom && (
         <div className="mb-2 text-sm text-dark-500">
           <Repeat size={14} className="inline-block mr-1" />
           Reposted by{' '}
-          <Link to={`/profile/${post.user.username || post.user.id}`} className="font-semibold hover:underline">
+          <Link
+            to={`/profile/${post.user.username || post.user.id}`}
+            className="font-semibold hover:underline"
+          >
             {post.user.email || post.user.walletAddress}
           </Link>
         </div>
       )}
       {/* Post Header */}
       <div className="mb-md flex items-center justify-between">
-        <Link to={`/profile/${post.repostedFrom ? post.repostedFrom.user.username || post.repostedFrom.user.id : post.user.username || post.user.id}`} className="flex items-center gap-md hover:opacity-80 transition-opacity">
+        <Link
+          to={`/profile/${post.repostedFrom ? post.repostedFrom.user.username || post.repostedFrom.user.id : post.user.username || post.user.id}`}
+          className="flex items-center gap-md hover:opacity-80 transition-opacity"
+        >
           <Avatar name={displayName} size={48} />
           <div>
-            <h3 className="font-semibold text-dark-900 hover:text-primary-600">
-              {displayName}
-            </h3>
+            <h3 className="font-semibold text-dark-900 hover:text-primary-600">{displayName}</h3>
             {post.taggedUsers && post.taggedUsers.length > 0 && (
               <span className="text-sm text-dark-500 ml-1">
                 is with
                 {post.taggedUsers.map((user, index) => (
-                  <Link key={user.id} to={`/profile/${user.username || user.id}`} className="font-semibold hover:underline ml-1">
+                  <Link
+                    key={user.id}
+                    to={`/profile/${user.username || user.id}`}
+                    className="font-semibold hover:underline ml-1"
+                  >
                     {user.displayName}
                     {index < post.taggedUsers!.length - 1 ? ',' : ''}
                   </Link>
@@ -1047,72 +1094,82 @@ export function PostCard({
             )}
             <p className="text-xs text-dark-500">
               {formatDate(post.repostedFrom ? post.repostedFrom.createdAt : post.createdAt)}
-              {post.locationName && (
-                <span className="ml-2">· {post.locationName}</span>
-              )}
+              {post.locationName && <span className="ml-2">· {post.locationName}</span>}
               {hasBeenEdited && (
-                <span className="ml-2">· <button onClick={() => setShowEditHistory(!showEditHistory)} className="underline">Edited</button></span>
+                <span className="ml-2">
+                  ·{' '}
+                  <button
+                    onClick={() => setShowEditHistory(!showEditHistory)}
+                    className="underline"
+                  >
+                    Edited
+                  </button>
+                </span>
               )}
             </p>
           </div>
         </Link>
 
         <div className="flex items-center gap-sm">
-          {post.isSponsored && !post.creative?.instantForm && <span className="ml-2 font-semibold text-gray-500">Sponsored</span>}
+          {post.isSponsored && !post.creative?.instantForm && (
+            <span className="ml-2 font-semibold text-gray-500">Sponsored</span>
+          )}
           {post.isSponsored && post.creative?.instantForm && (
             <Button onClick={handleAdClick} size="sm">
               {post.creative.instantForm.callToAction || 'Learn More'}
             </Button>
           )}
           {currentUser && currentUser.id !== originalPost.user.id && (
-            <Button 
+            <Button
               variant={isFollowing ? 'secondary' : 'primary'}
               size="sm"
               className="rounded-full"
-              onClick={() => isFollowing ? handleUnfollow() : handleFollow()}
+              onClick={() => (isFollowing ? handleUnfollow() : handleFollow())}
             >
               {isFollowing ? 'Following' : 'Follow'}
             </Button>
           )}
-          {currentUser && currentUser.id === post.user.id && (post.user.subscription?.active || post.user.isPremium) && (
-            <div className="flex gap-sm">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
-                title="Edit"
-              >
-                <Edit2 size={18} />
-              </button>
-              <button
-                onClick={handleTogglePin}
-                className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
-                title={post.isPinned ? 'Unpin from profile' : 'Pin to your profile'}
-              >
-                <Pin size={18} />
-              </button>
-              <button
-                onClick={() => onToggleFeatured?.(post.id, !post.isFeatured)}
-                className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
-                title={post.isFeatured ? 'Unfeature' : 'Feature'}
-              >
-                <Star size={18} />
-              </button>
-              <button
-                onClick={() => setIsPromoting(true)}
-                className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
-                title="Promote"
-              >
-                <Megaphone size={18} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="rounded-xl border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
-                title="Delete"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          )}
+          {currentUser &&
+            currentUser.id === post.user.id &&
+            (post.user.subscription?.active || post.user.isPremium) && (
+              <div className="flex gap-sm">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                  title="Edit"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button
+                  onClick={handleTogglePin}
+                  className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                  title={post.isPinned ? 'Unpin from profile' : 'Pin to your profile'}
+                >
+                  <Pin size={18} />
+                </button>
+                <button
+                  onClick={() => onToggleFeatured?.(post.id, !post.isFeatured)}
+                  className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                  title={post.isFeatured ? 'Unfeature' : 'Feature'}
+                >
+                  <Star size={18} />
+                </button>
+                <button
+                  onClick={() => setIsPromoting(true)}
+                  className="rounded-xl border border-dark-200 bg-white p-2 text-dark-600 transition-colors hover:bg-dark-100 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                  title="Promote"
+                >
+                  <Megaphone size={18} />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="rounded-xl border border-red-200 bg-red-50 p-2 text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
+                  title="Delete"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            )}
         </div>
       </div>
 
@@ -1125,12 +1182,7 @@ export function PostCard({
             onChange={(e) => setEditedContent(e.target.value)}
           />
           <div className="flex gap-sm">
-            <Button 
-              variant="primary" 
-              size="sm" 
-              onClick={handleUpdate}
-              icon={<Check size={16} />}
-            >
+            <Button variant="primary" size="sm" onClick={handleUpdate} icon={<Check size={16} />}>
               Save
             </Button>
             <Button
@@ -1149,34 +1201,33 @@ export function PostCard({
             <div className="mb-4 p-4 rounded-xl border border-dark-200 bg-dark-50 dark:bg-dark-800 text-center">
               <Lock size={20} className="mx-auto mb-2 text-dark-500" />
               <p className="font-medium text-dark-700">Sensitive content</p>
-              <p className="text-sm text-dark-500">
-                Verify your age to view this post.
-              </p>
+              <p className="text-sm text-dark-500">Verify your age to view this post.</p>
             </div>
           )}
           {/* Content warning banner if post has harmful content, misinformation, or deepfake/synthetic content and user has warnings enabled */}
-          {contentWarningsEnabled && post.contentAnalysis && (
-            post.contentAnalysis.isHarmful || 
-            post.contentAnalysis.isMisinformation ||
-            post.contentAnalysis.flags.some(f => f.type === 'deepfake' || f.type === 'synthetic_content')
-          ) && (
-            <div className="mb-4">
-              <ContentWarningBanner 
-                analysis={post.contentAnalysis}
-                showDismiss={false}
-              />
-            </div>
-          )}
-          
+          {contentWarningsEnabled &&
+            post.contentAnalysis &&
+            (post.contentAnalysis.isHarmful ||
+              post.contentAnalysis.isMisinformation ||
+              post.contentAnalysis.flags.some(
+                (f) => f.type === 'deepfake' || f.type === 'synthetic_content'
+              )) && (
+              <div className="mb-4">
+                <ContentWarningBanner analysis={post.contentAnalysis} showDismiss={false} />
+              </div>
+            )}
+
           {/* AI-generated auto-tags display */}
           {post.autoTags && post.autoTags.length > 0 && (
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">AI-categorized topics:</span>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  AI-categorized topics:
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {post.autoTags.map(tag => (
-                  <Link 
+                {post.autoTags.map((tag) => (
+                  <Link
                     key={tag.id}
                     to={`/hashtag/${tag.name}`}
                     className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -1201,14 +1252,16 @@ export function PostCard({
                 <>
                   {renderContent(translatedContent)}
                   <span className="text-xs text-dark-500 dark:text-dark-400 block mt-1">
-                    Translated from {detectedLanguage || 'unknown language'}
-                    • <button onClick={handleManualTranslate} className="underline">Show original</button>
+                    Translated from {detectedLanguage || 'unknown language'}•{' '}
+                    <button onClick={handleManualTranslate} className="underline">
+                      Show original
+                    </button>
                   </span>
                 </>
               ) : (
                 <>
                   {renderContent(originalPost.content)}
-                  <button 
+                  <button
                     onClick={handleManualTranslate}
                     className="inline-flex items-center gap-1 text-xs text-primary-500 hover:text-primary-600 dark:text-primary-400 mt-1"
                     disabled={isTranslating}
@@ -1222,12 +1275,18 @@ export function PostCard({
           </div>
           {originalPost.stickerUrl && (
             <div className="mt-2 relative">
-              <img src={originalPost.stickerUrl} alt="sticker" className="w-full h-auto rounded-md" />
+              <img
+                src={originalPost.stickerUrl}
+                alt="sticker"
+                className="w-full h-auto rounded-md"
+              />
             </div>
           )}
           {showEditHistory && post.editHistory && post.editHistory.length > 0 && (
             <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h4 className="text-sm font-semibold mb-3 text-dark-700 dark:text-light-200">Edit history</h4>
+              <h4 className="text-sm font-semibold mb-3 text-dark-700 dark:text-light-200">
+                Edit history
+              </h4>
               <ul className="space-y-3">
                 {post.editHistory.map((edit, index) => (
                   <li key={edit.id} className="text-xs text-dark-600 dark:text-dark-300">
@@ -1256,10 +1315,20 @@ export function PostCard({
             <span className="font-semibold">{displayName}</span>: {post.content?.slice(0, 140)}
           </div>
           <div className="flex gap-sm">
-            <Button variant="primary" size="sm" onClick={handleQuote} disabled={isSubmittingQuote || !quoteContent.trim()}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleQuote}
+              disabled={isSubmittingQuote || !quoteContent.trim()}
+            >
               {isSubmittingQuote ? 'Posting...' : 'Quote'}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setIsQuoting(false)} icon={<X size={16} />}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsQuoting(false)}
+              icon={<X size={16} />}
+            >
               Cancel
             </Button>
           </div>
@@ -1273,9 +1342,14 @@ export function PostCard({
           className="mb-md block rounded-2xl border border-dark-200 p-4 transition-colors hover:bg-dark-50 dark:border-dark-700 dark:hover:bg-dark-800/50"
         >
           <div className="mb-1 flex items-center gap-2">
-            <Avatar name={post.quotedPost.user?.displayName || post.quotedPost.user?.email || 'Unknown'} size={20} />
+            <Avatar
+              name={post.quotedPost.user?.displayName || post.quotedPost.user?.email || 'Unknown'}
+              size={20}
+            />
             <span className="text-sm font-semibold text-dark-900 dark:text-dark-100">
-              {post.quotedPost.user?.displayName || post.quotedPost.user?.email || post.quotedPost.user?.walletAddress}
+              {post.quotedPost.user?.displayName ||
+                post.quotedPost.user?.email ||
+                post.quotedPost.user?.walletAddress}
             </span>
             <span className="text-xs text-dark-500">{formatDate(post.quotedPost.createdAt)}</span>
           </div>
@@ -1297,7 +1371,9 @@ export function PostCard({
           </button>
           {showAlgorithmReasons && (
             <div className="mt-2 p-3 bg-dark-50 dark:bg-dark-800 rounded-lg">
-              <h4 className="text-sm font-semibold mb-2 text-dark-700 dark:text-light-200">Why you're seeing this post</h4>
+              <h4 className="text-sm font-semibold mb-2 text-dark-700 dark:text-light-200">
+                Why you're seeing this post
+              </h4>
               <ul className="text-xs text-dark-600 dark:text-dark-300 space-y-1">
                 {post.algorithmReasons.map((reason, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -1318,7 +1394,9 @@ export function PostCard({
             {post.poll[0].options.map((option) => {
               const totalVotes = post.poll![0].options.reduce((acc, o) => acc + o.voteCount, 0);
               const percentage = totalVotes > 0 ? (option.voteCount / totalVotes) * 100 : 0;
-              const hasVoted = post.poll![0].options.some(o => o.votes.some(v => v.id === currentUser?.id));
+              const hasVoted = post.poll![0].options.some((o) =>
+                o.votes.some((v) => v.id === currentUser?.id)
+              );
 
               return (
                 <div key={option.id}>
@@ -1329,8 +1407,12 @@ export function PostCard({
                         style={{ width: `${percentage}%` }}
                       />
                       <div className="absolute inset-0 flex items-center justify-between px-4">
-                        <span className="font-medium text-dark-900 dark:text-dark-100">{option.text}</span>
-                        <span className="text-sm font-semibold text-dark-900 dark:text-dark-100">{percentage.toFixed(0)}%</span>
+                        <span className="font-medium text-dark-900 dark:text-dark-100">
+                          {option.text}
+                        </span>
+                        <span className="text-sm font-semibold text-dark-900 dark:text-dark-100">
+                          {percentage.toFixed(0)}%
+                        </span>
                       </div>
                     </div>
                   ) : (
@@ -1388,21 +1470,34 @@ export function PostCard({
                       )}
                     </Link>
                     {/* Render product tags only on first media item in carousel */}
-                    {mediaIndex === 0 && post.productTags && post.productTags.map((tag, index) => (
-                      <Link
-                        key={index}
-                        to={`/marketplace/products/${tag.product_id}`}
-                        className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-dark-800 rounded-full p-2 shadow-lg hover:scale-110 transition-transform cursor-pointer z-10"
-                        style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
-                        title="View product"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
-                          <circle cx="9" cy="21" r="1"></circle>
-                          <circle cx="20" cy="21" r="1"></circle>
-                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                        </svg>
-                      </Link>
-                    ))}
+                    {mediaIndex === 0 &&
+                      post.productTags &&
+                      post.productTags.map((tag, index) => (
+                        <Link
+                          key={index}
+                          to={`/marketplace/products/${tag.product_id}`}
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-dark-800 rounded-full p-2 shadow-lg hover:scale-110 transition-transform cursor-pointer z-10"
+                          style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
+                          title="View product"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-indigo-600 dark:text-indigo-400"
+                          >
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                          </svg>
+                        </Link>
+                      ))}
                   </div>
                 ))}
               </div>
@@ -1440,21 +1535,33 @@ export function PostCard({
                 )}
               </Link>
               {/* Render product tags */}
-              {post.productTags && post.productTags.map((tag, index) => (
-                <Link
-                  key={index}
-                  to={`/marketplace/products/${tag.product_id}`}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-dark-800 rounded-full p-2 shadow-lg hover:scale-110 transition-transform cursor-pointer z-10"
-                  style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
-                  title="View product"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                  </svg>
-                </Link>
-              ))}
+              {post.productTags &&
+                post.productTags.map((tag, index) => (
+                  <Link
+                    key={index}
+                    to={`/marketplace/products/${tag.product_id}`}
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-dark-800 rounded-full p-2 shadow-lg hover:scale-110 transition-transform cursor-pointer z-10"
+                    style={{ left: `${tag.x}%`, top: `${tag.y}%` }}
+                    title="View product"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-indigo-600 dark:text-indigo-400"
+                    >
+                      <circle cx="9" cy="21" r="1"></circle>
+                      <circle cx="20" cy="21" r="1"></circle>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                  </Link>
+                ))}
             </div>
           )}
         </div>
@@ -1464,7 +1571,10 @@ export function PostCard({
       {post.awards && post.awards.length > 0 && (
         <div className="mt-3 flex items-center gap-2 flex-wrap">
           {post.awards.map((award, index) => (
-            <div key={`${award.id}-${index}`} className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full text-xs">
+            <div
+              key={`${award.id}-${index}`}
+              className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full text-xs"
+            >
               <img src={award.gift.iconUrl} alt={award.gift.name} className="w-4 h-4" />
               <span className="text-yellow-800 dark:text-yellow-200">{award.gift.name}</span>
             </div>
@@ -1477,7 +1587,9 @@ export function PostCard({
         <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
           <div className="flex items-center gap-2">
             <div className="animate-pulse h-4 w-4 border-2 border-purple-400 border-t-transparent rounded-full"></div>
-            <span className="text-sm text-purple-700 dark:text-purple-300">Transmitting content to your neural implant...</span>
+            <span className="text-sm text-purple-700 dark:text-purple-300">
+              Transmitting content to your neural implant...
+            </span>
           </div>
         </div>
       )}
@@ -1485,13 +1597,20 @@ export function PostCard({
         <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
           <div className="flex items-center gap-2 mb-2">
             <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-            <span className="text-sm font-medium text-green-800 dark:text-green-300">Content successfully consumed!</span>
+            <span className="text-sm font-medium text-green-800 dark:text-green-300">
+              Content successfully consumed!
+            </span>
           </div>
           {neuralConsumptionMetadata.sensoryCues && (
             <div className="flex flex-wrap gap-2 mt-2">
-              <span className="text-xs text-green-700 dark:text-green-400">Sensory cues transmitted:</span>
+              <span className="text-xs text-green-700 dark:text-green-400">
+                Sensory cues transmitted:
+              </span>
               {neuralConsumptionMetadata.sensoryCues.map((cue: string, idx: number) => (
-                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200"
+                >
                   {cue}
                 </span>
               ))}
@@ -1503,17 +1622,21 @@ export function PostCard({
       {/* Post Actions */}
       <div className="flex items-center gap-3 border-t border-dark-200 pt-md dark:border-dark-700">
         <ReactionButtons postId={post.id} />
-        
+
         {/* Neural consumption button */}
         <Button
           type="button"
           size="sm"
-          variant={isNeuralConsumptionActive ? "destructive" : "secondary"}
+          variant={isNeuralConsumptionActive ? 'destructive' : 'secondary'}
           onClick={isNeuralConsumptionActive ? stopNeuralConsumption : startNeuralConsumption}
           className="flex items-center gap-1"
         >
           <Brain size={16} />
-          {isNeuralProcessing ? "Consuming..." : isNeuralConsumptionActive ? "Stop" : "Neural Consume"}
+          {isNeuralProcessing
+            ? 'Consuming...'
+            : isNeuralConsumptionActive
+              ? 'Stop'
+              : 'Neural Consume'}
         </Button>
 
         <button
@@ -1536,7 +1659,7 @@ export function PostCard({
         </button>
 
         <button
-          onClick={() => isReposted ? handleUndoRepost() : handleRepost()}
+          onClick={() => (isReposted ? handleUndoRepost() : handleRepost())}
           className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
             isReposted
               ? 'bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-300'
@@ -1562,7 +1685,7 @@ export function PostCard({
           )}
         </button>
 
-        {media.some(m => m.type === 'video') && (
+        {media.some((m) => m.type === 'video') && (
           <button
             onClick={() => {
               // Navigate to shorts editor with this video imported as a clip
@@ -1592,8 +1715,14 @@ export function PostCard({
         </button>
 
         {showSaveOptions && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowSaveOptions(false)}>
-            <div className="bg-white dark:bg-dark-800 rounded-lg p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowSaveOptions(false)}
+          >
+            <div
+              className="bg-white dark:bg-dark-800 rounded-lg p-6 w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h2 className="text-2xl font-bold mb-4">Save Post</h2>
               <div className="space-y-2">
                 <button
@@ -1612,18 +1741,22 @@ export function PostCard({
                 >
                   <Bookmark className="w-5 h-5" />
                   <div>
-                    <p className="font-medium">{isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}</p>
+                    <p className="font-medium">
+                      {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                    </p>
                     <p className="text-sm text-gray-500">Save to watchlist</p>
                   </div>
                 </button>
-                {media.some(m => m.type === 'video') && (
+                {media.some((m) => m.type === 'video') && (
                   <button
                     onClick={handleAddToWatchLater}
                     className={`w-full text-left p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded flex items-center gap-3 ${isInWatchLater ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                   >
                     <Clock className="w-5 h-5" />
                     <div>
-                      <p className="font-medium">{isInWatchLater ? 'Remove from Watch Later' : 'Add to Watch Later'}</p>
+                      <p className="font-medium">
+                        {isInWatchLater ? 'Remove from Watch Later' : 'Add to Watch Later'}
+                      </p>
                       <p className="text-sm text-gray-500">Save this video to watch later</p>
                     </div>
                   </button>
@@ -1634,7 +1767,9 @@ export function PostCard({
                 >
                   <BookOpen className="w-5 h-5" />
                   <div>
-                    <p className="font-medium">{isInReadLater ? 'Remove from Read Later' : 'Add to Read Later'}</p>
+                    <p className="font-medium">
+                      {isInReadLater ? 'Remove from Read Later' : 'Add to Read Later'}
+                    </p>
                     <p className="text-sm text-gray-500">Save this post to read later</p>
                   </div>
                 </button>
@@ -1744,20 +1879,14 @@ export function PostCard({
             />
             <span className="font-semibold text-green-900 dark:text-green-200">ETH</span>
           </div>
-          <p className="text-xs text-dark-500 mt-xs">Your balance: {balance?.formatted} {balance?.symbol}</p>
+          <p className="text-xs text-dark-500 mt-xs">
+            Your balance: {balance?.formatted} {balance?.symbol}
+          </p>
           <div className="flex gap-sm mt-md">
-            <Button 
-              variant="primary" 
-              size="sm"
-              onClick={handleTip}
-            >
+            <Button variant="primary" size="sm" onClick={handleTip}>
               Send Tip
             </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsTipping(false)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => setIsTipping(false)}>
               Cancel
             </Button>
           </div>
@@ -1767,7 +1896,9 @@ export function PostCard({
       {/* Awards Form */}
       {isAwards && (
         <div className="mt-md rounded-2xl border border-yellow-200 bg-yellow-50 p-md dark:border-yellow-900/40 dark:bg-yellow-950/25">
-          <h4 className="mb-sm font-semibold text-yellow-900 dark:text-yellow-200">Send an Award</h4>
+          <h4 className="mb-sm font-semibold text-yellow-900 dark:text-yellow-200">
+            Send an Award
+          </h4>
           <div className="grid grid-cols-3 gap-2 mb-3">
             {gifts.map((gift) => (
               <button
@@ -1779,19 +1910,15 @@ export function PostCard({
                     : 'border-dark-200 bg-white dark:border-dark-700 dark:bg-dark-800'
                 }`}
               >
-                <img 
-                  src={gift.iconUrl} 
-                  alt={gift.name} 
-                  className="w-8 h-8 mx-auto mb-1"
-                />
+                <img src={gift.iconUrl} alt={gift.name} className="w-8 h-8 mx-auto mb-1" />
                 <p className="text-xs font-medium truncate">{gift.name}</p>
                 <p className="text-xs text-dark-500">{gift.price} pts</p>
               </button>
             ))}
           </div>
           <div className="flex gap-sm mt-md">
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               size="sm"
               onClick={() => handleSendAward()}
               className="bg-yellow-600 hover:bg-yellow-700"
@@ -1801,7 +1928,10 @@ export function PostCard({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => { setIsAwards(false); setSelectedGift(null); }}
+              onClick={() => {
+                setIsAwards(false);
+                setSelectedGift(null);
+              }}
             >
               Cancel
             </Button>
@@ -1821,18 +1951,10 @@ export function PostCard({
             maxLength={200}
           />
           <div className="flex gap-sm">
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleReport}
-            >
+            <Button variant="destructive" size="sm" onClick={handleReport}>
               Submit Report
             </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsReporting(false)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => setIsReporting(false)}>
               Cancel
             </Button>
           </div>
@@ -1854,20 +1976,30 @@ export function PostCard({
               (() => {
                 const renderComment = (comment: Comment, depth: number) => {
                   const isPostOwner = post.user.id === currentUser?.id;
-                  const marginLeft = depth > 0 ? 'ml-8 border-l-2 pl-4 border-dark-300 dark:border-dark-600' : '';
+                  const marginLeft =
+                    depth > 0 ? 'ml-8 border-l-2 pl-4 border-dark-300 dark:border-dark-600' : '';
 
                   return (
                     <div key={comment.id} className={`mb-4 ${marginLeft}`}>
-                      <div className={`rounded-xl border border-dark-200 bg-dark-50 p-md dark:border-dark-700 dark:bg-dark-800/70 ${comment.isPinned ? 'ring-2 ring-blue-500' : ''} ${comment.isLocked ? 'opacity-75' : ''}`}>
+                      <div
+                        className={`rounded-xl border border-dark-200 bg-dark-50 p-md dark:border-dark-700 dark:bg-dark-800/70 ${comment.isPinned ? 'ring-2 ring-blue-500' : ''} ${comment.isLocked ? 'opacity-75' : ''}`}
+                      >
                         <div className="flex items-start justify-between">
-                          <Link to={`/profile/${comment.user.username || comment.user.id}`} className="flex items-center gap-sm mb-xs hover:opacity-80">
+                          <Link
+                            to={`/profile/${comment.user.username || comment.user.id}`}
+                            className="flex items-center gap-sm mb-xs hover:opacity-80"
+                          >
                             <div className="w-8 h-8 bg-gradient-to-br from-primary-300 to-accent-300 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              {(comment.user.email || comment.user.walletAddress || 'A').charAt(0).toUpperCase()}
+                              {(comment.user.email || comment.user.walletAddress || 'A')
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <p className="font-semibold text-sm text-dark-900 dark:text-white">
-                                  {comment.user.displayName || comment.user.email || comment.user.walletAddress}
+                                  {comment.user.displayName ||
+                                    comment.user.email ||
+                                    comment.user.walletAddress}
                                 </p>
                                 {comment.isPinned && (
                                   <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
@@ -1920,9 +2052,18 @@ export function PostCard({
                         {comment.awards && comment.awards.length > 0 && (
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
                             {comment.awards.map((award, index) => (
-                              <div key={`${award.id}-${index}`} className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full text-xs">
-                                <img src={award.gift.iconUrl} alt={award.gift.name} className="w-4 h-4" />
-                                <span className="text-yellow-800 dark:text-yellow-200">{award.gift.name}</span>
+                              <div
+                                key={`${award.id}-${index}`}
+                                className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded-full text-xs"
+                              >
+                                <img
+                                  src={award.gift.iconUrl}
+                                  alt={award.gift.name}
+                                  className="w-4 h-4"
+                                />
+                                <span className="text-yellow-800 dark:text-yellow-200">
+                                  {award.gift.name}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -1967,8 +2108,10 @@ export function PostCard({
             <div className="pt-md border-t border-dark-200">
               {replyingTo && (
                 <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-between">
-                  <span className="text-sm text-blue-600 dark:text-blue-400">Replying to a comment</span>
-                  <button 
+                  <span className="text-sm text-blue-600 dark:text-blue-400">
+                    Replying to a comment
+                  </span>
+                  <button
                     onClick={() => setReplyingTo(null)}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -1978,7 +2121,7 @@ export function PostCard({
               )}
               <textarea
                 className="textarea-field mb-sm rounded-xl border-dark-200 bg-white dark:border-dark-700 dark:bg-dark-900/80"
-                placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
+                placeholder={replyingTo ? 'Write a reply...' : 'Add a comment...'}
                 value={comment}
                 onChange={handleCommentChange}
                 maxLength={200}
@@ -1986,13 +2129,17 @@ export function PostCard({
               />
               {userSearchResults.length > 0 && (
                 <div className="mt-2 rounded-lg border border-dark-200 bg-white dark:border-dark-700 dark:bg-dark-800">
-                  {userSearchResults.map(user => (
+                  {userSearchResults.map((user) => (
                     <div
                       key={user.id}
                       className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-dark-100 dark:hover:bg-dark-700"
                       onClick={() => handleAddTaggedUserToComment(user)}
                     >
-                      <img src={user.profile.avatarUrl} alt={user.username} className="w-8 h-8 rounded-full" />
+                      <img
+                        src={user.profile.avatarUrl}
+                        alt={user.username}
+                        className="w-8 h-8 rounded-full"
+                      />
                       <span>{user.username}</span>
                     </div>
                   ))}
@@ -2012,15 +2159,11 @@ export function PostCard({
           )}
         </div>
       )}
-      
+
       <CommunityNotes postId={post.id} />
 
-      <PromotionModal
-        isOpen={isPromoting}
-        onClose={() => setIsPromoting(false)}
-        postId={post.id}
-      />
-      
+      <PromotionModal isOpen={isPromoting} onClose={() => setIsPromoting(false)} postId={post.id} />
+
       {showInstantForm && post.creative?.instantForm && (
         <InstantFormModal
           form={post.creative.instantForm}

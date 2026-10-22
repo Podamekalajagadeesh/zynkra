@@ -13,7 +13,7 @@ export class FavoritesService {
     @InjectRepository(Favorite)
     private readonly favoritesRepository: Repository<Favorite>,
     @InjectRepository(Post)
-    private readonly postsRepository: Repository<Post>,
+    private readonly postsRepository: Repository<Post>
   ) {}
 
   async addFavorite(user: User, postId: string): Promise<{ success: boolean }> {
@@ -65,11 +65,7 @@ export class FavoritesService {
     return { success: true };
   }
 
-  async getUserFavorites(
-    user: User,
-    page: number = 1,
-    limit: number = 20,
-  ) {
+  async getUserFavorites(user: User, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit;
 
     const [favorites, total] = await this.favoritesRepository.findAndCount({
@@ -80,7 +76,7 @@ export class FavoritesService {
       take: limit,
     });
 
-    const posts = favorites.map(favorite => favorite.post);
+    const posts = favorites.map((favorite) => favorite.post);
 
     return {
       data: posts,

@@ -30,7 +30,7 @@ export class ProductsController {
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
     @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>,
+    private readonly productsRepository: Repository<Product>
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -46,7 +46,7 @@ export class ProductsController {
     @Query('category') category?: string,
     @Query('search') search?: string,
     @Query('minPrice') minPrice?: number,
-    @Query('maxPrice') maxPrice?: number,
+    @Query('maxPrice') maxPrice?: number
   ) {
     return this.productsService.findAll(page, limit, category, search, minPrice, maxPrice);
   }
@@ -56,7 +56,7 @@ export class ProductsController {
   findUserProducts(
     @CurrentUser() user: User,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query('limit') limit: number = 20
   ) {
     return this.productsService.findUserProducts(user, page, limit);
   }
@@ -71,7 +71,7 @@ export class ProductsController {
   update(
     @Param('id') id: string,
     @Body() updateProductDto: Partial<CreateProductDto>,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.productsService.update(user, id, updateProductDto);
   }
@@ -84,10 +84,7 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/variants')
-  addVariant(
-    @Param('id') id: string,
-    @Body() variantData: Partial<ProductVariant>,
-  ) {
+  addVariant(@Param('id') id: string, @Body() variantData: Partial<ProductVariant>) {
     return this.productsService.addVariant(id, variantData);
   }
 
@@ -113,9 +110,9 @@ export class ProductsController {
     }
 
     // Check if user has purchased this product by finding a completed order that includes this product
-    const userHasPurchased = product.orderItems.some(orderItem => 
-      orderItem.order.customerId === user.id && 
-      orderItem.order.status === 'completed'
+    const userHasPurchased = product.orderItems.some(
+      (orderItem) =>
+        orderItem.order.customerId === user.id && orderItem.order.status === 'completed'
     );
 
     // Also allow the seller to download their own product

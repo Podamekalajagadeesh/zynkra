@@ -216,13 +216,48 @@ export class SearchFullText1789100000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     const tables = [
-      { table: 'users', fn: 'users_search_vector_update', trigger: 'trg_users_search_vector', index: 'IDX_users_searchVector' },
-      { table: 'posts', fn: 'posts_search_vector_update', trigger: 'trg_posts_search_vector', index: 'IDX_posts_searchVector' },
-      { table: 'tags', fn: 'tags_search_vector_update', trigger: 'trg_tags_search_vector', index: 'IDX_tags_searchVector' },
-      { table: 'places', fn: 'places_search_vector_update', trigger: 'trg_places_search_vector', index: 'IDX_places_searchVector' },
-      { table: 'groups', fn: 'groups_search_vector_update', trigger: 'trg_groups_search_vector', index: 'IDX_groups_searchVector' },
-      { table: 'event', fn: 'event_search_vector_update', trigger: 'trg_event_search_vector', index: 'IDX_event_searchVector' },
-      { table: 'products', fn: 'products_search_vector_update', trigger: 'trg_products_search_vector', index: 'IDX_products_searchVector' },
+      {
+        table: 'users',
+        fn: 'users_search_vector_update',
+        trigger: 'trg_users_search_vector',
+        index: 'IDX_users_searchVector',
+      },
+      {
+        table: 'posts',
+        fn: 'posts_search_vector_update',
+        trigger: 'trg_posts_search_vector',
+        index: 'IDX_posts_searchVector',
+      },
+      {
+        table: 'tags',
+        fn: 'tags_search_vector_update',
+        trigger: 'trg_tags_search_vector',
+        index: 'IDX_tags_searchVector',
+      },
+      {
+        table: 'places',
+        fn: 'places_search_vector_update',
+        trigger: 'trg_places_search_vector',
+        index: 'IDX_places_searchVector',
+      },
+      {
+        table: 'groups',
+        fn: 'groups_search_vector_update',
+        trigger: 'trg_groups_search_vector',
+        index: 'IDX_groups_searchVector',
+      },
+      {
+        table: 'event',
+        fn: 'event_search_vector_update',
+        trigger: 'trg_event_search_vector',
+        index: 'IDX_event_searchVector',
+      },
+      {
+        table: 'products',
+        fn: 'products_search_vector_update',
+        trigger: 'trg_products_search_vector',
+        index: 'IDX_products_searchVector',
+      },
     ];
 
     for (const { table, fn, trigger, index } of tables) {

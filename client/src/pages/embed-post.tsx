@@ -82,8 +82,13 @@ export default function EmbedPostPage() {
             m.type === 'video' ? (
               <video key={i} src={m.url} controls style={{ width: '100%', borderRadius: 8 }} />
             ) : (
-              <img key={i} src={m.url} alt="" style={{ width: '100%', borderRadius: 8, maxHeight: 320, objectFit: 'cover' }} />
-            ),
+              <img
+                key={i}
+                src={m.url}
+                alt=""
+                style={{ width: '100%', borderRadius: 8, maxHeight: 320, objectFit: 'cover' }}
+              />
+            )
           )}
         </div>
       )}

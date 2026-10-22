@@ -4,26 +4,53 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { useToast } from '../../contexts/ToastContext';
-import { 
-  Github, GitBranch, GitMerge, Code, FileText, Bug, Layout, Zap, Shield,
-  Plus, Clock, Search, CheckCircle, XCircle, Loader2, Trash2, Eye
+import {
+  Github,
+  GitBranch,
+  GitMerge,
+  Code,
+  FileText,
+  Bug,
+  Layout,
+  Zap,
+  Shield,
+  Plus,
+  Clock,
+  Search,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Trash2,
+  Eye,
 } from 'lucide-react';
-import { 
-  getContributions, 
-  getContributionStats, 
-  createContribution, 
+import {
+  getContributions,
+  getContributionStats,
+  createContribution,
   deleteContribution,
   updateContribution,
   Contribution,
   ContributionType,
   ContributionStatus,
   CreateContributionDto,
-  ContributionStats
+  ContributionStats,
 } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -81,10 +108,7 @@ export function OpenSourcePlatformPage() {
 
   const loadData = async () => {
     try {
-      const [contribs, statsData] = await Promise.all([
-        getContributions(),
-        getContributionStats(),
-      ]);
+      const [contribs, statsData] = await Promise.all([getContributions(), getContributionStats()]);
       setContributions(contribs);
       setStats(statsData);
     } catch (error) {
@@ -122,7 +146,7 @@ export function OpenSourcePlatformPage() {
 
   const handleDeleteContribution = async (id: string) => {
     if (!confirm('Are you sure you want to delete this contribution?')) return;
-    
+
     try {
       await deleteContribution(id);
       showToast('Contribution deleted', 'success');
@@ -161,7 +185,8 @@ export function OpenSourcePlatformPage() {
               Open Source Platform
             </h1>
             <p className="text-gray-600 mt-2">
-              All platform code is public. Contribute to feature development, fix bugs, and help improve the platform together.
+              All platform code is public. Contribute to feature development, fix bugs, and help
+              improve the platform together.
             </p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -180,7 +205,9 @@ export function OpenSourcePlatformPage() {
                   <label className="text-sm font-medium mb-1 block">Title *</label>
                   <Input
                     value={newContribution.title}
-                    onChange={(e) => setNewContribution({ ...newContribution, title: e.target.value })}
+                    onChange={(e) =>
+                      setNewContribution({ ...newContribution, title: e.target.value })
+                    }
                     placeholder="Brief description of your contribution"
                   />
                 </div>
@@ -208,7 +235,9 @@ export function OpenSourcePlatformPage() {
                   <label className="text-sm font-medium mb-1 block">Description *</label>
                   <Textarea
                     value={newContribution.description}
-                    onChange={(e) => setNewContribution({ ...newContribution, description: e.target.value })}
+                    onChange={(e) =>
+                      setNewContribution({ ...newContribution, description: e.target.value })
+                    }
                     placeholder="Detailed description of your changes"
                     rows={5}
                   />
@@ -217,12 +246,14 @@ export function OpenSourcePlatformPage() {
                   <label className="text-sm font-medium mb-1 block">Pull Request URL</label>
                   <Input
                     value={newContribution.pullRequestUrl || ''}
-                    onChange={(e) => setNewContribution({ ...newContribution, pullRequestUrl: e.target.value })}
+                    onChange={(e) =>
+                      setNewContribution({ ...newContribution, pullRequestUrl: e.target.value })
+                    }
                     placeholder="https://github.com/..."
                   />
                 </div>
-                <Button 
-                  className="w-full mt-4" 
+                <Button
+                  className="w-full mt-4"
                   onClick={handleCreateContribution}
                   disabled={isSubmitting}
                 >
@@ -299,16 +330,18 @@ export function OpenSourcePlatformPage() {
                           <Badge className={statusColors[contribution.status]}>
                             {statusLabels[contribution.status]}
                           </Badge>
-                          <Badge variant="outline">{contributionTypeLabels[contribution.type]}</Badge>
+                          <Badge variant="outline">
+                            {contributionTypeLabels[contribution.type]}
+                          </Badge>
                         </div>
                         <p className="text-gray-600 text-sm mt-1">{contribution.description}</p>
                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                           <span>by {contribution.author?.username || 'Unknown'}</span>
                           <span>{new Date(contribution.createdAt).toLocaleDateString()}</span>
                           {contribution.pullRequestUrl && (
-                            <a 
-                              href={contribution.pullRequestUrl} 
-                              target="_blank" 
+                            <a
+                              href={contribution.pullRequestUrl}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-500 hover:underline flex items-center gap-1"
                             >

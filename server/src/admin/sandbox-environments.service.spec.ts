@@ -21,16 +21,20 @@ describe('SandboxEnvironmentsService', () => {
 
     const result = await service.create({ name: 'QA Environment', expiresInDays: 7 });
 
-    expect(result).toEqual(expect.objectContaining({
-      id: 'sandbox-1',
-      slug: 'qa-environment',
-      accessKey: expect.stringMatching(/^zk_sbx_/),
-      status: SandboxEnvironmentStatus.ACTIVE,
-    }));
-    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
-      accessKeyHash: expect.not.stringMatching(/^zk_sbx_/),
-      expiresAt: expect.any(Date),
-    }));
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'sandbox-1',
+        slug: 'qa-environment',
+        accessKey: expect.stringMatching(/^zk_sbx_/),
+        status: SandboxEnvironmentStatus.ACTIVE,
+      })
+    );
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accessKeyHash: expect.not.stringMatching(/^zk_sbx_/),
+        expiresAt: expect.any(Date),
+      })
+    );
     expect(result).not.toHaveProperty('accessKeyHash');
   });
 
@@ -39,7 +43,9 @@ describe('SandboxEnvironmentsService', () => {
     repository.findOne.mockResolvedValue({ id: 'existing' });
     const service = new SandboxEnvironmentsService(repository as never);
 
-    await expect(service.create({ name: 'QA Environment' })).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.create({ name: 'QA Environment' })).rejects.toBeInstanceOf(
+      ConflictException
+    );
   });
 
   it('validates active, unexpired access keys and records usage', async () => {

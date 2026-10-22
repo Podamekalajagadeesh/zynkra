@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,9 +6,7 @@ interface CreateCollectionFormProps {
   onCreate: (name: string) => void;
 }
 
-export const CreateCollectionForm = ({
-  onCreate,
-}: CreateCollectionFormProps) => {
+export const CreateCollectionForm = ({ onCreate }: CreateCollectionFormProps) => {
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {

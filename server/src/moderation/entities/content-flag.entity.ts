@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { ModerationQueueItemEntity } from './moderation-queue-item.entity';
 
 @Entity('content_flags')
@@ -11,9 +18,18 @@ export class ContentFlagEntity {
 
   @Column({
     type: 'varchar',
-    length: 50
+    length: 50,
   })
-  type: 'harmful' | 'misinformation' | 'hate_speech' | 'violence' | 'adult_content' | 'spam' | 'fraud' | 'deepfake' | 'synthetic_content';
+  type:
+    | 'harmful'
+    | 'misinformation'
+    | 'hate_speech'
+    | 'violence'
+    | 'adult_content'
+    | 'spam'
+    | 'fraud'
+    | 'deepfake'
+    | 'synthetic_content';
 
   @Column('text')
   description: string;

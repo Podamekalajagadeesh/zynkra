@@ -23,7 +23,7 @@ export const NotificationDropdown = ({ isOpen }: { isOpen: boolean }) => {
         {notifications.length === 0 ? (
           <p className="p-4 text-gray-500">No notifications yet.</p>
         ) : (
-          notifications.map(notification => (
+          notifications.map((notification) => (
             <NotificationItem key={notification.id} notification={notification} />
           ))
         )}

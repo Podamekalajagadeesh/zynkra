@@ -55,7 +55,7 @@ describe('VerifyLinkPage', () => {
     });
     expect(verifyMagicLink).toHaveBeenCalledWith({ token: 'valid-token' });
     expect(mockAddAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'mock-jwt-token' }),
+      expect.objectContaining({ token: 'mock-jwt-token' })
     );
   });
 

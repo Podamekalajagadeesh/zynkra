@@ -12,11 +12,23 @@ function makeUser(overrides: any = {}) {
 
 function makeArticle(overrides: any = {}) {
   return {
-    id: 'art-1', slug: 'my-article-123', title: 'My Article', subtitle: 'Subtitle',
-    content: 'Article content here', excerpt: 'Article content here',
-    status: ArticleStatus.PUBLISHED, author: makeUser(), authorId: 'user-1',
-    viewCount: 0, readingTime: 1, tags: ['tech'], coverImage: null,
-    publishedAt: new Date(), isGated: false, tokenPrice: null, ...overrides,
+    id: 'art-1',
+    slug: 'my-article-123',
+    title: 'My Article',
+    subtitle: 'Subtitle',
+    content: 'Article content here',
+    excerpt: 'Article content here',
+    status: ArticleStatus.PUBLISHED,
+    author: makeUser(),
+    authorId: 'user-1',
+    viewCount: 0,
+    readingTime: 1,
+    tags: ['tech'],
+    coverImage: null,
+    publishedAt: new Date(),
+    isGated: false,
+    tokenPrice: null,
+    ...overrides,
   };
 }
 
@@ -29,7 +41,17 @@ describe('ArticlesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ArticlesService,
-        { provide: getRepositoryToken(Article), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), createQueryBuilder: jest.fn() } },
+        {
+          provide: getRepositoryToken(Article),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
+            createQueryBuilder: jest.fn(),
+          },
+        },
         { provide: getRepositoryToken(User), useValue: { findOne: jest.fn() } },
       ],
     }).compile();
@@ -44,14 +66,19 @@ describe('ArticlesService', () => {
       userRepo.findOne.mockResolvedValue(makeUser() as any);
       articleRepo.save.mockResolvedValue(makeArticle() as any);
 
-      const result = await service.create('user-1', { title: 'My Article', content: 'Content here' });
+      const result = await service.create('user-1', {
+        title: 'My Article',
+        content: 'Content here',
+      });
       expect(result.title).toBe('My Article');
       expect(articleRepo.save).toHaveBeenCalled();
     });
 
     it('throws when user not found', async () => {
       userRepo.findOne.mockResolvedValue(null);
-      await expect(service.create('bad-id', { title: 'X', content: 'Y' })).rejects.toThrow(NotFoundException);
+      await expect(service.create('bad-id', { title: 'X', content: 'Y' })).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -70,7 +97,9 @@ describe('ArticlesService', () => {
     });
 
     it('throws when not author', async () => {
-      articleRepo.findOne.mockResolvedValue(makeArticle({ author: makeUser({ id: 'other' }) }) as any);
+      articleRepo.findOne.mockResolvedValue(
+        makeArticle({ author: makeUser({ id: 'other' }) }) as any
+      );
       await expect(service.update('art-1', 'user-1', {})).rejects.toThrow(BadRequestException);
     });
   });
@@ -85,7 +114,9 @@ describe('ArticlesService', () => {
     });
 
     it('throws when not author', async () => {
-      articleRepo.findOne.mockResolvedValue(makeArticle({ author: makeUser({ id: 'other' }) }) as any);
+      articleRepo.findOne.mockResolvedValue(
+        makeArticle({ author: makeUser({ id: 'other' }) }) as any
+      );
       await expect(service.publish('art-1', 'user-1')).rejects.toThrow(BadRequestException);
     });
   });
@@ -110,7 +141,9 @@ describe('ArticlesService', () => {
     });
 
     it('throws when not author', async () => {
-      articleRepo.findOne.mockResolvedValue(makeArticle({ author: makeUser({ id: 'other' }) }) as any);
+      articleRepo.findOne.mockResolvedValue(
+        makeArticle({ author: makeUser({ id: 'other' }) }) as any
+      );
       await expect(service.deleteArticle('art-1', 'user-1')).rejects.toThrow(BadRequestException);
     });
   });

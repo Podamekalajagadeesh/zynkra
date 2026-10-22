@@ -74,7 +74,7 @@ describe('POST /auth/signout (HTTP integration)', () => {
       ],
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
+        { provide: AccountLinkingService, useValue: {} },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -92,7 +92,10 @@ describe('POST /auth/signout (HTTP integration)', () => {
           provide: UsersService,
           useValue: { findOneById: jest.fn() },
         },
-        { provide: ConfigService, useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) } },
+        {
+          provide: ConfigService,
+          useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+        },
         {
           provide: getRepositoryToken(LoginSession),
           useValue: {
@@ -107,7 +110,18 @@ describe('POST /auth/signout (HTTP integration)', () => {
           provide: CaptchaService,
           useValue: { generate: jest.fn(), verify: jest.fn().mockReturnValue(true) },
         },
-        { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {
+            findOne: jest.fn().mockResolvedValue({
+              id: 'user-1',
+              email: 'user-1@test.com',
+              status: 'active',
+              banned: false,
+              role: 'user',
+            }),
+          },
+        },
         JwtStrategy,
       ],
     }).compile();
@@ -148,8 +162,7 @@ describe('POST /auth/signout (HTTP integration)', () => {
   // --- JWT guard ---
 
   it('returns 401 when Authorization header is missing', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signout');
+    const response = await request(app.getHttpServer()).post('/auth/signout');
 
     expect(response.status).toBe(401);
     expect(authService.signOut).not.toHaveBeenCalled();

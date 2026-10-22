@@ -36,12 +36,6 @@ import { LoginSession } from '../auth/entities/login-session.entity';
     }),
   ],
   providers: [OpenRouterService, WsAuthService, WsRateLimiter, CsrfGuard],
-  exports: [
-    OpenRouterService,
-    WsAuthService,
-    WsRateLimiter,
-    CsrfGuard,
-    DataPermissionsModule,
-  ],
+  exports: [OpenRouterService, WsAuthService, WsRateLimiter, CsrfGuard, DataPermissionsModule],
 })
 export class CommonModule {}

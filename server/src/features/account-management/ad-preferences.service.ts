@@ -38,7 +38,7 @@ export class AdPreferencesService {
    */
   async updateAdPreferences(
     accountId: string,
-    updates: Partial<AdPreferences>,
+    updates: Partial<AdPreferences>
   ): Promise<AdPreferences> {
     let prefs = this.adPreferences.get(accountId);
 
@@ -56,10 +56,14 @@ export class AdPreferencesService {
     if (updates.personalizedAds !== undefined) prefs.personalizedAds = updates.personalizedAds;
     if (updates.thirdPartyAds !== undefined) prefs.thirdPartyAds = updates.thirdPartyAds;
     if (updates.affiliateAds !== undefined) prefs.affiliateAds = updates.affiliateAds;
-    if (updates.allowCrossSiteTracking !== undefined) prefs.allowCrossSiteTracking = updates.allowCrossSiteTracking;
-    if (updates.preferredCategories !== undefined) prefs.preferredCategories = updates.preferredCategories;
-    if (updates.blockedCategories !== undefined) prefs.blockedCategories = updates.blockedCategories;
-    if (updates.blockedAdvertisers !== undefined) prefs.blockedAdvertisers = updates.blockedAdvertisers;
+    if (updates.allowCrossSiteTracking !== undefined)
+      prefs.allowCrossSiteTracking = updates.allowCrossSiteTracking;
+    if (updates.preferredCategories !== undefined)
+      prefs.preferredCategories = updates.preferredCategories;
+    if (updates.blockedCategories !== undefined)
+      prefs.blockedCategories = updates.blockedCategories;
+    if (updates.blockedAdvertisers !== undefined)
+      prefs.blockedAdvertisers = updates.blockedAdvertisers;
     if (updates.showAds !== undefined) prefs.showAds = updates.showAds;
     if (updates.adFrequency !== undefined) prefs.adFrequency = updates.adFrequency;
 
@@ -73,7 +77,10 @@ export class AdPreferencesService {
   /**
    * Block an advertiser
    */
-  async blockAdvertiser(accountId: string, advertiserId: string): Promise<{ success: boolean; blockedAdvertisers: string[] }> {
+  async blockAdvertiser(
+    accountId: string,
+    advertiserId: string
+  ): Promise<{ success: boolean; blockedAdvertisers: string[] }> {
     const prefs = await this.getAdPreferences(accountId);
 
     if (!prefs.blockedAdvertisers.includes(advertiserId)) {
@@ -87,7 +94,10 @@ export class AdPreferencesService {
   /**
    * Unblock an advertiser
    */
-  async unblockAdvertiser(accountId: string, advertiserId: string): Promise<{ success: boolean; blockedAdvertisers: string[] }> {
+  async unblockAdvertiser(
+    accountId: string,
+    advertiserId: string
+  ): Promise<{ success: boolean; blockedAdvertisers: string[] }> {
     const prefs = await this.getAdPreferences(accountId);
 
     const index = prefs.blockedAdvertisers.indexOf(advertiserId);
@@ -112,7 +122,7 @@ export class AdPreferencesService {
    */
   async setPreferredCategories(
     accountId: string,
-    categories: string[],
+    categories: string[]
   ): Promise<{ success: boolean; preferredCategories: string[] }> {
     const prefs = await this.getAdPreferences(accountId);
 
@@ -127,7 +137,7 @@ export class AdPreferencesService {
    */
   async setBlockedCategories(
     accountId: string,
-    categories: string[],
+    categories: string[]
   ): Promise<{ success: boolean; blockedCategories: string[] }> {
     const prefs = await this.getAdPreferences(accountId);
 
@@ -142,7 +152,7 @@ export class AdPreferencesService {
    */
   async setAdFrequency(
     accountId: string,
-    frequency: 'high' | 'medium' | 'low' | 'minimal',
+    frequency: 'high' | 'medium' | 'low' | 'minimal'
   ): Promise<{ success: boolean; adFrequency: string }> {
     const prefs = await this.getAdPreferences(accountId);
 
@@ -155,7 +165,10 @@ export class AdPreferencesService {
   /**
    * Toggle cross-site tracking
    */
-  async toggleCrossSiteTracking(accountId: string, enabled: boolean): Promise<{ success: boolean; allowCrossSiteTracking: boolean }> {
+  async toggleCrossSiteTracking(
+    accountId: string,
+    enabled: boolean
+  ): Promise<{ success: boolean; allowCrossSiteTracking: boolean }> {
     const prefs = await this.getAdPreferences(accountId);
 
     prefs.allowCrossSiteTracking = enabled;
@@ -177,7 +190,7 @@ export class AdPreferencesService {
    */
   async setAdTargetingLevel(
     accountId: string,
-    level: 'disabled' | 'basic' | 'personalized' | 'advanced',
+    level: 'disabled' | 'basic' | 'personalized' | 'advanced'
   ): Promise<{ success: boolean; adTargeting: string }> {
     const prefs = await this.getAdPreferences(accountId);
 
@@ -208,7 +221,7 @@ export class AdPreferencesService {
    */
   async bulkUpdateAdPreferences(
     accountId: string,
-    updates: Partial<AdPreferences>,
+    updates: Partial<AdPreferences>
   ): Promise<{ success: boolean; updatedPreferences: AdPreferences }> {
     const prefs = await this.updateAdPreferences(accountId, updates);
     return { success: true, updatedPreferences: prefs };

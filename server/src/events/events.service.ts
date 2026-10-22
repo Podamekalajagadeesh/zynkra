@@ -16,12 +16,12 @@ export class EventsService {
     private readonly eventsRepository: Repository<Event>,
     @InjectRepository(Rsvp)
     private readonly rsvpRepository: Repository<Rsvp>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   async create(createEventDto: CreateEventDto, creator: User): Promise<Event> {
     const { coHostIds, ...restOfDto } = createEventDto;
-    
+
     // Validate location based on event type
     if (createEventDto.type === 'in_person' && !createEventDto.location) {
       throw new BadRequestException('In-person events require a location');
@@ -29,9 +29,12 @@ export class EventsService {
     if (createEventDto.type === 'virtual' && !createEventDto.virtualMeetingLink) {
       throw new BadRequestException('Virtual events require a meeting link');
     }
-    
+
     // Validate ticket pricing
-    if (createEventDto.isTicketed && (!createEventDto.ticketPrice || createEventDto.ticketPrice <= 0)) {
+    if (
+      createEventDto.isTicketed &&
+      (!createEventDto.ticketPrice || createEventDto.ticketPrice <= 0)
+    ) {
       throw new BadRequestException('Ticketed events require a valid ticket price');
     }
 
@@ -70,10 +73,10 @@ export class EventsService {
 
   async updateRsvp(eventId: string, user: User, updateRsvpDto: UpdateRsvpDto): Promise<Rsvp> {
     const event = await this.findOne(eventId);
-    
+
     // Check if event has capacity
     if (event.capacity && updateRsvpDto.status === RsvpStatus.GOING) {
-      const goingCount = event.rsvps.filter(r => r.status === RsvpStatus.GOING).length;
+      const goingCount = event.rsvps.filter((r) => r.status === RsvpStatus.GOING).length;
       if (goingCount >= event.capacity) {
         updateRsvpDto.status = RsvpStatus.WAITLIST;
       }
@@ -107,12 +110,12 @@ export class EventsService {
 
   async getEventAnalytics(eventId: string) {
     const event = await this.findOne(eventId);
-    
+
     const rsvpCounts = {
-      going: event.rsvps.filter(r => r.status === RsvpStatus.GOING).length,
-      maybe: event.rsvps.filter(r => r.status === RsvpStatus.MAYBE).length,
-      notGoing: event.rsvps.filter(r => r.status === RsvpStatus.NOT_GOING).length,
-      waitlist: event.rsvps.filter(r => r.status === RsvpStatus.WAITLIST).length,
+      going: event.rsvps.filter((r) => r.status === RsvpStatus.GOING).length,
+      maybe: event.rsvps.filter((r) => r.status === RsvpStatus.MAYBE).length,
+      notGoing: event.rsvps.filter((r) => r.status === RsvpStatus.NOT_GOING).length,
+      waitlist: event.rsvps.filter((r) => r.status === RsvpStatus.WAITLIST).length,
       total: event.rsvps.length,
     };
 
@@ -131,7 +134,7 @@ export class EventsService {
   async getEventsRequiringReminders(): Promise<Event[]> {
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    
+
     return this.eventsRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.rsvps', 'rsvps')

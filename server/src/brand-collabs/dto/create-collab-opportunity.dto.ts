@@ -1,9 +1,18 @@
-import { IsString, IsNotEmpty, IsNumber, Min, IsEnum, IsArray, IsDate, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  Min,
+  IsEnum,
+  IsArray,
+  IsDate,
+  IsOptional,
+} from 'class-validator';
 
 export enum PaymentType {
   FIXED = 'fixed',
   COMMISSION = 'commission',
-  HYBRID = 'hybrid'
+  HYBRID = 'hybrid',
 }
 
 export class CreateCollabOpportunityDto {

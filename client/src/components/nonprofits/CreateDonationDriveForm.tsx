@@ -29,11 +29,7 @@ const CreateDonationDriveForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+      <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <Textarea
         placeholder="Description"
         value={description}

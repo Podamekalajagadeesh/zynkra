@@ -4,8 +4,7 @@ const ACCESS_TOKEN_KEY = 'access_token';
 // Remembered sessions persist across browser restarts (localStorage); unremembered
 // sessions live in sessionStorage and are cleared when the tab/browser closes.
 // Defaults to NOT remembered when the flag has never been set (secure default).
-export const isRemembered = (): boolean =>
-  localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+export const isRemembered = (): boolean => localStorage.getItem(REMEMBER_ME_KEY) === 'true';
 
 export const setRememberMe = (value: boolean): void => {
   localStorage.setItem(REMEMBER_ME_KEY, String(value));

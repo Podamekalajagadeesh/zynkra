@@ -9,11 +9,7 @@ interface VoiceChannelViewProps {
   onLeave: () => void;
 }
 
-export const VoiceChannelView = ({
-  channelName,
-  participants,
-  onLeave,
-}: VoiceChannelViewProps) => {
+export const VoiceChannelView = ({ channelName, participants, onLeave }: VoiceChannelViewProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
@@ -36,10 +32,13 @@ export const VoiceChannelView = ({
           <span className="absolute bottom-2 left-2 text-sm">You</span>
           {isMuted && <MicOff className="absolute top-2 right-2 text-red-500" size={20} />}
         </div>
-        
+
         {/* Other participants */}
         {participants.slice(0, 5).map((userId, index) => (
-          <div key={userId} className="aspect-video bg-dark-200 dark:bg-dark-800 rounded-lg flex items-center justify-center relative">
+          <div
+            key={userId}
+            className="aspect-video bg-dark-200 dark:bg-dark-800 rounded-lg flex items-center justify-center relative"
+          >
             <Avatar className="w-16 h-16" />
             <span className="absolute bottom-2 left-2 text-sm">User {index + 1}</span>
           </div>
@@ -76,7 +75,7 @@ export const VoiceChannelView = ({
           >
             {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -85,7 +84,7 @@ export const VoiceChannelView = ({
           >
             {isVideoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -93,11 +92,11 @@ export const VoiceChannelView = ({
           >
             <Users size={20} />
           </Button>
-          
+
           <Button variant="ghost" size="icon">
             <Settings size={20} />
           </Button>
-          
+
           <Button
             variant="destructive"
             size="icon"

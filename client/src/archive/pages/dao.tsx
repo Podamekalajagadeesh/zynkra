@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PageShell } from '../components/PageShell';
-import {
-  getProposals,
-  createProposal,
-  createDao,
-  vote,
-  getDaoStats,
-} from '../lib/api';
+import { getProposals, createProposal, createDao, vote, getDaoStats } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -148,7 +142,11 @@ export function DaoPage() {
             ...updated,
             votes: [
               ...updated.votes,
-              { id: 'new', support, voter: { id: activeAccount.user.id, username: activeAccount.user.username } },
+              {
+                id: 'new',
+                support,
+                voter: { id: activeAccount.user.id, username: activeAccount.user.username },
+              },
             ],
           });
         }
@@ -281,7 +279,10 @@ export function DaoPage() {
             </button>
 
             {showCreateForm && (
-              <form onSubmit={handleCreateProposal} className="p-4 pt-0 border-t border-dark-100 dark:border-dark-700">
+              <form
+                onSubmit={handleCreateProposal}
+                className="p-4 pt-0 border-t border-dark-100 dark:border-dark-700"
+              >
                 <div className="space-y-4 pt-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-700 dark:text-dark-300 mb-1.5">
@@ -306,11 +307,7 @@ export function DaoPage() {
                     />
                   </div>
                   <div className="flex gap-2 justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setShowCreateForm(false)}
-                    >
+                    <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>
                       Cancel
                     </Button>
                     <Button type="submit" variant="primary">
@@ -460,10 +457,7 @@ export function DaoPage() {
                                 Voters
                               </p>
                               {proposal.votes.map((vote) => (
-                                <div
-                                  key={vote.id}
-                                  className="flex items-center gap-2 text-sm"
-                                >
+                                <div key={vote.id} className="flex items-center gap-2 text-sm">
                                   {vote.support ? (
                                     <CheckCircle2 size={12} className="text-green-400" />
                                   ) : (

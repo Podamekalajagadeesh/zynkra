@@ -9,7 +9,7 @@ import { User } from '../users/entities/user.entity';
 export class SponsoredPostsService {
   constructor(
     @InjectRepository(SponsoredPost)
-    private sponsoredPostsRepository: Repository<SponsoredPost>,
+    private sponsoredPostsRepository: Repository<SponsoredPost>
   ) {}
 
   async create(sponsor: User, post: Post, budget: number, expiresAt: Date): Promise<SponsoredPost> {

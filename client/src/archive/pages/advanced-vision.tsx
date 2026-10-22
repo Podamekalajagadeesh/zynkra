@@ -13,7 +13,8 @@ const capabilityCards: {
 }[] = [
   {
     title: 'Desktop / Electron-ready shell',
-    description: 'Keyboard-first workspace layouts, responsive navigation, and desktop-friendly workflows are live.',
+    description:
+      'Keyboard-first workspace layouts, responsive navigation, and desktop-friendly workflows are live.',
     icon: MonitorSmartphone,
     status: 'Live',
     href: '/devices',
@@ -27,7 +28,8 @@ const capabilityCards: {
   },
   {
     title: 'AI and neural systems',
-    description: 'An operational AI companion, neural-aware content tools, and advanced feature demos are now available.',
+    description:
+      'An operational AI companion, neural-aware content tools, and advanced feature demos are now available.',
     icon: BrainCircuit,
     status: 'Live',
     href: '/advanced-features',
@@ -101,10 +103,14 @@ export function AdvancedVisionPage() {
             <div>
               <h2 className="text-xl font-semibold">Multi-device rollout</h2>
               <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">
-                The product now adapts to desktop, TV, tablet, and watch contexts without losing core social workflows.
+                The product now adapts to desktop, TV, tablet, and watch contexts without losing
+                core social workflows.
               </p>
             </div>
-            <Link to="/devices" className="inline-flex items-center gap-2 rounded-full bg-dark-950 px-3 py-2 text-sm font-semibold text-white dark:bg-white dark:text-dark-950">
+            <Link
+              to="/devices"
+              className="inline-flex items-center gap-2 rounded-full bg-dark-950 px-3 py-2 text-sm font-semibold text-white dark:bg-white dark:text-dark-950"
+            >
               View device modes <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -119,10 +125,14 @@ export function AdvancedVisionPage() {
               <div>
                 <h2 className="text-xl font-semibold">AI and neural production rollout</h2>
                 <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">
-                  The AI companion provides guided content planning, adaptive suggestions, and neural-aware interaction patterns.
+                  The AI companion provides guided content planning, adaptive suggestions, and
+                  neural-aware interaction patterns.
                 </p>
               </div>
-              <Link to="/advanced-features" className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-300">
+              <Link
+                to="/advanced-features"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-300"
+              >
                 Open advanced features <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -135,11 +145,13 @@ export function AdvancedVisionPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold">
-                  Blockchain identity and UBI <span className="text-sm font-medium text-dark-500">— Archived</span>
+                  Blockchain identity and UBI{' '}
+                  <span className="text-sm font-medium text-dark-500">— Archived</span>
                 </h2>
                 <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">
-                  Cut from the product surface per ROADMAP.md §2/§6. Self-sovereign identity and UBI are not
-                  built. Wallet-sign authentication (SIWE) is the only identity system that actually works today.
+                  Cut from the product surface per ROADMAP.md §2/§6. Self-sovereign identity and UBI
+                  are not built. Wallet-sign authentication (SIWE) is the only identity system that
+                  actually works today.
                 </p>
               </div>
             </div>

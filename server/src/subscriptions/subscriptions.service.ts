@@ -1,12 +1,14 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { SubscriptionTier } from './entities/subscription-tier.entity';
-import {
-  SubscriptionBundle,
-  SubscriptionBundleTier,
-} from './entities/subscription-bundle.entity';
+import { SubscriptionBundle, SubscriptionBundleTier } from './entities/subscription-bundle.entity';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
 import { UsersService } from '../users/users.service';
@@ -33,7 +35,7 @@ export class SubscriptionsService {
     @InjectRepository(SubscriptionBundleTier)
     private bundleTiersRepository: Repository<SubscriptionBundleTier>,
     private usersService: UsersService,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentsService: PaymentsService
   ) {
     if (typeof this.paymentsService.registerFulfillmentHandler === 'function') {
       this.paymentsService.registerFulfillmentHandler('subscription', async (transaction) => {
@@ -46,7 +48,7 @@ export class SubscriptionsService {
     subscriberId: string,
     creatorId: string,
     tier: string,
-    paymentMethodId?: string,
+    paymentMethodId?: string
   ): Promise<Subscription | SubscriptionPaymentResult> {
     const subscriber = await this.usersService.findOneById(subscriberId);
     const creator = await this.usersService.findOneById(creatorId);
@@ -97,9 +99,9 @@ export class SubscriptionsService {
         payerId: subscriberId,
         recipientId: creatorId,
         metadata,
-        platformFeeRate: 0.10,
+        platformFeeRate: 0.1,
         paymentMethodId,
-      },
+      }
     );
 
     if (!payment?.success) {
@@ -172,7 +174,7 @@ export class SubscriptionsService {
     return subscriptions.filter(
       (subscription) =>
         subscription.status === SubscriptionStatus.ACTIVE &&
-        (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now),
+        (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now)
     );
   }
 
@@ -202,7 +204,7 @@ export class SubscriptionsService {
   async createSubscriptionTier(
     creatorId: string,
     name: string,
-    price: number,
+    price: number
   ): Promise<SubscriptionTier> {
     const creator = await this.usersService.findOneById(creatorId);
     if (!creator) {
@@ -227,7 +229,7 @@ export class SubscriptionsService {
   async updateSubscriptionTier(
     creatorId: string,
     tierId: string,
-    updates: Partial<{ name: string; price: number }>,
+    updates: Partial<{ name: string; price: number }>
   ): Promise<SubscriptionTier> {
     const tier = await this.subscriptionTiersRepository.findOne({
       where: { id: tierId },
@@ -273,7 +275,7 @@ export class SubscriptionsService {
     const tierSum = tiers.reduce((sum, tier) => sum + Number(tier.price), 0);
     if (dto.price > tierSum) {
       throw new BadRequestException(
-        `Bundle price cannot exceed the sum of its tier prices ($${tierSum.toFixed(2)})`,
+        `Bundle price cannot exceed the sum of its tier prices ($${tierSum.toFixed(2)})`
       );
     }
 
@@ -286,9 +288,7 @@ export class SubscriptionsService {
     });
     await this.bundlesRepository.save(bundle);
 
-    bundle.tiers = tiers.map((tier) =>
-      this.bundleTiersRepository.create({ bundle, tier }),
-    );
+    bundle.tiers = tiers.map((tier) => this.bundleTiersRepository.create({ bundle, tier }));
     await this.bundleTiersRepository.save(bundle.tiers);
 
     return this.getBundle(bundle.id);
@@ -313,7 +313,11 @@ export class SubscriptionsService {
     });
   }
 
-  async updateBundle(creatorId: string, bundleId: string, dto: UpdateBundleDto): Promise<SubscriptionBundle> {
+  async updateBundle(
+    creatorId: string,
+    bundleId: string,
+    dto: UpdateBundleDto
+  ): Promise<SubscriptionBundle> {
     const bundle = await this.bundlesRepository.findOne({
       where: { id: bundleId },
       relations: ['creator', 'tiers', 'tiers.tier'],
@@ -333,7 +337,7 @@ export class SubscriptionsService {
     const price = dto.price !== undefined ? dto.price : Number(bundle.price);
     if (price > tierSum) {
       throw new BadRequestException(
-        `Bundle price cannot exceed the sum of its tier prices ($${tierSum.toFixed(2)})`,
+        `Bundle price cannot exceed the sum of its tier prices ($${tierSum.toFixed(2)})`
       );
     }
 
@@ -345,7 +349,7 @@ export class SubscriptionsService {
     if (dto.tierIds !== undefined) {
       await this.bundleTiersRepository.remove(bundle.tiers);
       bundle.tiers = nextTierEntities.map((tier) =>
-        this.bundleTiersRepository.create({ bundle, tier }),
+        this.bundleTiersRepository.create({ bundle, tier })
       );
       await this.bundleTiersRepository.save(bundle.tiers);
     }
@@ -370,7 +374,7 @@ export class SubscriptionsService {
   async purchaseBundle(
     subscriberId: string,
     bundleId: string,
-    paymentMethodId?: string,
+    paymentMethodId?: string
   ): Promise<Subscription | SubscriptionPaymentResult> {
     const bundle = await this.getBundle(bundleId);
     if (!bundle.isActive) {
@@ -416,9 +420,9 @@ export class SubscriptionsService {
         payerId: subscriberId,
         recipientId: creator.id,
         metadata,
-        platformFeeRate: 0.10,
+        platformFeeRate: 0.1,
         paymentMethodId,
-      },
+      }
     );
 
     if (!payment?.success) {
@@ -514,16 +518,13 @@ export class SubscriptionsService {
     date.setUTCDate(1);
     date.setUTCMonth(date.getUTCMonth() + 1);
     const lastDay = new Date(
-      Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)
     ).getUTCDate();
     date.setUTCDate(Math.min(day, lastDay));
     return date;
   }
 
-  private async loadOwnedTiers(
-    creatorId: string,
-    tierIds: string[],
-  ): Promise<SubscriptionTier[]> {
+  private async loadOwnedTiers(creatorId: string, tierIds: string[]): Promise<SubscriptionTier[]> {
     if (tierIds.length === 0) {
       throw new BadRequestException('A bundle needs at least one tier');
     }

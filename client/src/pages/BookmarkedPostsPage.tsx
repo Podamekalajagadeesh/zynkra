@@ -33,9 +33,7 @@ export function BookmarkedPostsPage() {
       ) : (
         <div className="space-y-4">
           {bookmarks.length > 0 ? (
-            bookmarks.map((bookmark) => (
-              <PostCard key={bookmark.id} post={bookmark.post} />
-            ))
+            bookmarks.map((bookmark) => <PostCard key={bookmark.id} post={bookmark.post} />)
           ) : (
             <p>You haven't bookmarked any posts yet.</p>
           )}

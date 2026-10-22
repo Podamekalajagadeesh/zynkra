@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 import FundraisingTab from '../components/nonprofits/FundraisingTab';
@@ -13,19 +12,13 @@ const NonprofitPage = () => {
       <h1 className="text-2xl font-bold mb-4">Nonprofit Tools</h1>
       <div className="flex border-b">
         <button
-          className={`px-4 py-2 ${
-            activeTab === 'fundraising'
-              ? 'border-b-2 border-blue-500'
-              : ''
-          }`}
+          className={`px-4 py-2 ${activeTab === 'fundraising' ? 'border-b-2 border-blue-500' : ''}`}
           onClick={() => setActiveTab('fundraising')}
         >
           Fundraising
         </button>
         <button
-          className={`px-4 py-2 ${
-            activeTab === 'drives' ? 'border-b-2 border-blue-500' : ''
-          }`}
+          className={`px-4 py-2 ${activeTab === 'drives' ? 'border-b-2 border-blue-500' : ''}`}
           onClick={() => setActiveTab('drives')}
         >
           Donation Drives

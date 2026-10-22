@@ -23,7 +23,7 @@ export class PageInboxController {
   createMessage(
     @Param('conversationId') conversationId: string,
     @Body('content') content: string,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.pageInboxService.createMessage(conversationId, content, user);
   }

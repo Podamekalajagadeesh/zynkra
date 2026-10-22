@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -28,18 +24,18 @@ export class PreKeysService {
     @InjectRepository(PreKeyBundle)
     private readonly preKeyBundlesRepository: Repository<PreKeyBundle>,
     @InjectRepository(KeyRotationEvent)
-    private readonly rotationEventsRepository: Repository<KeyRotationEvent>,
+    private readonly rotationEventsRepository: Repository<KeyRotationEvent>
   ) {}
 
   private async recordRotation(
     userId: string,
     kind: 'identity' | 'signed-prekey' | 'one-time-prekeys',
     keyId: number | null = null,
-    detail: string | null = null,
+    detail: string | null = null
   ): Promise<void> {
     try {
       await this.rotationEventsRepository.save(
-        this.rotationEventsRepository.create({ userId, kind, keyId, detail }),
+        this.rotationEventsRepository.create({ userId, kind, keyId, detail })
       );
     } catch (error) {
       // The audit trail must never block a key upload.
@@ -56,10 +52,7 @@ export class PreKeysService {
    * peer must re-establish via X3DH rather than keep ratcheting). Re-uploading
    * the same key is a no-op apart from the column write.
    */
-  async uploadIdentityKey(
-    userId: string,
-    identityKey: string,
-  ): Promise<void> {
+  async uploadIdentityKey(userId: string, identityKey: string): Promise<void> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -77,9 +70,7 @@ export class PreKeysService {
       await this.oneTimePreKeysRepository.delete({ userId });
       await this.signedPreKeysRepository.delete({ userId });
       await this.recordRotation(userId, 'identity');
-      this.logger.log(
-        `Identity key rotated for user ${userId} (pre-keys purged)`,
-      );
+      this.logger.log(`Identity key rotated for user ${userId} (pre-keys purged)`);
     }
   }
 
@@ -96,7 +87,7 @@ export class PreKeysService {
     userId: string,
     keyId: number,
     publicKey: string,
-    signature: string,
+    signature: string
   ): Promise<void> {
     const existing = await this.signedPreKeysRepository.findOne({
       where: { userId, keyId },
@@ -133,7 +124,7 @@ export class PreKeysService {
    * Get the current signed pre-key for a user.
    */
   async getSignedPreKey(
-    userId: string,
+    userId: string
   ): Promise<{ keyId: number; publicKey: string; signature: string }> {
     const spk = await this.signedPreKeysRepository.findOne({
       where: { userId },
@@ -154,7 +145,7 @@ export class PreKeysService {
    */
   async uploadOneTimePreKeys(
     userId: string,
-    preKeys: Array<{ keyId: number; publicKey: string }>,
+    preKeys: Array<{ keyId: number; publicKey: string }>
   ): Promise<number> {
     if (preKeys.length === 0) return this.getOneTimePreKeyCount(userId);
 
@@ -171,14 +162,14 @@ export class PreKeysService {
           userId,
           keyId: pk.keyId,
           publicKey: pk.publicKey,
-        }),
+        })
       );
       await this.oneTimePreKeysRepository.save(entities);
       await this.recordRotation(
         userId,
         'one-time-prekeys',
         null,
-        JSON.stringify({ uploaded: fresh.length, skipped: preKeys.length - fresh.length }),
+        JSON.stringify({ uploaded: fresh.length, skipped: preKeys.length - fresh.length })
       );
     }
 
@@ -194,9 +185,7 @@ export class PreKeysService {
    * one-time pre-key, or both sessions would encrypt to a key only one of them
    * can complete — the classic X3DH pre-key race.
    */
-  async getPreKeyBundle(
-    userId: string,
-  ): Promise<{
+  async getPreKeyBundle(userId: string): Promise<{
     registrationId: number;
     identityKey: string;
     signedPreKey: { keyId: number; publicKey: string; signature: string };
@@ -217,21 +206,19 @@ export class PreKeysService {
       throw new NotFoundException('No signed pre-key found for this user');
     }
 
-    const otpk = await this.oneTimePreKeysRepository.manager.transaction(
-      async (manager) => {
-        const repo = manager.getRepository(OneTimePreKey);
-        const candidate = await repo
-          .createQueryBuilder('k')
-          .where('k."userId" = :userId AND k."isUsed" = false', { userId })
-          .orderBy('k."createdAt"', 'ASC')
-          .setLock('pessimistic_write')
-          .getOne();
-        if (!candidate) return null;
-        candidate.isUsed = true;
-        await repo.save(candidate);
-        return candidate;
-      },
-    );
+    const otpk = await this.oneTimePreKeysRepository.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(OneTimePreKey);
+      const candidate = await repo
+        .createQueryBuilder('k')
+        .where('k."userId" = :userId AND k."isUsed" = false', { userId })
+        .orderBy('k."createdAt"', 'ASC')
+        .setLock('pessimistic_write')
+        .getOne();
+      if (!candidate) return null;
+      candidate.isUsed = true;
+      await repo.save(candidate);
+      return candidate;
+    });
 
     const identityRotatedAt = await this.lastIdentityRotation(userId);
 
@@ -243,9 +230,7 @@ export class PreKeysService {
         publicKey: spk.publicKey,
         signature: spk.signature,
       },
-      oneTimePreKey: otpk
-        ? { keyId: otpk.keyId, publicKey: otpk.publicKey }
-        : null,
+      oneTimePreKey: otpk ? { keyId: otpk.keyId, publicKey: otpk.publicKey } : null,
       identityRotatedAt,
     };
   }
@@ -265,7 +250,7 @@ export class PreKeysService {
    * `rotatedAt` (or the key itself) and re-establishes a session on change.
    */
   async getIdentityKeyStatus(
-    userId: string,
+    userId: string
   ): Promise<{ publicKey: string; rotatedAt: string | null }> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user || !user.publicKey) {
@@ -291,12 +276,12 @@ export class PreKeysService {
    */
   async getRotationEvents(
     userId: string,
-    since?: Date,
-  ): Promise<Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>> {
+    since?: Date
+  ): Promise<
+    Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
+  > {
     const events = await this.rotationEventsRepository.find({
-      where: since
-        ? { userId, createdAt: MoreThan(since) }
-        : { userId },
+      where: since ? { userId, createdAt: MoreThan(since) } : { userId },
       order: { createdAt: 'DESC' },
       take: 50,
     });
@@ -318,7 +303,7 @@ export class PreKeysService {
       identityKey: string;
       signedPreKey: { keyId: number; publicKey: string; signature: string };
       oneTimePreKeys: Array<{ keyId: number; publicKey: string }>;
-    },
+    }
   ): Promise<void> {
     await this.uploadIdentityKey(userId, bundle.identityKey);
 
@@ -326,7 +311,7 @@ export class PreKeysService {
       userId,
       bundle.signedPreKey.keyId,
       bundle.signedPreKey.publicKey,
-      bundle.signedPreKey.signature,
+      bundle.signedPreKey.signature
     );
 
     if (bundle.oneTimePreKeys?.length > 0) {
@@ -335,8 +320,8 @@ export class PreKeysService {
 
     this.logger.log(
       `Uploaded pre-key bundle for user ${userId}: ` +
-      `signedPreKey=${bundle.signedPreKey.keyId}, ` +
-      `${bundle.oneTimePreKeys?.length || 0} one-time pre-keys`,
+        `signedPreKey=${bundle.signedPreKey.keyId}, ` +
+        `${bundle.oneTimePreKeys?.length || 0} one-time pre-keys`
     );
   }
 }

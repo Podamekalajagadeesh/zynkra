@@ -32,9 +32,7 @@ const LiveStreamChat = ({ streamId, userId }: LiveStreamChatProps) => {
     });
 
     socketRef.current.on('comment-deleted', (commentId: string) => {
-      setMessages((prevMessages) =>
-        prevMessages.filter((msg) => msg.id !== commentId)
-      );
+      setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== commentId));
     });
 
     return () => {
@@ -67,19 +65,13 @@ const LiveStreamChat = ({ streamId, userId }: LiveStreamChatProps) => {
               {msg.user.username}: {msg.content}
             </span>
             {msg.user.id === userId && (
-              <button onClick={() => handleDeleteMessage(msg.id)}>
-                Delete
-              </button>
+              <button onClick={() => handleDeleteMessage(msg.id)}>Delete</button>
             )}
           </div>
         ))}
       </div>
       <form onSubmit={handleSendMessage}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-        />
+        <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} />
         <button type="submit">Send</button>
       </form>
     </div>

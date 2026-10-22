@@ -18,8 +18,8 @@ import { NeuralThoughtFlagEntity } from './entities/neural-thought-flag.entity';
       ModerationQueueItemEntity,
       ContentFlagEntity,
       ModerationMitigationEntity,
-      NeuralThoughtFlagEntity
-    ])
+      NeuralThoughtFlagEntity,
+    ]),
   ],
   controllers: [ModerationController, AdvancedModerationController],
   providers: [
@@ -27,8 +27,14 @@ import { NeuralThoughtFlagEntity } from './entities/neural-thought-flag.entity';
     NeuralModerationService,
     DeepfakeDetectionService,
     BiasDetectionService,
-    AdvancedModerationService
+    AdvancedModerationService,
   ],
-  exports: [ModerationService, NeuralModerationService, DeepfakeDetectionService, BiasDetectionService, AdvancedModerationService]
+  exports: [
+    ModerationService,
+    NeuralModerationService,
+    DeepfakeDetectionService,
+    BiasDetectionService,
+    AdvancedModerationService,
+  ],
 })
 export class ModerationModule {}

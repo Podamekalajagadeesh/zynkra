@@ -65,7 +65,7 @@ export class SmartFeedService {
   constructor(
     @InjectRepository(Post) private readonly postsRepo: Repository<Post>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
   ) {}
 
   /**
@@ -97,19 +97,22 @@ export class SmartFeedService {
   /**
    * Generate a personalized feed using the selected algorithm.
    */
-  async generateFeed(userId: string, options: {
-    algorithm?: string;
-    page?: number;
-    limit?: number;
-    cursor?: string;
-  } = {}): Promise<{
+  async generateFeed(
+    userId: string,
+    options: {
+      algorithm?: string;
+      page?: number;
+      limit?: number;
+      cursor?: string;
+    } = {}
+  ): Promise<{
     posts: any[];
     algorithm: string;
     nextCursor?: string;
     hasMore: boolean;
   }> {
     await this.dataPermissions.require(userId, DataPermission.PERSONALIZATION);
-    const algorithmName = options.algorithm || await this.getUserAlgorithm(userId);
+    const algorithmName = options.algorithm || (await this.getUserAlgorithm(userId));
     const algorithm = ALGORITHMS[algorithmName] || ALGORITHMS.relevance;
     const page = options.page || 1;
     const limit = Math.min(options.limit || 20, 50);
@@ -137,7 +140,7 @@ export class SmartFeedService {
     const paginated = scored.slice(start, end);
 
     return {
-      posts: paginated.map(p => {
+      posts: paginated.map((p) => {
         const { score, ...rest } = p;
         return { ...rest, _score: score };
       }),
@@ -156,7 +159,7 @@ export class SmartFeedService {
 
     // Recency score (0-1): newer posts score higher
     const ageInHours = (Date.now() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60);
-    const recencyScore = Math.max(0, 1 - (ageInHours / 168)); // Decay over 7 days
+    const recencyScore = Math.max(0, 1 - ageInHours / 168); // Decay over 7 days
     score += weights.recency * recencyScore;
 
     // Engagement score (0-1): likes, comments, views
@@ -191,8 +194,19 @@ export class SmartFeedService {
     const keywords = content.split(/\s+/).filter((w: string) => w.length > 4);
 
     // Score based on common interest words
-    const interestWords = ['tech', 'ai', 'crypto', 'design', 'music', 'art', 'food', 'travel', 'fitness', 'coding'];
-    const matches = interestWords.filter(word => content.includes(word));
+    const interestWords = [
+      'tech',
+      'ai',
+      'crypto',
+      'design',
+      'music',
+      'art',
+      'food',
+      'travel',
+      'fitness',
+      'coding',
+    ];
+    const matches = interestWords.filter((word) => content.includes(word));
 
     return Math.min(1, matches.length / 3);
   }
@@ -234,11 +248,12 @@ export class SmartFeedService {
 
     const posts = await this.postsRepo.find({ order: { createdAt: 'DESC' }, take: 100 });
 
-    const avgEngagement = posts.reduce((sum, p) => {
-      const reactions = (p as any).reactions?.length || 0;
-      const comments = (p as any).comments?.length || 0;
-      return sum + reactions + comments;
-    }, 0) / Math.max(posts.length, 1);
+    const avgEngagement =
+      posts.reduce((sum, p) => {
+        const reactions = (p as any).reactions?.length || 0;
+        const comments = (p as any).comments?.length || 0;
+        return sum + reactions + comments;
+      }, 0) / Math.max(posts.length, 1);
 
     return {
       totalPosts: posts.length,

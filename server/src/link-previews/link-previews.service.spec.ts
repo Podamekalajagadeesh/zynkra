@@ -76,7 +76,9 @@ describe('LinkPreviewsService', () => {
           <link rel="icon" href="/favicon.ico" />
         </head></html>`,
       });
-      previewsRepo.create.mockImplementation((partial) => makePreview(partial as Partial<LinkPreview>));
+      previewsRepo.create.mockImplementation((partial) =>
+        makePreview(partial as Partial<LinkPreview>)
+      );
       previewsRepo.save.mockImplementation(async (preview: any) => preview as LinkPreview);
 
       const result = await service.unfurl('https://example.com/article');
@@ -91,8 +93,12 @@ describe('LinkPreviewsService', () => {
 
     it('falls back to the raw <title> when no OG tag exists', async () => {
       previewsRepo.findOne.mockResolvedValue(null);
-      mockedAxiosGet.mockResolvedValue({ data: '<html><head><title>Raw Title</title></head></html>' });
-      previewsRepo.create.mockImplementation((partial) => makePreview(partial as Partial<LinkPreview>));
+      mockedAxiosGet.mockResolvedValue({
+        data: '<html><head><title>Raw Title</title></head></html>',
+      });
+      previewsRepo.create.mockImplementation((partial) =>
+        makePreview(partial as Partial<LinkPreview>)
+      );
       previewsRepo.save.mockImplementation(async (preview: any) => preview as LinkPreview);
 
       const result = await service.unfurl('https://example.com/no-og');

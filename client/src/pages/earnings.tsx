@@ -50,18 +50,15 @@ const formatDate = (iso: string) =>
 const PAYOUT_BADGE: Record<PayoutStatus, { label: string; className: string }> = {
   pending: {
     label: 'Pending',
-    className:
-      'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+    className: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
   },
   processing: {
     label: 'Processing',
-    className:
-      'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+    className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
   },
   paid: {
     label: 'Paid',
-    className:
-      'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
+    className: 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
   },
   rejected: {
     label: 'Rejected',
@@ -150,8 +147,7 @@ export function EarningsPage() {
   }, [searchParams, setSearchParams, addToast]);
 
   const parsedAmount = Number(amount);
-  const amountValid =
-    Number.isFinite(parsedAmount) && parsedAmount > 0 && parsedAmount <= balance;
+  const amountValid = Number.isFinite(parsedAmount) && parsedAmount > 0 && parsedAmount <= balance;
 
   const canOnboard = connect?.mode === 'stripe';
   const payoutsReady = connect ? connect.payoutsEnabled : true;
@@ -183,10 +179,7 @@ export function EarningsPage() {
       setAmount('');
       await refresh();
     } catch (err: any) {
-      addToast(
-        err?.response?.data?.message || 'Payout request failed',
-        'error',
-      );
+      addToast(err?.response?.data?.message || 'Payout request failed', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -321,7 +314,9 @@ export function EarningsPage() {
                             Amount (USD)
                           </label>
                           <div className="relative">
-                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">$</span>
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">
+                              $
+                            </span>
                             <input
                               id="payout-amount"
                               type="number"
@@ -374,7 +369,9 @@ export function EarningsPage() {
                           </p>
                         </div>
                         <p className="text-sm text-green-700 dark:text-green-400">
-                          {cryptoResult.amount} {cryptoResult.currency} to {cryptoResult.recipientAddress.slice(0, 6)}...{cryptoResult.recipientAddress.slice(-4)}
+                          {cryptoResult.amount} {cryptoResult.currency} to{' '}
+                          {cryptoResult.recipientAddress.slice(0, 6)}...
+                          {cryptoResult.recipientAddress.slice(-4)}
                         </p>
                         {cryptoResult.txHash && (
                           <a
@@ -395,7 +392,9 @@ export function EarningsPage() {
                             Amount (USD → USDC)
                           </label>
                           <div className="relative">
-                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">$</span>
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-400">
+                              $
+                            </span>
                             <input
                               type="number"
                               inputMode="decimal"
@@ -428,7 +427,16 @@ export function EarningsPage() {
                           </div>
                         )}
                         <div className="flex items-center gap-3">
-                          <Button type="submit" disabled={cryptoSubmitting || !cryptoAmount || parseFloat(cryptoAmount) <= 0 || parseFloat(cryptoAmount) > balance} isLoading={cryptoSubmitting}>
+                          <Button
+                            type="submit"
+                            disabled={
+                              cryptoSubmitting ||
+                              !cryptoAmount ||
+                              parseFloat(cryptoAmount) <= 0 ||
+                              parseFloat(cryptoAmount) > balance
+                            }
+                            isLoading={cryptoSubmitting}
+                          >
                             Send USDC
                           </Button>
                           <button
@@ -440,11 +448,12 @@ export function EarningsPage() {
                             Max
                           </button>
                         </div>
-                        {cryptoAmount && (parseFloat(cryptoAmount) <= 0 || parseFloat(cryptoAmount) > balance) && (
-                          <p className="text-sm text-red-600 dark:text-red-400">
-                            Enter an amount between $0.01 and {formatMoney(balance)}.
-                          </p>
-                        )}
+                        {cryptoAmount &&
+                          (parseFloat(cryptoAmount) <= 0 || parseFloat(cryptoAmount) > balance) && (
+                            <p className="text-sm text-red-600 dark:text-red-400">
+                              Enter an amount between $0.01 and {formatMoney(balance)}.
+                            </p>
+                          )}
                       </form>
                     )}
                   </div>
@@ -469,19 +478,14 @@ export function EarningsPage() {
                   {payouts.map((payout) => {
                     const badge = PAYOUT_BADGE[payout.status];
                     return (
-                      <li
-                        key={payout.id}
-                        className="flex items-center justify-between gap-4 py-3"
-                      >
+                      <li key={payout.id} className="flex items-center justify-between gap-4 py-3">
                         <div className="min-w-0">
                           <p className="font-semibold text-dark-900 dark:text-white">
                             {formatMoney(Number(payout.amount), payout.currency)}
                           </p>
                           <p className="text-xs text-dark-500 dark:text-dark-400">
                             {formatDate(payout.createdAt)}
-                            {payout.failureReason
-                              ? ` · ${payout.failureReason}`
-                              : ''}
+                            {payout.failureReason ? ` · ${payout.failureReason}` : ''}
                           </p>
                         </div>
                         <span
@@ -513,10 +517,7 @@ export function EarningsPage() {
                   {ledger.map((entry) => {
                     const credit = Number(entry.amount) >= 0;
                     return (
-                      <li
-                        key={entry.id}
-                        className="flex items-center justify-between gap-4 py-3"
-                      >
+                      <li key={entry.id} className="flex items-center justify-between gap-4 py-3">
                         <div className="flex min-w-0 items-center gap-3">
                           <span
                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
@@ -525,11 +526,7 @@ export function EarningsPage() {
                                 : 'bg-dark-100 text-dark-500 dark:bg-dark-800 dark:text-dark-300'
                             }`}
                           >
-                            {credit ? (
-                              <ArrowDownRight size={16} />
-                            ) : (
-                              <ArrowUpRight size={16} />
-                            )}
+                            {credit ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
                           </span>
                           <div className="min-w-0">
                             <p className="truncate font-medium text-dark-900 dark:text-white">

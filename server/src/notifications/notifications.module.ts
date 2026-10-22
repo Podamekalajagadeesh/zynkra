@@ -12,7 +12,12 @@ import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification, PushSubscriptionEntity, MobilePushToken]), forwardRef(() => AuthModule), forwardRef(() => UsersModule), EmailModule],
+  imports: [
+    TypeOrmModule.forFeature([Notification, PushSubscriptionEntity, MobilePushToken]),
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule),
+    EmailModule,
+  ],
   providers: [NotificationsGateway, NotificationsService, AiNotificationsService],
   controllers: [NotificationsController],
   exports: [NotificationsService],

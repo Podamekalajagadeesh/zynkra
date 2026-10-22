@@ -38,7 +38,7 @@ export function VerificationDocumentUpload({
     if (!fileExtension || !acceptedFormats.includes(fileExtension)) {
       addToast(
         `File format not accepted. Accepted formats: ${acceptedFormats.join(', ')}`,
-        'error',
+        'error'
       );
       return false;
     }
@@ -58,7 +58,7 @@ export function VerificationDocumentUpload({
       setFile(selectedFile);
       setUploadStatus('idle');
     },
-    [maxSize, acceptedFormats],
+    [maxSize, acceptedFormats]
   );
 
   const handleUpload = async () => {
@@ -103,12 +103,8 @@ export function VerificationDocumentUpload({
         <div className="flex gap-3">
           <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-green-900 dark:text-green-100">
-              Document uploaded
-            </h3>
-            <p className="text-sm text-green-800 dark:text-green-200 mt-1">
-              {uploadedFile.name}
-            </p>
+            <h3 className="font-semibold text-green-900 dark:text-green-100">Document uploaded</h3>
+            <p className="text-sm text-green-800 dark:text-green-200 mt-1">{uploadedFile.name}</p>
             <p className="text-xs text-green-700 dark:text-green-300 mt-2">
               Uploaded {new Date(uploadedFile.uploadedAt).toLocaleDateString()}
             </p>
@@ -131,14 +127,13 @@ export function VerificationDocumentUpload({
 
   return (
     <div className="rounded-lg border border-dark-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900/70">
-      <h3 className="font-semibold text-dark-900 dark:text-white mb-4">
-        Upload Identity Document
-      </h3>
+      <h3 className="font-semibold text-dark-900 dark:text-white mb-4">Upload Identity Document</h3>
 
       <div className="space-y-4">
         <p className="text-sm text-dark-600 dark:text-dark-300">
-          Please upload a government-issued ID document (passport, driver's license, or national ID).
-          Maximum file size: {maxSize}MB. Accepted formats: {acceptedFormats.join(', ').toUpperCase()}
+          Please upload a government-issued ID document (passport, driver's license, or national
+          ID). Maximum file size: {maxSize}MB. Accepted formats:{' '}
+          {acceptedFormats.join(', ').toUpperCase()}
         </p>
 
         <div className="relative">

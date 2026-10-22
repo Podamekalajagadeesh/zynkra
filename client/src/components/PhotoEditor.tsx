@@ -1,5 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Sliders, Image as ImageIcon, Scissors, Sparkles, Download, RotateCcw } from 'lucide-react';
+import {
+  X,
+  Sliders,
+  Image as ImageIcon,
+  Scissors,
+  Sparkles,
+  Download,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from './ui/button';
 
 interface PhotoEditorProps {
@@ -57,18 +65,18 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
   const applyBackgroundRemoval = async () => {
     if (!canvasRef.current || !imageRef.current) return;
     setIsProcessing(true);
-    
+
     // Simulate processing time for AI background removal
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const img = imageRef.current;
-    
+
     canvas.width = img.width;
     canvas.height = img.height;
     ctx?.drawImage(img, 0, 0);
-    
+
     // In a real implementation, we would call an API like Remove.bg or use a ML model
     // This is a simulation that creates a transparent background effect
     setIsProcessing(false);
@@ -85,7 +93,7 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
 
     canvas.width = img.width;
     canvas.height = img.height;
-    
+
     // Apply all filters to canvas
     if (ctx) {
       ctx.filter = getCurrentFilter();
@@ -184,7 +192,9 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Brightness: {brightness}%</label>
+                    <label className="text-sm font-medium mb-1 block">
+                      Brightness: {brightness}%
+                    </label>
                     <input
                       type="range"
                       min="0"
@@ -206,7 +216,9 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Saturation: {saturation}%</label>
+                    <label className="text-sm font-medium mb-1 block">
+                      Saturation: {saturation}%
+                    </label>
                     <input
                       type="range"
                       min="0"
@@ -217,7 +229,9 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Hue Rotate: {hueRotate}°</label>
+                    <label className="text-sm font-medium mb-1 block">
+                      Hue Rotate: {hueRotate}°
+                    </label>
                     <input
                       type="range"
                       min="-180"
@@ -249,7 +263,7 @@ export function PhotoEditor({ imageUrl, onClose, onSave }: PhotoEditorProps) {
                 </h3>
                 <div className="space-y-2">
                   <Button
-                    variant={removeBackground ? "default" : "outline"}
+                    variant={removeBackground ? 'default' : 'outline'}
                     className="w-full justify-start"
                     onClick={() => {
                       setRemoveBackground(true);

@@ -4,7 +4,12 @@
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -18,20 +23,52 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(serviceOverrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    create: jest.fn(), findAll: jest.fn(), findOne: jest.fn(),
-    update: jest.fn(), remove: jest.fn(), like: jest.fn(), unlike: jest.fn(),
-    share: jest.fn(), repost: jest.fn(), undoRepost: jest.fn(),
-    togglePin: jest.fn(), archive: jest.fn(), feature: jest.fn(),
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    like: jest.fn(),
+    unlike: jest.fn(),
+    share: jest.fn(),
+    repost: jest.fn(),
+    undoRepost: jest.fn(),
+    togglePin: jest.fn(),
+    archive: jest.fn(),
+    feature: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [PostsController],
     providers: [
       { provide: PostsService, useValue: { ...defaultService, ...serviceOverrides } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -50,7 +87,8 @@ describe('POST /posts (create text post)', () => {
   it('returns 201 with created post', async () => {
     const { app, postsService, token } = await buildApp();
     postsService.create.mockResolvedValue({
-      id: 'post-1', content: 'Hello world',
+      id: 'post-1',
+      content: 'Hello world',
     } as any);
 
     const r = await request(app.getHttpServer())
@@ -67,7 +105,8 @@ describe('POST /posts (create text post)', () => {
   it('returns 201 with created post containing media', async () => {
     const { app, postsService, token } = await buildApp();
     postsService.create.mockResolvedValue({
-      id: 'post-2', content: 'With images',
+      id: 'post-2',
+      content: 'With images',
     } as any);
 
     const r = await request(app.getHttpServer())
@@ -93,9 +132,7 @@ describe('POST /posts (create text post)', () => {
 
   it('returns 401 without auth', async () => {
     const { app } = await buildApp();
-    const r = await request(app.getHttpServer())
-      .post('/posts')
-      .send({ content: 'Hello' });
+    const r = await request(app.getHttpServer()).post('/posts').send({ content: 'Hello' });
     expect(r.status).toBe(401);
     await app.close();
   });
@@ -112,7 +149,9 @@ describe('POST /posts (create text post)', () => {
 
   it('returns 400 for encrypted post without encryptedContent', async () => {
     const { app, postsService, token } = await buildApp();
-    postsService.create.mockRejectedValue(new BadRequestException('Encrypted posts require encryptedContent'));
+    postsService.create.mockRejectedValue(
+      new BadRequestException('Encrypted posts require encryptedContent')
+    );
 
     const r = await request(app.getHttpServer())
       .post('/posts')

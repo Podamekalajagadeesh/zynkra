@@ -45,7 +45,7 @@ export interface FederationOutcome {
  */
 export function interpretReport(
   report: FederationReport | null,
-  intent: Intent,
+  intent: Intent
 ): FederationOutcome {
   if (!report) {
     return { applied: false, notice: 'The request failed before the server answered.' };
@@ -115,7 +115,9 @@ export default function FederationPage() {
       const result = await getFederatedTimeline({ limit: PAGE_SIZE, offset, includeMuted });
       setTotal(result.total ?? 0);
       setHasMore(Boolean(result.hasMore));
-      setItems((previous) => (offset === 0 ? result.items ?? [] : [...previous, ...(result.items ?? [])]));
+      setItems((previous) =>
+        offset === 0 ? (result.items ?? []) : [...previous, ...(result.items ?? [])]
+      );
       /**
        * Advance by the **page size**, not by `items.length`.
        *
@@ -128,7 +130,7 @@ export default function FederationPage() {
        */
       setNextOffset(offset + (result.limit ?? PAGE_SIZE));
     },
-    [includeMuted],
+    [includeMuted]
   );
 
   useEffect(() => {
@@ -145,7 +147,9 @@ export default function FederationPage() {
         // their fetch failures into console.error, which made "the server
         // errored" indistinguishable from "you have nothing here" — the exact
         // failure this project has been cleaning up.
-        setTimelineError('Could not reach the federation service. This is not the same as an empty timeline.');
+        setTimelineError(
+          'Could not reach the federation service. This is not the same as an empty timeline.'
+        );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -183,11 +187,14 @@ export default function FederationPage() {
   const runAction = async (
     activityId: string,
     intent: Intent,
-    call: (id: string) => Promise<FederationReport>,
+    call: (id: string) => Promise<FederationReport>
   ) => {
     if (!canInteract) return;
 
-    setInteractions((previous) => ({ ...previous, [activityId]: { ...previous[activityId], busy: true, notice: null } }));
+    setInteractions((previous) => ({
+      ...previous,
+      [activityId]: { ...previous[activityId], busy: true, notice: null },
+    }));
     try {
       const report = await call(activityId);
       const outcome = interpretReport(report, intent);
@@ -239,7 +246,10 @@ export default function FederationPage() {
       title="Federated timeline"
       description="Posts that reached this instance from other ActivityPub servers. Remote content is stored separately from local posts, so a remote id is a URL and is never interchangeable with a local post id."
       action={
-        <Button variant="secondary" onClick={() => load(0).catch(() => setTimelineError('Could not refresh the timeline.'))}>
+        <Button
+          variant="secondary"
+          onClick={() => load(0).catch(() => setTimelineError('Could not refresh the timeline.'))}
+        >
           Refresh
         </Button>
       }
@@ -251,9 +261,10 @@ export default function FederationPage() {
             <div>
               <p className="font-semibold">Outbound federation is disabled on this instance.</p>
               <p className="mt-1">
-                The server is running with <code>FEDERATION_ENABLED=false</code>. Reading this timeline still
-                works, but liking or boosting a remote post will not reach the other server until an
-                operator enables it. Delivery to a live Mastodon instance has not been verified either.
+                The server is running with <code>FEDERATION_ENABLED=false</code>. Reading this
+                timeline still works, but liking or boosting a remote post will not reach the other
+                server until an operator enables it. Delivery to a live Mastodon instance has not
+                been verified either.
               </p>
             </div>
           </div>
@@ -271,9 +282,21 @@ export default function FederationPage() {
             label="Connected instances"
             value={stats ? String(stats.activeInstances) : '—'}
           />
-          <StatCard icon={<Users size={18} />} label="Remote actors" value={stats ? String(stats.totalRemoteUsers) : '—'} />
-          <StatCard icon={<Globe size={18} />} label="Remote posts" value={stats ? String(stats.totalRemotePosts) : '—'} />
-          <StatCard icon={<Info size={18} />} label="This instance" value={stats ? stats.localDomain : '—'} />
+          <StatCard
+            icon={<Users size={18} />}
+            label="Remote actors"
+            value={stats ? String(stats.totalRemoteUsers) : '—'}
+          />
+          <StatCard
+            icon={<Globe size={18} />}
+            label="Remote posts"
+            value={stats ? String(stats.totalRemotePosts) : '—'}
+          />
+          <StatCard
+            icon={<Info size={18} />}
+            label="This instance"
+            value={stats ? stats.localDomain : '—'}
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -288,7 +311,10 @@ export default function FederationPage() {
           </label>
           {canInteract ? null : (
             <p className="text-sm text-dark-600 dark:text-dark-300">
-              <Link to="/login" className="font-medium text-primary-600 underline dark:text-primary-300">
+              <Link
+                to="/login"
+                className="font-medium text-primary-600 underline dark:text-primary-300"
+              >
                 Sign in
               </Link>{' '}
               to like or boost remote posts.
@@ -323,8 +349,8 @@ export default function FederationPage() {
           </div>
         ) : items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-dark-200 p-6 text-sm text-dark-500 dark:border-dark-700 dark:text-dark-300">
-            No remote posts have reached this instance yet. This fills up when a server on another instance
-            follows a local account, or when a remote account follows you.
+            No remote posts have reached this instance yet. This fills up when a server on another
+            instance follows a local account, or when a remote account follows you.
           </div>
         ) : (
           <div className="space-y-3">
@@ -397,14 +423,18 @@ function RemotePostCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-semibold text-dark-900 dark:text-white">{displayName}</span>
             {item.author?.username ? (
-              <span className="text-sm text-dark-500 dark:text-dark-400">@{item.author.username}</span>
+              <span className="text-sm text-dark-500 dark:text-dark-400">
+                @{item.author.username}
+              </span>
             ) : null}
             {item.instance?.domain ? (
               <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-700 dark:bg-primary-950/40 dark:text-primary-300">
                 {item.instance.software || item.instance.domain}
               </span>
             ) : null}
-            <span className="text-xs text-dark-500 dark:text-dark-400">{formatDate(item.publishedAt)}</span>
+            <span className="text-xs text-dark-500 dark:text-dark-400">
+              {formatDate(item.publishedAt)}
+            </span>
           </div>
 
           <p className="whitespace-pre-wrap text-dark-900 dark:text-dark-100">{item.content}</p>
@@ -437,7 +467,10 @@ function RemotePostCard({
           {item.tags?.length ? (
             <div className="flex flex-wrap gap-2">
               {item.tags.map((tag) => (
-                <span key={tag} className="text-xs font-medium text-primary-600 dark:text-primary-300">
+                <span
+                  key={tag}
+                  className="text-xs font-medium text-primary-600 dark:text-primary-300"
+                >
                   #{tag}
                 </span>
               ))}

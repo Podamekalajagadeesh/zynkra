@@ -20,7 +20,7 @@ export class LocalizationService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    private readonly translationService: TranslationService,
+    private readonly translationService: TranslationService
   ) {}
 
   getSupportedLanguages() {
@@ -37,7 +37,7 @@ export class LocalizationService {
 
   async updatePreferences(
     userId: string,
-    input: Partial<LocalePreferences>,
+    input: Partial<LocalePreferences>
   ): Promise<LocalePreferences> {
     const user = await this.findUser(userId);
     const current = this.toPreferences(user.accountPreferences);
@@ -117,7 +117,12 @@ export class LocalizationService {
     const language = accountPreferences?.language ?? 'en';
     const timezone = accountPreferences?.timezone ?? DEFAULT_TIMEZONE;
     const currency = accountPreferences?.customSettings?.currency ?? DEFAULT_CURRENCY;
-    return { language, timezone, currency, rtl: RTL_LANGUAGES.has(language.split('-')[0].toLowerCase()) };
+    return {
+      language,
+      timezone,
+      currency,
+      rtl: RTL_LANGUAGES.has(language.split('-')[0].toLowerCase()),
+    };
   }
 
   private validateLanguage(language: string) {

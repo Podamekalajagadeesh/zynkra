@@ -25,12 +25,7 @@ const configStub = {
 };
 
 function makeService(): CryptoPayoutsService {
-  return new CryptoPayoutsService(
-    null as any,
-    null as any,
-    configStub as any,
-    null as any,
-  );
+  return new CryptoPayoutsService(null as any, null as any, configStub as any, null as any);
 }
 
 describe('USDC_ADDRESSES', () => {
@@ -47,7 +42,7 @@ describe('USDC_ADDRESSES', () => {
     // plausible but is a different address entirely. It is a valid 20-byte hex
     // string, so no amount of format validation would ever have caught it.
     expect(USDC_ADDRESSES[42161]?.toLowerCase()).not.toBe(
-      '0xaf88d065b77c8c223d7d5ac3b63c4c8c6c6b6b6',
+      '0xaf88d065b77c8c223d7d5ac3b63c4c8c6c6b6b6'
     );
   });
 
@@ -81,14 +76,14 @@ describe('CryptoPayoutsService.assertUsdcContract', () => {
     // This is the case a wrong-but-well-formed address produces.
     const provider = { getCode: jest.fn().mockResolvedValue('0x') };
     await expect(assertUsdcContract(42161, USDC_ADDRESSES[42161], provider)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
+      ServiceUnavailableException
     );
   });
 
   it('refuses a malformed address before touching the network', async () => {
     const provider = { getCode: jest.fn() };
     await expect(assertUsdcContract(8453, '0xnot-an-address', provider)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
+      ServiceUnavailableException
     );
     expect(provider.getCode).not.toHaveBeenCalled();
   });
@@ -96,14 +91,12 @@ describe('CryptoPayoutsService.assertUsdcContract', () => {
   it('treats an empty code response as no contract', async () => {
     const provider = { getCode: jest.fn().mockResolvedValue('') };
     await expect(assertUsdcContract(8453, USDC_ADDRESSES[8453], provider)).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
+      ServiceUnavailableException
     );
   });
 
   it('skips the network check when no provider is configured', async () => {
-    await expect(
-      assertUsdcContract(8453, USDC_ADDRESSES[8453], null),
-    ).resolves.toBeUndefined();
+    await expect(assertUsdcContract(8453, USDC_ADDRESSES[8453], null)).resolves.toBeUndefined();
   });
 });
 

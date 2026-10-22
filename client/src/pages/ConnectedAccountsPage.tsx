@@ -5,9 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '../components/ui/dialog';
 import { Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
-import { getConnectedAccounts, connectAccount, disconnectAccount, setConnectedAccountActive } from '../lib/api';
+import {
+  getConnectedAccounts,
+  connectAccount,
+  disconnectAccount,
+  setConnectedAccountActive,
+} from '../lib/api';
 
 type SocialPlatform = 'twitter' | 'instagram' | 'facebook' | 'linkedin' | 'tiktok';
 
@@ -32,7 +44,7 @@ const platformLabels: Record<SocialPlatform, string> = {
   instagram: 'Instagram',
   facebook: 'Facebook',
   linkedin: 'LinkedIn',
-  tiktok: 'TikTok'
+  tiktok: 'TikTok',
 };
 
 const platformColors: Record<SocialPlatform, string> = {
@@ -40,7 +52,7 @@ const platformColors: Record<SocialPlatform, string> = {
   instagram: 'bg-pink-500',
   facebook: 'bg-blue-600',
   linkedin: 'bg-blue-700',
-  tiktok: 'bg-gray-900'
+  tiktok: 'bg-gray-900',
 };
 
 const platformIcons: Record<SocialPlatform, string> = {
@@ -48,7 +60,7 @@ const platformIcons: Record<SocialPlatform, string> = {
   instagram: '📷',
   facebook: 'f',
   linkedin: 'in',
-  tiktok: '♪'
+  tiktok: '♪',
 };
 
 const ConnectedAccountsPage = () => {
@@ -60,7 +72,7 @@ const ConnectedAccountsPage = () => {
     platform: 'twitter',
     apiKey: '',
     apiSecret: '',
-    accessToken: ''
+    accessToken: '',
   });
 
   useEffect(() => {
@@ -83,7 +95,7 @@ const ConnectedAccountsPage = () => {
     setConnecting(true);
     try {
       const account = await connectAccount(newAccount);
-      setAccounts(prev => [...prev, account]);
+      setAccounts((prev) => [...prev, account]);
       setIsConnectDialogOpen(false);
       setNewAccount({ platform: 'twitter', apiKey: '', apiSecret: '', accessToken: '' });
     } catch (error) {
@@ -96,7 +108,7 @@ const ConnectedAccountsPage = () => {
   const handleDisconnectAccount = async (accountId: string) => {
     try {
       await disconnectAccount(accountId);
-      setAccounts(prev => prev.filter(a => a.id !== accountId));
+      setAccounts((prev) => prev.filter((a) => a.id !== accountId));
     } catch (error) {
       console.error('Failed to disconnect account:', error);
     }
@@ -104,16 +116,23 @@ const ConnectedAccountsPage = () => {
 
   const handleToggleAccountActive = async (accountId: string, isActive: boolean) => {
     // Optimistic update, reverted if the server rejects it.
-    setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, isActive } : a));
+    setAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, isActive } : a)));
     try {
       await setConnectedAccountActive(accountId, isActive);
     } catch (error) {
-      setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, isActive: !isActive } : a));
+      setAccounts((prev) =>
+        prev.map((a) => (a.id === accountId ? { ...a, isActive: !isActive } : a))
+      );
       console.error('Failed to update account:', error);
     }
   };
 
-  if (loading) return <PageShell><p>Loading connected accounts...</p></PageShell>;
+  if (loading)
+    return (
+      <PageShell>
+        <p>Loading connected accounts...</p>
+      </PageShell>
+    );
 
   return (
     <PageShell title="Connected Social Accounts">
@@ -122,7 +141,8 @@ const ConnectedAccountsPage = () => {
           <div>
             <h1 className="text-2xl font-bold">Cross-Platform Publishing</h1>
             <p className="text-gray-500 mt-1">
-              Connect your external social media accounts to publish the same content across multiple platforms simultaneously.
+              Connect your external social media accounts to publish the same content across
+              multiple platforms simultaneously.
             </p>
           </div>
           <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
@@ -143,10 +163,14 @@ const ConnectedAccountsPage = () => {
                     id="platform"
                     className="w-full rounded-md border border-input bg-background px-3 py-2"
                     value={newAccount.platform}
-                    onChange={(e) => setNewAccount({...newAccount, platform: e.target.value as SocialPlatform})}
+                    onChange={(e) =>
+                      setNewAccount({ ...newAccount, platform: e.target.value as SocialPlatform })
+                    }
                   >
                     {Object.entries(platformLabels).map(([key, label]) => (
-                      <option key={key} value={key}>{label}</option>
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -155,7 +179,7 @@ const ConnectedAccountsPage = () => {
                   <Input
                     id="apiKey"
                     value={newAccount.apiKey}
-                    onChange={(e) => setNewAccount({...newAccount, apiKey: e.target.value})}
+                    onChange={(e) => setNewAccount({ ...newAccount, apiKey: e.target.value })}
                     required
                   />
                 </div>
@@ -165,7 +189,7 @@ const ConnectedAccountsPage = () => {
                     id="apiSecret"
                     type="password"
                     value={newAccount.apiSecret}
-                    onChange={(e) => setNewAccount({...newAccount, apiSecret: e.target.value})}
+                    onChange={(e) => setNewAccount({ ...newAccount, apiSecret: e.target.value })}
                     required
                   />
                 </div>
@@ -175,12 +199,16 @@ const ConnectedAccountsPage = () => {
                     id="accessToken"
                     type="password"
                     value={newAccount.accessToken}
-                    onChange={(e) => setNewAccount({...newAccount, accessToken: e.target.value})}
+                    onChange={(e) => setNewAccount({ ...newAccount, accessToken: e.target.value })}
                     required
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="secondary" onClick={() => setIsConnectDialogOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsConnectDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={connecting}>
@@ -198,22 +226,28 @@ const ConnectedAccountsPage = () => {
               <div className="text-center">
                 <ExternalLink className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-lg font-semibold">No accounts connected</h3>
-                <p className="text-gray-500 mt-2">Connect your first social media account to start cross-platform publishing.</p>
+                <p className="text-gray-500 mt-2">
+                  Connect your first social media account to start cross-platform publishing.
+                </p>
               </div>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {accounts.map(account => (
+            {accounts.map((account) => (
               <Card key={account.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`${platformColors[account.platform]} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg`}>
+                      <div
+                        className={`${platformColors[account.platform]} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg`}
+                      >
                         {platformIcons[account.platform]}
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{platformLabels[account.platform]}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {platformLabels[account.platform]}
+                        </CardTitle>
                         <p className="text-sm text-gray-500">@{account.platformUsername}</p>
                       </div>
                     </div>
@@ -232,7 +266,9 @@ const ConnectedAccountsPage = () => {
                       <Switch
                         id={`active-${account.id}`}
                         checked={account.isActive}
-                        onCheckedChange={(checked) => handleToggleAccountActive(account.id, checked)}
+                        onCheckedChange={(checked) =>
+                          handleToggleAccountActive(account.id, checked)
+                        }
                       />
                       <Label htmlFor={`active-${account.id}`}>
                         {account.isActive ? (
@@ -263,8 +299,13 @@ const ConnectedAccountsPage = () => {
           <CardContent className="space-y-4">
             <ol className="list-decimal list-inside space-y-2 text-gray-600">
               <li>Connect all your social media accounts from the major platforms</li>
-              <li>When creating or scheduling a post, select which connected platforms you want to publish to</li>
-              <li>Zynkra automatically publishes your content to all selected platforms simultaneously</li>
+              <li>
+                When creating or scheduling a post, select which connected platforms you want to
+                publish to
+              </li>
+              <li>
+                Zynkra automatically publishes your content to all selected platforms simultaneously
+              </li>
               <li>Track performance across all platforms from your Zynkra analytics dashboard</li>
             </ol>
           </CardContent>

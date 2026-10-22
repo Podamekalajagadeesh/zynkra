@@ -38,7 +38,7 @@ export class ModerationService {
     private moderationMitigationRepository: Repository<ModerationMitigationEntity>,
     private deepfakeDetectionService: DeepfakeDetectionService,
     private biasDetectionService: BiasDetectionService,
-    private readonly openRouter: OpenRouterService,
+    private readonly openRouter: OpenRouterService
   ) {}
 
   async analyzeContent(analyzeContentDto: AnalyzeContentDto): Promise<ContentAnalysisResult> {
@@ -216,7 +216,7 @@ Return valid JSON ONLY with this exact shape:
   private async addToModerationQueue(
     analysisResult: ContentAnalysisResult,
     contentPreview: string,
-    analyzeContentDto: AnalyzeContentDto,
+    analyzeContentDto: AnalyzeContentDto
   ) {
     const queueItem = this.moderationQueueRepository.create({
       contentId: analyzeContentDto.contentId,
@@ -283,7 +283,7 @@ Return valid JSON ONLY with this exact shape:
   private async addBiasFlagToQueue(
     detectedBiasTypes: string[],
     affectedGroups: string[],
-    representationScore: number,
+    representationScore: number
   ) {
     const queueItem = this.moderationQueueRepository.create({
       contentId: 'feed_algorithm',
@@ -433,14 +433,12 @@ Return valid JSON ONLY with this exact shape:
     const hasAlgorithmicBias = representationAnalysis.feedRepresentationScore < 70;
 
     if (representationAnalysis.demographicBreakdown) {
-      Object.entries(representationAnalysis.demographicBreakdown).forEach(
-        ([group, percentage]) => {
-          if (percentage < 10) {
-            affectedGroups.push(group);
-            detectedBiasTypes.push('underrepresentation');
-          }
-        },
-      );
+      Object.entries(representationAnalysis.demographicBreakdown).forEach(([group, percentage]) => {
+        if (percentage < 10) {
+          affectedGroups.push(group);
+          detectedBiasTypes.push('underrepresentation');
+        }
+      });
     }
 
     // Human bias analysis — checks actual moderation patterns
@@ -453,7 +451,7 @@ Return valid JSON ONLY with this exact shape:
     // Generate mitigation suggestions
     if (hasAlgorithmicBias) {
       mitigationSuggestions.push(
-        'Adjust algorithmic weights to increase representation of underrepresented groups',
+        'Adjust algorithmic weights to increase representation of underrepresented groups'
       );
       mitigationSuggestions.push('Implement diversity quotas for main feed content');
       mitigationSuggestions.push('Add exploratory content to expose users to diverse perspectives');
@@ -461,7 +459,7 @@ Return valid JSON ONLY with this exact shape:
     if (humanBiasAnalysis.detectedBias) {
       mitigationSuggestions.push('Provide bias awareness training for content moderators');
       mitigationSuggestions.push(
-        'Implement blind moderation to remove demographic identifiers during review',
+        'Implement blind moderation to remove demographic identifiers during review'
       );
       mitigationSuggestions.push('Add automated bias checks for all human moderation decisions');
     }
@@ -477,7 +475,7 @@ Return valid JSON ONLY with this exact shape:
       await this.addBiasFlagToQueue(
         detectedBiasTypes,
         affectedGroups,
-        representationAnalysis.feedRepresentationScore,
+        representationAnalysis.feedRepresentationScore
       );
     }
 
@@ -503,7 +501,8 @@ Return valid JSON ONLY with this exact shape:
       if (item.authorDemographics && typeof item.authorDemographics === 'object') {
         hasDemographicData = true;
         Object.entries(item.authorDemographics).forEach(([group, count]: [string, any]) => {
-          demographics[group] = (demographics[group] || 0) + (typeof count === 'number' ? count : 1);
+          demographics[group] =
+            (demographics[group] || 0) + (typeof count === 'number' ? count : 1);
         });
       }
     });

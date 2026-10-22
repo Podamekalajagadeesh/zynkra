@@ -24,14 +24,18 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/roles.enum';
 import { ConnectInstanceDto } from './dto/remote-instance.dto';
-import { FederateFollowDto, FederatePostRequestDto, FederateRemoteObjectDto } from './dto/federate-post.dto';
+import {
+  FederateFollowDto,
+  FederatePostRequestDto,
+  FederateRemoteObjectDto,
+} from './dto/federate-post.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('federation')
 export class FederationController {
   constructor(
     private readonly federationService: FederationService,
-    private readonly httpSignaturesService: HttpSignaturesService,
+    private readonly httpSignaturesService: HttpSignaturesService
   ) {}
 
   @Get('instances')
@@ -68,9 +72,7 @@ export class FederationController {
   @Roles(Role.ADMIN)
   async listDeliveries(@Query('status') status?: string) {
     const normalized =
-      status === 'pending' || status === 'dead' || status === 'delivered'
-        ? status
-        : undefined;
+      status === 'pending' || status === 'dead' || status === 'delivered' ? status : undefined;
     return this.federationService.listDeliveryAttempts(normalized);
   }
 
@@ -97,19 +99,13 @@ export class FederationController {
 
   @Post('follow')
   @UseGuards(JwtAuthGuard)
-  async followRemoteUser(
-    @Body() followDto: FederateFollowDto,
-    @CurrentUser() user: any,
-  ) {
+  async followRemoteUser(@Body() followDto: FederateFollowDto, @CurrentUser() user: any) {
     return this.federationService.sendFollow(followDto, userId(user));
   }
 
   @Post('posts/federate')
   @UseGuards(JwtAuthGuard)
-  async federatePost(
-    @Body() body: FederatePostRequestDto,
-    @CurrentUser() user: any,
-  ) {
+  async federatePost(@Body() body: FederatePostRequestDto, @CurrentUser() user: any) {
     // The author is always the authenticated user. `localUserId` may be present
     // in the body for a future admin re-federation path, but it is ignored here
     // so a caller cannot federate someone else's post under their own token.
@@ -213,7 +209,7 @@ export class FederationController {
         content: post.content,
         publishedAt: post.createdAt ?? new Date(),
       } as any,
-      targets,
+      targets
     );
   }
 
@@ -232,7 +228,7 @@ export class FederationController {
     @Req() req: any,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
-    @Query('includeMuted') includeMuted?: string,
+    @Query('includeMuted') includeMuted?: string
   ) {
     const user = req?.user;
     return this.federationService.getFederatedTimeline(userId(user) ?? null, {
@@ -351,11 +347,7 @@ export class FederationController {
   }
 
   @Post('users/:username/inbox')
-  async userInbox(
-    @Param('username') username: string,
-    @Body() activity: any,
-    @Req() req: any,
-  ) {
+  async userInbox(@Param('username') username: string, @Body() activity: any, @Req() req: any) {
     await this.assertSignedInbound(req, activity);
     return this.federationService.processUserInbox(username, activity);
   }
@@ -375,13 +367,11 @@ export class FederationController {
   private async assertSignedInbound(req: any, activity: any): Promise<void> {
     if (!this.httpSignaturesService.isInboundVerificationRequired()) return;
 
-    const parsed = this.httpSignaturesService.parseSignatureHeader(
-      req?.headers?.signature,
-    );
+    const parsed = this.httpSignaturesService.parseSignatureHeader(req?.headers?.signature);
     if (!parsed) {
       throw new HttpException(
         'Missing or malformed HTTP Signature header',
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED
       );
     }
 
@@ -398,7 +388,7 @@ export class FederationController {
     if (activity?.actor && activity.actor !== actorUrl) {
       throw new HttpException(
         'Activity actor does not match the signing keyId',
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED
       );
     }
 
@@ -406,7 +396,7 @@ export class FederationController {
     if (!publicKeyPem) {
       throw new HttpException(
         'Could not resolve the signing actor public key',
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED
       );
     }
 
@@ -420,10 +410,7 @@ export class FederationController {
     });
 
     if (!result.valid) {
-      throw new HttpException(
-        `Invalid HTTP Signature: ${result.reason}`,
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new HttpException(`Invalid HTTP Signature: ${result.reason}`, HttpStatus.UNAUTHORIZED);
     }
   }
 }

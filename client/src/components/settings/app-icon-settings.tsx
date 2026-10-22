@@ -11,8 +11,8 @@ export function AppIconSettings() {
   const isPremium = useIsPremium();
 
   const handleIconSelect = (newIcon: AppIconPreference) => {
-    const iconOption = APP_ICON_OPTIONS.find(option => option.value === newIcon);
-    
+    const iconOption = APP_ICON_OPTIONS.find((option) => option.value === newIcon);
+
     if (iconOption?.creatorCurated && !isPremium) {
       toast.error('Creator-curated icons require a premium subscription.');
       return;
@@ -41,15 +41,23 @@ export function AppIconSettings() {
             className="relative flex flex-col items-center gap-1 p-3"
             disabled={option.creatorCurated && !isPremium}
           >
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xs font-bold mb-1 ${
-              option.value === 'default' ? 'bg-blue-500' :
-              option.value === 'neon' ? 'bg-purple-500' :
-              option.value === 'ocean' ? 'bg-cyan-500' :
-              option.value === 'sunset' ? 'bg-orange-500' :
-              option.value === 'creator-classic' ? 'bg-gray-700' :
-              option.value === 'creator-vibrant' ? 'bg-pink-500' :
-              'bg-slate-400'
-            }`}>
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xs font-bold mb-1 ${
+                option.value === 'default'
+                  ? 'bg-blue-500'
+                  : option.value === 'neon'
+                    ? 'bg-purple-500'
+                    : option.value === 'ocean'
+                      ? 'bg-cyan-500'
+                      : option.value === 'sunset'
+                        ? 'bg-orange-500'
+                        : option.value === 'creator-classic'
+                          ? 'bg-gray-700'
+                          : option.value === 'creator-vibrant'
+                            ? 'bg-pink-500'
+                            : 'bg-slate-400'
+              }`}
+            >
               Z
             </div>
             <span className="text-xs">{option.label}</span>
@@ -62,7 +70,8 @@ export function AppIconSettings() {
         ))}
       </div>
       <p className="text-xs text-dark-500 dark:text-dark-400">
-        Swap default app icons for creator-curated designs. Creator-curated icons require a premium subscription.
+        Swap default app icons for creator-curated designs. Creator-curated icons require a premium
+        subscription.
       </p>
     </div>
   );

@@ -1,10 +1,20 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  UpdateDateColumn, ManyToOne, JoinColumn, OneToMany,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 
-export enum CourseStatus { DRAFT = 'draft', PUBLISHED = 'published', ARCHIVED = 'archived' }
+export enum CourseStatus {
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived',
+}
 
 @Entity('courses')
 export class Course {
@@ -16,7 +26,8 @@ export class Course {
   @Column({ type: 'text', nullable: true }) curriculum: string;
   @Column({ nullable: true }) authorId: string;
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'authorId' }) author: User;
+  @JoinColumn({ name: 'authorId' })
+  author: User;
   @Column({ type: 'enum', enum: CourseStatus, default: CourseStatus.DRAFT }) status: CourseStatus;
   @Column({ type: 'int', default: 0 }) enrollmentCount: number;
   @Column({ type: 'int', default: 0 }) lessonCount: number;
@@ -31,7 +42,8 @@ export class CourseLesson {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column() courseId: string;
   @ManyToOne(() => Course, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'courseId' }) course: Course;
+  @JoinColumn({ name: 'courseId' })
+  course: Course;
   @Column({ type: 'varchar', length: 500 }) title: string;
   @Column({ type: 'text' }) content: string;
   @Column({ type: 'int' }) orderIndex: number;
@@ -46,10 +58,12 @@ export class CourseEnrollment {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column() courseId: string;
   @ManyToOne(() => Course, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'courseId' }) course: Course;
+  @JoinColumn({ name: 'courseId' })
+  course: Course;
   @Column() userId: string;
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' }) user: User;
+  @JoinColumn({ name: 'userId' })
+  user: User;
   @Column({ type: 'int', default: 0 }) progress: number;
   @Column({ type: 'simple-array', nullable: true }) completedLessons: string[];
   @Column({ default: false }) isCompleted: boolean;

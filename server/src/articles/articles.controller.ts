@@ -24,7 +24,8 @@ export class ArticlesController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Req() req,
-    @Body() body: {
+    @Body()
+    body: {
       title: string;
       subtitle?: string;
       content: string;
@@ -34,7 +35,7 @@ export class ArticlesController {
       scheduledAt?: string;
       isGated?: boolean;
       tokenPrice?: number;
-    },
+    }
   ) {
     return this.articlesService.create(req.user.userId || req.user.id, body);
   }
@@ -44,7 +45,8 @@ export class ArticlesController {
   async update(
     @Param('id') id: string,
     @Req() req,
-    @Body() body: {
+    @Body()
+    body: {
       title?: string;
       subtitle?: string;
       content?: string;
@@ -52,7 +54,7 @@ export class ArticlesController {
       coverImage?: string;
       isGated?: boolean;
       tokenPrice?: number;
-    },
+    }
   ) {
     return this.articlesService.update(id, req.user.userId || req.user.id, body);
   }
@@ -83,7 +85,7 @@ export class ArticlesController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('tag') tag?: string,
-    @Query('authorId') authorId?: string,
+    @Query('authorId') authorId?: string
   ) {
     return this.articlesService.getFeed({
       page: page ? parseInt(page, 10) : 1,

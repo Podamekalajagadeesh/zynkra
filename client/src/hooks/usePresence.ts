@@ -43,7 +43,7 @@ export function usePresence(userIds: string[]) {
       setStatuses((prev) =>
         prev[status.userId] || key.includes(status.userId)
           ? { ...prev, [status.userId]: status }
-          : prev,
+          : prev
       );
     };
     socket.on('user-status-updated', handler);
@@ -52,10 +52,7 @@ export function usePresence(userIds: string[]) {
     };
   }, [socket, key]);
 
-  const isOnline = useCallback(
-    (userId: string) => statuses[userId]?.isOnline === true,
-    [statuses],
-  );
+  const isOnline = useCallback((userId: string) => statuses[userId]?.isOnline === true, [statuses]);
 
   return { statuses, isOnline };
 }

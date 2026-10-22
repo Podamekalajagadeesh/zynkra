@@ -23,7 +23,9 @@ export class AddEmailVerificationAttemptTracking1789700000000 implements Migrati
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE users DROP COLUMN IF EXISTS "emailVerificationLockedUntil";`);
+    await queryRunner.query(
+      `ALTER TABLE users DROP COLUMN IF EXISTS "emailVerificationLockedUntil";`
+    );
     await queryRunner.query(`ALTER TABLE users DROP COLUMN IF EXISTS "emailVerificationAttempts";`);
   }
 }

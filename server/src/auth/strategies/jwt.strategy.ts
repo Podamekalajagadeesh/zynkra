@@ -15,12 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(LoginSession)
     private readonly loginSessionsRepository: Repository<LoginSession>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
     if (!jwtSecret) {
       throw new Error(
-        'JWT_SECRET is not set. Refusing to start with an insecure default — see server/.env.example.',
+        'JWT_SECRET is not set. Refusing to start with an insecure default — see server/.env.example.'
       );
     }
     super({

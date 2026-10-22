@@ -11,7 +11,7 @@ import { AiNotificationsService } from './ai-notifications.service';
 export class NotificationsController {
   constructor(
     private readonly notificationsService: NotificationsService,
-    private readonly aiNotificationsService: AiNotificationsService,
+    private readonly aiNotificationsService: AiNotificationsService
   ) {}
 
   @Get()
@@ -49,7 +49,7 @@ export class NotificationsController {
   @Post('push/subscribe')
   savePushSubscription(
     @Req() req: Request,
-    @Body() body: { endpoint: string; keys: { p256dh: string; auth: string } },
+    @Body() body: { endpoint: string; keys: { p256dh: string; auth: string } }
   ) {
     return this.notificationsService.savePushSubscription(this.getUserEntity(req), body);
   }
@@ -62,13 +62,13 @@ export class NotificationsController {
   @Post('push/mobile')
   saveMobilePushToken(
     @Req() req: Request,
-    @Body() body: { token: string; platform?: MobilePushPlatform; provider?: MobilePushProvider },
+    @Body() body: { token: string; platform?: MobilePushPlatform; provider?: MobilePushProvider }
   ) {
     return this.notificationsService.saveMobilePushToken(
       this.getUserEntity(req),
       body.token,
       body.platform || MobilePushPlatform.ANDROID,
-      body.provider || MobilePushProvider.FCM,
+      body.provider || MobilePushProvider.FCM
     );
   }
 

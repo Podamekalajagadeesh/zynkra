@@ -21,7 +21,7 @@ export function StoriesBar() {
       const fetchedStories = await getStories();
       // Filter out expired stories, then sort with boosted stories first
       const now = new Date();
-      const activeStories = fetchedStories.filter(story => new Date(story.expiresAt) > now);
+      const activeStories = fetchedStories.filter((story) => new Date(story.expiresAt) > now);
       const sortedStories = [...activeStories].sort((a, b) => {
         if (a.isBoosted && !b.isBoosted) return -1;
         if (!a.isBoosted && b.isBoosted) return 1;
@@ -82,17 +82,21 @@ export function StoriesBar() {
                 Create
               </Button>
               {stories.map((story, index) => (
-                <div key={story.id} className="cursor-pointer relative" onClick={() => openStoryViewer(index)}>
-                  <div className={`h-14 w-14 rounded-full p-1 ${story.isBoosted ? 'bg-gradient-to-br from-orange-500 via-red-500 to-pink-500' : 'bg-gradient-to-br from-primary-600 via-cyan-500 to-accent-600'}`}>
+                <div
+                  key={story.id}
+                  className="cursor-pointer relative"
+                  onClick={() => openStoryViewer(index)}
+                >
+                  <div
+                    className={`h-14 w-14 rounded-full p-1 ${story.isBoosted ? 'bg-gradient-to-br from-orange-500 via-red-500 to-pink-500' : 'bg-gradient-to-br from-primary-600 via-cyan-500 to-accent-600'}`}
+                  >
                     <img
                       className="h-full w-full rounded-full border-2 border-white dark:border-dark-900"
                       src={`https://i.pravatar.cc/150?u=${story.user.id}`}
                       alt={story.user.walletAddress || story.user.email || 'User'}
                     />
                   </div>
-                  {story.isBoosted && (
-                    <span className="absolute -top-1 -right-1 text-xs">🔥</span>
-                  )}
+                  {story.isBoosted && <span className="absolute -top-1 -right-1 text-xs">🔥</span>}
                 </div>
               ))}
             </div>
@@ -107,10 +111,7 @@ export function StoriesBar() {
         />
       )}
       {createStoryOpen && (
-        <CreateStoryForm
-          onClose={closeCreateStory}
-          onStoryCreated={handleStoryCreated}
-        />
+        <CreateStoryForm onClose={closeCreateStory} onStoryCreated={handleStoryCreated} />
       )}
     </>
   );

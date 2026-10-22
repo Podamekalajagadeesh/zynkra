@@ -57,7 +57,10 @@ function parseIpv6(value: string): bigint | null {
       return null;
     }
     head = normalized.slice(0, doubleColon).split(':').filter(Boolean);
-    rear = normalized.slice(doubleColon + 2).split(':').filter(Boolean);
+    rear = normalized
+      .slice(doubleColon + 2)
+      .split(':')
+      .filter(Boolean);
     if (head.length + rear.length > 7) {
       // `::` must stand for at least one zero group.
       return null;
@@ -183,7 +186,10 @@ export function ipMatchesCidr(address: string, cidr: string): boolean {
 }
 
 /** True when `address` matches any entry in `cidrs` (bare addresses allowed). */
-export function ipInAllowlist(address: string | null | undefined, cidrs: readonly string[]): boolean {
+export function ipInAllowlist(
+  address: string | null | undefined,
+  cidrs: readonly string[]
+): boolean {
   if (!address) return false;
   for (const entry of cidrs) {
     if (ipMatchesCidr(address, entry)) {

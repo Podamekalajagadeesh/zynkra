@@ -18,7 +18,7 @@ export class LinkPreviewsService {
 
   constructor(
     @InjectRepository(LinkPreview)
-    private readonly previewsRepository: Repository<LinkPreview>,
+    private readonly previewsRepository: Repository<LinkPreview>
   ) {}
 
   async unfurl(rawUrl: string): Promise<LinkPreview> {
@@ -37,7 +37,10 @@ export class LinkPreviewsService {
         responseType: 'text',
         headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml' },
       });
-      preview = this.parseHtml(url.href, typeof data === 'string' ? data.slice(0, MAX_HTML_BYTES) : '');
+      preview = this.parseHtml(
+        url.href,
+        typeof data === 'string' ? data.slice(0, MAX_HTML_BYTES) : ''
+      );
     } catch (error) {
       this.logger.debug(`unfurl failed for ${url.href}: ${(error as Error).message}`);
       preview = this.previewsRepository.create({ url: url.href });
@@ -58,7 +61,8 @@ export class LinkPreviewsService {
     const image = meta('og:image') ?? meta('twitter:image') ?? null;
     const siteName = meta('og:site_name') || null;
     const favicon =
-      root.querySelector('link[rel="icon"], link[rel="shortcut icon"]')?.getAttribute('href') || null;
+      root.querySelector('link[rel="icon"], link[rel="shortcut icon"]')?.getAttribute('href') ||
+      null;
 
     return this.previewsRepository.create({
       url,

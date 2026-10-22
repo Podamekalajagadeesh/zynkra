@@ -1,4 +1,3 @@
-
 import { IsEnum, IsOptional, IsBoolean, ValidateNested } from 'class-validator';
 import {
   PostVisibility,

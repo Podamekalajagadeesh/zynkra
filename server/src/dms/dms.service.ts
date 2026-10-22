@@ -34,13 +34,13 @@ export class DmsService {
     @InjectRepository(MessageReceipt)
     private readonly messageReceiptsRepository: Repository<MessageReceipt>,
     private readonly visibilityService: VisibilityService,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
   ) {}
 
   async forwardMessage(
     user: User,
     messageId: string,
-    forwardMessageDto: ForwardMessageDto,
+    forwardMessageDto: ForwardMessageDto
   ): Promise<Message> {
     const originalMessage = await this.messagesRepository.findOne({
       where: { id: messageId },
@@ -59,13 +59,9 @@ export class DmsService {
       throw new NotFoundException('Conversation not found');
     }
 
-    const isParticipant = conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     // Forwarding is another send path, so it must observe the same privacy rules.
@@ -81,7 +77,7 @@ export class DmsService {
       !DmsService.isE2eeEnvelope(originalMessage.content)
     ) {
       throw new BadRequestException(
-        'This conversation is end-to-end encrypted. Forwarded messages must be encrypted envelopes.',
+        'This conversation is end-to-end encrypted. Forwarded messages must be encrypted envelopes.'
       );
     }
 
@@ -99,10 +95,7 @@ export class DmsService {
     return this.messagesRepository.save(message);
   }
 
-  async markMessageAsRead(
-    user: User,
-    messageId: string,
-  ): Promise<MessageReceipt | null> {
+  async markMessageAsRead(user: User, messageId: string): Promise<MessageReceipt | null> {
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: ['conversation', 'conversation.participants'],
@@ -112,13 +105,9 @@ export class DmsService {
       throw new NotFoundException('Message not found');
     }
 
-    const isParticipant = message.conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = message.conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     if (!user.readReceipts) {
@@ -144,11 +133,7 @@ export class DmsService {
     return this.messageReceiptsRepository.save(newReceipt);
   }
 
-  async addReaction(
-    user: User,
-    messageId: string,
-    reaction: string,
-  ): Promise<Message> {
+  async addReaction(user: User, messageId: string, reaction: string): Promise<Message> {
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: ['conversation', 'conversation.participants'],
@@ -158,13 +143,9 @@ export class DmsService {
       throw new NotFoundException('Message not found');
     }
 
-    const isParticipant = message.conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = message.conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     const existingReaction = await this.messageReactionsRepository.findOne({
@@ -195,7 +176,7 @@ export class DmsService {
   async createConversation(
     starter: User,
     recipientIds: string[],
-    name?: string,
+    name?: string
   ): Promise<Conversation> {
     await this.dataPermissions.require(starter.id, DataPermission.MESSAGES);
     const recipients = await this.usersRepository.findBy({
@@ -220,8 +201,7 @@ export class DmsService {
       // identity keys (uploaded by the browser Signal client at login). The server
       // then rejects readable plaintext and only stores ciphertext envelopes.
       const bothHaveKeys =
-        !!starter.publicKey &&
-        recipients.every((recipient) => !!recipient.publicKey);
+        !!starter.publicKey && recipients.every((recipient) => !!recipient.publicKey);
       const conversation = this.conversationsRepository.create({
         participants,
         type: ConversationType.ONE_TO_ONE,
@@ -245,7 +225,7 @@ export class DmsService {
   async sendMessage(
     sender: User,
     conversationId: string,
-    sendMessageDto: SendMessageDto,
+    sendMessageDto: SendMessageDto
   ): Promise<Message> {
     await this.dataPermissions.require(sender.id, DataPermission.MESSAGES);
     const conversation = await this.conversationsRepository.findOne({
@@ -257,13 +237,9 @@ export class DmsService {
       throw new NotFoundException('Conversation not found');
     }
 
-    const isParticipant = conversation.participants.some(
-      (p) => p.id === sender.id,
-    );
+    const isParticipant = conversation.participants.some((p) => p.id === sender.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     // Blocks after the conversation exists still stop new one-to-one messages.
@@ -278,7 +254,7 @@ export class DmsService {
     // Encrypted threads only accept ciphertext envelopes — never readable text.
     if (conversation.isEncrypted && hasText && !isEnvelope) {
       throw new BadRequestException(
-        'This conversation is end-to-end encrypted. Messages must be sent as encrypted envelopes.',
+        'This conversation is end-to-end encrypted. Messages must be sent as encrypted envelopes.'
       );
     }
 
@@ -289,13 +265,13 @@ export class DmsService {
       const plaintextMedia = sendMessageDto.media.filter((m) => !m.enc);
       if (plaintextMedia.length > 0) {
         throw new BadRequestException(
-          'This conversation is end-to-end encrypted. Media must be uploaded as E2EE ciphertext (enc tag required).',
+          'This conversation is end-to-end encrypted. Media must be uploaded as E2EE ciphertext (enc tag required).'
         );
       }
       // An attachment key can only be delivered inside an envelope.
       if (!isEnvelope) {
         throw new BadRequestException(
-          'Encrypted media requires an encrypted envelope carrying the attachment keys.',
+          'Encrypted media requires an encrypted envelope carrying the attachment keys.'
         );
       }
     }
@@ -342,7 +318,9 @@ export class DmsService {
     return this.messagesRepository.save(message);
   }
 
-  async getConversations(user: User): Promise<Array<Conversation & { unreadCount: number; lastMessage?: Message }>> {
+  async getConversations(
+    user: User
+  ): Promise<Array<Conversation & { unreadCount: number; lastMessage?: Message }>> {
     await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const conversations = await this.conversationsRepository.find({
       where: { participants: { id: user.id } },
@@ -351,10 +329,14 @@ export class DmsService {
 
     return conversations.map((conversation) => {
       const messages = (conversation.messages ?? [])
-        .filter((message) => !message.deletedAt && (!message.expiresAt || message.expiresAt > new Date()))
+        .filter(
+          (message) => !message.deletedAt && (!message.expiresAt || message.expiresAt > new Date())
+        )
         .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       const unreadCount = messages.filter(
-        (message) => message.sender?.id !== user.id && !message.readBy?.some((receipt) => receipt.user?.id === user.id),
+        (message) =>
+          message.sender?.id !== user.id &&
+          !message.readBy?.some((receipt) => receipt.user?.id === user.id)
       ).length;
 
       return {
@@ -368,7 +350,7 @@ export class DmsService {
 
   async markConversationAsRead(
     user: User,
-    conversationId: string,
+    conversationId: string
   ): Promise<{ conversationId: string; markedCount: number }> {
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
@@ -387,7 +369,9 @@ export class DmsService {
       relations: ['sender', 'readBy', 'readBy.user'],
     });
     const unreadMessages = messages.filter(
-      (message) => message.sender?.id !== user.id && !message.readBy?.some((receipt) => receipt.user?.id === user.id),
+      (message) =>
+        message.sender?.id !== user.id &&
+        !message.readBy?.some((receipt) => receipt.user?.id === user.id)
     );
 
     if (!user.readReceipts) {
@@ -396,17 +380,14 @@ export class DmsService {
 
     if (unreadMessages.length > 0) {
       await this.messageReceiptsRepository.save(
-        unreadMessages.map((message) => this.messageReceiptsRepository.create({ user, message })),
+        unreadMessages.map((message) => this.messageReceiptsRepository.create({ user, message }))
       );
     }
 
     return { conversationId, markedCount: unreadMessages.length };
   }
 
-  async getMessages(
-    user: User,
-    conversationId: string,
-  ): Promise<Message[]> {
+  async getMessages(user: User, conversationId: string): Promise<Message[]> {
     await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
@@ -417,13 +398,9 @@ export class DmsService {
       throw new NotFoundException('Conversation not found');
     }
 
-    const isParticipant = conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     const messages = await this.messagesRepository.find({
@@ -435,14 +412,7 @@ export class DmsService {
           expiresAt: MoreThan(new Date()),
         },
       ],
-      relations: [
-        'sender',
-        'reactions',
-        'reactions.user',
-        'replyTo',
-        'replyTo.sender',
-        'readBy',
-      ],
+      relations: ['sender', 'reactions', 'reactions.user', 'replyTo', 'replyTo.sender', 'readBy'],
       order: { createdAt: 'ASC' },
     });
 
@@ -457,11 +427,7 @@ export class DmsService {
     return messages;
   }
 
-  async updateMessage(
-    user: User,
-    messageId: string,
-    content: string,
-  ): Promise<Message> {
+  async updateMessage(user: User, messageId: string, content: string): Promise<Message> {
     await this.dataPermissions.require(user.id, DataPermission.MESSAGES);
     const message = await this.messagesRepository.findOne({
       where: { id: messageId },
@@ -483,7 +449,7 @@ export class DmsService {
       !DmsService.isE2eeEnvelope(content)
     ) {
       throw new BadRequestException(
-        'This conversation is end-to-end encrypted. Edits must be encrypted envelopes.',
+        'This conversation is end-to-end encrypted. Edits must be encrypted envelopes.'
       );
     }
 
@@ -535,12 +501,12 @@ export class DmsService {
     const senderFriendIds = new Set(
       senderFollowing
         .filter((user) => user.following?.some((followed) => followed.id === senderId))
-        .map((user) => user.id),
+        .map((user) => user.id)
     );
     const recipientFriendIds = new Set(
       recipientFollowing
         .filter((user) => user.following?.some((followed) => followed.id === recipientId))
-        .map((user) => user.id),
+        .map((user) => user.id)
     );
     const areFriends = senderFriendIds.has(recipientId) && recipientFriendIds.has(senderId);
 
@@ -563,7 +529,7 @@ export class DmsService {
   async setVanishMode(
     user: User,
     conversationId: string,
-    vanishMode: boolean,
+    vanishMode: boolean
   ): Promise<Conversation> {
     const conversation = await this.conversationsRepository.findOne({
       where: { id: conversationId },
@@ -574,13 +540,9 @@ export class DmsService {
       throw new NotFoundException('Conversation not found');
     }
 
-    const isParticipant = conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     conversation.vanishMode = vanishMode;
@@ -619,11 +581,11 @@ export class DmsService {
   async setMessageTtl(
     user: User,
     conversationId: string,
-    ttlSeconds: number | null,
+    ttlSeconds: number | null
   ): Promise<Conversation> {
     if (ttlSeconds !== null && !DmsService.ALLOWED_TTLS.includes(ttlSeconds)) {
       throw new BadRequestException(
-        `messageTtlSeconds must be null or one of: ${DmsService.ALLOWED_TTLS.join(', ')}`,
+        `messageTtlSeconds must be null or one of: ${DmsService.ALLOWED_TTLS.join(', ')}`
       );
     }
 
@@ -636,13 +598,9 @@ export class DmsService {
       throw new NotFoundException('Conversation not found');
     }
 
-    const isParticipant = conversation.participants.some(
-      (p) => p.id === user.id,
-    );
+    const isParticipant = conversation.participants.some((p) => p.id === user.id);
     if (!isParticipant) {
-      throw new UnauthorizedException(
-        'You are not a participant of this conversation.',
-      );
+      throw new UnauthorizedException('You are not a participant of this conversation.');
     }
 
     conversation.messageTtlSeconds = ttlSeconds;

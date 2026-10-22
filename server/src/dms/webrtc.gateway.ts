@@ -15,9 +15,7 @@ import { applyWsCors } from '../common/ws-auth/ws-cors';
 
 // CORS is applied in afterInit, not the decorator — see ws-cors.ts.
 @WebSocketGateway()
-export class WebRtcGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class WebRtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server: Server;
   private readonly logger = new Logger(WebRtcGateway.name);
@@ -25,7 +23,7 @@ export class WebRtcGateway
   constructor(
     private readonly wsAuth: WsAuthService,
     private readonly configService: ConfigService,
-    private readonly rateLimiter: WsRateLimiter,
+    private readonly rateLimiter: WsRateLimiter
   ) {}
 
   afterInit(server: Server) {

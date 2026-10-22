@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { CollabOpportunity } from './collab-opportunity.entity';
 
@@ -34,7 +42,7 @@ export class Brand {
   @Column()
   userId: string;
 
-  @OneToMany(() => CollabOpportunity, opportunity => opportunity.brand)
+  @OneToMany(() => CollabOpportunity, (opportunity) => opportunity.brand)
   opportunities: CollabOpportunity[];
 
   @CreateDateColumn()

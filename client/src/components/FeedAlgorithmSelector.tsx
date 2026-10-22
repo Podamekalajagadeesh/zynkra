@@ -19,13 +19,17 @@ const ALGORITHM_ICONS: Record<string, any> = {
   media: Image,
 };
 
-const FeedAlgorithmSelector: React.FC<{ onAlgorithmChange?: (algorithm: string) => void }> = ({ onAlgorithmChange }) => {
+const FeedAlgorithmSelector: React.FC<{ onAlgorithmChange?: (algorithm: string) => void }> = ({
+  onAlgorithmChange,
+}) => {
   const [algorithms, setAlgorithms] = useState<Algorithm[]>([]);
   const [selected, setSelected] = useState('relevance');
   const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
 
-  useEffect(() => { loadAlgorithms(); }, []);
+  useEffect(() => {
+    loadAlgorithms();
+  }, []);
 
   const loadAlgorithms = async () => {
     try {
@@ -47,7 +51,7 @@ const FeedAlgorithmSelector: React.FC<{ onAlgorithmChange?: (algorithm: string) 
       await post('/feed/algorithm', { algorithm });
       setSelected(algorithm);
       onAlgorithmChange?.(algorithm);
-      addToast(`Feed set to "${algorithms.find(a => a.name === algorithm)?.label}"`, 'success');
+      addToast(`Feed set to "${algorithms.find((a) => a.name === algorithm)?.label}"`, 'success');
     } catch (error) {
       addToast('Failed to update feed', 'error');
     }
@@ -77,7 +81,9 @@ const FeedAlgorithmSelector: React.FC<{ onAlgorithmChange?: (algorithm: string) 
             >
               <div className="flex items-center gap-2">
                 <Icon size={16} className={isSelected ? 'text-primary-600' : 'text-dark-400'} />
-                <span className={`text-sm font-medium ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-dark-700 dark:text-dark-300'}`}>
+                <span
+                  className={`text-sm font-medium ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-dark-700 dark:text-dark-300'}`}
+                >
                   {algo.label}
                 </span>
                 {isSelected && <Check size={14} className="text-primary-600 ml-auto" />}

@@ -5,7 +5,16 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Skeleton } from '../ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { Image as ImageIcon, Loader2, Search, X, Grid3X3, Sparkles, Layers, TrendingUp } from 'lucide-react';
+import {
+  Image as ImageIcon,
+  Loader2,
+  Search,
+  X,
+  Grid3X3,
+  Sparkles,
+  Layers,
+  TrendingUp,
+} from 'lucide-react';
 import { getVisualDiscoveryFeed, reverseImageSearch, getVisualCategories } from '../../lib/api';
 import type { Post } from '../../lib/types';
 
@@ -90,7 +99,7 @@ export default function VisualDiscoveryPage() {
   useEffect(() => {
     if (loadingMore || !hasMore) return;
 
-    observer.current = new IntersectionObserver(entries => {
+    observer.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         loadMore();
       }
@@ -109,18 +118,18 @@ export default function VisualDiscoveryPage() {
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
-    
+
     setLoadingMore(true);
     try {
       const response = await getVisualDiscoveryFeed(activeCategory, posts.length);
       const newMasonryPosts = (response.posts || []).map((post: any) => ({
-          ...post,
-          height: 200 + Math.floor(Math.random() * 200),
-          width: 300,
-          likes: post.reactions?.length || 0,
-          saves: 0,
-        }));
-      setPosts(prev => [...prev, ...newMasonryPosts]);
+        ...post,
+        height: 200 + Math.floor(Math.random() * 200),
+        width: 300,
+        likes: post.reactions?.length || 0,
+        saves: 0,
+      }));
+      setPosts((prev) => [...prev, ...newMasonryPosts]);
       setHasMore(response.hasMore || false);
     } catch (error) {
       console.error('Failed to load more visual posts:', error);
@@ -166,9 +175,9 @@ export default function VisualDiscoveryPage() {
   });
 
   return (
-    <PageShell 
-      eyebrow="Discover" 
-      title="Visual Discovery" 
+    <PageShell
+      eyebrow="Discover"
+      title="Visual Discovery"
       description="Explore beautiful images and find similar content with Pinterest-style visual search"
     >
       <div className="space-y-6">
@@ -188,7 +197,10 @@ export default function VisualDiscoveryPage() {
         {/* Search and image upload bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 dark:text-dark-500" size={20} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 dark:text-dark-500"
+              size={20}
+            />
             <Input
               type="text"
               placeholder="Search by keyword or upload an image to find similar content..."
@@ -204,13 +216,17 @@ export default function VisualDiscoveryPage() {
             onChange={handleImageSearch}
             className="hidden"
           />
-          <Button 
+          <Button
             onClick={triggerImageUpload}
             variant="secondary"
             className="flex items-center gap-2 rounded-full"
             disabled={isImageSearchLoading}
           >
-            {isImageSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            {isImageSearchLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4" />
+            )}
             Search by Image
           </Button>
         </div>
@@ -259,7 +275,9 @@ export default function VisualDiscoveryPage() {
         {/* Category showcase if not viewing similar images */}
         {activeCategory !== 'similar-images' && !loading && categories.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">Explore Categories</h2>
+            <h2 className="text-xl font-semibold text-dark-900 dark:text-white mb-4">
+              Explore Categories
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {categories.slice(0, 4).map((category) => (
                 <div
@@ -267,15 +285,17 @@ export default function VisualDiscoveryPage() {
                   onClick={() => setActiveCategory(category.id)}
                   className="relative h-40 rounded-xl overflow-hidden cursor-pointer group"
                 >
-                  <img 
-                    src={category.imageUrl} 
+                  <img
+                    src={category.imageUrl}
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-4">
                     <h3 className="font-semibold text-white">{category.name}</h3>
-                    <p className="text-xs text-white/80">{category.postCount?.toLocaleString() || 0} posts</p>
+                    <p className="text-xs text-white/80">
+                      {category.postCount?.toLocaleString() || 0} posts
+                    </p>
                   </div>
                 </div>
               ))}
@@ -299,20 +319,23 @@ export default function VisualDiscoveryPage() {
             {columns.map((column, colIndex) => (
               <div key={colIndex} className="space-y-4">
                 {column.map((post) => (
-                  <div key={post.id} className="relative group rounded-2xl overflow-hidden bg-dark-100 dark:bg-dark-800">
+                  <div
+                    key={post.id}
+                    className="relative group rounded-2xl overflow-hidden bg-dark-100 dark:bg-dark-800"
+                  >
                     <img
-                        src={post.imageUrls?.[0] || 'https://picsum.photos/400/600'}
-                        alt="Visual discovery post"
-                        className="w-full object-cover"
-                        style={{ height: `${post.height}px` }}
-                      />
+                      src={post.imageUrls?.[0] || 'https://picsum.photos/400/600'}
+                      alt="Visual discovery post"
+                      className="w-full object-cover"
+                      style={{ height: `${post.height}px` }}
+                    />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
                     {/* Hover actions */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={post.author?.avatarUrl || '/default-avatar.png'} 
+                          <img
+                            src={post.author?.avatarUrl || '/default-avatar.png'}
                             alt={post.author?.username || 'User'}
                             className="w-8 h-8 rounded-full object-cover"
                           />
@@ -339,8 +362,12 @@ export default function VisualDiscoveryPage() {
         ) : (
           <div className="text-center py-16">
             <ImageIcon className="h-12 w-12 mx-auto text-dark-400 dark:text-dark-500 mb-4" />
-            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">No visual content found</h3>
-            <p className="text-dark-600 dark:text-dark-400">Upload an image to discover similar visual content</p>
+            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">
+              No visual content found
+            </h3>
+            <p className="text-dark-600 dark:text-dark-400">
+              Upload an image to discover similar visual content
+            </p>
           </div>
         )}
 

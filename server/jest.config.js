@@ -4,16 +4,22 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
-transform: {
-    '^.+\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json', diagnostics: {
-      // `src/features/*` is unregistered facade (none of it is in
-      // app.module.ts) that is scheduled for a wire-up-or-delete audit. It
-      // still sits in the *type* graph via imports, so ts-jest otherwise
-      // fails unrelated test suites on its pre-existing type errors. Errors
-      // everywhere else still fail the run. Do not widen this list without
-      // fixing the underlying types first.
-      exclude: ['**/src/features/**'],
-    } }],
+  transform: {
+    '^.+\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.json',
+        diagnostics: {
+          // `src/features/*` is unregistered facade (none of it is in
+          // app.module.ts) that is scheduled for a wire-up-or-delete audit. It
+          // still sits in the *type* graph via imports, so ts-jest otherwise
+          // fails unrelated test suites on its pre-existing type errors. Errors
+          // everywhere else still fail the run. Do not widen this list without
+          // fixing the underlying types first.
+          exclude: ['**/src/features/**'],
+        },
+      },
+    ],
   },
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   moduleNameMapper: {

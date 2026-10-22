@@ -10,20 +10,23 @@ export class PodcastsService {
     @InjectRepository(Podcast)
     private readonly podcastsRepository: Repository<Podcast>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
-  async create(authorId: string, data: {
-    title: string;
-    description: string;
-    audioUrl: string;
-    coverImage?: string;
-    durationSeconds: number;
-    tags?: string[];
-    status?: 'draft' | 'published';
-    isGated?: boolean;
-    tokenPrice?: number;
-  }): Promise<Podcast> {
+  async create(
+    authorId: string,
+    data: {
+      title: string;
+      description: string;
+      audioUrl: string;
+      coverImage?: string;
+      durationSeconds: number;
+      tags?: string[];
+      status?: 'draft' | 'published';
+      isGated?: boolean;
+      tokenPrice?: number;
+    }
+  ): Promise<Podcast> {
     const author = await this.usersRepository.findOne({ where: { id: authorId } });
     if (!author) throw new NotFoundException('User not found');
 
@@ -96,7 +99,10 @@ export class PodcastsService {
   }
 
   private generateSlug(title: string): string {
-    const base = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const base = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
     return `${base}-${Date.now()}`;
   }
 }

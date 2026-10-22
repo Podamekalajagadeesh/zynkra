@@ -10,13 +10,11 @@ const VolunteerMatchingTab = () => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Volunteer Opportunities</h2>
-        <Button onClick={() => setIsModalOpen(true)}>
-          Create Opportunity
-        </Button>
+        <Button onClick={() => setIsModalOpen(true)}>Create Opportunity</Button>
       </div>
       <p>
-        This is where the volunteer matching tool will be displayed. This
-        feature is currently under construction.
+        This is where the volunteer matching tool will be displayed. This feature is currently under
+        construction.
       </p>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="p-4">

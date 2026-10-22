@@ -14,15 +14,20 @@ export class OrdersService {
     @InjectRepository(OrderItem)
     private orderItemsRepository: Repository<OrderItem>,
     @InjectRepository(ProductVariant)
-    private productVariantsRepository: Repository<ProductVariant>,
+    private productVariantsRepository: Repository<ProductVariant>
   ) {}
 
-  async create(orderData: { customerId: string; items: { productVariantId: string; quantity: number }[] }): Promise<Order> {
+  async create(orderData: {
+    customerId: string;
+    items: { productVariantId: string; quantity: number }[];
+  }): Promise<Order> {
     let total = 0;
     const orderItems = [];
 
     for (const item of orderData.items) {
-      const variant = await this.productVariantsRepository.findOne({ where: { id: item.productVariantId } });
+      const variant = await this.productVariantsRepository.findOne({
+        where: { id: item.productVariantId },
+      });
       if (!variant || variant.stock < item.quantity) {
         throw new Error('Product variant not available in desired quantity.');
       }
@@ -51,7 +56,10 @@ export class OrdersService {
   }
 
   async findOne(id: string): Promise<Order> {
-    return this.ordersRepository.findOne({ where: { id }, relations: ['customer', 'items', 'items.productVariant'] });
+    return this.ordersRepository.findOne({
+      where: { id },
+      relations: ['customer', 'items', 'items.productVariant'],
+    });
   }
 
   async update(id: string, orderData: Partial<Order>): Promise<Order> {

@@ -1,8 +1,31 @@
 export type ThemePreference = 'light' | 'dark';
 
-export type AppIconPreference = 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
+export type AppIconPreference =
+  | 'default'
+  | 'neon'
+  | 'ocean'
+  | 'sunset'
+  | 'creator-classic'
+  | 'creator-vibrant'
+  | 'creator-minimal';
 
-export type LanguagePreference = 'system' | 'en' | 'es' | 'fr' | 'de' | 'pt' | 'ja' | 'hi' | 'ar' | 'he' | 'zh' | 'ru' | 'sw' | 'tr' | 'ur' | 'vi';
+export type LanguagePreference =
+  | 'system'
+  | 'en'
+  | 'es'
+  | 'fr'
+  | 'de'
+  | 'pt'
+  | 'ja'
+  | 'hi'
+  | 'ar'
+  | 'he'
+  | 'zh'
+  | 'ru'
+  | 'sw'
+  | 'tr'
+  | 'ur'
+  | 'vi';
 export type AutoTranslatePreference = boolean;
 
 export type FeedSortPreference = 'algorithmic' | 'chronological';
@@ -27,43 +50,71 @@ export const PREFERENCE_STORAGE_KEYS = {
   colorBlindMode: 'zynkra_color_blind_mode',
 } as const;
 
-export const APP_ICON_OPTIONS: Array<{ value: AppIconPreference; label: string; description: string; creatorCurated?: boolean }> = [
+export const APP_ICON_OPTIONS: Array<{
+  value: AppIconPreference;
+  label: string;
+  description: string;
+  creatorCurated?: boolean;
+}> = [
   { value: 'default', label: 'Default', description: 'Standard Zynkra app icon.' },
   { value: 'neon', label: 'Neon', description: 'Vibrant neon glow style.' },
   { value: 'ocean', label: 'Ocean', description: 'Calming blue wave design.' },
   { value: 'sunset', label: 'Sunset', description: 'Warm orange and pink gradient.' },
-  { value: 'creator-classic', label: 'Creator Classic', description: 'Timeless creator-curated design.', creatorCurated: true },
-  { value: 'creator-vibrant', label: 'Creator Vibrant', description: 'Bold, colorful creator-curated icon.', creatorCurated: true },
-  { value: 'creator-minimal', label: 'Creator Minimal', description: 'Clean minimalist creator-curated design.', creatorCurated: true },
+  {
+    value: 'creator-classic',
+    label: 'Creator Classic',
+    description: 'Timeless creator-curated design.',
+    creatorCurated: true,
+  },
+  {
+    value: 'creator-vibrant',
+    label: 'Creator Vibrant',
+    description: 'Bold, colorful creator-curated icon.',
+    creatorCurated: true,
+  },
+  {
+    value: 'creator-minimal',
+    label: 'Creator Minimal',
+    description: 'Clean minimalist creator-curated design.',
+    creatorCurated: true,
+  },
 ];
 
 export type RegionPreference =
-  | 'system'
-  | 'US'
-  | 'GB'
-  | 'CA'
-  | 'AU'
-  | 'IN'
-  | 'JP'
-  | 'BR'
-  | 'MX'
-  | 'ES'
-  | 'FR'
-  | 'DE';
+  'system' | 'US' | 'GB' | 'CA' | 'AU' | 'IN' | 'JP' | 'BR' | 'MX' | 'ES' | 'FR' | 'DE';
 
-export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
+export type ColorBlindMode =
+  'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
 
-export const COLOR_BLIND_OPTIONS: Array<{ value: ColorBlindMode; label: string; description: string }> = [
+export const COLOR_BLIND_OPTIONS: Array<{
+  value: ColorBlindMode;
+  label: string;
+  description: string;
+}> = [
   { value: 'none', label: 'None', description: 'Standard color display.' },
-  { value: 'protanopia', label: 'Protanopia', description: 'Red-green color blindness (red weakness).' },
-  { value: 'deuteranopia', label: 'Deuteranopia', description: 'Red-green color blindness (green weakness).' },
+  {
+    value: 'protanopia',
+    label: 'Protanopia',
+    description: 'Red-green color blindness (red weakness).',
+  },
+  {
+    value: 'deuteranopia',
+    label: 'Deuteranopia',
+    description: 'Red-green color blindness (green weakness).',
+  },
   { value: 'tritanopia', label: 'Tritanopia', description: 'Blue-yellow color blindness.' },
-  { value: 'achromatopsia', label: 'Achromatopsia', description: 'Complete color blindness (grayscale only).' },
+  {
+    value: 'achromatopsia',
+    label: 'Achromatopsia',
+    description: 'Complete color blindness (grayscale only).',
+  },
 ];
 
-
-
-export const LANGUAGE_OPTIONS: Array<{ value: LanguagePreference; label: string; description: string }> = [
+export const LANGUAGE_OPTIONS: Array<{
+  value: LanguagePreference;
+  label: string;
+  description: string;
+}> = [
   { value: 'system', label: 'System default', description: 'Use your browser language.' },
   { value: 'en', label: 'English', description: 'English language formatting.' },
   { value: 'es', label: 'Español', description: 'Spanish language formatting.' },
@@ -82,7 +133,11 @@ export const LANGUAGE_OPTIONS: Array<{ value: LanguagePreference; label: string;
   { value: 'vi', label: 'Tiếng Việt', description: 'Vietnamese language formatting.' },
 ];
 
-export const REGION_OPTIONS: Array<{ value: RegionPreference; label: string; description: string }> = [
+export const REGION_OPTIONS: Array<{
+  value: RegionPreference;
+  label: string;
+  description: string;
+}> = [
   { value: 'system', label: 'System default', description: 'Use your browser region.' },
   { value: 'US', label: 'United States', description: 'MM/DD/YYYY and USD-style defaults.' },
   { value: 'GB', label: 'United Kingdom', description: 'DD/MM/YYYY and GBP-style defaults.' },
@@ -126,7 +181,8 @@ export function getPreferredLocale() {
 }
 
 export function formatDateTime(value: string | Date, options?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat(getPreferredLocale(), options ?? { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat(
+    getPreferredLocale(),
+    options ?? { dateStyle: 'medium', timeStyle: 'short' }
+  ).format(new Date(value));
 }

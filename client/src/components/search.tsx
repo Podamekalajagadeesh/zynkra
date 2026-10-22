@@ -13,7 +13,14 @@ import { Avatar } from './Avatar';
 
 export function Search() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ users: User[]; posts: Post[]; hashtags: Tag[]; places: Place[]; groups: Group[], events: Event[] } | null>(null);
+  const [results, setResults] = useState<{
+    users: User[];
+    posts: Post[];
+    hashtags: Tag[];
+    places: Place[];
+    groups: Group[];
+    events: Event[];
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -64,7 +71,10 @@ export function Search() {
 
   return (
     <div className="relative" onBlur={handleBlur}>
-      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 dark:text-dark-500" size={20} />
+      <SearchIcon
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400 dark:text-dark-500"
+        size={20}
+      />
       <input
         id="global-search"
         type="text"
@@ -75,14 +85,21 @@ export function Search() {
         onFocus={() => query.length > 1 && setIsDropdownOpen(true)}
         onKeyDown={handleKeyDown}
       />
-      {isLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-dark-400 dark:text-dark-500" size={20} />}
-      
+      {isLoading && (
+        <Loader2
+          className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-dark-400 dark:text-dark-500"
+          size={20}
+        />
+      )}
+
       {isDropdownOpen && results && (
         <div className="absolute mt-2 w-full rounded-md bg-white shadow-lg dark:bg-dark-800">
           <div className="py-1">
             {results.users.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Users</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Users
+                </h3>
                 {results.users.map((user) => (
                   <Link
                     key={user.id}
@@ -100,7 +117,9 @@ export function Search() {
             )}
             {results.posts.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Posts</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Posts
+                </h3>
                 {results.posts.map((post) => (
                   <Link
                     key={post.id}
@@ -114,7 +133,9 @@ export function Search() {
             )}
             {results.hashtags.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Hashtags</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Hashtags
+                </h3>
                 {results.hashtags.map((tag) => (
                   <Link
                     key={tag.id}
@@ -128,7 +149,9 @@ export function Search() {
             )}
             {results.places.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Places</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Places
+                </h3>
                 {results.places.map((place) => (
                   <Link
                     key={place.id}
@@ -142,7 +165,9 @@ export function Search() {
             )}
             {results.groups.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Groups</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Groups
+                </h3>
                 {results.groups.map((group) => (
                   <Link
                     key={group.id}
@@ -156,7 +181,9 @@ export function Search() {
             )}
             {results.events.length > 0 && (
               <div>
-                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">Events</h3>
+                <h3 className="px-4 py-2 text-xs font-semibold uppercase text-dark-500 dark:text-dark-400">
+                  Events
+                </h3>
                 {results.events.map((event) => (
                   <Link
                     key={event.id}
@@ -168,9 +195,16 @@ export function Search() {
                 ))}
               </div>
             )}
-            {results.users.length === 0 && results.posts.length === 0 && results.hashtags.length === 0 && results.places.length === 0 && results.groups.length === 0 && results.events.length === 0 && (
-              <p className="px-4 py-2 text-sm text-dark-500 dark:text-dark-400">No results found.</p>
-            )}
+            {results.users.length === 0 &&
+              results.posts.length === 0 &&
+              results.hashtags.length === 0 &&
+              results.places.length === 0 &&
+              results.groups.length === 0 &&
+              results.events.length === 0 && (
+                <p className="px-4 py-2 text-sm text-dark-500 dark:text-dark-400">
+                  No results found.
+                </p>
+              )}
           </div>
         </div>
       )}

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { getProfile, updatePrivacy } from '../../lib/api';
@@ -20,30 +19,24 @@ import { toast } from 'sonner';
 export function PrivacyShortcutsSettings() {
   const { activeAccount } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [postVisibility, setPostVisibility] = useState<PostVisibility>(
-    PostVisibility.PUBLIC,
-  );
-  const [storyVisibility, setStoryVisibility] = useState<'public' | 'friends' | 'followers' | 'only_me'>('friends');
+  const [postVisibility, setPostVisibility] = useState<PostVisibility>(PostVisibility.PUBLIC);
+  const [storyVisibility, setStoryVisibility] = useState<
+    'public' | 'friends' | 'followers' | 'only_me'
+  >('friends');
   const [friendRequestPrivacy, setFriendRequestPrivacy] = useState<FriendRequestPrivacy>(
-    FriendRequestPrivacy.EVERYONE,
+    FriendRequestPrivacy.EVERYONE
   );
   const [emailSearchPrivacy, setEmailSearchPrivacy] = useState<EmailSearchPrivacy>(
-    EmailSearchPrivacy.EVERYONE,
+    EmailSearchPrivacy.EVERYONE
   );
-  const [commentPrivacy, setCommentPrivacy] = useState<CommentPrivacy>(
-    CommentPrivacy.EVERYONE,
-  );
-  const [tagPrivacy, setTagPrivacy] = useState<TagPrivacy>(
-    TagPrivacy.EVERYONE,
-  );
+  const [commentPrivacy, setCommentPrivacy] = useState<CommentPrivacy>(CommentPrivacy.EVERYONE);
+  const [tagPrivacy, setTagPrivacy] = useState<TagPrivacy>(TagPrivacy.EVERYONE);
   const [mentionPrivacy, setMentionPrivacy] = useState<'everyone' | 'followers' | 'no_one'>(
-    'everyone',
+    'everyone'
   );
-  const [messagePrivacy, setMessagePrivacy] = useState<MessagePrivacy>(
-    MessagePrivacy.EVERYONE,
-  );
+  const [messagePrivacy, setMessagePrivacy] = useState<MessagePrivacy>(MessagePrivacy.EVERYONE);
   const [screenshotProtection, setScreenshotProtection] = useState<ScreenshotProtectionSettings>(
-    defaultScreenshotProtectionSettings,
+    defaultScreenshotProtectionSettings
   );
 
   useEffect(() => {
@@ -53,22 +46,12 @@ export function PrivacyShortcutsSettings() {
         setUser(profile);
         setPostVisibility(profile.postVisibility || PostVisibility.PUBLIC);
         setStoryVisibility(profile.storyVisibility || 'friends');
-        setFriendRequestPrivacy(
-          profile.friendRequestPrivacy || FriendRequestPrivacy.EVERYONE,
-        );
-        setEmailSearchPrivacy(
-          profile.emailSearchPrivacy || EmailSearchPrivacy.EVERYONE,
-        );
-        setCommentPrivacy(
-          profile.commentPrivacy || CommentPrivacy.EVERYONE,
-        );
-        setTagPrivacy(
-          profile.tagPrivacy || TagPrivacy.EVERYONE,
-        );
+        setFriendRequestPrivacy(profile.friendRequestPrivacy || FriendRequestPrivacy.EVERYONE);
+        setEmailSearchPrivacy(profile.emailSearchPrivacy || EmailSearchPrivacy.EVERYONE);
+        setCommentPrivacy(profile.commentPrivacy || CommentPrivacy.EVERYONE);
+        setTagPrivacy(profile.tagPrivacy || TagPrivacy.EVERYONE);
         setMentionPrivacy(profile.mentions || 'everyone');
-        setMessagePrivacy(
-          profile.messagePrivacy || MessagePrivacy.EVERYONE,
-        );
+        setMessagePrivacy(profile.messagePrivacy || MessagePrivacy.EVERYONE);
         if (profile.screenshotProtection) {
           setScreenshotProtection(profile.screenshotProtection);
         }
@@ -171,7 +154,9 @@ export function PrivacyShortcutsSettings() {
     }
   };
 
-  const handleScreenshotProtectionChange = async (newSettings: Partial<ScreenshotProtectionSettings>) => {
+  const handleScreenshotProtectionChange = async (
+    newSettings: Partial<ScreenshotProtectionSettings>
+  ) => {
     const updatedSettings = { ...screenshotProtection, ...newSettings };
     setScreenshotProtection(updatedSettings);
     try {
@@ -328,14 +313,19 @@ export function PrivacyShortcutsSettings() {
       <p className="text-sm text-gray-500">
         Protect your sensitive content from being screenshotted or recorded.
       </p>
-      
+
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <label htmlFor="screenshot-protection-enabled" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="screenshot-protection-enabled"
+              className="block text-sm font-medium text-gray-700"
+            >
               Enable screenshot protection
             </label>
-            <p className="text-xs text-gray-500">Block or warn when someone tries to screenshot your content</p>
+            <p className="text-xs text-gray-500">
+              Block or warn when someone tries to screenshot your content
+            </p>
           </div>
           <Switch
             id="screenshot-protection-enabled"
@@ -354,45 +344,59 @@ export function PrivacyShortcutsSettings() {
                 id="protection-level"
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                 value={screenshotProtection.level}
-                onChange={(e) => handleScreenshotProtectionChange({ level: e.target.value as ScreenshotProtectionLevel })}
+                onChange={(e) =>
+                  handleScreenshotProtectionChange({
+                    level: e.target.value as ScreenshotProtectionLevel,
+                  })
+                }
               >
-                <option value={ScreenshotProtectionLevel.WARNING_ONLY}>Warn only (notify when screenshot is detected)</option>
+                <option value={ScreenshotProtectionLevel.WARNING_ONLY}>
+                  Warn only (notify when screenshot is detected)
+                </option>
                 <option value={ScreenshotProtectionLevel.BLOCK_ALL}>Block all attempts</option>
               </select>
             </div>
 
             <div className="mt-4 space-y-3">
               <p className="text-sm font-medium text-gray-700">Apply protection to:</p>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Direct Messages</span>
                 <Switch
                   checked={screenshotProtection.applyToDms}
-                  onCheckedChange={(checked) => handleScreenshotProtectionChange({ applyToDms: checked })}
+                  onCheckedChange={(checked) =>
+                    handleScreenshotProtectionChange({ applyToDms: checked })
+                  }
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Your Posts</span>
                 <Switch
                   checked={screenshotProtection.applyToPosts}
-                  onCheckedChange={(checked) => handleScreenshotProtectionChange({ applyToPosts: checked })}
+                  onCheckedChange={(checked) =>
+                    handleScreenshotProtectionChange({ applyToPosts: checked })
+                  }
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Your Stories</span>
                 <Switch
                   checked={screenshotProtection.applyToStories}
-                  onCheckedChange={(checked) => handleScreenshotProtectionChange({ applyToStories: checked })}
+                  onCheckedChange={(checked) =>
+                    handleScreenshotProtectionChange({ applyToStories: checked })
+                  }
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Your Profile</span>
                 <Switch
                   checked={screenshotProtection.applyToProfile}
-                  onCheckedChange={(checked) => handleScreenshotProtectionChange({ applyToProfile: checked })}
+                  onCheckedChange={(checked) =>
+                    handleScreenshotProtectionChange({ applyToProfile: checked })
+                  }
                 />
               </div>
             </div>

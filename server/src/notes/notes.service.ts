@@ -11,7 +11,7 @@ import { subHours } from 'date-fns';
 export class NotesService {
   constructor(
     @InjectRepository(Note)
-    private readonly notesRepository: Repository<Note>,
+    private readonly notesRepository: Repository<Note>
   ) {}
 
   async create(createNoteDto: CreateNoteDto, user: User): Promise<Note> {

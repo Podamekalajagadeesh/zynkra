@@ -18,22 +18,18 @@ export default function LogAttemptModal({ segment, onSubmit, onClose }: LogAttem
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const totalSeconds = 
-      (parseInt(hours) || 0) * 3600 + 
-      (parseInt(minutes) || 0) * 60 + 
-      (parseInt(seconds) || 0);
-    
+    const totalSeconds =
+      (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+
     if (totalSeconds > 0) {
       onSubmit(totalSeconds);
     }
   };
 
   const calculatePace = () => {
-    const totalSeconds = 
-      (parseInt(hours) || 0) * 3600 + 
-      (parseInt(minutes) || 0) * 60 + 
-      (parseInt(seconds) || 0);
-    
+    const totalSeconds =
+      (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+
     if (totalSeconds > 0 && segment.distance > 0) {
       const hoursDecimal = totalSeconds / 3600;
       return (segment.distance / hoursDecimal).toFixed(2);
@@ -48,7 +44,7 @@ export default function LogAttemptModal({ segment, onSubmit, onClose }: LogAttem
           <DialogTitle>Log your attempt</DialogTitle>
           <p className="text-gray-600 dark:text-gray-400">{segment.name}</p>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -84,14 +80,14 @@ export default function LogAttemptModal({ segment, onSubmit, onClose }: LogAttem
               />
             </div>
           </div>
-          
+
           <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Calculated pace:</span>
               <span className="font-medium">{calculatePace()} km/h</span>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel

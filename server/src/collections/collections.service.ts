@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,7 +9,7 @@ import { User } from '../users/entities/user.entity';
 export class CollectionsService {
   constructor(
     @InjectRepository(Collection)
-    private collectionsRepository: Repository<Collection>,
+    private collectionsRepository: Repository<Collection>
   ) {}
 
   async create(createCollectionDto: CreateCollectionDto, user: User): Promise<Collection> {

@@ -18,8 +18,14 @@ export function Avatar({ className, size = 40, user, userId, src, alt, name }: A
   const avatarUser = user ?? (userId ? { id: userId } : null) ?? authUser;
   const displayName = name || avatarUser?.displayName || avatarUser?.username || 'User';
 
-  const isNft = avatarUser?.nftPfpUrl && avatarUser.nftPfpContractAddress && avatarUser.nftPfpTokenId;
-  const rawImageSrc = src || avatarUser?.pfp || avatarUser?.avatar || avatarUser?.profile?.avatarUrl || avatarUser?.nftPfpUrl;
+  const isNft =
+    avatarUser?.nftPfpUrl && avatarUser.nftPfpContractAddress && avatarUser.nftPfpTokenId;
+  const rawImageSrc =
+    src ||
+    avatarUser?.pfp ||
+    avatarUser?.avatar ||
+    avatarUser?.profile?.avatarUrl ||
+    avatarUser?.nftPfpUrl;
   const imageSrc = resolveMediaUrl(rawImageSrc);
 
   const baseClasses = 'flex items-center justify-center rounded-full object-cover';
@@ -38,7 +44,10 @@ export function Avatar({ className, size = 40, user, userId, src, alt, name }: A
   }
 
   return (
-    <div className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 ${baseClasses} ${className}`} style={style}>
+    <div
+      className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 ${baseClasses} ${className}`}
+      style={style}
+    >
       <User className="h-1/2 w-1/2 text-gray-500" />
     </div>
   );

@@ -34,7 +34,18 @@ import { FederationModule } from '../federation/federation.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostReaction, Comment, Report, Poll, PollOption, Media, ReelEffect, TimelineReview, Subscription]),
+    TypeOrmModule.forFeature([
+      Post,
+      PostReaction,
+      Comment,
+      Report,
+      Poll,
+      PollOption,
+      Media,
+      ReelEffect,
+      TimelineReview,
+      Subscription,
+    ]),
     UsersModule,
     StorageModule,
     ReputationModule,
@@ -48,14 +59,14 @@ import { FederationModule } from '../federation/federation.module';
     GroupsModule,
     TimelineReviewModule,
     MediaModule,
-     ProfileReviewModule,
-     WebhooksModule,
-     DataPermissionsModule,
-     // FederationModule imports PostsModule (it builds a local outbox from
-     // PostsService), so this edge is a genuine cycle and must be forwardRef'd
-     // on both sides or the container fails to resolve.
-     forwardRef(() => FederationModule),
-   ],
+    ProfileReviewModule,
+    WebhooksModule,
+    DataPermissionsModule,
+    // FederationModule imports PostsModule (it builds a local outbox from
+    // PostsService), so this edge is a genuine cycle and must be forwardRef'd
+    // on both sides or the container fails to resolve.
+    forwardRef(() => FederationModule),
+  ],
 
   providers: [PostsService],
   controllers: [PostsController],

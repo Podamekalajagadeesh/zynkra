@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { X, Users, UserPlus, Copy, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/useToast';
@@ -29,7 +35,7 @@ export function CollaborationPanel({
   isOwner,
   onInviteCollaborator,
   onRemoveCollaborator,
-  postId
+  postId,
 }: CollaborationPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -43,7 +49,7 @@ export function CollaborationPanel({
     setTimeout(() => setCopied(false), 2000);
     toast({
       title: 'Link copied',
-      description: 'Edit link copied to clipboard'
+      description: 'Edit link copied to clipboard',
     });
   };
 
@@ -53,7 +59,7 @@ export function CollaborationPanel({
       setInviteEmail('');
       toast({
         title: 'Invitation sent',
-        description: `Collaboration invitation sent to ${inviteEmail}`
+        description: `Collaboration invitation sent to ${inviteEmail}`,
       });
     }
   };
@@ -62,11 +68,11 @@ export function CollaborationPanel({
     onRemoveCollaborator(userId);
     toast({
       title: 'Collaborator removed',
-      description: 'The user has been removed from this collaboration'
+      description: 'The user has been removed from this collaboration',
     });
   };
 
-  const activeCollaborators = collaborators.filter(c => c.userId !== currentUserId);
+  const activeCollaborators = collaborators.filter((c) => c.userId !== currentUserId);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -84,13 +90,13 @@ export function CollaborationPanel({
         <DialogHeader>
           <DialogTitle>Collaborators</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Share link section */}
           <div className="flex items-center space-x-2">
-            <Input 
-              value={`${window.location.origin}/edit/${postId}`} 
-              readOnly 
+            <Input
+              value={`${window.location.origin}/edit/${postId}`}
+              readOnly
               className="flex-1 text-sm"
             />
             <Button size="icon" onClick={copyEditLink}>
@@ -117,7 +123,10 @@ export function CollaborationPanel({
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Currently editing ({collaborators.length})</h4>
             {collaborators.map((collaborator) => (
-              <div key={collaborator.userId} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div
+                key={collaborator.userId}
+                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
                   <Avatar>
                     <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white">
@@ -135,8 +144,8 @@ export function CollaborationPanel({
                   </div>
                 </div>
                 {isOwner && collaborator.userId !== currentUserId && (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="icon"
                     onClick={() => handleRemove(collaborator.userId)}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"

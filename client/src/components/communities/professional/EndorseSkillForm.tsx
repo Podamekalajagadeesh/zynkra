@@ -10,20 +10,25 @@ interface EndorseSkillFormProps {
   onSubmit: () => void;
 }
 
-export const EndorseSkillForm = ({ communityId, profileUserId, skillId, onSubmit }: EndorseSkillFormProps) => {
+export const EndorseSkillForm = ({
+  communityId,
+  profileUserId,
+  skillId,
+  onSubmit,
+}: EndorseSkillFormProps) => {
   const { showToast } = useToast();
   const [comment, setComment] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // In a real app, this would send the endorsement to the server
     console.log('Endorsed skill:', skillId, { profileUserId, comment });
-    
+
     showToast({
       title: 'Skill endorsed!',
       description: 'Your endorsement has been added to the profile.',
-      type: 'success'
+      type: 'success',
     });
 
     onSubmit();
@@ -42,7 +47,9 @@ export const EndorseSkillForm = ({ communityId, profileUserId, skillId, onSubmit
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onSubmit}>Cancel</Button>
+        <Button type="button" variant="secondary" onClick={onSubmit}>
+          Cancel
+        </Button>
         <Button type="submit">Endorse Skill</Button>
       </div>
     </form>

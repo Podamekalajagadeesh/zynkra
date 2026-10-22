@@ -1,6 +1,23 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Pause, Download, MapPin, Calendar, Heart, MessageCircle, Share2, PencilLine, Sparkles, MessageSquarePlus, ArrowLeftRight, Clock3, Globe, ShieldCheck, ShieldAlert } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  Download,
+  MapPin,
+  Calendar,
+  Heart,
+  MessageCircle,
+  Share2,
+  PencilLine,
+  Sparkles,
+  MessageSquarePlus,
+  ArrowLeftRight,
+  Clock3,
+  Globe,
+  ShieldCheck,
+  ShieldAlert,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Avatar } from '../Avatar';
@@ -52,7 +69,13 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
 
   if (!memory || !post.isMemory) return null;
 
-  const sortedRevisions = useMemo(() => [...revisions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [revisions]);
+  const sortedRevisions = useMemo(
+    () =>
+      [...revisions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
+    [revisions]
+  );
 
   const loadRevisions = async () => {
     try {
@@ -71,7 +94,9 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
         annotation: revisionForm.annotation || undefined,
         sensoryNote: revisionForm.sensoryNote || undefined,
         contextNote: revisionForm.contextNote || undefined,
-        sensoryEnhancements: revisionForm.sensoryEnhancements ? JSON.parse(revisionForm.sensoryEnhancements) : undefined,
+        sensoryEnhancements: revisionForm.sensoryEnhancements
+          ? JSON.parse(revisionForm.sensoryEnhancements)
+          : undefined,
       });
       addToast({ type: 'success', message: 'Memory edit saved without changing the original' });
       setRevisionForm({
@@ -104,7 +129,10 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
         contextNote: '',
       }));
       setShowPortEditor(false);
-      addToast({ type: 'success', message: `Memory ported to ${updatedMemory.realityContext} reality` });
+      addToast({
+        type: 'success',
+        message: `Memory ported to ${updatedMemory.realityContext} reality`,
+      });
     } catch (error) {
       addToast({ type: 'error', message: 'Failed to port memory across realities' });
     }
@@ -239,18 +267,22 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
                 <div className="text-center">
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     {(activeSensoryTab === 'all' || activeSensoryTab === 'visual') &&
-                      memory.sensory.visual?.slice(0, 6).map((file, i) => (
-                        <img
-                          key={i}
-                          src={file.url}
-                          alt={`visual-${i}`}
-                          className="w-full h-24 object-cover rounded"
-                        />
-                      ))}
+                      memory.sensory.visual
+                        ?.slice(0, 6)
+                        .map((file, i) => (
+                          <img
+                            key={i}
+                            src={file.url}
+                            alt={`visual-${i}`}
+                            className="w-full h-24 object-cover rounded"
+                          />
+                        ))}
                   </div>
                   <Button onClick={handleReplay} disabled={!memory.privacySettings.allowReplay}>
                     <Play className="mr-2 h-4 w-4" />
-                    {memory.privacySettings.allowReplay ? 'Replay Full Experience' : 'Replay Disabled'}
+                    {memory.privacySettings.allowReplay
+                      ? 'Replay Full Experience'
+                      : 'Replay Disabled'}
                   </Button>
                 </div>
               )}
@@ -271,12 +303,20 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
                 )}
                 <h4 className="text-sm font-semibold">Neural authenticity check</h4>
               </div>
-              <Badge variant={currentPost.authenticityAnalysis.verdict === 'likely_authentic' ? 'secondary' : 'outline'} className="capitalize">
+              <Badge
+                variant={
+                  currentPost.authenticityAnalysis.verdict === 'likely_authentic'
+                    ? 'secondary'
+                    : 'outline'
+                }
+                className="capitalize"
+              >
                 {currentPost.authenticityAnalysis.verdict.replaceAll('_', ' ')}
               </Badge>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Confidence {Math.round(currentPost.authenticityAnalysis.confidence * 100)}% • Score {currentPost.authenticityAnalysis.score.toFixed(2)}
+              Confidence {Math.round(currentPost.authenticityAnalysis.confidence * 100)}% • Score{' '}
+              {currentPost.authenticityAnalysis.score.toFixed(2)}
             </p>
             <ul className="mt-3 space-y-1 text-sm text-gray-600 dark:text-gray-300">
               {currentPost.authenticityAnalysis.signals.slice(0, 4).map((signal) => (
@@ -313,9 +353,19 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <h4 className="text-sm font-semibold">Memory editing tools</h4>
-              <p className="text-xs text-gray-500">Add annotations, context, or sensory enhancements without changing the original memory.</p>
+              <p className="text-xs text-gray-500">
+                Add annotations, context, or sensory enhancements without changing the original
+                memory.
+              </p>
             </div>
-            <Button variant="outline" size="sm" onClick={async () => { setShowEditor((value) => !value); if (!showEditor) await loadRevisions(); }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                setShowEditor((value) => !value);
+                if (!showEditor) await loadRevisions();
+              }}
+            >
               <PencilLine className="mr-2 h-4 w-4" />
               {showEditor ? 'Close editor' : 'Edit memory'}
             </Button>
@@ -326,7 +376,15 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Edit type</label>
-                  <Select value={revisionForm.editType} onValueChange={(value) => setRevisionForm((current) => ({ ...current, editType: value as MemoryEditType }))}>
+                  <Select
+                    value={revisionForm.editType}
+                    onValueChange={(value) =>
+                      setRevisionForm((current) => ({
+                        ...current,
+                        editType: value as MemoryEditType,
+                      }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -339,23 +397,53 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Optional title</label>
-                  <Input value={revisionForm.title} onChange={(e) => setRevisionForm((current) => ({ ...current, title: e.target.value }))} placeholder="Add a label for this revision" />
+                  <Input
+                    value={revisionForm.title}
+                    onChange={(e) =>
+                      setRevisionForm((current) => ({ ...current, title: e.target.value }))
+                    }
+                    placeholder="Add a label for this revision"
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Annotation</label>
-                <Textarea value={revisionForm.annotation} onChange={(e) => setRevisionForm((current) => ({ ...current, annotation: e.target.value }))} rows={3} placeholder="Add context or a note about the memory" />
+                <Textarea
+                  value={revisionForm.annotation}
+                  onChange={(e) =>
+                    setRevisionForm((current) => ({ ...current, annotation: e.target.value }))
+                  }
+                  rows={3}
+                  placeholder="Add context or a note about the memory"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Context note</label>
-                <Textarea value={revisionForm.contextNote} onChange={(e) => setRevisionForm((current) => ({ ...current, contextNote: e.target.value }))} rows={2} placeholder="Explain what this memory means now" />
+                <Textarea
+                  value={revisionForm.contextNote}
+                  onChange={(e) =>
+                    setRevisionForm((current) => ({ ...current, contextNote: e.target.value }))
+                  }
+                  rows={2}
+                  placeholder="Explain what this memory means now"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sensory enhancement JSON</label>
-                <Textarea value={revisionForm.sensoryEnhancements} onChange={(e) => setRevisionForm((current) => ({ ...current, sensoryEnhancements: e.target.value }))} rows={3} placeholder='{"visual": [{"url": "https://...", "type": "image"}]}' />
+                <Textarea
+                  value={revisionForm.sensoryEnhancements}
+                  onChange={(e) =>
+                    setRevisionForm((current) => ({
+                      ...current,
+                      sensoryEnhancements: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                  placeholder='{"visual": [{"url": "https://...", "type": "image"}]}'
+                />
               </div>
 
               <div className="flex justify-end">
@@ -373,22 +461,45 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
                 {sortedRevisions.length > 0 ? (
                   <div className="space-y-2">
                     {sortedRevisions.map((revision) => (
-                      <div key={revision.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                      <div
+                        key={revision.id}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+                      >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{revision.editType.replaceAll('_', ' ')}</Badge>
-                            {revision.title && <span className="text-sm font-medium">{revision.title}</span>}
+                            <Badge variant="secondary">
+                              {revision.editType.replaceAll('_', ' ')}
+                            </Badge>
+                            {revision.title && (
+                              <span className="text-sm font-medium">{revision.title}</span>
+                            )}
                           </div>
-                          <span className="text-xs text-gray-500">{new Date(revision.createdAt).toLocaleString()}</span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(revision.createdAt).toLocaleString()}
+                          </span>
                         </div>
-                        {revision.annotation && <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">{revision.annotation}</p>}
-                        {revision.contextNote && <p className="text-xs text-gray-500 mt-1">Context: {revision.contextNote}</p>}
-                        {revision.sensoryNote && <p className="text-xs text-gray-500 mt-1">Sensory: {revision.sensoryNote}</p>}
+                        {revision.annotation && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                            {revision.annotation}
+                          </p>
+                        )}
+                        {revision.contextNote && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Context: {revision.contextNote}
+                          </p>
+                        )}
+                        {revision.sensoryNote && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Sensory: {revision.sensoryNote}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No edits yet. Add the first annotation or enhancement.</p>
+                  <p className="text-sm text-gray-500">
+                    No edits yet. Add the first annotation or enhancement.
+                  </p>
                 )}
               </div>
             </div>
@@ -399,9 +510,16 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <h4 className="text-sm font-semibold">Cross-reality porting</h4>
-              <p className="text-xs text-gray-500">Move this memory between physical, augmented, virtual, and neural contexts with preserved metadata.</p>
+              <p className="text-xs text-gray-500">
+                Move this memory between physical, augmented, virtual, and neural contexts with
+                preserved metadata.
+              </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowPortEditor((value) => !value)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPortEditor((value) => !value)}
+            >
               <ArrowLeftRight className="mr-2 h-4 w-4" />
               {showPortEditor ? 'Close porting' : 'Port memory'}
             </Button>
@@ -412,7 +530,15 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Source reality</label>
-                  <Select value={portForm.sourceReality} onValueChange={(value) => setPortForm((current) => ({ ...current, sourceReality: value as RealityContext }))}>
+                  <Select
+                    value={portForm.sourceReality}
+                    onValueChange={(value) =>
+                      setPortForm((current) => ({
+                        ...current,
+                        sourceReality: value as RealityContext,
+                      }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -426,7 +552,15 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Target reality</label>
-                  <Select value={portForm.targetReality} onValueChange={(value) => setPortForm((current) => ({ ...current, targetReality: value as RealityContext }))}>
+                  <Select
+                    value={portForm.targetReality}
+                    onValueChange={(value) =>
+                      setPortForm((current) => ({
+                        ...current,
+                        targetReality: value as RealityContext,
+                      }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -442,12 +576,25 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Context note</label>
-                <Textarea value={portForm.contextNote} onChange={(e) => setPortForm((current) => ({ ...current, contextNote: e.target.value }))} rows={3} placeholder="Describe how the memory should adapt in the destination reality" />
+                <Textarea
+                  value={portForm.contextNote}
+                  onChange={(e) =>
+                    setPortForm((current) => ({ ...current, contextNote: e.target.value }))
+                  }
+                  rows={3}
+                  placeholder="Describe how the memory should adapt in the destination reality"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Fidelity</label>
-                <Input value={portForm.fidelity} onChange={(e) => setPortForm((current) => ({ ...current, fidelity: e.target.value }))} placeholder="full" />
+                <Input
+                  value={portForm.fidelity}
+                  onChange={(e) =>
+                    setPortForm((current) => ({ ...current, fidelity: e.target.value }))
+                  }
+                  placeholder="full"
+                />
               </div>
 
               <div className="flex justify-end">
@@ -467,15 +614,26 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ post }) => {
               </div>
               <div className="space-y-2">
                 {ports.map((port) => (
-                  <div key={port.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm">
+                  <div
+                    key={port.id}
+                    className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 text-sm"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="capitalize">{port.sourceReality} to {port.targetReality}</Badge>
-                        <span className="text-gray-600 dark:text-gray-300">{port.fidelity} fidelity</span>
+                        <Badge variant="secondary" className="capitalize">
+                          {port.sourceReality} to {port.targetReality}
+                        </Badge>
+                        <span className="text-gray-600 dark:text-gray-300">
+                          {port.fidelity} fidelity
+                        </span>
                       </div>
-                      <span className="text-xs text-gray-500">{new Date(port.portedAt).toLocaleString()}</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(port.portedAt).toLocaleString()}
+                      </span>
                     </div>
-                    {port.contextNote && <p className="text-gray-600 dark:text-gray-300 mt-2">{port.contextNote}</p>}
+                    {port.contextNote && (
+                      <p className="text-gray-600 dark:text-gray-300 mt-2">{port.contextNote}</p>
+                    )}
                   </div>
                 ))}
               </div>

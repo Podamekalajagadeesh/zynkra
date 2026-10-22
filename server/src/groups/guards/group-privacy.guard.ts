@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GroupsService } from '../groups.service';
 import { GroupPrivacy } from '../enums/group-privacy.enum';
@@ -7,7 +13,7 @@ import { GroupPrivacy } from '../enums/group-privacy.enum';
 export class GroupPrivacyGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private groupsService: GroupsService,
+    private groupsService: GroupsService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

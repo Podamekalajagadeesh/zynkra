@@ -49,7 +49,7 @@ export class AccountManagementController {
     private readonly adPreferencesService: AdPreferencesService,
     private readonly dataExportService: DataExportService,
     private readonly exportService: ExportService,
-    private readonly securitySettingsService: SecuritySettingsService,
+    private readonly securitySettingsService: SecuritySettingsService
   ) {}
 
   // ============ ACCOUNT DASHBOARD ============
@@ -90,7 +90,10 @@ export class AccountManagementController {
 
   @Put('data-permissions')
   async updateDataPermissions(@Request() req, @Body() dto: UpdateDataPermissionsDto) {
-    return this.accountManagementService.updateDataPermissions(req.user.userId, dto.dataPermissions);
+    return this.accountManagementService.updateDataPermissions(
+      req.user.userId,
+      dto.dataPermissions
+    );
   }
 
   // ============ NOTIFICATION PREFERENCES ============
@@ -101,7 +104,10 @@ export class AccountManagementController {
   }
 
   @Put('notifications/preferences')
-  async updateNotificationPreferences(@Request() req, @Body() dto: UpdateNotificationPreferencesDto) {
+  async updateNotificationPreferences(
+    @Request() req,
+    @Body() dto: UpdateNotificationPreferencesDto
+  ) {
     return this.accountManagementService.updateNotificationPreferences(req.user.userId, dto);
   }
 
@@ -141,12 +147,17 @@ export class AccountManagementController {
 
   @Get('ad-preferences/blocked-advertisers')
   async getBlockedAdvertisers(@Request() req) {
-    const blockedAdvertisers = await this.adPreferencesService.getBlockedAdvertisers(req.user.userId);
+    const blockedAdvertisers = await this.adPreferencesService.getBlockedAdvertisers(
+      req.user.userId
+    );
     return { blockedAdvertisers };
   }
 
   @Post('ad-preferences/targeting-level')
-  async setAdTargetingLevel(@Request() req, @Body() body: { level: 'disabled' | 'basic' | 'personalized' | 'advanced' }) {
+  async setAdTargetingLevel(
+    @Request() req,
+    @Body() body: { level: 'disabled' | 'basic' | 'personalized' | 'advanced' }
+  ) {
     return this.adPreferencesService.setAdTargetingLevel(req.user.userId, body.level);
   }
 
@@ -165,18 +176,30 @@ export class AccountManagementController {
 
   @Post('sessions')
   async createAccountSession(@Request() req, @Body() dto: CreateAccountSessionDto) {
-    return this.accountManagementService.createAccountSession(req.user.userId, dto.deviceName, dto.ipAddress, dto.userAgent);
+    return this.accountManagementService.createAccountSession(
+      req.user.userId,
+      dto.deviceName,
+      dto.ipAddress,
+      dto.userAgent
+    );
   }
 
   @Delete('sessions/:sessionId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async revokeAccountSession(@Request() req, @Param('sessionId') sessionId: string, @Body() dto: RevokeSessionDto) {
+  async revokeAccountSession(
+    @Request() req,
+    @Param('sessionId') sessionId: string,
+    @Body() dto: RevokeSessionDto
+  ) {
     await this.accountManagementService.revokeAccountSession(req.user.userId, sessionId);
   }
 
   @Post('sessions/revoke-all-others')
   async revokeAllOtherSessions(@Request() req) {
-    return this.accountManagementService.revokeAllOtherSessions(req.user.userId, req.user.sessionId ?? undefined);
+    return this.accountManagementService.revokeAllOtherSessions(
+      req.user.userId,
+      req.user.sessionId ?? undefined
+    );
   }
 
   // ============ DATA MANAGEMENT ============
@@ -187,7 +210,18 @@ export class AccountManagementController {
   }
 
   @Post('data/export')
-  async exportAccountData(@Request() req, @Body() body: { dataTypes?: string[]; format?: string; includeSecurityLog?: boolean; includeLinkedAccounts?: boolean; includePrivacySettings?: boolean; includeHistory?: boolean }) {
+  async exportAccountData(
+    @Request() req,
+    @Body()
+    body: {
+      dataTypes?: string[];
+      format?: string;
+      includeSecurityLog?: boolean;
+      includeLinkedAccounts?: boolean;
+      includePrivacySettings?: boolean;
+      includeHistory?: boolean;
+    }
+  ) {
     if (body.format && body.format !== 'json') {
       throw new BadRequestException('Account export currently supports JSON format only');
     }
@@ -216,7 +250,11 @@ export class AccountManagementController {
 
   @Post('data/delete')
   async requestDataDeletion(@Request() req, @Body() dto: RequestDataDeletionDto) {
-    return this.accountManagementService.requestDataDeletion(req.user.userId, dto.dataTypes, dto.reason);
+    return this.accountManagementService.requestDataDeletion(
+      req.user.userId,
+      dto.dataTypes,
+      dto.reason
+    );
   }
 
   @Post('data/import')
@@ -242,7 +280,10 @@ export class AccountManagementController {
 
   @Post('delete/confirm')
   async confirmAccountDeletion(@Request() req, @Body() dto: ConfirmAccountDeletionDto) {
-    return this.accountManagementService.confirmAccountDeletion(req.user.userId, dto.confirmationCode);
+    return this.accountManagementService.confirmAccountDeletion(
+      req.user.userId,
+      dto.confirmationCode
+    );
   }
 
   // ============ ACCOUNT HISTORY ============
@@ -265,7 +306,11 @@ export class AccountManagementController {
 
   @Post('security-alerts/:alertId/resolve')
   async resolveSecurityAlert(@Request() req, @Param('alertId') alertId: string) {
-    const alert = await this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, true);
+    const alert = await this.accountManagementService.resolveSecurityAlert(
+      req.user.userId,
+      alertId,
+      true
+    );
     if (!alert) {
       throw new BadRequestException('Security alert not found');
     }
@@ -274,7 +319,11 @@ export class AccountManagementController {
 
   @Post('security-alerts/:alertId/reopen')
   async reopenSecurityAlert(@Request() req, @Param('alertId') alertId: string) {
-    const alert = await this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, false);
+    const alert = await this.accountManagementService.resolveSecurityAlert(
+      req.user.userId,
+      alertId,
+      false
+    );
     if (!alert) {
       throw new BadRequestException('Security alert not found');
     }
@@ -289,7 +338,10 @@ export class AccountManagementController {
   }
 
   @Post('linked-accounts/oauth/:provider')
-  async startLinkedAccountOAuth(@Request() req, @Param('provider') provider: LinkedAccountProvider) {
+  async startLinkedAccountOAuth(
+    @Request() req,
+    @Param('provider') provider: LinkedAccountProvider
+  ) {
     if (!Object.values(LinkedAccountProvider).includes(provider)) {
       throw new BadRequestException('Unsupported linked-account provider');
     }
@@ -339,7 +391,7 @@ export class AccountManagementController {
     const [approvals, total] = await this.loginApprovalService.getUserApprovalHistory(
       req.user.userId,
       body.limit || 50,
-      body.offset || 0,
+      body.offset || 0
     );
     return { approvals, total };
   }
@@ -354,12 +406,20 @@ export class AccountManagementController {
   }
 
   @Post('login-approvals/:approvalId/approve')
-  async approveLogin(@Request() req, @Param('approvalId') approvalId: string, @Body() approveDto: ApproveLoginRequestDto) {
+  async approveLogin(
+    @Request() req,
+    @Param('approvalId') approvalId: string,
+    @Body() approveDto: ApproveLoginRequestDto
+  ) {
     return this.loginApprovalService.approveLoginRequest(approvalId, req.user.userId, approveDto);
   }
 
   @Post('login-approvals/:approvalId/reject')
-  async rejectLogin(@Request() req, @Param('approvalId') approvalId: string, @Body() rejectDto: RejectLoginRequestDto) {
+  async rejectLogin(
+    @Request() req,
+    @Param('approvalId') approvalId: string,
+    @Body() rejectDto: RejectLoginRequestDto
+  ) {
     return this.loginApprovalService.rejectLoginRequest(approvalId, req.user.userId, rejectDto);
   }
 
@@ -468,7 +528,11 @@ export class AccountManagementController {
 
   @Put('security')
   async updateSecuritySettings(@Request() req, @Body() dto: UpdateSecuritySettingsDto) {
-    return this.securitySettingsService.updateSecuritySettings(req.user.userId, dto, req.user.userId);
+    return this.securitySettingsService.updateSecuritySettings(
+      req.user.userId,
+      dto,
+      req.user.userId
+    );
   }
 
   @Get('security/features')
@@ -477,7 +541,10 @@ export class AccountManagementController {
   }
 
   @Put('security/features')
-  async updateAccountSecurityFeatures(@Request() req, @Body() dto: Partial<UpdateSecuritySettingsDto>) {
+  async updateAccountSecurityFeatures(
+    @Request() req,
+    @Body() dto: Partial<UpdateSecuritySettingsDto>
+  ) {
     return this.accountManagementService.updateAccountSecuritySettings(req.user.userId, {
       twoFactorAuthentication: dto.twoFactorAuthentication ?? undefined,
       biometricAuthentication: dto.biometricAuthentication ?? undefined,
@@ -538,7 +605,10 @@ export class AccountManagementController {
   }
 
   @Post('security/level')
-  async setSecurityLevel(@Request() req, @Body() body: { level: 'standard' | 'enhanced' | 'maximum' }) {
+  async setSecurityLevel(
+    @Request() req,
+    @Body() body: { level: 'standard' | 'enhanced' | 'maximum' }
+  ) {
     return this.securitySettingsService.setSecurityLevel(req.user.userId, body.level);
   }
 

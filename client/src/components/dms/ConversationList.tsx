@@ -52,7 +52,7 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
 
   const participantIds = useMemo(
     () => [...new Set(conversations.flatMap((c) => c.participants.map((p) => p.id)))],
-    [conversations],
+    [conversations]
   );
   const { isOnline } = usePresence(participantIds);
   const { activeAccount } = useAuth();
@@ -62,7 +62,9 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
     conv.participants.some((p) => p.id !== currentUserId && isOnline(p.id));
 
   const getConversationName = (conv: Conversation) => {
-    return conv.participants.map((p) => p.displayName || p.username || p.email || 'Unknown').join(', ');
+    return conv.participants
+      .map((p) => p.displayName || p.username || p.email || 'Unknown')
+      .join(', ');
   };
 
   const handleSelectConversation = async (conversation: Conversation) => {
@@ -71,9 +73,9 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
 
     try {
       await markConversationAsRead(conversation.id);
-      setConversations((current) => current.map((item) => (
-        item.id === conversation.id ? { ...item, unreadCount: 0 } : item
-      )));
+      setConversations((current) =>
+        current.map((item) => (item.id === conversation.id ? { ...item, unreadCount: 0 } : item))
+      );
     } catch (error) {
       console.error('Failed to mark conversation as read', error);
     }
@@ -124,9 +126,7 @@ export const ConversationList = ({ onSelectConversation, selectedId }: Conversat
                   <PresenceDot online={otherParticipantOnline(conv)} />
                 </p>
                 {conv.lastMessage && (
-                  <p className="text-sm text-dark-500 truncate mt-xs">
-                    {conv.lastMessage.content}
-                  </p>
+                  <p className="text-sm text-dark-500 truncate mt-xs">{conv.lastMessage.content}</p>
                 )}
                 {Boolean(conv.unreadCount) && (
                   <span className="mt-1 inline-flex min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 py-0.5 text-xs font-semibold text-white">

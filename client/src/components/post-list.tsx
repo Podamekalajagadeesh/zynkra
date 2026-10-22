@@ -16,7 +16,14 @@ interface PostListProps {
   hideFollowButton?: boolean;
 }
 
-export function PostList({ posts, onFollow, onUnfollow, onDelete, onToggleFeatured, hideFollowButton }: PostListProps) {
+export function PostList({
+  posts,
+  onFollow,
+  onUnfollow,
+  onDelete,
+  onToggleFeatured,
+  hideFollowButton,
+}: PostListProps) {
   const { user: currentUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);

@@ -1,4 +1,3 @@
-
 import { Controller, Post, Body, Get, UseGuards, Query, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
@@ -20,7 +19,7 @@ export class TippingController {
       postId?: string;
       currency?: string;
       paymentMethodId?: string;
-    },
+    }
   ) {
     return this.tippingService.createFiatTip(
       req.user?.userId || req.user?.id,
@@ -28,7 +27,7 @@ export class TippingController {
       body.amount,
       body.postId,
       body.currency ?? 'usd',
-      body.paymentMethodId,
+      body.paymentMethodId
     );
   }
 
@@ -43,7 +42,7 @@ export class TippingController {
   @Get('leaderboard')
   leaderboard(
     @Query('period') period: 'all' | 'weekly' | 'monthly' = 'all',
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     const parsedLimit = limit ? parseInt(limit, 10) : 50;
     return this.tippingService.getLeaderboard(period, Number.isNaN(parsedLimit) ? 50 : parsedLimit);

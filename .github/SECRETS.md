@@ -7,6 +7,7 @@ This document explains the secrets needed for automated app store distribution v
 ### Expo (Required for building)
 
 **EXPO_TOKEN**
+
 - Generate from: https://expo.dev/settings/accounts/tokens
 - Purpose: Authenticate with Expo services for building
 - How to add: Settings → Secrets and variables → Actions → New repository secret
@@ -14,21 +15,25 @@ This document explains the secrets needed for automated app store distribution v
 ### Apple (Required for iOS submission)
 
 **APPLE_ID**
+
 - Email address for Apple Developer Account
 - Example: `developer@zynkra.com`
 
 **APPLE_PASSWORD**
+
 - App-specific password (NOT regular Apple ID password)
 - Generate from: https://appleid.apple.com/account/manage → Security → App-specific passwords
 - Create password for "Zynkra Release"
 
 **APPLE_TEAM_ID**
+
 - Found in: https://developer.apple.com/account → Membership
 - Example: `A1B2C3D4E5`
 
 ### Google Play (Required for Android submission)
 
 **ANDROID_SERVICE_ACCOUNT**
+
 - JSON key for service account
 - Generate from: Google Cloud Console → Service Accounts
 - Full JSON contents (minified)
@@ -153,15 +158,18 @@ Periodically update your secrets for security:
 ## Troubleshooting
 
 ### "Invalid Expo Token"
+
 - Regenerate token: https://expo.dev/settings/accounts/tokens
 - Ensure token is not expired (3 months)
 
 ### "Apple authentication failed"
+
 - Verify app-specific password is correct
 - Ensure password is for "Zynkra Release" app
 - Check Team ID is correct
 
 ### "Google Play authentication failed"
+
 - Verify service account JSON is valid
 - Ensure service account has Editor role in Google Play
 - Check JSON is properly minified for GitHub secret

@@ -10,14 +10,10 @@ export class StoriesReactionService {
   constructor(
     @InjectRepository(StoryReaction)
     private readonly storyReactionsRepository: Repository<StoryReaction>,
-    private readonly storiesService: StoriesService,
+    private readonly storiesService: StoriesService
   ) {}
 
-  async addReaction(
-    userId: string,
-    storyId: string,
-    reaction: string,
-  ): Promise<StoryReaction> {
+  async addReaction(userId: string, storyId: string, reaction: string): Promise<StoryReaction> {
     const story = await this.storiesService.findOne(storyId, userId);
     if (!story) {
       throw new NotFoundException('Story not found');

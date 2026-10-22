@@ -1,4 +1,3 @@
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,13 +9,10 @@ import { User } from '../users/entities/user.entity';
 export class NonprofitsService {
   constructor(
     @InjectRepository(Nonprofit)
-    private readonly nonprofitRepository: Repository<Nonprofit>,
+    private readonly nonprofitRepository: Repository<Nonprofit>
   ) {}
 
-  async create(
-    createNonprofitDto: CreateNonprofitDto,
-    user: User,
-  ): Promise<Nonprofit> {
+  async create(createNonprofitDto: CreateNonprofitDto, user: User): Promise<Nonprofit> {
     const nonprofit = this.nonprofitRepository.create({
       ...createNonprofitDto,
       user,

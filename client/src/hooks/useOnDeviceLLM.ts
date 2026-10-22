@@ -45,55 +45,82 @@ export function useOnDeviceLLM(): UseOnDeviceLLMReturn {
     }
   }, [isReady, isLoading]);
 
-  const withGeneration = useCallback(async <T>(fn: () => Promise<T>): Promise<T> => {
-    if (!isReady) {
-      await initialize();
-    }
-    setIsGenerating(true);
-    setError(null);
-    try {
-      const result = await fn();
-      return result;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'AI generation failed';
-      setError(message);
-      throw err;
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [isReady, initialize]);
+  const withGeneration = useCallback(
+    async <T>(fn: () => Promise<T>): Promise<T> => {
+      if (!isReady) {
+        await initialize();
+      }
+      setIsGenerating(true);
+      setError(null);
+      try {
+        const result = await fn();
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'AI generation failed';
+        setError(message);
+        throw err;
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [isReady, initialize]
+  );
 
-  const chat = useCallback((messages: ChatMessage[]) => {
-    return withGeneration(() => llmRef.current.chat(messages));
-  }, [withGeneration]);
+  const chat = useCallback(
+    (messages: ChatMessage[]) => {
+      return withGeneration(() => llmRef.current.chat(messages));
+    },
+    [withGeneration]
+  );
 
-  const generatePost = useCallback((topic: string, tone?: string) => {
-    return withGeneration(() => llmRef.current.generatePost(topic, tone));
-  }, [withGeneration]);
+  const generatePost = useCallback(
+    (topic: string, tone?: string) => {
+      return withGeneration(() => llmRef.current.generatePost(topic, tone));
+    },
+    [withGeneration]
+  );
 
-  const generateArticle = useCallback((title: string, outline?: string) => {
-    return withGeneration(() => llmRef.current.generateArticle(title, outline));
-  }, [withGeneration]);
+  const generateArticle = useCallback(
+    (title: string, outline?: string) => {
+      return withGeneration(() => llmRef.current.generateArticle(title, outline));
+    },
+    [withGeneration]
+  );
 
-  const generateHashtags = useCallback((content: string) => {
-    return withGeneration(() => llmRef.current.generateHashtags(content));
-  }, [withGeneration]);
+  const generateHashtags = useCallback(
+    (content: string) => {
+      return withGeneration(() => llmRef.current.generateHashtags(content));
+    },
+    [withGeneration]
+  );
 
-  const summarize = useCallback((text: string) => {
-    return withGeneration(() => llmRef.current.summarize(text));
-  }, [withGeneration]);
+  const summarize = useCallback(
+    (text: string) => {
+      return withGeneration(() => llmRef.current.summarize(text));
+    },
+    [withGeneration]
+  );
 
-  const analyzeSentiment = useCallback((text: string) => {
-    return withGeneration(() => llmRef.current.analyzeSentiment(text));
-  }, [withGeneration]);
+  const analyzeSentiment = useCallback(
+    (text: string) => {
+      return withGeneration(() => llmRef.current.analyzeSentiment(text));
+    },
+    [withGeneration]
+  );
 
-  const translate = useCallback((text: string, targetLang: string) => {
-    return withGeneration(() => llmRef.current.translate(text, targetLang));
-  }, [withGeneration]);
+  const translate = useCallback(
+    (text: string, targetLang: string) => {
+      return withGeneration(() => llmRef.current.translate(text, targetLang));
+    },
+    [withGeneration]
+  );
 
-  const generateCaption = useCallback((mediaType: string, description?: string) => {
-    return withGeneration(() => llmRef.current.generateCaption(mediaType, description));
-  }, [withGeneration]);
+  const generateCaption = useCallback(
+    (mediaType: string, description?: string) => {
+      return withGeneration(() => llmRef.current.generateCaption(mediaType, description));
+    },
+    [withGeneration]
+  );
 
   const getStatus = useCallback(() => {
     return llmRef.current.getStatus();

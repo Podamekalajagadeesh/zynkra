@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsArray,
-  IsUrl,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsUrl, MaxLength } from 'class-validator';
 
 export const OAUTH_SCOPES = ['read_profile', 'read_posts', 'write_posts'];
 

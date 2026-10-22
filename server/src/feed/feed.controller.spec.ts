@@ -39,7 +39,7 @@ describe('FeedController viewer hydration', () => {
     usersService.findOneById.mockResolvedValue(null);
 
     await expect(controller.getChronologicalFeed({ user: { userId: 'missing' } })).rejects.toThrow(
-      UnauthorizedException,
+      UnauthorizedException
     );
   });
 
@@ -48,7 +48,7 @@ describe('FeedController viewer hydration', () => {
 
     expect(feedService.getFeed).toHaveBeenCalledWith(
       { id: 'user-1', username: 'viewer' },
-      { view: 'following', limit: 5 },
+      { view: 'following', limit: 5 }
     );
   });
 

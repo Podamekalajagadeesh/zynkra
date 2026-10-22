@@ -24,9 +24,12 @@ describe('MessageContent text to speech', () => {
       speak: vi.fn(),
       cancel: vi.fn(),
     });
-    vi.stubGlobal('SpeechSynthesisUtterance', vi.fn(function (text: string) {
-      return { text, onend: undefined, onerror: undefined };
-    }));
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      vi.fn(function (text: string) {
+        return { text, onend: undefined, onerror: undefined };
+      })
+    );
   });
 
   it('reads the displayed message aloud when requested', () => {
@@ -34,7 +37,7 @@ describe('MessageContent text to speech', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Read message aloud' }));
 
     expect(window.speechSynthesis.speak).toHaveBeenCalledWith(
-      expect.objectContaining({ text: 'Hello from Zynkra' }),
+      expect.objectContaining({ text: 'Hello from Zynkra' })
     );
     expect(screen.getByRole('button', { name: 'Stop reading message aloud' })).toBeInTheDocument();
   });

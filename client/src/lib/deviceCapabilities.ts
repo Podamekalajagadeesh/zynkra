@@ -28,10 +28,14 @@ export function detectDeviceCapabilities(input: DeviceCapabilityInput = {}): Dev
   const isTouch = input.hasTouch ?? false;
   const isElectron = input.isElectron ?? false;
 
-  const isSmartwatch = /watch|wear os|wearos|galaxy watch|apple watch/i.test(userAgent) || (width <= 220 && height <= 220);
-  const isSmartTv = /tv|android tv|google tv|roku|apple tv|fire tv|webos|tizen/i.test(userAgent) || (width >= 1920 && height <= 1080 && !isTouch);
+  const isSmartwatch =
+    /watch|wear os|wearos|galaxy watch|apple watch/i.test(userAgent) ||
+    (width <= 220 && height <= 220);
+  const isSmartTv =
+    /tv|android tv|google tv|roku|apple tv|fire tv|webos|tizen/i.test(userAgent) ||
+    (width >= 1920 && height <= 1080 && !isTouch);
   const isTablet = /ipad|tablet|tab/i.test(userAgent) || (width >= 768 && width < 1200);
-  const isMobile = /iphone|android|mobile/i.test(userAgent) || (width < 768);
+  const isMobile = /iphone|android|mobile/i.test(userAgent) || width < 768;
 
   let mode: DeviceMode = 'desktop';
   let label = 'Desktop';
@@ -46,7 +50,8 @@ export function detectDeviceCapabilities(input: DeviceCapabilityInput = {}): Dev
   } else if (isSmartTv) {
     mode = 'tv';
     label = 'Smart TV';
-    description = 'A large-format, remote-friendly experience with big controls and simple navigation.';
+    description =
+      'A large-format, remote-friendly experience with big controls and simple navigation.';
     isCompact = false;
   } else if (isTablet) {
     mode = 'tablet';
@@ -80,6 +85,8 @@ export function getDeviceCapabilities(): DeviceCapabilityInfo {
     width: window.innerWidth,
     height: window.innerHeight,
     hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-    isElectron: typeof window !== 'undefined' && Boolean((window as Window & { electron?: unknown }).electron),
+    isElectron:
+      typeof window !== 'undefined' &&
+      Boolean((window as Window & { electron?: unknown }).electron),
   });
 }

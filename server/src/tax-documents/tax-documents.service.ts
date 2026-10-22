@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { TaxDocument, TaxDocumentStatus } from './entities/tax-document.entity';
@@ -18,7 +14,7 @@ export class TaxDocumentsService {
     private taxDocumentsRepository: Repository<TaxDocument>,
     @InjectRepository(LedgerEntry)
     private ledgerRepository: Repository<LedgerEntry>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   async list(userId: string): Promise<TaxDocument[]> {
@@ -59,10 +55,7 @@ export class TaxDocumentsService {
       },
     });
 
-    const totalAmount = entries.reduce(
-      (sum, entry) => sum + Math.max(0, Number(entry.amount)),
-      0,
-    );
+    const totalAmount = entries.reduce((sum, entry) => sum + Math.max(0, Number(entry.amount)), 0);
 
     const document = this.taxDocumentsRepository.create({
       user,

@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/useToast';
@@ -53,10 +64,7 @@ export default function EventPage() {
     const fetchEventData = async () => {
       if (!id) return;
       try {
-        const [eventData, analyticsData] = await Promise.all([
-          getEvent(id),
-          getEventAnalytics(id)
-        ]);
+        const [eventData, analyticsData] = await Promise.all([getEvent(id), getEventAnalytics(id)]);
         setEvent(eventData);
         setAnalytics(analyticsData);
       } catch (error) {
@@ -94,15 +102,21 @@ export default function EventPage() {
     }
   };
 
-  if (isLoading) return <PageShell eyebrow="Events" title="Loading..." description="">Loading event details...</PageShell>;
-  if (!event) return <PageShell eyebrow="Events" title="Event Not Found" description="">The event you're looking for doesn't exist.</PageShell>;
+  if (isLoading)
+    return (
+      <PageShell eyebrow="Events" title="Loading..." description="">
+        Loading event details...
+      </PageShell>
+    );
+  if (!event)
+    return (
+      <PageShell eyebrow="Events" title="Event Not Found" description="">
+        The event you're looking for doesn't exist.
+      </PageShell>
+    );
 
   return (
-    <PageShell
-      eyebrow="Events"
-      title={event.title}
-      description={event.description}
-    >
+    <PageShell eyebrow="Events" title={event.title} description={event.description}>
       <div className="space-y-8">
         {/* Event Details */}
         <div className="surface-soft p-6 rounded-lg">
@@ -122,7 +136,12 @@ export default function EventPage() {
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Meeting Link</dt>
                     <dd>
-                      <a href={event.virtualLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                      <a
+                        href={event.virtualLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
                         {event.virtualLink}
                       </a>
                     </dd>
@@ -140,7 +159,11 @@ export default function EventPage() {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Capacity</dt>
-                  <dd>{event.maxAttendees ? `${event.attendees.length} / ${event.maxAttendees}` : `${event.attendees.length} / Unlimited`}</dd>
+                  <dd>
+                    {event.maxAttendees
+                      ? `${event.attendees.length} / ${event.maxAttendees}`
+                      : `${event.attendees.length} / Unlimited`}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Total Revenue</dt>
@@ -150,9 +173,13 @@ export default function EventPage() {
             </div>
             <div className="flex flex-col justify-start gap-4">
               <Button onClick={handleAttend}>RSVP Now</Button>
-              <Button variant="secondary" onClick={handleUnattend}>Cancel RSVP</Button>
+              <Button variant="secondary" onClick={handleUnattend}>
+                Cancel RSVP
+              </Button>
               <Link to="/events">
-                <Button variant="secondary" className="w-full">Back to All Events</Button>
+                <Button variant="secondary" className="w-full">
+                  Back to All Events
+                </Button>
               </Link>
             </div>
           </div>
@@ -163,14 +190,21 @@ export default function EventPage() {
           <h3 className="text-lg font-semibold mb-4">Attendees ({event.attendees.length})</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {event.attendees.map((attendee) => (
-              <div key={attendee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div
+                key={attendee.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded"
+              >
                 <span>{attendee.email}</span>
-                <span className={`text-xs px-2 py-1 rounded ${attendee.checkedIn ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  {attendee.checkedIn ? 'Checked In' : 'RSVP\'d'}
+                <span
+                  className={`text-xs px-2 py-1 rounded ${attendee.checkedIn ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+                >
+                  {attendee.checkedIn ? 'Checked In' : "RSVP'd"}
                 </span>
               </div>
             ))}
-            {event.attendees.length === 0 && <p className="text-gray-500">No attendees yet. Be the first to RSVP!</p>}
+            {event.attendees.length === 0 && (
+              <p className="text-gray-500">No attendees yet. Be the first to RSVP!</p>
+            )}
           </div>
         </div>
 
@@ -178,7 +212,7 @@ export default function EventPage() {
         {analytics && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">Event Analytics</h3>
-            
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="surface-soft p-4 rounded-lg text-center">

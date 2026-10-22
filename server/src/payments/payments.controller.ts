@@ -8,7 +8,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
-    private readonly payoutReconciliationService: PayoutReconciliationService,
+    private readonly payoutReconciliationService: PayoutReconciliationService
   ) {}
 
   // ---- Stripe Connect onboarding (creator-facing) ------------------------
@@ -64,34 +64,35 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   async requestPayout(@Req() req, @Body() body: { amount: number; purpose?: string }) {
     const userId = req.user?.userId || req.user?.id;
-    return this.paymentsService.requestPayout(userId, body.amount, body.purpose || 'creator-payout');
+    return this.paymentsService.requestPayout(
+      userId,
+      body.amount,
+      body.purpose || 'creator-payout'
+    );
   }
 
   @Post('payouts/schedule')
   @UseGuards(JwtAuthGuard)
   async schedulePayout(
     @Req() req,
-    @Body() body: { amount: number; dueAt: string; purpose?: string },
+    @Body() body: { amount: number; dueAt: string; purpose?: string }
   ) {
     const userId = req.user?.userId || req.user?.id;
     return this.paymentsService.schedulePayout(
       userId,
       body.amount,
       body.purpose || 'creator-payout',
-      new Date(body.dueAt),
+      new Date(body.dueAt)
     );
   }
 
   @Post('confirm')
   @UseGuards(JwtAuthGuard)
-  async confirmPayment(
-    @Req() req,
-    @Body() body: { paymentId: string; paymentMethodId?: string },
-  ) {
+  async confirmPayment(@Req() req, @Body() body: { paymentId: string; paymentMethodId?: string }) {
     return this.paymentsService.confirmPayment(
       body.paymentId,
       req.user?.userId || req.user?.id,
-      body.paymentMethodId,
+      body.paymentMethodId
     );
   }
 
@@ -99,13 +100,14 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   async processPayment(
     @Req() req,
-    @Body() body: {
+    @Body()
+    body: {
       amount: number;
       currency: string;
       paymentMethod?: string;
       paymentMethodId?: string;
       paymentDetails?: any;
-    },
+    }
   ) {
     const paymentMethodId =
       body.paymentMethodId ??
@@ -113,17 +115,12 @@ export class PaymentsController {
         ? body.paymentMethod
         : undefined);
     const userId = req.user?.userId || req.user?.id;
-    const transaction = await this.paymentsService.processPayment(
-      userId,
-      body.amount,
-      'manual',
-      {
-        currency: body.currency,
-        payerId: userId,
-        metadata: { paymentMethod: body.paymentMethod },
-        paymentMethodId,
-      },
-    );
+    const transaction = await this.paymentsService.processPayment(userId, body.amount, 'manual', {
+      currency: body.currency,
+      payerId: userId,
+      metadata: { paymentMethod: body.paymentMethod },
+      paymentMethodId,
+    });
 
     return {
       success: transaction.success,
@@ -139,13 +136,16 @@ export class PaymentsController {
 
   @Post('demo-poc')
   @UseGuards(JwtAuthGuard)
-  async createDemoPaymentScenario(@Req() req, @Body() body: { amount?: number; currency?: string; recipientId?: string }) {
+  async createDemoPaymentScenario(
+    @Req() req,
+    @Body() body: { amount?: number; currency?: string; recipientId?: string }
+  ) {
     const userId = req.user?.userId || req.user?.id;
     return this.paymentsService.createDemoPaymentScenario(
       body.amount ?? 12.5,
       body.currency ?? 'usd',
       body.recipientId || userId,
-      userId,
+      userId
     );
   }
 }

@@ -19,7 +19,9 @@ vi.mock('../hooks/useAuth', () => ({
 // Mock WebAuthn
 vi.mock('../components/WebAuthn', () => ({
   default: ({ children, className, variant }: any) => (
-    <button className={className} data-variant={variant}>{children}</button>
+    <button className={className} data-variant={variant}>
+      {children}
+    </button>
   ),
 }));
 
@@ -56,7 +58,10 @@ describe('LoginPage', () => {
 
   it('renders forgot password link', () => {
     renderLoginPage();
-    expect(screen.getByRole('link', { name: /forgot password/i })).toHaveAttribute('href', '/forgot-password');
+    expect(screen.getByRole('link', { name: /forgot password/i })).toHaveAttribute(
+      'href',
+      '/forgot-password'
+    );
   });
 
   it('renders sign up link', () => {
@@ -101,7 +106,7 @@ describe('LoginPage', () => {
       }),
       http.get('*/users/me', () => {
         return HttpResponse.json({ id: 'user-1', username: 'testuser', email: 'test@example.com' });
-      }),
+      })
     );
 
     await user.type(screen.getByLabelText(/email or username/i), 'test@example.com');
@@ -219,7 +224,7 @@ describe('LoginPage', () => {
       }),
       http.get('*/users/me', () => {
         return HttpResponse.json({ id: 'user-1', username: 'testuser', email: 'test@example.com' });
-      }),
+      })
     );
 
     const rememberCheckbox = screen.getByLabelText(/remember me/i);
@@ -246,7 +251,9 @@ describe('LoginPage', () => {
     server.use(
       http.post('*/auth/magic-link/request', async ({ request }) => {
         capturedBody = await request.json();
-        return HttpResponse.json({ message: 'If an account exists for that email, a sign-in link has been sent.' });
+        return HttpResponse.json({
+          message: 'If an account exists for that email, a sign-in link has been sent.',
+        });
       })
     );
 

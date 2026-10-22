@@ -14,7 +14,7 @@ export class ProductsService {
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(ProductVariant)
-    private readonly productVariantsRepository: Repository<ProductVariant>,
+    private readonly productVariantsRepository: Repository<ProductVariant>
   ) {}
 
   async create(user: User, createProductDto: CreateProductDto): Promise<Product> {
@@ -47,7 +47,7 @@ export class ProductsService {
     category?: string,
     search?: string,
     minPrice?: number,
-    maxPrice?: number,
+    maxPrice?: number
   ) {
     const skip = (page - 1) * limit;
     const queryBuilder = this.productsRepository.createQueryBuilder('product');
@@ -62,10 +62,9 @@ export class ProductsService {
     }
 
     if (search) {
-      queryBuilder.andWhere(
-        '(product.name ILIKE :search OR product.description ILIKE :search)',
-        { search: `%${search}%` }
-      );
+      queryBuilder.andWhere('(product.name ILIKE :search OR product.description ILIKE :search)', {
+        search: `%${search}%`,
+      });
     }
 
     if (minPrice !== undefined) {
@@ -124,7 +123,11 @@ export class ProductsService {
     };
   }
 
-  async update(user: User, id: string, updateProductDto: Partial<CreateProductDto>): Promise<Product> {
+  async update(
+    user: User,
+    id: string,
+    updateProductDto: Partial<CreateProductDto>
+  ): Promise<Product> {
     const product = await this.productsRepository.findOne({ where: { id, sellerId: user.id } });
 
     if (!product) {
@@ -139,7 +142,7 @@ export class ProductsService {
     if (updateProductDto.variants && updateProductDto.variants.length > 0) {
       // Delete existing variants
       await this.productVariantsRepository.delete({ productId: id });
-      
+
       // Create new variants
       for (const variantData of updateProductDto.variants) {
         const variant = this.productVariantsRepository.create({
@@ -168,7 +171,10 @@ export class ProductsService {
     return { success: true };
   }
 
-  async addVariant(productId: string, variantData: Partial<ProductVariant>): Promise<ProductVariant> {
+  async addVariant(
+    productId: string,
+    variantData: Partial<ProductVariant>
+  ): Promise<ProductVariant> {
     const variant = this.productVariantsRepository.create({
       ...variantData,
       productId: productId,

@@ -23,10 +23,10 @@ export class KeyRotationEvents1793100000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "key_rotation_events" ADD CONSTRAINT "FK_key_rotation_events_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "key_rotation_events" ADD CONSTRAINT "FK_key_rotation_events_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_key_rotation_user_kind" ON "key_rotation_events" ("userId", "kind", "createdAt")`,
+      `CREATE INDEX "IDX_key_rotation_user_kind" ON "key_rotation_events" ("userId", "kind", "createdAt")`
     );
   }
 

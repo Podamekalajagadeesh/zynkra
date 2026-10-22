@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { CollabOpportunity } from './collab-opportunity.entity';
 
@@ -7,7 +14,7 @@ export class CollabApplication {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => CollabOpportunity, opportunity => opportunity.applications)
+  @ManyToOne(() => CollabOpportunity, (opportunity) => opportunity.applications)
   opportunity: CollabOpportunity;
 
   @Column()

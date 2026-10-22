@@ -20,10 +20,7 @@ export class PreKeysController {
   @UseGuards(JwtAuthGuard)
   @Post('identity')
   @HttpCode(HttpStatus.OK)
-  async uploadIdentityKey(
-    @Req() req,
-    @Body('identityKey') identityKey: string,
-  ): Promise<void> {
+  async uploadIdentityKey(@Req() req, @Body('identityKey') identityKey: string): Promise<void> {
     await this.preKeysService.uploadIdentityKey(req.user.userId, identityKey);
   }
 
@@ -34,14 +31,9 @@ export class PreKeysController {
     @Req() req,
     @Body('keyId') keyId: number,
     @Body('publicKey') publicKey: string,
-    @Body('signature') signature: string,
+    @Body('signature') signature: string
   ): Promise<void> {
-    await this.preKeysService.uploadSignedPreKey(
-      req.user.userId,
-      keyId,
-      publicKey,
-      signature,
-    );
+    await this.preKeysService.uploadSignedPreKey(req.user.userId, keyId, publicKey, signature);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -49,12 +41,9 @@ export class PreKeysController {
   @HttpCode(HttpStatus.OK)
   async uploadOneTimePreKeys(
     @Req() req,
-    @Body('preKeys') preKeys: Array<{ keyId: number; publicKey: string }>,
+    @Body('preKeys') preKeys: Array<{ keyId: number; publicKey: string }>
   ): Promise<{ count: number }> {
-    const count = await this.preKeysService.uploadOneTimePreKeys(
-      req.user.userId,
-      preKeys,
-    );
+    const count = await this.preKeysService.uploadOneTimePreKeys(req.user.userId, preKeys);
     return { count };
   }
 
@@ -69,16 +58,14 @@ export class PreKeysController {
       identityKey: string;
       signedPreKey: { keyId: number; publicKey: string; signature: string };
       oneTimePreKeys: Array<{ keyId: number; publicKey: string }>;
-    },
+    }
   ): Promise<void> {
     await this.preKeysService.uploadPreKeyBundle(req.user.userId, bundle);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('bundle/:userId')
-  async getPreKeyBundle(
-    @Param('userId') userId: string,
-  ): Promise<{
+  async getPreKeyBundle(@Param('userId') userId: string): Promise<{
     registrationId: number;
     identityKey: string;
     signedPreKey: { keyId: number; publicKey: string; signature: string };
@@ -89,9 +76,7 @@ export class PreKeysController {
 
   @UseGuards(JwtAuthGuard)
   @Get('prekey-count')
-  async getOneTimePreKeyCount(
-    @Req() req,
-  ): Promise<{ count: number }> {
+  async getOneTimePreKeyCount(@Req() req): Promise<{ count: number }> {
     const count = await this.preKeysService.getOneTimePreKeyCount(req.user.userId);
     return { count };
   }
@@ -105,11 +90,12 @@ export class PreKeysController {
   @Get('rotation-events')
   async getRotationEvents(
     @Req() req,
-    @Query('since') since?: string,
-  ): Promise<Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>> {
+    @Query('since') since?: string
+  ): Promise<
+    Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
+  > {
     const parsed = since ? new Date(since) : undefined;
-    const sinceDate =
-      parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
+    const sinceDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
     return this.preKeysService.getRotationEvents(req.user.userId, sinceDate);
   }
 
@@ -121,7 +107,7 @@ export class PreKeysController {
   @UseGuards(JwtAuthGuard)
   @Get('identity/:userId')
   async getIdentityKeyStatus(
-    @Param('userId') userId: string,
+    @Param('userId') userId: string
   ): Promise<{ publicKey: string; rotatedAt: string | null }> {
     return this.preKeysService.getIdentityKeyStatus(userId);
   }

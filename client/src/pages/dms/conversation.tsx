@@ -1,7 +1,16 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getMessages, sendMessage, updateMessage, deleteMessage, uploadMedia, setVanishMode, setMessageTtl, getConversations } from '../../lib/api';
+import {
+  getMessages,
+  sendMessage,
+  updateMessage,
+  deleteMessage,
+  uploadMedia,
+  setVanishMode,
+  setMessageTtl,
+  getConversations,
+} from '../../lib/api';
 import { Message, Conversation as ConversationType } from '../../lib/types';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebRTC } from '../../hooks/useWebRTC';
@@ -10,7 +19,18 @@ import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Edit, Mic, MoreHorizontal, Paperclip, Trash2, Video, Ghost, Timer, ShieldCheck, Lock } from 'lucide-react';
+import {
+  Edit,
+  Mic,
+  MoreHorizontal,
+  Paperclip,
+  Trash2,
+  Video,
+  Ghost,
+  Timer,
+  ShieldCheck,
+  Lock,
+} from 'lucide-react';
 import { CallModal } from '../../components/dms/CallModal/CallModal';
 import MessageContent from '../../components/dms/MessageContent';
 import { formatDateTime } from '../../lib/preferences';
@@ -54,7 +74,12 @@ export function ConversationPage() {
   const [conversation, setConversation] = useState<ConversationType | null>(null);
   const [vanishMode, setVanishModeState] = useState(false);
   const [messageTtl, setMessageTtlState] = useState<number | null>(null);
-  const { encryptMessage, isReady: e2eeReady, isInitializing: e2eeInit, error: e2eeError } = useE2EE(currentUser?.id);
+  const {
+    encryptMessage,
+    isReady: e2eeReady,
+    isInitializing: e2eeInit,
+    error: e2eeError,
+  } = useE2EE(currentUser?.id);
 
   useEffect(() => {
     if (id) {
@@ -84,9 +109,10 @@ export function ConversationPage() {
   };
 
   /** Find the other participant in a 1:1 conversation. */
-  const recipientId = conversation?.type === 'one_to_one'
-    ? conversation.participants?.find((p) => p.id !== currentUser?.id)?.id ?? null
-    : null;
+  const recipientId =
+    conversation?.type === 'one_to_one'
+      ? (conversation.participants?.find((p) => p.id !== currentUser?.id)?.id ?? null)
+      : null;
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +125,11 @@ export function ConversationPage() {
 
       if (selectedFile) {
         const { url } = await uploadMedia(selectedFile);
-        const type = selectedFile.type.startsWith('image') ? 'image' : selectedFile.type.startsWith('video') ? 'video' : 'audio';
+        const type = selectedFile.type.startsWith('image')
+          ? 'image'
+          : selectedFile.type.startsWith('video')
+            ? 'video'
+            : 'audio';
         media = [{ url, type }];
       }
 
@@ -113,7 +143,15 @@ export function ConversationPage() {
         }
       }
 
-      const sentMessage = await sendMessage(id, undefined, content, undefined, media, undefined, senderPublicKey);
+      const sentMessage = await sendMessage(
+        id,
+        undefined,
+        content,
+        undefined,
+        media,
+        undefined,
+        senderPublicKey
+      );
       setMessages((prev) => [...prev, sentMessage]);
       setNewMessage('');
       setSelectedFile(null);
@@ -130,9 +168,7 @@ export function ConversationPage() {
 
     try {
       const updatedMessage = await updateMessage(messageId, editedContent);
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === messageId ? updatedMessage : msg))
-      );
+      setMessages((prev) => prev.map((msg) => (msg.id === messageId ? updatedMessage : msg)));
       setEditingMessageId(null);
       setEditedContent('');
     } catch (error) {
@@ -156,8 +192,6 @@ export function ConversationPage() {
       console.error('Failed to delete message:', error);
     }
   };
-
-
 
   const handleRecord = async () => {
     if (isRecording) {
@@ -213,10 +247,17 @@ export function ConversationPage() {
 
         try {
           const { url } = await uploadMedia(file);
-          const sentMessage = await sendMessage(id, undefined, '', undefined, [{ url, type: 'audio' }], {
-            durationSeconds,
-            waveform,
-          });
+          const sentMessage = await sendMessage(
+            id,
+            undefined,
+            '',
+            undefined,
+            [{ url, type: 'audio' }],
+            {
+              durationSeconds,
+              waveform,
+            }
+          );
           setMessages((prev) => [...prev, sentMessage]);
         } catch (error) {
           console.error('Failed to send voice message:', error);
@@ -255,19 +296,25 @@ export function ConversationPage() {
         (msg) =>
           !msg.deletedAt &&
           msg.readBy.length > 0 &&
-          msg.readBy.some((r) => r.user.id !== currentUser?.id),
+          msg.readBy.some((r) => r.user.id !== currentUser?.id)
       );
       readMessages.forEach((msg) => {
         // We call the API directly to avoid the confirmation prompt
-        deleteMessage(msg.id).then(() => {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === msg.id
-                ? { ...m, content: 'This message was deleted.', deletedAt: new Date().toISOString() }
-                : m
-            )
-          );
-        }).catch(err => console.error('Failed to auto-delete message in vanish mode:', err));
+        deleteMessage(msg.id)
+          .then(() => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === msg.id
+                  ? {
+                      ...m,
+                      content: 'This message was deleted.',
+                      deletedAt: new Date().toISOString(),
+                    }
+                  : m
+              )
+            );
+          })
+          .catch((err) => console.error('Failed to auto-delete message in vanish mode:', err));
       });
     }
   }, [messages, vanishMode, currentUser, id]);
@@ -279,7 +326,10 @@ export function ConversationPage() {
           <h2 className="text-xl font-bold">Conversation</h2>
           <div className="flex items-center space-x-2 mr-4">
             {e2eeReady ? (
-              <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400" title="Transport is encrypted via TLS. End-to-end encryption is not yet enforced server-side.">
+              <div
+                className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+                title="Transport is encrypted via TLS. End-to-end encryption is not yet enforced server-side."
+              >
                 <Lock size={16} />
                 <span className="text-xs hidden sm:inline">TLS</span>
               </div>
@@ -297,10 +347,7 @@ export function ConversationPage() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Timer
-                size={18}
-                className={messageTtl ? 'text-blue-500' : 'text-gray-400'}
-              />
+              <Timer size={18} className={messageTtl ? 'text-blue-500' : 'text-gray-400'} />
               <select
                 aria-label="Disappearing messages timer"
                 value={messageTtl ?? ''}
@@ -314,9 +361,7 @@ export function ConversationPage() {
               </select>
             </div>
             <div className="flex items-center space-x-2">
-              <Ghost
-                className={vanishMode ? 'text-blue-500' : 'text-gray-400'}
-              />
+              <Ghost className={vanishMode ? 'text-blue-500' : 'text-gray-400'} />
               <Label htmlFor="vanish-mode">Vanish Mode</Label>
               <Switch
                 id="vanish-mode"
@@ -342,9 +387,7 @@ export function ConversationPage() {
                 <div
                   key={message.id}
                   className={`flex ${
-                    message.sender.id === currentUser?.id
-                      ? 'justify-end'
-                      : 'justify-start'
+                    message.sender.id === currentUser?.id ? 'justify-end' : 'justify-start'
                   }`}
                 >
                   <div
@@ -388,10 +431,7 @@ export function ConversationPage() {
                           className="bg-transparent text-white"
                         />
                         <div className="flex justify-end gap-2 mt-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateMessage(message.id)}
-                          >
+                          <Button size="sm" onClick={() => handleUpdateMessage(message.id)}>
                             Save
                           </Button>
                           <Button
@@ -430,12 +470,7 @@ export function ConversationPage() {
             <Button type="button" onClick={() => fileInputRef.current?.click()}>
               <Paperclip />
             </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
             <Button
               type="button"
               onClick={handleRecord}

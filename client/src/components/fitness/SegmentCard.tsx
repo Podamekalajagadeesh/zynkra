@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
-import { 
-  MapPin, 
-  Clock, 
-  Timer, 
-  Trophy, 
-  Route, 
+import {
+  MapPin,
+  Clock,
+  Timer,
+  Trophy,
+  Route,
   Footprints,
   Bike,
   Waves,
-  Mountain
+  Mountain,
 } from 'lucide-react';
 import { FitnessSegment, SegmentLeaderboard } from '../../lib/types';
 import { getSegmentLeaderboard, createSegmentAttempt } from '../../lib/api';
@@ -26,12 +26,18 @@ interface SegmentCardProps {
 
 const getSegmentTypeIcon = (type: string) => {
   switch (type) {
-    case 'run': return <Footprints className="h-5 w-5" />;
-    case 'ride': return <Bike className="h-5 w-5" />;
-    case 'swim': return <Waves className="h-5 w-5" />;
-    case 'hike': return <Mountain className="h-5 w-5" />;
-    case 'walk': return <Footprints className="h-5 w-5" />;
-    default: return <Route className="h-5 w-5" />;
+    case 'run':
+      return <Footprints className="h-5 w-5" />;
+    case 'ride':
+      return <Bike className="h-5 w-5" />;
+    case 'swim':
+      return <Waves className="h-5 w-5" />;
+    case 'hike':
+      return <Mountain className="h-5 w-5" />;
+    case 'walk':
+      return <Footprints className="h-5 w-5" />;
+    default:
+      return <Route className="h-5 w-5" />;
   }
 };
 
@@ -39,7 +45,7 @@ const formatDuration = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   } else if (minutes > 0) {
@@ -56,7 +62,7 @@ export default function SegmentCard({ segment, userLatitude, userLongitude }: Se
 
   const fetchLeaderboard = async () => {
     if (leaderboard) return;
-    
+
     try {
       setLoading(true);
       const data = await getSegmentLeaderboard(segment.id);
@@ -77,10 +83,10 @@ export default function SegmentCard({ segment, userLatitude, userLongitude }: Se
     createSegmentAttempt(segment.id, duration, userLatitude, userLongitude)
       .then(() => {
         // Refresh leaderboard after logging attempt
-        getSegmentLeaderboard(segment.id).then(data => setLeaderboard(data));
+        getSegmentLeaderboard(segment.id).then((data) => setLeaderboard(data));
         setShowLogModal(false);
       })
-      .catch(err => console.error('Failed to log attempt:', err));
+      .catch((err) => console.error('Failed to log attempt:', err));
   };
 
   return (
@@ -104,8 +110,7 @@ export default function SegmentCard({ segment, userLatitude, userLongitude }: Se
                 </span>
                 {segment.elevationGain && (
                   <span className="flex items-center gap-1 text-sm">
-                    <Mountain className="h-4 w-4" />
-                    +{segment.elevationGain}m
+                    <Mountain className="h-4 w-4" />+{segment.elevationGain}m
                   </span>
                 )}
               </div>
@@ -121,8 +126,8 @@ export default function SegmentCard({ segment, userLatitude, userLongitude }: Se
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img 
-                  src={leaderboard.overall[0].user.profilePhoto} 
+                <img
+                  src={leaderboard.overall[0].user.profilePhoto}
                   alt={leaderboard.overall[0].user.displayName}
                   className="w-8 h-8 rounded-full object-cover"
                 />
@@ -153,7 +158,7 @@ export default function SegmentCard({ segment, userLatitude, userLongitude }: Se
       </Card>
 
       {showLeaderboard && leaderboard && (
-        <SegmentLeaderboardView 
+        <SegmentLeaderboardView
           leaderboard={leaderboard}
           onClose={() => setShowLeaderboard(false)}
         />

@@ -55,6 +55,10 @@ export class AdvancedFeaturesController {
   @Post('translate')
   @HttpCode(HttpStatus.OK)
   translate(@Body() body: { text?: string; targetLanguage?: string }) {
-    return this.translationService.translate(body?.text || '', 'auto', body?.targetLanguage || 'en');
+    return this.translationService.translate(
+      body?.text || '',
+      'auto',
+      body?.targetLanguage || 'en'
+    );
   }
 }

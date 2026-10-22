@@ -24,7 +24,7 @@ class KeyUploadDto {
 export class CryptoController {
   constructor(
     private readonly cryptoService: CryptoService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   @Post('keys')
@@ -33,18 +33,18 @@ export class CryptoController {
     await this.cryptoService.saveIdentityKey(
       user,
       keyUploadDto.identityKey.registrationId,
-      keyUploadDto.identityKey.publicKey,
+      keyUploadDto.identityKey.publicKey
     );
     await this.cryptoService.savePreKey(
       user,
       keyUploadDto.preKey.keyId,
-      keyUploadDto.preKey.publicKey,
+      keyUploadDto.preKey.publicKey
     );
     await this.cryptoService.saveSignedPreKey(
       user,
       keyUploadDto.signedPreKey.keyId,
       keyUploadDto.signedPreKey.publicKey,
-      keyUploadDto.signedPreKey.signature,
+      keyUploadDto.signedPreKey.signature
     );
     return { success: true };
   }

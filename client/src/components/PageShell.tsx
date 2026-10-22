@@ -23,7 +23,12 @@ export function PageShell({
   compact = false,
 }: PageShellProps) {
   return (
-    <div className={twMerge('relative isolate min-h-[calc(100vh-4rem)] overflow-hidden px-4 py-8 sm:px-6 lg:px-8', className)}>
+    <div
+      className={twMerge(
+        'relative isolate min-h-[calc(100vh-4rem)] overflow-hidden px-4 py-8 sm:px-6 lg:px-8',
+        className
+      )}
+    >
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-primary-500/10 blur-3xl animate-float-subtle" />
         <div className="absolute right-[-4rem] top-24 h-80 w-80 rounded-full bg-accent-500/10 blur-3xl animate-float-subtle-delayed" />
@@ -54,7 +59,12 @@ export function PageShell({
           {action && <div className="flex shrink-0 items-center gap-3">{action}</div>}
         </div>
 
-        <div className={twMerge('rounded-[1.75rem] border border-white/70 bg-white/85 p-4 shadow-[0_30px_90px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-dark-700/80 dark:bg-dark-800/85 sm:p-6 animate-reveal-up', contentClassName)}>
+        <div
+          className={twMerge(
+            'rounded-[1.75rem] border border-white/70 bg-white/85 p-4 shadow-[0_30px_90px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-dark-700/80 dark:bg-dark-800/85 sm:p-6 animate-reveal-up',
+            contentClassName
+          )}
+        >
           {children}
         </div>
       </div>

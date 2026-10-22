@@ -16,27 +16,18 @@ export class UserInterestsController {
   constructor(private readonly userInterestsService: UserInterestsService) {}
 
   @Get()
-  async getUserInterests(
-    @CurrentUser() user: User,
-    @Query('limit') limit: string = '20',
-  ) {
+  async getUserInterests(@CurrentUser() user: User, @Query('limit') limit: string = '20') {
     const limitNumber = parseInt(limit, 10);
     return this.userInterestsService.getInterests(user, limitNumber);
   }
 
   @Post()
-  async addInterest(
-    @Body() addInterestDto: AddInterestDto,
-    @CurrentUser() user: User,
-  ) {
+  async addInterest(@Body() addInterestDto: AddInterestDto, @CurrentUser() user: User) {
     return this.userInterestsService.addInterest(user, addInterestDto.tagId);
   }
 
   @Delete(':tagId')
-  async removeInterest(
-    @Param('tagId') tagId: string,
-    @CurrentUser() user: User,
-  ) {
+  async removeInterest(@Param('tagId') tagId: string, @CurrentUser() user: User) {
     await this.userInterestsService.removeInterest(user, tagId);
     return { success: true };
   }
@@ -45,7 +36,7 @@ export class UserInterestsController {
   async getPostRecommendations(
     @CurrentUser() user: User,
     @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
+    @Query('limit') limit: string = '20'
   ): Promise<RecommendedContent<PostEntity>> {
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -56,7 +47,7 @@ export class UserInterestsController {
   async getProductRecommendations(
     @CurrentUser() user: User,
     @Query('page') page: string = '1',
-    @Query('limit') limit: string = '20',
+    @Query('limit') limit: string = '20'
   ): Promise<RecommendedContent<Product>> {
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -64,10 +55,7 @@ export class UserInterestsController {
   }
 
   @Get('similar')
-  async getSimilarInterests(
-    @CurrentUser() user: User,
-    @Query('limit') limit: string = '10',
-  ) {
+  async getSimilarInterests(@CurrentUser() user: User, @Query('limit') limit: string = '10') {
     const limitNumber = parseInt(limit, 10);
     return this.userInterestsService.getUserSimilarInterests(user, limitNumber);
   }

@@ -62,8 +62,8 @@ describe('GET /auth/verify-email/:token (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -110,8 +110,7 @@ describe('GET /auth/verify-email/:token (HTTP integration)', () => {
   it('returns 200 and access_token for valid token', async () => {
     authService.verifyEmail.mockResolvedValue({ access_token: 'jwt-token' });
 
-    const response = await request(app.getHttpServer())
-      .get('/auth/verify-email/valid-token-123');
+    const response = await request(app.getHttpServer()).get('/auth/verify-email/valid-token-123');
 
     expect(response.status).toBe(200);
     expect(response.body.access_token).toBe('jwt-token');
@@ -122,11 +121,10 @@ describe('GET /auth/verify-email/:token (HTTP integration)', () => {
 
   it('returns 401 for invalid token', async () => {
     authService.verifyEmail.mockRejectedValue(
-      new UnauthorizedException('Invalid verification token'),
+      new UnauthorizedException('Invalid verification token')
     );
 
-    const response = await request(app.getHttpServer())
-      .get('/auth/verify-email/invalid-token');
+    const response = await request(app.getHttpServer()).get('/auth/verify-email/invalid-token');
 
     expect(response.status).toBe(401);
     expect(response.body.message).toContain('Invalid verification token');
@@ -136,11 +134,10 @@ describe('GET /auth/verify-email/:token (HTTP integration)', () => {
 
   it('returns 401 for expired token', async () => {
     authService.verifyEmail.mockRejectedValue(
-      new UnauthorizedException('Verification token has expired'),
+      new UnauthorizedException('Verification token has expired')
     );
 
-    const response = await request(app.getHttpServer())
-      .get('/auth/verify-email/expired-token');
+    const response = await request(app.getHttpServer()).get('/auth/verify-email/expired-token');
 
     expect(response.status).toBe(401);
     expect(response.body.message).toContain('expired');
@@ -157,8 +154,8 @@ describe('POST /auth/resend-verification (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,

@@ -4,12 +4,12 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { useToast } from '../../hooks/useToast';
-import { 
-  getModerationQueue, 
-  approveContent, 
+import {
+  getModerationQueue,
+  approveContent,
   removeContent,
   startCommunityVote,
-  ModerationQueueItem 
+  ModerationQueueItem,
 } from '../../services/contentModerationService';
 
 export function ModerationQueue() {
@@ -36,15 +36,15 @@ export function ModerationQueue() {
   }, [filter]);
 
   const handleApprove = async (itemId: string) => {
-    setProcessingIds(prev => new Set(prev).add(itemId));
+    setProcessingIds((prev) => new Set(prev).add(itemId));
     try {
       await approveContent(itemId);
       addToast('Content approved successfully', 'success');
-      setQueue(prev => prev.filter(item => item.id !== itemId));
+      setQueue((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
       addToast('Failed to approve content', 'error');
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(itemId);
         return newSet;
@@ -53,15 +53,15 @@ export function ModerationQueue() {
   };
 
   const handleRemove = async (itemId: string) => {
-    setProcessingIds(prev => new Set(prev).add(itemId));
+    setProcessingIds((prev) => new Set(prev).add(itemId));
     try {
       await removeContent(itemId);
       addToast('Content removed successfully', 'success');
-      setQueue(prev => prev.filter(item => item.id !== itemId));
+      setQueue((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
       addToast('Failed to remove content', 'error');
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(itemId);
         return newSet;
@@ -70,15 +70,18 @@ export function ModerationQueue() {
   };
 
   const handleStartCommunityVote = async (itemId: string) => {
-    setProcessingIds(prev => new Set(prev).add(itemId));
+    setProcessingIds((prev) => new Set(prev).add(itemId));
     try {
       await startCommunityVote(itemId);
-      addToast('Community vote started successfully! All users can now participate in moderating this content.', 'success');
-      setQueue(prev => prev.filter(item => item.id !== itemId));
+      addToast(
+        'Community vote started successfully! All users can now participate in moderating this content.',
+        'success'
+      );
+      setQueue((prev) => prev.filter((item) => item.id !== itemId));
     } catch (error) {
       addToast('Failed to start community vote', 'error');
     } finally {
-      setProcessingIds(prev => {
+      setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(itemId);
         return newSet;
@@ -89,13 +92,29 @@ export function ModerationQueue() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3 mr-1" /> Pending
+          </Badge>
+        );
       case 'approved':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="h-3 w-3 mr-1" /> Approved</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <Check className="h-3 w-3 mr-1" /> Approved
+          </Badge>
+        );
       case 'removed':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800"><Trash2 className="h-3 w-3 mr-1" /> Removed</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-red-100 text-red-800">
+            <Trash2 className="h-3 w-3 mr-1" /> Removed
+          </Badge>
+        );
       case 'appealed':
-        return <Badge variant="secondary" className="bg-purple-100 text-purple-800"><AlertTriangle className="h-3 w-3 mr-1" /> Appealed</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            <AlertTriangle className="h-3 w-3 mr-1" /> Appealed
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -122,7 +141,7 @@ export function ModerationQueue() {
           <h2 className="text-2xl font-bold">Content Moderation Queue</h2>
         </div>
         <div className="space-y-4">
-          {[1,2,3].map(i => (
+          {[1, 2, 3].map((i) => (
             <Card key={i} className="p-4">
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-gray-200 rounded w-1/3"></div>
@@ -145,7 +164,7 @@ export function ModerationQueue() {
           <Badge variant="secondary">{queue.length}</Badge>
         </div>
         <div className="flex gap-2">
-          {['pending', 'approved', 'removed', 'appealed'].map(status => (
+          {['pending', 'approved', 'removed', 'appealed'].map((status) => (
             <Button
               key={status}
               variant={filter === status ? 'default' : 'ghost'}
@@ -166,7 +185,7 @@ export function ModerationQueue() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {queue.map(item => (
+          {queue.map((item) => (
             <Card key={item.id} className="p-4 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="space-y-2">
@@ -178,10 +197,10 @@ export function ModerationQueue() {
                   </div>
                   <p className="text-sm text-gray-700 line-clamp-3">{item.contentPreview}</p>
                   <div className="flex flex-wrap gap-1">
-                    {item.analysisResult.flags.map(flag => (
-                      <Badge 
-                        key={flag.id} 
-                        variant="outline" 
+                    {item.analysisResult.flags.map((flag) => (
+                      <Badge
+                        key={flag.id}
+                        variant="outline"
                         className={`text-xs ${flag.type === 'deepfake' ? 'bg-red-100 border-red-500 text-red-700' : ''} ${flag.type === 'synthetic_content' ? 'bg-orange-100 border-orange-500 text-orange-700' : ''}`}
                       >
                         {flag.type.replace('_', ' ')} ({Math.round(flag.confidence * 100)}%)

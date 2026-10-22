@@ -20,17 +20,12 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/zynkra-updates"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.zynkra.app",
       "buildNumber": "2",
-      "associatedDomains": [
-        "applinks:app.zynkra.example",
-        "applinks:applinks.zynkra.dev"
-      ],
+      "associatedDomains": ["applinks:app.zynkra.example", "applinks:applinks.zynkra.dev"],
       "privacyManifest": {
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": [],
@@ -70,9 +65,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font"
-    ],
+    "plugins": ["expo-font"],
     "description": "Zynkra: A decentralized social platform for the next generation. Connect, create, and collaborate in a privacy-first environment.",
     "githubUrl": "https://github.com/Podamekalajagadeesh/zynkra",
     "extra": {

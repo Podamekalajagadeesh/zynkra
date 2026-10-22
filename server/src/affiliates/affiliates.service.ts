@@ -18,12 +18,12 @@ export class AffiliatesService {
     @InjectRepository(AffiliateConversion)
     private readonly affiliateConversionRepository: Repository<AffiliateConversion>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   async createAffiliateLink(user: User, dto: CreateAffiliateLinkDto): Promise<AffiliateLink> {
     const slug = nanoid(8);
-    
+
     const link = this.affiliateLinkRepository.create({
       name: dto.name,
       destinationUrl: dto.destinationUrl,
@@ -54,12 +54,12 @@ export class AffiliatesService {
     let totalEarnings = 0;
     let pendingEarnings = 0;
 
-    links.forEach(link => {
+    links.forEach((link) => {
       totalClicks += link.clickCount;
       totalConversions += link.conversionCount;
       totalEarnings += link.totalEarnings;
-      
-      link.conversions.forEach(conversion => {
+
+      link.conversions.forEach((conversion) => {
         if (conversion.status === 'pending') {
           pendingEarnings += conversion.commissionEarned;
         }
@@ -76,9 +76,14 @@ export class AffiliatesService {
     };
   }
 
-  async trackClick(slug: string, ipAddress: string, userAgent?: string, referrer?: string): Promise<string> {
+  async trackClick(
+    slug: string,
+    ipAddress: string,
+    userAgent?: string,
+    referrer?: string
+  ): Promise<string> {
     const link = await this.affiliateLinkRepository.findOne({ where: { slug } });
-    
+
     if (!link) {
       throw new NotFoundException('Affiliate link not found');
     }
@@ -91,7 +96,7 @@ export class AffiliatesService {
     });
 
     await this.affiliateClickRepository.save(click);
-    
+
     link.clickCount += 1;
     await this.affiliateLinkRepository.save(link);
 
@@ -110,32 +115,32 @@ export class AffiliatesService {
 
     const clicksByDay = await this.affiliateClickRepository
       .createQueryBuilder('click')
-      .select("DATE(click.clickedAt)", "date")
-      .addSelect("COUNT(*)", "count")
-      .where("click.affiliateLinkId = :linkId", { linkId })
-      .groupBy("DATE(click.clickedAt)")
-      .orderBy("date", "DESC")
+      .select('DATE(click.clickedAt)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('click.affiliateLinkId = :linkId', { linkId })
+      .groupBy('DATE(click.clickedAt)')
+      .orderBy('date', 'DESC')
       .limit(30)
       .getRawMany();
 
     const conversionsByDay = await this.affiliateConversionRepository
       .createQueryBuilder('conversion')
-      .select("DATE(conversion.convertedAt)", "date")
-      .addSelect("SUM(conversion.commissionEarned)", "earnings")
-      .addSelect("COUNT(*)", "count")
-      .where("conversion.affiliateLinkId = :linkId", { linkId })
-      .groupBy("DATE(conversion.convertedAt)")
-      .orderBy("date", "DESC")
+      .select('DATE(conversion.convertedAt)', 'date')
+      .addSelect('SUM(conversion.commissionEarned)', 'earnings')
+      .addSelect('COUNT(*)', 'count')
+      .where('conversion.affiliateLinkId = :linkId', { linkId })
+      .groupBy('DATE(conversion.convertedAt)')
+      .orderBy('date', 'DESC')
       .limit(30)
       .getRawMany();
 
     const topCountries = await this.affiliateClickRepository
       .createQueryBuilder('click')
-      .select("click.country", "country")
-      .addSelect("COUNT(*)", "count")
-      .where("click.affiliateLinkId = :linkId", { linkId })
-      .groupBy("click.country")
-      .orderBy("count", "DESC")
+      .select('click.country', 'country')
+      .addSelect('COUNT(*)', 'count')
+      .where('click.affiliateLinkId = :linkId', { linkId })
+      .groupBy('click.country')
+      .orderBy('count', 'DESC')
       .limit(10)
       .getRawMany();
 
@@ -149,7 +154,7 @@ export class AffiliatesService {
 
   async deleteAffiliateLink(linkId: string, userId: string): Promise<void> {
     const result = await this.affiliateLinkRepository.delete({ id: linkId, userId });
-    
+
     if (result.affected === 0) {
       throw new NotFoundException('Affiliate link not found');
     }

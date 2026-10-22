@@ -9,10 +9,7 @@ export class InviteCodesController {
   constructor(private readonly inviteCodesService: InviteCodesService) {}
 
   @Post()
-  create(
-    @Request() req,
-    @Body() body: { maxUses?: number; expiresInDays?: number },
-  ) {
+  create(@Request() req, @Body() body: { maxUses?: number; expiresInDays?: number }) {
     return this.inviteCodesService.generateCode(req.user.userId, {
       maxUses: body.maxUses,
       expiresInDays: body.expiresInDays,

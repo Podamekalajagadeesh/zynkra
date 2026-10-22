@@ -18,20 +18,52 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(serviceOverrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    create: jest.fn(), findAll: jest.fn(), findOne: jest.fn(),
-    update: jest.fn(), remove: jest.fn(), like: jest.fn(), unlike: jest.fn(),
-    share: jest.fn(), repost: jest.fn(), undoRepost: jest.fn(),
-    togglePin: jest.fn(), archive: jest.fn(), feature: jest.fn(),
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    like: jest.fn(),
+    unlike: jest.fn(),
+    share: jest.fn(),
+    repost: jest.fn(),
+    undoRepost: jest.fn(),
+    togglePin: jest.fn(),
+    archive: jest.fn(),
+    feature: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [PostsController],
     providers: [
       { provide: PostsService, useValue: { ...defaultService, ...serviceOverrides } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();

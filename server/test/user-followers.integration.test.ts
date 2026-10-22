@@ -42,16 +42,42 @@ function createApp(userServiceOverrides = {}) {
   const mockService = { ...createMockUserService(), ...userServiceOverrides };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [UsersController],
     providers: [
-    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
-    { provide: AccountManagementService, useValue: {} },
+      {
+        provide: VisibilityService,
+        useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) },
+      },
+      { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: mockService },
       { provide: PagesService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -74,7 +100,9 @@ describe('GET /users/me/followers', () => {
       { id: 'follower-2', username: 'bob', displayName: 'Bob' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/me/followers').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/me/followers')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(2);
     expect(r.body[0].username).toBe('alice');
@@ -92,7 +120,9 @@ describe('GET /users/me/followers', () => {
     const { app, usersService, token } = await buildApp();
     usersService.getFollowers.mockRejectedValue(new NotFoundException('User not found'));
 
-    const r = await request(app.getHttpServer()).get('/users/me/followers').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/me/followers')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(404);
     await app.close();
   });
@@ -103,7 +133,9 @@ describe('DELETE /users/followers/:id (remove follower)', () => {
     const { app, usersService, token } = await buildApp();
     usersService.unfollow.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).delete('/users/followers/follower-1').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/users/followers/follower-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(204);
     expect(usersService.unfollow).toHaveBeenCalledWith('follower-1', 'user-1');
     await app.close();
@@ -111,13 +143,15 @@ describe('DELETE /users/followers/:id (remove follower)', () => {
 });
 
 describe('GET /users/:id/followers', () => {
-  it('returns a user\'s followers list', async () => {
+  it("returns a user's followers list", async () => {
     const { app, usersService, token } = await buildApp();
     usersService.getUserFollowers.mockResolvedValue([
       { id: 'follower-1', username: 'alice', displayName: 'Alice' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/other-user/followers').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/other-user/followers')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(usersService.getUserFollowers).toHaveBeenCalledWith('other-user', 'user-1');
     expect(r.body).toHaveLength(1);
@@ -127,13 +161,15 @@ describe('GET /users/:id/followers', () => {
 });
 
 describe('GET /users/:id/following', () => {
-  it('returns a user\'s following list', async () => {
+  it("returns a user's following list", async () => {
     const { app, usersService, token } = await buildApp();
     usersService.getUserFollowing.mockResolvedValue([
       { id: 'user-2', username: 'bob', displayName: 'Bob' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/other-user/following').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/other-user/following')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(usersService.getUserFollowing).toHaveBeenCalledWith('other-user', 'user-1');
     expect(r.body).toHaveLength(1);

@@ -1,4 +1,16 @@
-import { Controller, Post, Body, UseGuards, Request, Get, Param, Delete, Patch, Query, Put } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Get,
+  Param,
+  Delete,
+  Patch,
+  Query,
+  Put,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateDraftDto } from './dto/create-draft.dto';
@@ -19,17 +31,13 @@ export class PostsController {
       req.user,
       createPostDto,
       createPostDto.reelEffectId,
-      createPostDto.groupId,
+      createPostDto.groupId
     );
   }
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
-  findAll(
-    @Request() req,
-    @Query('take') take?: string,
-    @Query('skip') skip?: string,
-  ) {
+  findAll(@Request() req, @Query('take') take?: string, @Query('skip') skip?: string) {
     const userId = req.user ? req.user.userId : undefined;
     return this.postsService.findAll(userId, take ? +take : 10, skip ? +skip : 0);
   }
@@ -91,11 +99,7 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() createPostDto: CreatePostDto,
-    @Request() req,
-  ) {
+  update(@Param('id') id: string, @Body() createPostDto: CreatePostDto, @Request() req) {
     return this.postsService.update(id, createPostDto.content, req.user);
   }
 
@@ -151,11 +155,7 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id/show-likes')
-  updateShowLikes(
-    @Param('id') id: string,
-    @Body('showLikes') showLikes: boolean,
-    @Request() req,
-  ) {
+  updateShowLikes(@Param('id') id: string, @Body('showLikes') showLikes: boolean, @Request() req) {
     return this.postsService.updateShowLikes(id, showLikes, req.user.userId);
   }
 

@@ -72,7 +72,11 @@ export function PostPage() {
 
   if (loading) {
     return (
-      <PageShell eyebrow="Post" title="Loading post" description="Fetching the conversation and media attached to this post.">
+      <PageShell
+        eyebrow="Post"
+        title="Loading post"
+        description="Fetching the conversation and media attached to this post."
+      >
         <div className="space-y-4">
           <Skeleton height={88} />
           <Skeleton height={420} />
@@ -83,7 +87,11 @@ export function PostPage() {
 
   if (!post) {
     return (
-      <PageShell eyebrow="Post" title="Post not found" description="The content may have been removed or the link is invalid.">
+      <PageShell
+        eyebrow="Post"
+        title="Post not found"
+        description="The content may have been removed or the link is invalid."
+      >
         <div className="text-center py-12">
           <p className="section-subtitle">Try returning to the feed.</p>
         </div>
@@ -129,7 +137,11 @@ export function PostPage() {
         onUnfollow={handleUnfollow}
         onDelete={handleDelete}
       />
-      <PostCollaborators postId={post.id} collaborators={post.collaborators || []} authorId={post.user?.id} />
+      <PostCollaborators
+        postId={post.id}
+        collaborators={post.collaborators || []}
+        authorId={post.user?.id}
+      />
       <PostAnalytics postId={post.id} authorId={post.user?.id} />
       <MoreLikeThis postId={post.id} />
     </PageShell>

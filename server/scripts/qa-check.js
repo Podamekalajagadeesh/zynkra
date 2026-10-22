@@ -2,7 +2,9 @@ const { execSync } = require('node:child_process');
 const path = require('node:path');
 
 function run(command) {
-  return execSync(command, { cwd: path.resolve(__dirname, '..'), stdio: 'pipe' }).toString().trim();
+  return execSync(command, { cwd: path.resolve(__dirname, '..'), stdio: 'pipe' })
+    .toString()
+    .trim();
 }
 
 function main() {

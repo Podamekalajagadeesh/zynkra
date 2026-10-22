@@ -8,7 +8,11 @@ function makeClient(id = 'sock-1') {
 function makeLimiter(limit = 3, closeAfter = 2) {
   const config = {
     get: (key: string, fallback?: number) =>
-      key === 'WS_RATE_LIMIT_PER_MINUTE' ? limit : key === 'WS_RATE_LIMIT_CLOSE_AFTER' ? closeAfter : fallback,
+      key === 'WS_RATE_LIMIT_PER_MINUTE'
+        ? limit
+        : key === 'WS_RATE_LIMIT_CLOSE_AFTER'
+          ? closeAfter
+          : fallback,
   } as unknown as ConfigService;
   return new WsRateLimiter(config);
 }
@@ -34,7 +38,10 @@ describe('WsRateLimiter', () => {
     limiter.allow(client, 'u1');
     limiter.allow(client, 'u1');
     expect(limiter.allow(client, 'u1')).toBe(false);
-    expect(client.emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: expect.stringContaining('Rate limit') }));
+    expect(client.emit).toHaveBeenCalledWith(
+      'error',
+      expect.objectContaining({ message: expect.stringContaining('Rate limit') })
+    );
     expect(client.disconnect).not.toHaveBeenCalled();
     limiter.onModuleDestroy();
   });
@@ -85,7 +92,13 @@ describe('WsRateLimiter', () => {
 
   it('does not throw when the socket is already closed', () => {
     const limiter = makeLimiter(1, 1);
-    const client = { id: 'x', emit: jest.fn(() => { throw new Error('closed'); }), disconnect: jest.fn() };
+    const client = {
+      id: 'x',
+      emit: jest.fn(() => {
+        throw new Error('closed');
+      }),
+      disconnect: jest.fn(),
+    };
     expect(limiter.allow(client, 'u1')).toBe(true);
     expect(() => limiter.allow(client, 'u1')).not.toThrow();
     limiter.onModuleDestroy();

@@ -28,9 +28,15 @@ export const SnoozePage = () => {
           <li key={item.id} className="flex items-center justify-between p-2 border-b">
             <div>
               <p className="font-semibold">{item.snoozedId}</p>
-              <p className="text-sm text-gray-500">{item.snoozedType} - Snoozed until {new Date(item.snoozeEndDate).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-500">
+                {item.snoozedType} - Snoozed until{' '}
+                {new Date(item.snoozeEndDate).toLocaleDateString()}
+              </p>
             </div>
-            <button onClick={() => handleUnsnooze(item.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+            <button
+              onClick={() => handleUnsnooze(item.id)}
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
               Unsnooze
             </button>
           </li>

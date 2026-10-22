@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum ContributionStatus {
@@ -6,7 +14,7 @@ export enum ContributionStatus {
   IN_REVIEW = 'in_review',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  MERGED = 'merged'
+  MERGED = 'merged',
 }
 
 export enum ContributionType {
@@ -15,7 +23,7 @@ export enum ContributionType {
   DOCUMENTATION = 'documentation',
   UI_IMPROVEMENT = 'ui_improvement',
   PERFORMANCE = 'performance',
-  SECURITY = 'security'
+  SECURITY = 'security',
 }
 
 @Entity('contributions')
@@ -32,14 +40,14 @@ export class Contribution {
   @Column({
     type: 'varchar',
     enum: ContributionType,
-    default: ContributionType.FEATURE
+    default: ContributionType.FEATURE,
   })
   type: ContributionType;
 
   @Column({
     type: 'varchar',
     enum: ContributionStatus,
-    default: ContributionStatus.PENDING
+    default: ContributionStatus.PENDING,
   })
   status: ContributionStatus;
 

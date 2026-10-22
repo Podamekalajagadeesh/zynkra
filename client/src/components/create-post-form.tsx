@@ -2,15 +2,22 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { createPost, searchUsers } from '../lib/api';
-import { Image, Sparkles, Globe, Lock, User, BarChart, X as CloseIcon, MapPin, Package, Calendar, Music, Shield } from 'lucide-react';
+import {
+  Image,
+  Sparkles,
+  Globe,
+  Lock,
+  User,
+  BarChart,
+  X as CloseIcon,
+  MapPin,
+  Package,
+  Calendar,
+  Music,
+  Shield,
+} from 'lucide-react';
 import { Post, User as UserType } from '../lib/types';
 import { SchedulePostModal } from './scheduling/SchedulePostModal';
 import type { SchedulePostRequest } from '../lib/api';
@@ -25,7 +32,6 @@ import StickerLibrary from './StickerLibrary';
 interface CreatePostFormProps {
   onPostCreated?: (post: Post) => void;
 }
-
 
 const imageFilters = [
   { name: 'None', class: '' },
@@ -51,34 +57,36 @@ const CAROUSEL_TEMPLATES: CarouselTemplate[] = [
     name: '5-Slide Product Showcase',
     defaultSlideCount: 5,
     suggestedLayout: 'Each slide highlights one product feature',
-    description: 'Perfect for showcasing multiple products or features'
+    description: 'Perfect for showcasing multiple products or features',
   },
   {
     id: 'carousel-tutorial-4',
     name: '4-Step Tutorial',
     defaultSlideCount: 4,
     suggestedLayout: 'Step-by-step guide slides',
-    description: 'Ideal for creating how-to guides and tutorials'
+    description: 'Ideal for creating how-to guides and tutorials',
   },
   {
     id: 'carousel-story-3',
     name: '3-Slide Storytelling',
     defaultSlideCount: 3,
     suggestedLayout: 'Beginning, Middle, End narrative structure',
-    description: 'Tell a complete story across 3 visual slides'
+    description: 'Tell a complete story across 3 visual slides',
   },
   {
     id: 'carousel-collection-6',
     name: '6-Slide Collection',
     defaultSlideCount: 6,
     suggestedLayout: 'Grid layout of curated items',
-    description: 'Showcase an entire collection or portfolio'
-  }
+    description: 'Showcase an entire collection or portfolio',
+  },
 ];
 
 export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [content, setContent] = useState('');
-  const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; altText: string; captionsFile?: File }[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<
+    { file: File; preview: string; altText: string; captionsFile?: File }[]
+  >([]);
   const [filter, setFilter] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,37 +95,45 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [taggedUsers, setTaggedUsers] = useState<UserType[]>([]);
   const [userSearch, setUserSearch] = useState('');
   const [userSearchResults, setUserSearchResults] = useState<UserType[]>([]);
-  const [location, setLocation] = useState<{ name: string; latitude: number; longitude: number } | null>(null);
+  const [location, setLocation] = useState<{
+    name: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [showLocationInput, setShowLocationInput] = useState(false);
   const [locationQuery, setLocationQuery] = useState('');
   const [showLikes, setShowLikes] = useState(true);
   const [isStickerLibraryOpen, setIsStickerLibraryOpen] = useState(false);
   const [isCarouselTemplateOpen, setIsCarouselTemplateOpen] = useState(false);
   const [stickers, setStickers] = useState<{ url: string; x: number; y: number }[]>([]);
-  const [activeCarouselTemplate, setActiveCarouselTemplate] = useState<CarouselTemplate | null>(null);
+  const [activeCarouselTemplate, setActiveCarouselTemplate] = useState<CarouselTemplate | null>(
+    null
+  );
   const [isSensitive, setIsSensitive] = useState(false);
   const [enableScreenshotProtection, setEnableScreenshotProtection] = useState(false);
   const [registerOnBlockchain, setRegisterOnBlockchain] = useState(true);
-  
-  const [poll, setPoll] = useState<{ question: string, options: string[] } | null>(null);
-  
+
+  const [poll, setPoll] = useState<{ question: string; options: string[] } | null>(null);
+
   // State for new tag types
-  const [productTags, setProductTags] = useState<{ product_id: string; x: number; y: number }[]>([]);
+  const [productTags, setProductTags] = useState<{ product_id: string; x: number; y: number }[]>(
+    []
+  );
   const [eventTags, setEventTags] = useState<{ event_id: string; x: number; y: number }[]>([]);
   const [musicTags, setMusicTags] = useState<{ music_id: string; x: number; y: number }[]>([]);
-  
+
   // State for scheduling modal
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleRequest, setScheduleRequest] = useState<SchedulePostRequest | null>(null);
-  
+
   // Modal states for tag selection
   const [isProductTagModalOpen, setIsProductTagModalOpen] = useState(false);
   const [isEventTagModalOpen, setIsEventTagModalOpen] = useState(false);
   const [isMusicTagModalOpen, setIsMusicTagModalOpen] = useState(false);
-  
+
   // AI Co-Pilot state
   const [isAICoPilotOpen, setIsAICoPilotOpen] = useState(false);
-  
+
   const handleAISuggestionApply = (suggestion: ContentSuggestion) => {
     setContent(suggestion.content);
     // If the suggestion has emotional context, we could potentially apply it too if this were a memory form
@@ -129,11 +145,13 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
     setActiveCarouselTemplate(template);
     setIsCarouselTemplateOpen(false);
     // If template suggests a specific slide count, we can add placeholder logic here
-    addToast(`Carousel template "${template.name}" applied! Recommended: upload ${template.defaultSlideCount} images.`, 'success');
+    addToast(
+      `Carousel template "${template.name}" applied! Recommended: upload ${template.defaultSlideCount} images.`,
+      'success'
+    );
   };
 
   const { addToast } = useToast();
-
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -176,11 +194,11 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
     try {
       const newPost = await createPost(
         content,
-        mediaFiles.map(mf => ({ file: mf.file, altText: mf.altText })),
+        mediaFiles.map((mf) => ({ file: mf.file, altText: mf.altText })),
         visibility as any,
         filter,
         subscriptionGated,
-        taggedUsers.map(u => u.id),
+        taggedUsers.map((u) => u.id),
         poll,
         location,
         showLikes,
@@ -191,9 +209,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         musicTags,
         undefined,
         isSensitive,
-        enableScreenshotProtection || isSensitive,
+        enableScreenshotProtection || isSensitive
       );
-      
+
       // Register post ownership on blockchain if enabled and wallet connected
       const wallet = walletService.getConnectedWallet();
       if (registerOnBlockchain && wallet) {
@@ -202,12 +220,15 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
           addToast('Post created and ownership registered on-chain!', 'success');
         } catch (blockchainError) {
           console.warn('Failed to register on blockchain:', blockchainError);
-          addToast('Post created, but blockchain registration failed. Your post is still saved.', 'warning');
+          addToast(
+            'Post created, but blockchain registration failed. Your post is still saved.',
+            'warning'
+          );
         }
       } else {
         addToast('Post created successfully!', 'success');
       }
-      
+
       setContent('');
       setMediaFiles([]);
       setFilter('');
@@ -242,7 +263,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   };
 
   const handleCaptionsFileChange = (index: number, file: File) => {
-    setMediaFiles((prev) => prev.map((mf, i) => (i === index ? { ...mf, captionsFile: file } : mf)));
+    setMediaFiles((prev) =>
+      prev.map((mf, i) => (i === index ? { ...mf, captionsFile: file } : mf))
+    );
   };
 
   const handleRemoveMedia = (index: number) => {
@@ -272,7 +295,10 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
               }
             }}
           />
-          <label htmlFor="is-sensitive" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label
+            htmlFor="is-sensitive"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
             Mark as sensitive content
           </label>
         </div>
@@ -284,7 +310,10 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
             onCheckedChange={(checked) => setEnableScreenshotProtection(checked as boolean)}
             disabled={isSensitive}
           />
-          <label htmlFor="enable-screenshot-protection" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label
+            htmlFor="enable-screenshot-protection"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
             Block screenshots of this content
           </label>
         </div>
@@ -296,37 +325,47 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
             onCheckedChange={(checked) => setRegisterOnBlockchain(checked as boolean)}
           />
           <Shield className="h-4 w-4 text-primary-600" />
-          <label htmlFor="register-on-blockchain" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label
+            htmlFor="register-on-blockchain"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
             Register ownership on blockchain (immutable proof you created this content)
           </label>
         </div>
       </div>
 
       {isStickerLibraryOpen && (
-        <StickerLibrary onSelect={handleStickerSelect} onClose={() => setIsStickerLibraryOpen(false)} />
+        <StickerLibrary
+          onSelect={handleStickerSelect}
+          onClose={() => setIsStickerLibraryOpen(false)}
+        />
       )}
       {isCarouselTemplateOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-800 rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-xl font-bold mb-4">Carousel Templates</h3>
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {CAROUSEL_TEMPLATES.map(template => (
+              {CAROUSEL_TEMPLATES.map((template) => (
                 <div key={template.id} className="p-4 bg-gray-100 dark:bg-dark-700 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold">{template.name}</p>
-                      <p className="text-sm text-dark-500 dark:text-dark-400">{template.description}</p>
-                      <p className="text-xs text-primary-600 mt-1">{template.defaultSlideCount} slides recommended • {template.suggestedLayout}</p>
+                      <p className="text-sm text-dark-500 dark:text-dark-400">
+                        {template.description}
+                      </p>
+                      <p className="text-xs text-primary-600 mt-1">
+                        {template.defaultSlideCount} slides recommended • {template.suggestedLayout}
+                      </p>
                     </div>
-                    <Button onClick={() => handleCarouselTemplateSelect(template)}>
-                      Use
-                    </Button>
+                    <Button onClick={() => handleCarouselTemplateSelect(template)}>Use</Button>
                   </div>
                 </div>
               ))}
             </div>
             <div className="mt-4 flex justify-end">
-              <Button variant="ghost" onClick={() => setIsCarouselTemplateOpen(false)}>Close</Button>
+              <Button variant="ghost" onClick={() => setIsCarouselTemplateOpen(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
@@ -340,7 +379,10 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 <CloseIcon size={20} />
               </Button>
             </div>
-            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">Search and add products to your post. Click on a product to tag it at the center of your media.</p>
+            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
+              Search and add products to your post. Click on a product to tag it at the center of
+              your media.
+            </p>
             {/* Placeholder for product search functionality */}
             <input
               type="text"
@@ -350,14 +392,19 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 // In a real implementation, this would search for products and show results
                 if (e.target.value.length > 3) {
                   // Add a placeholder product tag when user types enough characters
-                  setProductTags([...productTags, { product_id: `prod-${Date.now()}`, x: 50, y: 50 }]);
+                  setProductTags([
+                    ...productTags,
+                    { product_id: `prod-${Date.now()}`, x: 50, y: 50 },
+                  ]);
                   setIsProductTagModalOpen(false);
                   addToast('Product tagged successfully!', 'success');
                 }
               }}
             />
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => setIsProductTagModalOpen(false)}>Close</Button>
+              <Button variant="ghost" onClick={() => setIsProductTagModalOpen(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
@@ -371,7 +418,10 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 <CloseIcon size={20} />
               </Button>
             </div>
-            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">Search and add events to your post. Click on an event to tag it at the center of your media.</p>
+            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
+              Search and add events to your post. Click on an event to tag it at the center of your
+              media.
+            </p>
             {/* Placeholder for event search functionality */}
             <input
               type="text"
@@ -388,7 +438,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
               }}
             />
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => setIsEventTagModalOpen(false)}>Close</Button>
+              <Button variant="ghost" onClick={() => setIsEventTagModalOpen(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
@@ -402,7 +454,10 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 <CloseIcon size={20} />
               </Button>
             </div>
-            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">Search and add music tracks to your post. Click on a track to tag it at the center of your media.</p>
+            <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
+              Search and add music tracks to your post. Click on a track to tag it at the center of
+              your media.
+            </p>
             {/* Placeholder for music search functionality */}
             <input
               type="text"
@@ -419,7 +474,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
               }}
             />
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => setIsMusicTagModalOpen(false)}>Close</Button>
+              <Button variant="ghost" onClick={() => setIsMusicTagModalOpen(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
@@ -435,7 +492,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         </div>
         <div>
           <p className="text-sm font-semibold text-dark-900 dark:text-white">Share an update</p>
-          <p className="text-xs text-dark-500 dark:text-dark-400">Post thoughts, ideas, or media to your network.</p>
+          <p className="text-xs text-dark-500 dark:text-dark-400">
+            Post thoughts, ideas, or media to your network.
+          </p>
         </div>
       </div>
       <div className="mb-md">
@@ -449,13 +508,17 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         />
         {userSearchResults.length > 0 && (
           <div className="mt-2 rounded-lg border border-dark-200 bg-white dark:border-dark-700 dark:bg-dark-800">
-            {userSearchResults.map(user => (
+            {userSearchResults.map((user) => (
               <div
                 key={user.id}
                 className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-dark-100 dark:hover:bg-dark-700"
                 onClick={() => handleAddTaggedUser(user)}
               >
-                <img src={user.profile.avatarUrl} alt={user.username} className="w-8 h-8 rounded-full" />
+                <img
+                  src={user.profile.avatarUrl}
+                  alt={user.username}
+                  className="w-8 h-8 rounded-full"
+                />
                 <span>{user.username}</span>
               </div>
             ))}
@@ -535,7 +598,9 @@ It uses advanced speech recognition technology.
 00:00:10.000 --> 00:00:15.000
 To transcribe your content in real-time.`;
                         const vttBlob = new Blob([generatedCaptions], { type: 'text/vtt' });
-                        const vttFile = new File([vttBlob], `auto-captions-${Date.now()}.vtt`, { type: 'text/vtt' });
+                        const vttFile = new File([vttBlob], `auto-captions-${Date.now()}.vtt`, {
+                          type: 'text/vtt',
+                        });
                         handleCaptionsFileChange(index, vttFile);
                         addToast('Auto-captions generated successfully!', 'success');
                       }}
@@ -555,7 +620,13 @@ To transcribe your content in real-time.`;
             src={sticker.url}
             alt="sticker"
             className="absolute"
-            style={{ left: `${sticker.x}%`, top: `${sticker.y}%`, transform: 'translate(-50%, -50%)', width: '100px', height: '100px' }}
+            style={{
+              left: `${sticker.x}%`,
+              top: `${sticker.y}%`,
+              transform: 'translate(-50%, -50%)',
+              width: '100px',
+              height: '100px',
+            }}
           />
         ))}
         {productTags.map((tag, index) => (
@@ -590,10 +661,11 @@ To transcribe your content in real-time.`;
         ))}
       </div>
 
-
       {mediaFiles.length > 0 && mediaFiles[0].file.type.startsWith('image') && (
         <div className="mb-md">
-          <p className="mb-2 text-sm font-medium text-dark-700 dark:text-dark-200">Apply a filter</p>
+          <p className="mb-2 text-sm font-medium text-dark-700 dark:text-dark-200">
+            Apply a filter
+          </p>
           <div className="flex flex-wrap gap-2">
             {imageFilters.map((f) => (
               <button
@@ -667,7 +739,9 @@ To transcribe your content in real-time.`;
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dark-200 bg-white px-4 py-2 font-medium text-dark-700 shadow-sm transition-colors hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
           >
             <Image size={20} />
-            <span>{activeCarouselTemplate ? activeCarouselTemplate.name : 'Use Carousel Template'}</span>
+            <span>
+              {activeCarouselTemplate ? activeCarouselTemplate.name : 'Use Carousel Template'}
+            </span>
           </button>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dark-200 bg-white px-4 py-2 font-medium text-dark-700 shadow-sm transition-colors hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700">
             <Image size={20} />
@@ -710,7 +784,9 @@ To transcribe your content in real-time.`;
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dark-200 bg-white px-4 py-2 font-medium text-dark-700 shadow-sm transition-colors hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
           >
             <Package size={20} />
-            <span>{productTags.length > 0 ? `${productTags.length} Product Tags` : 'Tag Product'}</span>
+            <span>
+              {productTags.length > 0 ? `${productTags.length} Product Tags` : 'Tag Product'}
+            </span>
           </button>
           <button
             type="button"
@@ -736,7 +812,10 @@ To transcribe your content in real-time.`;
             <Sparkles size={20} />
             <span>AI Co-Pilot</span>
           </button>
-          <Select value={visibility} onValueChange={(value) => setVisibility(value as Post['visibility'])}>
+          <Select
+            value={visibility}
+            onValueChange={(value) => setVisibility(value as Post['visibility'])}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select visibility" />
             </SelectTrigger>
@@ -762,7 +841,11 @@ To transcribe your content in real-time.`;
             </SelectContent>
           </Select>
           <div className="flex items-center space-x-2">
-            <Checkbox id="subscription-gated" checked={subscriptionGated} onCheckedChange={(checked) => setSubscriptionGated(checked as boolean)} />
+            <Checkbox
+              id="subscription-gated"
+              checked={subscriptionGated}
+              onCheckedChange={(checked) => setSubscriptionGated(checked as boolean)}
+            />
             <label
               htmlFor="subscription-gated"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -771,15 +854,15 @@ To transcribe your content in real-time.`;
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="is-sensitive" 
-              checked={isSensitive} 
+            <Checkbox
+              id="is-sensitive"
+              checked={isSensitive}
               onCheckedChange={(checked) => {
                 setIsSensitive(checked as boolean);
                 if (checked) {
                   setEnableScreenshotProtection(true);
                 }
-              }} 
+              }}
             />
             <label
               htmlFor="is-sensitive"
@@ -789,9 +872,9 @@ To transcribe your content in real-time.`;
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="enable-screenshot-protection" 
-              checked={enableScreenshotProtection} 
+            <Checkbox
+              id="enable-screenshot-protection"
+              checked={enableScreenshotProtection}
               onCheckedChange={(checked) => setEnableScreenshotProtection(checked as boolean)}
               disabled={isSensitive} // Always enabled for sensitive content
             />
@@ -803,7 +886,11 @@ To transcribe your content in real-time.`;
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox id="show-likes" checked={showLikes} onCheckedChange={(checked) => setShowLikes(checked as boolean)} />
+            <Checkbox
+              id="show-likes"
+              checked={showLikes}
+              onCheckedChange={(checked) => setShowLikes(checked as boolean)}
+            />
             <label
               htmlFor="show-likes"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -827,7 +914,7 @@ To transcribe your content in real-time.`;
                 postType: 'feed',
                 scheduledFor: '',
                 isOptimalTime: true,
-                visibility
+                visibility,
               };
               setScheduleRequest(request);
               setIsScheduleModalOpen(true);
@@ -853,7 +940,11 @@ To transcribe your content in real-time.`;
             // Reset form after scheduling
             setContent('');
             setMediaFiles([]);
-            addToast({ title: 'Post scheduled successfully', type: 'success', description: `Your post will be published on ${new Date(post.scheduledFor).toLocaleString()}` });
+            addToast({
+              title: 'Post scheduled successfully',
+              type: 'success',
+              description: `Your post will be published on ${new Date(post.scheduledFor).toLocaleString()}`,
+            });
           }}
           initialData={scheduleRequest}
         />

@@ -2,7 +2,14 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Skeleton } from '../ui/skeleton';
 import Avatar from '../ui/avatar';
-import { getMessages, addReaction, markMessageAsRead, getProfile, getConversations, forwardMessage } from '../../lib/api';
+import {
+  getMessages,
+  addReaction,
+  markMessageAsRead,
+  getProfile,
+  getConversations,
+  forwardMessage,
+} from '../../lib/api';
 import { Smile, CornerUpLeft, CheckCheck, Send } from 'lucide-react';
 import { Message, Conversation, ScreenshotProtectionLevel } from '../../lib/types';
 import { formatDateTime } from '../../lib/preferences';
@@ -16,14 +23,9 @@ interface MessageListProps {
   onReply: (message: Message) => void;
 }
 
-export const getReadReceiptLabel = (isRead: boolean) =>
-  isRead ? 'Read by recipient' : 'Sent';
+export const getReadReceiptLabel = (isRead: boolean) => (isRead ? 'Read by recipient' : 'Sent');
 
-export const MessageList = ({
-  conversationId,
-  channelId,
-  onReply,
-}: MessageListProps) => {
+export const MessageList = ({ conversationId, channelId, onReply }: MessageListProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
@@ -34,18 +36,21 @@ export const MessageList = ({
   const [me, setMe] = useState<any>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [forwardingMessage, setForwardingMessage] = useState<Message | null>(null);
-  
+
   // Load current user's profile to check screenshot protection settings
   useEffect(() => {
     getProfile().then(setMe);
   }, []);
-  
+
   // Apply screenshot protection if enabled for DMs
-  const shouldApplyProtection = me?.screenshotProtection?.enabled && me.screenshotProtection?.applyToDms;
-  
+  const shouldApplyProtection =
+    me?.screenshotProtection?.enabled && me.screenshotProtection?.applyToDms;
+
   const { protectionRef } = useScreenshotProtection({
     enabled: shouldApplyProtection,
-    level: (me?.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
+    level:
+      (me?.screenshotProtection?.level as ScreenshotProtectionLevel) ||
+      ScreenshotProtectionLevel.WARNING_ONLY,
     contentTitle: 'this direct message conversation',
   });
 
@@ -67,7 +72,7 @@ export const MessageList = ({
           }
         });
       },
-      { threshold: 1.0 },
+      { threshold: 1.0 }
     );
 
     return () => {
@@ -159,11 +164,9 @@ export const MessageList = ({
                 acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
                 return acc;
               },
-              {} as Record<string, number>,
+              {} as Record<string, number>
             );
-            const isRead =
-              msg.readBy.length > 0 &&
-              msg.readBy.some((r) => r.user.id !== user?.id);
+            const isRead = msg.readBy.length > 0 && msg.readBy.some((r) => r.user.id !== user?.id);
 
             return (
               <div
@@ -174,15 +177,10 @@ export const MessageList = ({
                     observer.current?.observe(el);
                   }
                 }}
-                className={`flex gap-sm group ${
-                  isOwn ? 'justify-end' : 'justify-start'
-                }`}
+                className={`flex gap-sm group ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 {!isOwn && (
-                  <Avatar
-                    name={msg.sender.username || msg.sender.email || 'U'}
-                    size={32}
-                  />
+                  <Avatar name={msg.sender.username || msg.sender.email || 'U'} size={32} />
                 )}
                 <div
                   className={`relative max-w-xs lg:max-w-md px-md py-sm rounded-lg ${
@@ -193,11 +191,7 @@ export const MessageList = ({
                 >
                   <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 flex">
                     <button
-                      onClick={() =>
-                        setShowReactions(
-                          showReactions === msg.id ? null : msg.id,
-                        )
-                      }
+                      onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)}
                     >
                       <Smile size={16} />
                     </button>
@@ -211,10 +205,7 @@ export const MessageList = ({
                   {showReactions === msg.id && (
                     <div className="absolute top-[-30px] right-0 bg-white border rounded-lg p-1 flex gap-1">
                       {['👍', '❤️', '😂', '😢', '😡'].map((r) => (
-                        <button
-                          key={r}
-                          onClick={() => handleAddReaction(msg.id, r)}
-                        >
+                        <button key={r} onClick={() => handleAddReaction(msg.id, r)}>
                           {r}
                         </button>
                       ))}
@@ -231,19 +222,14 @@ export const MessageList = ({
                               className="cursor-pointer hover:bg-gray-200 p-2 rounded-lg"
                               onClick={async () => {
                                 if (forwardingMessage) {
-                                  await forwardMessage(
-                                    forwardingMessage.id,
-                                    conv.id,
-                                  );
+                                  await forwardMessage(forwardingMessage.id, conv.id);
                                   setForwardingMessage(null);
                                   addToast('Message forwarded', 'success');
                                 }
                               }}
                             >
                               {conv.name ||
-                                conv.participants
-                                  .map((p) => p.username || p.email)
-                                  .join(', ')}
+                                conv.participants.map((p) => p.username || p.email).join(', ')}
                             </li>
                           ))}
                         </ul>
@@ -259,8 +245,7 @@ export const MessageList = ({
                   {msg.replyTo && (
                     <div className="text-xs bg-gray-200 p-2 rounded-lg mb-2">
                       <p className="font-semibold">
-                        {msg.replyTo.sender.username ||
-                          msg.replyTo.sender.email}
+                        {msg.replyTo.sender.username || msg.replyTo.sender.email}
                       </p>
                       <p>{msg.replyTo.content}</p>
                     </div>
@@ -272,11 +257,7 @@ export const MessageList = ({
                   )}
                   <MessageContent message={msg} />
                   <div className="flex items-center justify-between">
-                    <p
-                      className={`text-xs mt-xs ${
-                        isOwn ? 'text-white/70' : 'text-dark-500'
-                      }`}
-                    >
+                    <p className={`text-xs mt-xs ${isOwn ? 'text-white/70' : 'text-dark-500'}`}>
                       {formatDateTime(msg.createdAt, { timeStyle: 'short' })}
                     </p>
                     {isOwn && (
@@ -294,10 +275,7 @@ export const MessageList = ({
                   </div>
                   <div className="flex gap-1 mt-1">
                     {Object.entries(reactions).map(([r, count]) => (
-                      <div
-                        key={r}
-                        className="bg-gray-200 text-xs rounded-full px-2 py-1"
-                      >
+                      <div key={r} className="bg-gray-200 text-xs rounded-full px-2 py-1">
                         {r} {count}
                       </div>
                     ))}

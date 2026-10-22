@@ -14,9 +14,14 @@ import { CustomAudience } from '../custom-audiences/entities/custom-audience.ent
 
 function makeStory(overrides: any = {}) {
   return {
-    id: 'story-1', user: { id: 'user-1' }, mediaUrl: '/uploads/story.jpg',
-    audience: 'public', expiresAt: new Date(Date.now() + 86400000),
-    isBoosted: false, createdAt: new Date(), ...overrides,
+    id: 'story-1',
+    user: { id: 'user-1' },
+    mediaUrl: '/uploads/story.jpg',
+    audience: 'public',
+    expiresAt: new Date(Date.now() + 86400000),
+    isBoosted: false,
+    createdAt: new Date(),
+    ...overrides,
   };
 }
 
@@ -36,11 +41,41 @@ describe('StoriesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StoriesService,
-        { provide: getRepositoryToken(Story), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), create: jest.fn(), remove: jest.fn(), delete: jest.fn(), createQueryBuilder: jest.fn() } },
-        { provide: getRepositoryToken(StoryElement), useValue: { find: jest.fn(), create: jest.fn(), remove: jest.fn() } },
-        { provide: getRepositoryToken(StoryView), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn(), delete: jest.fn() } },
-        { provide: getRepositoryToken(StoryReaction), useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() } },
-        { provide: getRepositoryToken(StoryReply), useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() } },
+        {
+          provide: getRepositoryToken(Story),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
+            delete: jest.fn(),
+            createQueryBuilder: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(StoryElement),
+          useValue: { find: jest.fn(), create: jest.fn(), remove: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(StoryView),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(StoryReaction),
+          useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(StoryReply),
+          useValue: { find: jest.fn(), create: jest.fn(), save: jest.fn() },
+        },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
         { provide: getRepositoryToken(Subscription), useValue: { findOne: jest.fn() } },
         { provide: getRepositoryToken(CustomAudience), useValue: { findOne: jest.fn() } },
@@ -97,15 +132,19 @@ describe('StoriesService', () => {
     });
 
     it('hides an only-me story from another user', async () => {
-      storyRepo.findOne.mockResolvedValue(makeStory({
-        user: { id: 'owner-1', storyVisibility: 'only_me' },
-      }) as any);
-      usersService.findOneById.mockResolvedValue(makeUser({
-        id: 'viewer-1',
-        following: [{ id: 'owner-1' }],
-        followers: [],
-        closeFriendsWith: [],
-      }) as any);
+      storyRepo.findOne.mockResolvedValue(
+        makeStory({
+          user: { id: 'owner-1', storyVisibility: 'only_me' },
+        }) as any
+      );
+      usersService.findOneById.mockResolvedValue(
+        makeUser({
+          id: 'viewer-1',
+          following: [{ id: 'owner-1' }],
+          followers: [],
+          closeFriendsWith: [],
+        }) as any
+      );
 
       const result = await service.findOne('story-1', 'viewer-1');
 
@@ -117,12 +156,14 @@ describe('StoriesService', () => {
         user: { id: 'owner-1', storyVisibility: 'followers' },
       });
       storyRepo.findOne.mockResolvedValue(story as any);
-      usersService.findOneById.mockResolvedValue(makeUser({
-        id: 'viewer-1',
-        following: [{ id: 'owner-1' }],
-        followers: [],
-        closeFriendsWith: [],
-      }) as any);
+      usersService.findOneById.mockResolvedValue(
+        makeUser({
+          id: 'viewer-1',
+          following: [{ id: 'owner-1' }],
+          followers: [],
+          closeFriendsWith: [],
+        }) as any
+      );
 
       const result = await service.findOne('story-1', 'viewer-1');
 
@@ -137,7 +178,9 @@ describe('StoriesService', () => {
       });
       storyRepo.findOne.mockResolvedValue(story as any);
       customAudienceRepo.findOne.mockResolvedValue({
-        id: 'audience-1', userId: 'owner-1', userIds: ['viewer-1'],
+        id: 'audience-1',
+        userId: 'owner-1',
+        userIds: ['viewer-1'],
       } as any);
       usersService.findOneById.mockResolvedValue(makeUser({ id: 'viewer-1' }) as any);
 
@@ -175,7 +218,10 @@ describe('StoriesService', () => {
         addOrderBy: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([
           makeStory({ user: { id: 'public-owner', storyVisibility: 'public' } }),
-          makeStory({ id: 'story-2', user: { id: 'followers-owner', storyVisibility: 'followers' } }),
+          makeStory({
+            id: 'story-2',
+            user: { id: 'followers-owner', storyVisibility: 'followers' },
+          }),
           makeStory({ id: 'story-3', user: { id: 'friends-owner', storyVisibility: 'friends' } }),
           makeStory({ id: 'story-4', user: { id: 'private-owner', storyVisibility: 'only_me' } }),
         ]),
@@ -188,16 +234,20 @@ describe('StoriesService', () => {
     });
 
     it('includes public stories from users the viewer does not follow', async () => {
-      usersService.findOneById.mockResolvedValue(makeUser({ following: [], followers: [], closeFriendsWith: [] }) as any);
+      usersService.findOneById.mockResolvedValue(
+        makeUser({ following: [], followers: [], closeFriendsWith: [] }) as any
+      );
       const queryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         addOrderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          makeStory({ user: { id: 'public-owner', storyVisibility: 'public' } }),
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([
+            makeStory({ user: { id: 'public-owner', storyVisibility: 'public' } }),
+          ]),
       };
       storyRepo.createQueryBuilder.mockReturnValue(queryBuilder as any);
 

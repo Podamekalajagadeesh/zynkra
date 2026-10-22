@@ -33,32 +33,40 @@ const STORY_TEMPLATES: StoryTemplate[] = [
     id: 'story-poll-template',
     name: 'Poll Story',
     description: 'Story with built-in poll',
-    defaultElements: [{ type: 'poll', data: { question: '', options: ['', ''] } }]
+    defaultElements: [{ type: 'poll', data: { question: '', options: ['', ''] } }],
   },
   {
     id: 'story-quiz-template',
     name: 'Quiz Story',
     description: 'Story with quiz (3 options)',
-    defaultElements: [{ type: 'poll', data: { question: 'Quiz: What is your answer?', options: ['Option A', 'Option B', 'Option C'] } }]
+    defaultElements: [
+      {
+        type: 'poll',
+        data: {
+          question: 'Quiz: What is your answer?',
+          options: ['Option A', 'Option B', 'Option C'],
+        },
+      },
+    ],
   },
   {
     id: 'story-qa-template',
     name: 'Q&A Story',
     description: 'Story with question box for followers',
-    defaultElements: [{ type: 'qa', data: { question: 'Ask me anything!' } }]
+    defaultElements: [{ type: 'qa', data: { question: 'Ask me anything!' } }],
   },
   {
     id: 'story-countdown-template',
     name: 'Countdown Story',
     description: 'Story with countdown timer',
-    defaultElements: [{ type: 'countdown', data: { title: 'Coming Soon', endDate: '' } }]
+    defaultElements: [{ type: 'countdown', data: { title: 'Coming Soon', endDate: '' } }],
   },
   {
     id: 'story-mention-template',
     name: 'Mention Story',
     description: 'Story with mention placeholder',
-    defaultElements: [{ type: 'mention', data: { username: '' } }]
-  }
+    defaultElements: [{ type: 'mention', data: { username: '' } }],
+  },
 ];
 
 export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProps) {
@@ -93,7 +101,7 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
 
   const handleSelectTemplate = (template: StoryTemplate) => {
     // Apply template defaults
-    template.defaultElements.forEach(element => {
+    template.defaultElements.forEach((element) => {
       if (element.type === 'poll') {
         setPoll(element.data);
       } else if (element.type === 'mention') {
@@ -199,12 +207,18 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-md rounded-lg bg-white p-6 dark:bg-dark-800" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-lg bg-white p-6 dark:bg-dark-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Create a Story</h2>
           <div className="flex gap-2 items-center">
-            <Button 
+            <Button
               type="button"
               variant="secondary"
               size="sm"
@@ -223,24 +237,34 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
           <div className="absolute inset-0 bg-black/95 z-50 rounded-lg p-6">
             <h3 className="text-xl font-bold mb-4">Story Templates</h3>
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {STORY_TEMPLATES.map(template => (
-                <div key={template.id} className="p-4 bg-gray-100 dark:bg-dark-700 rounded-lg flex items-center justify-between">
+              {STORY_TEMPLATES.map((template) => (
+                <div
+                  key={template.id}
+                  className="p-4 bg-gray-100 dark:bg-dark-700 rounded-lg flex items-center justify-between"
+                >
                   <div>
                     <p className="font-semibold">{template.name}</p>
-                    <p className="text-sm text-dark-500 dark:text-dark-400">{template.description}</p>
+                    <p className="text-sm text-dark-500 dark:text-dark-400">
+                      {template.description}
+                    </p>
                   </div>
                   <Button onClick={() => handleSelectTemplate(template)}>Apply</Button>
                 </div>
               ))}
             </div>
             <div className="mt-4 flex justify-end">
-              <Button variant="ghost" onClick={() => setIsTemplateLibraryOpen(false)}>Close</Button>
+              <Button variant="ghost" onClick={() => setIsTemplateLibraryOpen(false)}>
+                Close
+              </Button>
             </div>
           </div>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="story-file" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="story-file"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Upload Image or Video
             </label>
             <input
@@ -253,7 +277,10 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
           </div>
 
           <div className="mb-4">
-            <label htmlFor="story-audience" className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2">
+            <label
+              htmlFor="story-audience"
+              className="block text-sm font-medium text-dark-700 dark:text-light-100 mb-2"
+            >
               Share with
             </label>
             <Select value={audience} onValueChange={setAudience}>
@@ -263,11 +290,12 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
               <SelectContent>
                 <SelectItem value="public">Public</SelectItem>
                 <SelectItem value="close_friends">Close Friends</SelectItem>
-                {isPremium && customAudiences.map(audience => (
-                  <SelectItem key={audience.id} value={`custom_${audience.id}`}>
-                    {audience.name}
-                  </SelectItem>
-                ))}
+                {isPremium &&
+                  customAudiences.map((audience) => (
+                    <SelectItem key={audience.id} value={`custom_${audience.id}`}>
+                      {audience.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -280,7 +308,10 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
               onChange={(e) => setIsBoosted(e.target.checked)}
               className="h-4 w-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600"
             />
-            <label htmlFor="boost-story" className="text-sm font-medium text-dark-700 dark:text-light-100">
+            <label
+              htmlFor="boost-story"
+              className="text-sm font-medium text-dark-700 dark:text-light-100"
+            >
               Boost story (Premium feature) - Place your story at the top of friends' feeds
             </label>
           </div>
@@ -294,9 +325,12 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
               disabled={!isPremium}
               className="h-4 w-4 rounded border-dark-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 disabled:opacity-50"
             />
-            <label htmlFor="extended-story-duration" className="text-sm font-medium text-dark-700 dark:text-light-100">
+            <label
+              htmlFor="extended-story-duration"
+              className="text-sm font-medium text-dark-700 dark:text-light-100"
+            >
               48-hour Story duration (Premium feature) - Double the standard 24-hour window
-              {!isPremium && " - Upgrade to premium to enable"}
+              {!isPremium && ' - Upgrade to premium to enable'}
             </label>
           </div>
 
@@ -307,7 +341,13 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
           )}
 
           {!mention && (
-            <Button type="button" onClick={() => setMention('')} variant="secondary" size="sm" className="mb-4 ml-2">
+            <Button
+              type="button"
+              onClick={() => setMention('')}
+              variant="secondary"
+              size="sm"
+              className="mb-4 ml-2"
+            >
               Add Mention
             </Button>
           )}
@@ -331,7 +371,12 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
                     className="w-full rounded-md border-dark-300 bg-dark-100 p-2 dark:border-dark-600 dark:bg-dark-700"
                   />
                   {poll.options.length > 2 && (
-                    <Button type="button" onClick={() => removeOption(index)} variant="ghost" size="icon">
+                    <Button
+                      type="button"
+                      onClick={() => removeOption(index)}
+                      variant="ghost"
+                      size="icon"
+                    >
                       <Trash2 size={16} />
                     </Button>
                   )}

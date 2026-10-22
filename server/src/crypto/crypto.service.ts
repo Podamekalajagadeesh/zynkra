@@ -14,10 +14,14 @@ export class CryptoService {
     @InjectRepository(PreKey)
     private preKeyRepository: Repository<PreKey>,
     @InjectRepository(SignedPreKey)
-    private signedPreKeyRepository: Repository<SignedPreKey>,
+    private signedPreKeyRepository: Repository<SignedPreKey>
   ) {}
 
-  async saveIdentityKey(user: User, registrationId: number, publicKey: string): Promise<IdentityKey> {
+  async saveIdentityKey(
+    user: User,
+    registrationId: number,
+    publicKey: string
+  ): Promise<IdentityKey> {
     const newIdentityKey = this.identityKeyRepository.create({
       user,
       registrationId,
@@ -35,7 +39,12 @@ export class CryptoService {
     return this.preKeyRepository.save(newPreKey);
   }
 
-  async saveSignedPreKey(user: User, keyId: number, publicKey: string, signature: string): Promise<SignedPreKey> {
+  async saveSignedPreKey(
+    user: User,
+    keyId: number,
+    publicKey: string,
+    signature: string
+  ): Promise<SignedPreKey> {
     const newSignedPreKey = this.signedPreKeyRepository.create({
       user,
       keyId,
@@ -46,14 +55,26 @@ export class CryptoService {
   }
 
   async getKeyBundle(userId: string): Promise<any> {
-    const identityKey = await this.identityKeyRepository.findOne({ where: { user: { id: userId } } });
+    const identityKey = await this.identityKeyRepository.findOne({
+      where: { user: { id: userId } },
+    });
     const preKey = await this.preKeyRepository.findOne({ where: { user: { id: userId } } });
-    const signedPreKey = await this.signedPreKeyRepository.findOne({ where: { user: { id: userId } } });
+    const signedPreKey = await this.signedPreKeyRepository.findOne({
+      where: { user: { id: userId } },
+    });
 
     return {
-      identityKey: identityKey ? { registrationId: identityKey.registrationId, publicKey: identityKey.publicKey } : null,
+      identityKey: identityKey
+        ? { registrationId: identityKey.registrationId, publicKey: identityKey.publicKey }
+        : null,
       preKey: preKey ? { keyId: preKey.keyId, publicKey: preKey.publicKey } : null,
-      signedPreKey: signedPreKey ? { keyId: signedPreKey.keyId, publicKey: signedPreKey.publicKey, signature: signedPreKey.signature } : null,
+      signedPreKey: signedPreKey
+        ? {
+            keyId: signedPreKey.keyId,
+            publicKey: signedPreKey.publicKey,
+            signature: signedPreKey.signature,
+          }
+        : null,
     };
   }
 }

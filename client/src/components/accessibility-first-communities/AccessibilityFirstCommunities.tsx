@@ -132,7 +132,9 @@ export const AccessibilityFirstCommunities: React.FC = () => {
 
       try {
         setRequestsLoading(true);
-        const response = await api.get(`/accessibility-first-communities/${selectedCommunityId}/accommodations`);
+        const response = await api.get(
+          `/accessibility-first-communities/${selectedCommunityId}/accommodations`
+        );
         setRequests(response.data);
       } catch (err) {
         console.error(err);
@@ -146,16 +148,20 @@ export const AccessibilityFirstCommunities: React.FC = () => {
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === selectedCommunityId),
-    [communities, selectedCommunityId],
+    [communities, selectedCommunityId]
   );
 
-  const isMember = (communityId: string) => myMemberships.some((membership) => membership.communityId === communityId);
+  const isMember = (communityId: string) =>
+    myMemberships.some((membership) => membership.communityId === communityId);
 
   const joinCommunity = async (communityId: string) => {
     try {
       await api.post(`/accessibility-first-communities/${communityId}/join`, {
         role: joinForm.role,
-        accessibilityNeeds: joinForm.accessibilityNeeds.split(',').map((item) => item.trim()).filter(Boolean),
+        accessibilityNeeds: joinForm.accessibilityNeeds
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
         preferredPreset: selectedPreset,
         customSettings: joinForm.customSettings ? JSON.parse(joinForm.customSettings) : {},
       });
@@ -184,8 +190,13 @@ export const AccessibilityFirstCommunities: React.FC = () => {
         title: requestForm.title,
         needType: requestForm.needType,
         description: requestForm.description,
-        requestedAdjustments: requestForm.requestedAdjustments.split(',').map((item) => item.trim()).filter(Boolean),
-        interfaceSettings: requestForm.interfaceSettings ? JSON.parse(requestForm.interfaceSettings) : {},
+        requestedAdjustments: requestForm.requestedAdjustments
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+        interfaceSettings: requestForm.interfaceSettings
+          ? JSON.parse(requestForm.interfaceSettings)
+          : {},
         isUrgent: requestForm.isUrgent,
       });
       setRequestForm({
@@ -196,7 +207,9 @@ export const AccessibilityFirstCommunities: React.FC = () => {
         interfaceSettings: '',
         isUrgent: false,
       });
-      const response = await api.get(`/accessibility-first-communities/${selectedCommunityId}/accommodations`);
+      const response = await api.get(
+        `/accessibility-first-communities/${selectedCommunityId}/accommodations`
+      );
       setRequests(response.data);
       await fetchData();
     } catch (err) {
@@ -206,8 +219,13 @@ export const AccessibilityFirstCommunities: React.FC = () => {
 
   const updateRequestStatus = async (requestId: string, status: string) => {
     try {
-      await api.patch(`/accessibility-first-communities/${selectedCommunityId}/accommodations/${requestId}`, { status });
-      const response = await api.get(`/accessibility-first-communities/${selectedCommunityId}/accommodations`);
+      await api.patch(
+        `/accessibility-first-communities/${selectedCommunityId}/accommodations/${requestId}`,
+        { status }
+      );
+      const response = await api.get(
+        `/accessibility-first-communities/${selectedCommunityId}/accommodations`
+      );
       setRequests(response.data);
       await fetchData();
     } catch (err) {
@@ -264,7 +282,8 @@ export const AccessibilityFirstCommunities: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold">Accessibility-First Communities</h2>
         <p className="text-gray-500 mt-2">
-          Social spaces built exclusively for users with physical or cognitive disabilities, with fully customized neural interfaces
+          Social spaces built exclusively for users with physical or cognitive disabilities, with
+          fully customized neural interfaces
         </p>
       </div>
 
@@ -290,32 +309,66 @@ export const AccessibilityFirstCommunities: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label>Title</Label>
-            <Input value={requestForm.title} onChange={(event) => setRequestForm((current) => ({ ...current, title: event.target.value }))} placeholder="Need high-contrast voice navigation" />
+            <Input
+              value={requestForm.title}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, title: event.target.value }))
+              }
+              placeholder="Need high-contrast voice navigation"
+            />
           </div>
           <div className="space-y-2">
             <Label>Need type</Label>
-            <Select value={requestForm.needType} onValueChange={(value) => setRequestForm((current) => ({ ...current, needType: value }))}>
+            <Select
+              value={requestForm.needType}
+              onValueChange={(value) =>
+                setRequestForm((current) => ({ ...current, needType: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(AccessibilityNeedType).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>{key.toLowerCase()}</SelectItem>
+                  <SelectItem key={key} value={value}>
+                    {key.toLowerCase()}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Description</Label>
-            <Textarea value={requestForm.description} onChange={(event) => setRequestForm((current) => ({ ...current, description: event.target.value }))} rows={4} placeholder="Describe the access need or interface adjustment" />
+            <Textarea
+              value={requestForm.description}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, description: event.target.value }))
+              }
+              rows={4}
+              placeholder="Describe the access need or interface adjustment"
+            />
           </div>
           <div className="space-y-2">
             <Label>Requested adjustments</Label>
-            <Input value={requestForm.requestedAdjustments} onChange={(event) => setRequestForm((current) => ({ ...current, requestedAdjustments: event.target.value }))} placeholder="captioning, keyboard shortcuts, reduced motion" />
+            <Input
+              value={requestForm.requestedAdjustments}
+              onChange={(event) =>
+                setRequestForm((current) => ({
+                  ...current,
+                  requestedAdjustments: event.target.value,
+                }))
+              }
+              placeholder="captioning, keyboard shortcuts, reduced motion"
+            />
           </div>
           <div className="space-y-2">
             <Label>Urgency</Label>
-            <Select value={requestForm.isUrgent ? 'urgent' : 'standard'} onValueChange={(value) => setRequestForm((current) => ({ ...current, isUrgent: value === 'urgent' }))}>
+            <Select
+              value={requestForm.isUrgent ? 'urgent' : 'standard'}
+              onValueChange={(value) =>
+                setRequestForm((current) => ({ ...current, isUrgent: value === 'urgent' }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -327,7 +380,14 @@ export const AccessibilityFirstCommunities: React.FC = () => {
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Interface settings JSON</Label>
-            <Textarea value={requestForm.interfaceSettings} onChange={(event) => setRequestForm((current) => ({ ...current, interfaceSettings: event.target.value }))} rows={3} placeholder='{"speechRate": 0.8, "contrast": "high"}' />
+            <Textarea
+              value={requestForm.interfaceSettings}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, interfaceSettings: event.target.value }))
+              }
+              rows={3}
+              placeholder='{"speechRate": 0.8, "contrast": "high"}'
+            />
           </div>
           <div className="md:col-span-2 flex justify-end">
             <Button onClick={createRequest} disabled={!isMember(selectedCommunityId)}>
@@ -344,11 +404,23 @@ export const AccessibilityFirstCommunities: React.FC = () => {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Your role</Label>
-            <Input value={joinForm.role} onChange={(event) => setJoinForm((current) => ({ ...current, role: event.target.value }))} placeholder="member, advocate, moderator" />
+            <Input
+              value={joinForm.role}
+              onChange={(event) =>
+                setJoinForm((current) => ({ ...current, role: event.target.value }))
+              }
+              placeholder="member, advocate, moderator"
+            />
           </div>
           <div className="space-y-2">
             <Label>Accessibility needs</Label>
-            <Input value={joinForm.accessibilityNeeds} onChange={(event) => setJoinForm((current) => ({ ...current, accessibilityNeeds: event.target.value }))} placeholder="visual, hearing, cognitive" />
+            <Input
+              value={joinForm.accessibilityNeeds}
+              onChange={(event) =>
+                setJoinForm((current) => ({ ...current, accessibilityNeeds: event.target.value }))
+              }
+              placeholder="visual, hearing, cognitive"
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Preferred interface preset</Label>
@@ -358,14 +430,23 @@ export const AccessibilityFirstCommunities: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(InterfacePreset).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>{key.toLowerCase()}</SelectItem>
+                  <SelectItem key={key} value={value}>
+                    {key.toLowerCase()}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="md:col-span-2 space-y-2">
             <Label>Custom interface settings JSON</Label>
-            <Textarea value={joinForm.customSettings} onChange={(event) => setJoinForm((current) => ({ ...current, customSettings: event.target.value }))} rows={3} placeholder='{"textSize": "large", "speech": true}' />
+            <Textarea
+              value={joinForm.customSettings}
+              onChange={(event) =>
+                setJoinForm((current) => ({ ...current, customSettings: event.target.value }))
+              }
+              rows={3}
+              placeholder='{"textSize": "large", "speech": true}'
+            />
           </div>
         </CardContent>
       </Card>
@@ -377,11 +458,15 @@ export const AccessibilityFirstCommunities: React.FC = () => {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="text-lg">{community.name}</CardTitle>
-                  {community.description && <p className="text-sm text-gray-500 mt-1">{community.description}</p>}
+                  {community.description && (
+                    <p className="text-sm text-gray-500 mt-1">{community.description}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {community.supportedNeeds.map((need) => (
-                    <Badge key={need} className={getNeedBadge(need)}>{need}</Badge>
+                    <Badge key={need} className={getNeedBadge(need)}>
+                      {need}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -398,7 +483,9 @@ export const AccessibilityFirstCommunities: React.FC = () => {
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-xs uppercase text-gray-500">Interface profiles</p>
-                  <p className="text-sm font-medium">{(community.interfaceProfiles ?? []).join(', ') || 'Custom'}</p>
+                  <p className="text-sm font-medium">
+                    {(community.interfaceProfiles ?? []).join(', ') || 'Custom'}
+                  </p>
                 </div>
               </div>
 
@@ -406,7 +493,9 @@ export const AccessibilityFirstCommunities: React.FC = () => {
                 <h4 className="font-semibold text-sm mb-2">Accessibility features</h4>
                 <div className="flex flex-wrap gap-2">
                   {(community.accessibilityFeatures ?? []).map((feature) => (
-                    <Badge key={feature} className="bg-slate-100 text-slate-800">{feature}</Badge>
+                    <Badge key={feature} className="bg-slate-100 text-slate-800">
+                      {feature}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -415,15 +504,21 @@ export const AccessibilityFirstCommunities: React.FC = () => {
                 <h4 className="font-semibold text-sm mb-2">Interface templates</h4>
                 <div className="flex flex-wrap gap-2">
                   {(community.customInterfaceTemplates ?? []).map((template) => (
-                    <Badge key={template} className={getPresetBadge(template)}>{template}</Badge>
+                    <Badge key={template} className={getPresetBadge(template)}>
+                      {template}
+                    </Badge>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-4 justify-between flex-wrap">
-                <p className="text-sm text-gray-500">Designed for inclusive, adjustable participation</p>
+                <p className="text-sm text-gray-500">
+                  Designed for inclusive, adjustable participation
+                </p>
                 {isMember(community.id) ? (
-                  <Button variant="destructive" onClick={() => leaveCommunity(community.id)}>Leave</Button>
+                  <Button variant="destructive" onClick={() => leaveCommunity(community.id)}>
+                    Leave
+                  </Button>
                 ) : (
                   <Button onClick={() => joinCommunity(community.id)}>Join Community</Button>
                 )}
@@ -436,33 +531,75 @@ export const AccessibilityFirstCommunities: React.FC = () => {
       {selectedCommunity && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Live accommodation requests in {selectedCommunity.name}</CardTitle>
+            <CardTitle className="text-lg">
+              Live accommodation requests in {selectedCommunity.name}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {requestsLoading && <p className="text-sm text-gray-500">Loading accommodation requests...</p>}
-            {!requestsLoading && requests.map((request) => (
-              <div key={request.id} className="rounded-lg border border-gray-200 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium text-sm">{request.title}</p>
-                  <div className="flex gap-2">
-                    <Badge className={request.isUrgent ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'}>{request.isUrgent ? 'urgent' : 'standard'}</Badge>
-                    <Badge className={getStatusBadge(request.status)}>{request.status}</Badge>
+            {requestsLoading && (
+              <p className="text-sm text-gray-500">Loading accommodation requests...</p>
+            )}
+            {!requestsLoading &&
+              requests.map((request) => (
+                <div key={request.id} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-sm">{request.title}</p>
+                    <div className="flex gap-2">
+                      <Badge
+                        className={
+                          request.isUrgent
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }
+                      >
+                        {request.isUrgent ? 'urgent' : 'standard'}
+                      </Badge>
+                      <Badge className={getStatusBadge(request.status)}>{request.status}</Badge>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{request.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+                    <span>Need: {request.needType}</span>
+                    {request.requester?.username && (
+                      <span>Posted by: {request.requester.username}</span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        updateRequestStatus(request.id, AccommodationRequestStatus.IN_REVIEW)
+                      }
+                    >
+                      Review
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        updateRequestStatus(request.id, AccommodationRequestStatus.READY)
+                      }
+                    >
+                      Prepare
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        updateRequestStatus(request.id, AccommodationRequestStatus.FULFILLED)
+                      }
+                    >
+                      Fulfill
+                    </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">{request.description}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                  <span>Need: {request.needType}</span>
-                  {request.requester?.username && <span>Posted by: {request.requester.username}</span>}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => updateRequestStatus(request.id, AccommodationRequestStatus.IN_REVIEW)}>Review</Button>
-                  <Button size="sm" variant="outline" onClick={() => updateRequestStatus(request.id, AccommodationRequestStatus.READY)}>Prepare</Button>
-                  <Button size="sm" variant="outline" onClick={() => updateRequestStatus(request.id, AccommodationRequestStatus.FULFILLED)}>Fulfill</Button>
-                </div>
-              </div>
-            ))}
+              ))}
             {!requestsLoading && requests.length === 0 && (
-              <p className="text-sm text-gray-500">No accommodation requests yet. Publish the first accessibility request for this community.</p>
+              <p className="text-sm text-gray-500">
+                No accommodation requests yet. Publish the first accessibility request for this
+                community.
+              </p>
             )}
           </CardContent>
         </Card>

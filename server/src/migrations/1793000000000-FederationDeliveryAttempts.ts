@@ -34,10 +34,10 @@ export class FederationDeliveryAttempts1793000000000 implements MigrationInterfa
       )
     `);
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_delivery_pending" ON "federation_delivery_attempts" ("dead", "completedAt", "nextRetryAt")`,
+      `CREATE INDEX "IDX_federation_delivery_pending" ON "federation_delivery_attempts" ("dead", "completedAt", "nextRetryAt")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_delivery_activity" ON "federation_delivery_attempts" ("activityId", "inboxUrl")`,
+      `CREATE INDEX "IDX_federation_delivery_activity" ON "federation_delivery_attempts" ("activityId", "inboxUrl")`
     );
   }
 

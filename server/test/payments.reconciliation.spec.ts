@@ -21,20 +21,20 @@ describe('PayoutReconciliationService', () => {
       update: jest.fn(async (criteria: any, patch: any) => {
         const payout = payouts.find(
           (p) =>
-            p.id === criteria.id &&
-            (criteria.status === undefined || p.status === criteria.status),
+            p.id === criteria.id && (criteria.status === undefined || p.status === criteria.status)
         );
         if (!payout) return { affected: 0 };
         Object.assign(payout, patch);
         return { affected: 1 };
       }),
-      findOne: jest.fn(async ({ where }: any) =>
-        payouts.find(
-          (p) =>
-            p.id === where.id ||
-            p.payoutId === where.payoutId ||
-            (where.stripeTransferId && p.stripeTransferId === where.stripeTransferId),
-        ) ?? null,
+      findOne: jest.fn(
+        async ({ where }: any) =>
+          payouts.find(
+            (p) =>
+              p.id === where.id ||
+              p.payoutId === where.payoutId ||
+              (where.stripeTransferId && p.stripeTransferId === where.stripeTransferId)
+          ) ?? null
       ),
       find: jest.fn(async () => payouts),
       count: jest.fn(async () => payouts.length),
@@ -88,7 +88,7 @@ describe('PayoutReconciliationService', () => {
         debit: jest.fn(async () => ({ walletBalance: 0 })),
       } as any,
       configService as any,
-      { dispatchEvent: jest.fn(async () => undefined) } as any,
+      { dispatchEvent: jest.fn(async () => undefined) } as any
     );
     (paymentsService as any).stripe = stripe;
     (paymentsService as any).logger = { log: jest.fn(), warn: jest.fn(), debug: jest.fn() };

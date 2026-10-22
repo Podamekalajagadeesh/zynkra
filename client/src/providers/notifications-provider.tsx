@@ -113,7 +113,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           return;
         }
 
-        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo';
+        const vapidPublicKey =
+          import.meta.env.VITE_VAPID_PUBLIC_KEY ||
+          'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo';
         const subscriptionOptions = {
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
           userVisibleOnly: true,
@@ -162,7 +164,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     try {
       await api.patch(`/notifications/${notificationId}/read`);
       setNotifications((prev) =>
-        prev.map((notification) => (notification.id === notificationId ? { ...notification, read: true } : notification))
+        prev.map((notification) =>
+          notification.id === notificationId ? { ...notification, read: true } : notification
+        )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
@@ -189,9 +193,5 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     pushSupported,
   };
 
-  return (
-    <NotificationsContext.Provider value={value}>
-      {children}
-    </NotificationsContext.Provider>
-  );
+  return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
 };

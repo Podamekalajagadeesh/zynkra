@@ -31,7 +31,11 @@ export class SandboxEnvironmentEntity {
   @Column({ type: 'varchar', length: 96, select: false })
   accessKeyHash: string;
 
-  @Column({ type: 'enum', enum: SandboxEnvironmentStatus, default: SandboxEnvironmentStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: SandboxEnvironmentStatus,
+    default: SandboxEnvironmentStatus.ACTIVE,
+  })
   status: SandboxEnvironmentStatus;
 
   @Column({ type: 'jsonb', default: {} })

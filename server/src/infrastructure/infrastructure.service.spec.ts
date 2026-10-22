@@ -15,7 +15,9 @@ describe('InfrastructureService', () => {
       expect(result.success).toBe(true);
       expect(result.archivePath.endsWith('.zip')).toBe(true);
 
-      const manifest = JSON.parse(await readFile(join(tempDir, 'backups', 'latest-backup.json'), 'utf8'));
+      const manifest = JSON.parse(
+        await readFile(join(tempDir, 'backups', 'latest-backup.json'), 'utf8')
+      );
       expect(manifest.label).toBe('demo');
       expect(manifest.createdAt).toBeDefined();
     } finally {
@@ -36,12 +38,18 @@ describe('InfrastructureService', () => {
       },
     };
 
-    const service = new InfrastructureService(configService as any, {
-      query: async () => [{ '?column?': 1 }],
-    } as any, {
-      create: (value: any) => value,
-      save: async (value: any) => value,
-    } as any, {} as any, {} as any);
+    const service = new InfrastructureService(
+      configService as any,
+      {
+        query: async () => [{ '?column?': 1 }],
+      } as any,
+      {
+        create: (value: any) => value,
+        save: async (value: any) => value,
+      } as any,
+      {} as any,
+      {} as any
+    );
     const snapshot = await service.getHealthSnapshot();
 
     expect(snapshot.status).toBe('degraded');

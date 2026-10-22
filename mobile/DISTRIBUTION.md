@@ -42,21 +42,27 @@ npm run release               # Build + submit all platforms
 ## Configuration Files
 
 ### app.json
+
 Main Expo configuration with app store metadata:
+
 - Bundle IDs and package names
 - App icons and splash screens
 - Privacy policy and permissions
 - Store-specific settings
 
 ### eas.json
+
 EAS Build configuration:
+
 - Build profiles (preview, production)
 - Build resources
 - Submission settings
 - App Store Connect IDs
 
 ### store-config.json
+
 App store metadata and versioning:
+
 - App descriptions
 - Keywords and categories
 - Release notes
@@ -116,6 +122,7 @@ gh workflow run app-store-release.yml \
 To update version:
 
 1. Edit `app.json`:
+
    ```json
    "version": "1.0.1",
    "ios": { "buildNumber": "2" },
@@ -137,6 +144,7 @@ After launch, monitor:
 ## Support
 
 For issues:
+
 - **Expo**: https://docs.expo.dev
 - **Apple**: https://developer.apple.com/support
 - **Google**: https://support.google.com/googleplay

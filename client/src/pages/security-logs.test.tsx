@@ -33,7 +33,7 @@ describe('SecurityLogsPage', () => {
     render(
       <MemoryRouter>
         <SecurityLogsPage />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     await waitFor(() => {

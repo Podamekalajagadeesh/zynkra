@@ -17,7 +17,7 @@ const SafetyCheck: React.FC<SafetyCheckProps> = ({ crisisEventId, friends, userI
       const data = (await response.json()) as UserSafetyStatus[];
       setSafetyStatuses(data);
 
-      const userStatus = data.find(s => s.userId === userId);
+      const userStatus = data.find((s) => s.userId === userId);
       if (userStatus) {
         setCurrentUserStatus(userStatus.status);
       }
@@ -49,8 +49,8 @@ const SafetyCheck: React.FC<SafetyCheckProps> = ({ crisisEventId, friends, userI
       )}
       <h3>Friends Status</h3>
       <ul>
-        {friends.map(friend => {
-          const status = safetyStatuses.find(s => s.userId === friend.id);
+        {friends.map((friend) => {
+          const status = safetyStatuses.find((s) => s.userId === friend.id);
           return (
             <li key={friend.id}>
               {friend.name}: {status ? status.status : 'Unknown'}

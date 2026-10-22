@@ -37,7 +37,13 @@ function createFakeManager(store: Store) {
   const matchWhere = (row: any, where: any): boolean => {
     for (const key of Object.keys(where || {})) {
       const expected = where[key];
-      if (expected && typeof expected === 'object' && !Array.isArray(expected._value) && 'id' in expected && key === 'participants') {
+      if (
+        expected &&
+        typeof expected === 'object' &&
+        !Array.isArray(expected._value) &&
+        'id' in expected &&
+        key === 'participants'
+      ) {
         if (!(row.participants || []).some((p: any) => p.id === expected.id)) return false;
       } else if (expected && typeof expected === 'object' && Array.isArray(expected._value)) {
         if (!expected._value.includes(row[key])) return false;
@@ -119,19 +125,49 @@ describe('Data export portability — transactional import', () => {
   it('restores 1:1 DMs with a resolved peer and reuses the thread on re-import', async () => {
     const store: Store = {
       users: [
-        { id: 'me', username: 'alice', publicKey: 'k1', accountDataPermissions: ALL_PERMS, verified: false },
+        {
+          id: 'me',
+          username: 'alice',
+          publicKey: 'k1',
+          accountDataPermissions: ALL_PERMS,
+          verified: false,
+        },
         { id: 'peer-a', username: 'bob', publicKey: 'k2', accountDataPermissions: ALL_PERMS },
       ],
-      follows: [], conversations: [], messages: [], ledger: [], orders: [], verifications: [], connected: [],
+      follows: [],
+      conversations: [],
+      messages: [],
+      ledger: [],
+      orders: [],
+      verifications: [],
+      connected: [],
     };
     const service = buildService(store);
     const payload = makePayload({
       conversations: [
-        { id: 'conv-1', type: 'one_to_one', name: null, isEncrypted: true, otherParticipant: { userId: 'peer-a', username: 'bob' } },
+        {
+          id: 'conv-1',
+          type: 'one_to_one',
+          name: null,
+          isEncrypted: true,
+          otherParticipant: { userId: 'peer-a', username: 'bob' },
+        },
       ],
       messages: [
-        { id: 'm1', content: 'hey from alice', direction: 'sent', conversationId: 'conv-1', createdAt: '2026-01-01T00:00:00.000Z' },
-        { id: 'm2', content: 'hi back', direction: 'received', conversationId: 'conv-1', createdAt: '2026-01-01T00:01:00.000Z' },
+        {
+          id: 'm1',
+          content: 'hey from alice',
+          direction: 'sent',
+          conversationId: 'conv-1',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'm2',
+          content: 'hi back',
+          direction: 'received',
+          conversationId: 'conv-1',
+          createdAt: '2026-01-01T00:01:00.000Z',
+        },
       ],
     });
 
@@ -143,7 +179,10 @@ describe('Data export portability — transactional import', () => {
     expect(store.messages).toHaveLength(2);
     expect(store.conversations).toHaveLength(1);
     expect(store.conversations[0].isEncrypted).toBe(true);
-    expect(store.conversations[0].participants.map((p: any) => p.id).sort()).toEqual(['me', 'peer-a']);
+    expect(store.conversations[0].participants.map((p: any) => p.id).sort()).toEqual([
+      'me',
+      'peer-a',
+    ]);
     const sent = store.messages.find((m) => m.content === 'hey from alice');
     expect(sent.sender.id).toBe('me');
     const received = store.messages.find((m) => m.content === 'hi back');
@@ -158,7 +197,13 @@ describe('Data export portability — transactional import', () => {
   it('skips group threads and unknown peers without importing their messages', async () => {
     const store: Store = {
       users: [{ id: 'me', username: 'alice', accountDataPermissions: ALL_PERMS }],
-      follows: [], conversations: [], messages: [], ledger: [], orders: [], verifications: [], connected: [],
+      follows: [],
+      conversations: [],
+      messages: [],
+      ledger: [],
+      orders: [],
+      verifications: [],
+      connected: [],
     };
     const service = buildService(store);
     const payload = makePayload({
@@ -167,7 +212,13 @@ describe('Data export portability — transactional import', () => {
         { id: 'conv-group', type: 'group', name: 'travel', otherParticipant: null },
       ],
       messages: [
-        { id: 'm1', content: 'to nobody', direction: 'sent', conversationId: 'conv-unknown', createdAt: '2026-01-01T00:00:00.000Z' },
+        {
+          id: 'm1',
+          content: 'to nobody',
+          direction: 'sent',
+          conversationId: 'conv-unknown',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
       ],
     });
 
@@ -183,19 +234,44 @@ describe('Data export portability — transactional import', () => {
   it('imports wallet, orders, verification, and linked accounts as archival only', async () => {
     const store: Store = {
       users: [{ id: 'me', username: 'alice', accountDataPermissions: ALL_PERMS, verified: false }],
-      follows: [], conversations: [], messages: [], ledger: [], orders: [], verifications: [], connected: [],
+      follows: [],
+      conversations: [],
+      messages: [],
+      ledger: [],
+      orders: [],
+      verifications: [],
+      connected: [],
     };
     const service = buildService(store);
     const payload = makePayload({
       wallet: [
-        { type: 'earning', amount: 50, balanceAfter: 50, currency: 'usd', reference: 'ref-1', purpose: 'post-support', createdAt: '2026-01-01T00:00:00.000Z' },
+        {
+          type: 'earning',
+          amount: 50,
+          balanceAfter: 50,
+          currency: 'usd',
+          reference: 'ref-1',
+          purpose: 'post-support',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
       ],
       orders: [{ id: 'o1', total: 20, status: 'delivered', createdAt: '2026-01-02T00:00:00.000Z' }],
       verification: [
-        { category: 'creator', status: 'approved', justification: 'I am a creator', links: [], createdAt: '2026-01-03T00:00:00.000Z' },
+        {
+          category: 'creator',
+          status: 'approved',
+          justification: 'I am a creator',
+          links: [],
+          createdAt: '2026-01-03T00:00:00.000Z',
+        },
       ],
       linkedAccounts: [
-        { platform: 'twitter', platformUsername: '@alice', platformUserId: '123', accessToken: 'SECRET' },
+        {
+          platform: 'twitter',
+          platformUsername: '@alice',
+          platformUserId: '123',
+          accessToken: 'SECRET',
+        },
       ],
     });
 
@@ -227,13 +303,17 @@ describe('Data export portability — transactional import', () => {
   it('imports nothing when the matching data category is disabled', async () => {
     const store: Store = {
       users: [{ id: 'me', username: 'alice', accountDataPermissions: ['profile'] }],
-      follows: [], conversations: [], messages: [], ledger: [], orders: [], verifications: [], connected: [],
+      follows: [],
+      conversations: [],
+      messages: [],
+      ledger: [],
+      orders: [],
+      verifications: [],
+      connected: [],
     };
     const service = buildService(store);
     const payload = makePayload({
-      conversations: [
-        { id: 'conv-1', type: 'one_to_one', otherParticipant: { username: 'bob' } },
-      ],
+      conversations: [{ id: 'conv-1', type: 'one_to_one', otherParticipant: { username: 'bob' } }],
       messages: [{ id: 'm1', content: 'secret', direction: 'sent', conversationId: 'conv-1' }],
       wallet: [{ type: 'earning', amount: 5, balanceAfter: 5 }],
       orders: [{ total: 1, status: 'delivered' }],

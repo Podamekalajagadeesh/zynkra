@@ -28,11 +28,12 @@ export class ActivityController {
   @Patch('settings')
   async updateSettings(
     @Request() req,
-    @Body() body: {
+    @Body()
+    body: {
       showOnlineStatus?: boolean;
       showLastSeenTimestamp?: boolean;
       activityVisibility?: 'public' | 'friends' | 'private';
-    },
+    }
   ) {
     return this.activityService.updateActivitySettings(req.user.userId, body);
   }

@@ -81,7 +81,7 @@ const renderPage = () =>
       <MemoryRouter>
         <GroupsPage />
       </MemoryRouter>
-    </ToastProvider>,
+    </ToastProvider>
   );
 
 describe('GroupsPage', () => {
@@ -112,9 +112,9 @@ describe('GroupsPage', () => {
 
   it('joins a discovered group and opens it', async () => {
     mockJoinGroup.mockResolvedValue({ id: 'm2', role: 'member' });
-    mockDiscoverGroups.mockResolvedValueOnce([
-      { id: 'g2', name: 'Open Guild', privacy: 'public' },
-    ]).mockResolvedValue([]);
+    mockDiscoverGroups
+      .mockResolvedValueOnce([{ id: 'g2', name: 'Open Guild', privacy: 'public' }])
+      .mockResolvedValue([]);
 
     renderPage();
 
@@ -136,9 +136,7 @@ describe('GroupsPage', () => {
     expect(screen.getByRole('button', { name: 'Tasks' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Calendar' }));
-    await waitFor(() =>
-      expect(mockApiGet).toHaveBeenCalledWith('/groups/g1/calendar-events'),
-    );
+    await waitFor(() => expect(mockApiGet).toHaveBeenCalledWith('/groups/g1/calendar-events'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Tasks' }));
     await waitFor(() => expect(mockApiGet).toHaveBeenCalledWith('/groups/g1/todo-items'));
@@ -184,7 +182,7 @@ describe('GroupsPage', () => {
 
     await waitFor(() => expect(mockLeaveGroup).toHaveBeenCalledWith('g1'));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: 'Leave group' })).not.toBeInTheDocument()
     );
     // group workspace closes after leaving
     expect(screen.queryByRole('button', { name: 'Channels' })).not.toBeInTheDocument();

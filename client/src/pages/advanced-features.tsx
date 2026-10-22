@@ -31,17 +31,22 @@ export function AdvancedFeaturesPage() {
   }, []);
 
   const loadStatus = async () => {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/advanced-features/status`);
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/advanced-features/status`
+    );
     setStatus(response.data);
   };
 
   const handleTranslate = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/advanced-features/translate`, {
-        text,
-        targetLanguage,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/advanced-features/translate`,
+        {
+          text,
+          targetLanguage,
+        }
+      );
       setTranslation(response.data.translatedText);
     } finally {
       setLoading(false);
@@ -56,20 +61,37 @@ export function AdvancedFeaturesPage() {
       { key: 'eInkReader', label: 'E-ink reader support', feature: status.eInkReader },
       { key: 'inCarIntegration', label: 'In-car integration', feature: status.inCarIntegration },
       { key: 'vrAr', label: 'VR/AR experiences', feature: status.vrAr },
-      { key: 'deepfakeDetection', label: 'AI deepfake detection', feature: status.deepfakeDetection },
-      { key: 'realTimeTranslation', label: 'Real-time translation', feature: status.realTimeTranslation },
+      {
+        key: 'deepfakeDetection',
+        label: 'AI deepfake detection',
+        feature: status.deepfakeDetection,
+      },
+      {
+        key: 'realTimeTranslation',
+        label: 'Real-time translation',
+        feature: status.realTimeTranslation,
+      },
     ];
   }, [status]);
 
   return (
-    <PageShell eyebrow="Built-in platform" title="Advanced features" description="Operational experiences for the next generation of connected spaces.">
+    <PageShell
+      eyebrow="Built-in platform"
+      title="Advanced features"
+      description="Operational experiences for the next generation of connected spaces."
+    >
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featureCards.map(({ key, label, feature }) => (
-            <div key={key} className="rounded-2xl border border-dark-200 bg-white/80 p-4 shadow-sm dark:border-dark-700 dark:bg-dark-800/80">
+            <div
+              key={key}
+              className="rounded-2xl border border-dark-200 bg-white/80 p-4 shadow-sm dark:border-dark-700 dark:bg-dark-800/80"
+            >
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-semibold">{label}</h3>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${feature.supported && feature.enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${feature.supported && feature.enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'}`}
+                >
                   {feature.supported && feature.enabled ? 'Active' : 'Preview'}
                 </span>
               </div>
@@ -82,9 +104,13 @@ export function AdvancedFeaturesPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold">Live translation demo</h2>
-              <p className="text-sm text-dark-600 dark:text-dark-300">Translate text instantly into another language with the built-in service.</p>
+              <p className="text-sm text-dark-600 dark:text-dark-300">
+                Translate text instantly into another language with the built-in service.
+              </p>
             </div>
-            <Button onClick={handleTranslate} isLoading={loading}>Translate</Button>
+            <Button onClick={handleTranslate} isLoading={loading}>
+              Translate
+            </Button>
           </div>
 
           <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
@@ -97,7 +123,11 @@ export function AdvancedFeaturesPage() {
             <div className="space-y-3">
               <label className="block text-sm font-medium">
                 Target language
-                <select value={targetLanguage} onChange={(event) => setTargetLanguage(event.target.value)} className="mt-1 w-full rounded-2xl border border-dark-200 bg-white/80 p-3 text-sm dark:border-dark-700 dark:bg-dark-900/70">
+                <select
+                  value={targetLanguage}
+                  onChange={(event) => setTargetLanguage(event.target.value)}
+                  className="mt-1 w-full rounded-2xl border border-dark-200 bg-white/80 p-3 text-sm dark:border-dark-700 dark:bg-dark-900/70"
+                >
                   <option value="es">Spanish</option>
                   <option value="fr">French</option>
                   <option value="de">German</option>
@@ -111,7 +141,9 @@ export function AdvancedFeaturesPage() {
               </label>
               <div className="rounded-2xl border border-dark-200 bg-white/70 p-3 text-sm dark:border-dark-700 dark:bg-dark-900/70">
                 <div className="font-medium">Result</div>
-                <p className="mt-1 text-dark-700 dark:text-dark-200">{translation || 'Translation will appear here.'}</p>
+                <p className="mt-1 text-dark-700 dark:text-dark-200">
+                  {translation || 'Translation will appear here.'}
+                </p>
               </div>
             </div>
           </div>

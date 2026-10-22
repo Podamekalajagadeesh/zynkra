@@ -21,22 +21,18 @@ export class TranslationController {
   @Post('translate')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async translate(@Body() body: {
-    text: string;
-    sourceLang?: string;
-    targetLang: string;
-  }) {
+  async translate(@Body() body: { text: string; sourceLang?: string; targetLang: string }) {
     return this.translationService.translate(body.text, body.sourceLang || 'auto', body.targetLang);
   }
 
   @Post('batch')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async translateBatch(@Body() body: {
-    texts: string[];
-    sourceLang?: string;
-    targetLang: string;
-  }) {
-    return this.translationService.translateBatch(body.texts, body.sourceLang || 'auto', body.targetLang);
+  async translateBatch(@Body() body: { texts: string[]; sourceLang?: string; targetLang: string }) {
+    return this.translationService.translateBatch(
+      body.texts,
+      body.sourceLang || 'auto',
+      body.targetLang
+    );
   }
 }

@@ -2,13 +2,13 @@ import { Logger } from '@nestjs/common';
 import { PostFederationService } from './post-federation.service';
 import { Post, PostVisibility } from '../posts/entities/post.entity';
 
-function makeService(
-  config: Record<string, string>,
-  federationService: any = undefined,
-) {
+function makeService(config: Record<string, string>, federationService: any = undefined) {
   return new (PostFederationService as any)(
     { get: (token: string) => (token === 'FederationService' ? federationService : undefined) },
-    { get: (key: string, fallback?: any) => (config[key] !== undefined ? config[key] : (fallback ?? null)) },
+    {
+      get: (key: string, fallback?: any) =>
+        config[key] !== undefined ? config[key] : (fallback ?? null),
+    }
   );
 }
 
@@ -107,7 +107,7 @@ describe('federateNewPost — eligibility', () => {
     const service = makeService({ FEDERATION_ENABLED: 'true' }, federationService);
     service.federateNewPost(
       makePost({ isEncrypted: true, content: '[Encrypted Content]' }),
-      'user-1',
+      'user-1'
     );
     await settle();
 
@@ -221,7 +221,7 @@ describe('federatePostDeletion', () => {
       new Promise<void>((resolve) => {
         service.federatePostDeletion('post-1', 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
   });
@@ -236,7 +236,7 @@ describe('federatePostDeletion', () => {
       new Promise<void>((resolve) => {
         service.federatePostDeletion('post-1', 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
   });
@@ -277,11 +277,7 @@ describe('federatePostUpdate — eligibility', () => {
     service.federatePostUpdate(makePost({ content: 'edited' }), 'user-1');
     await settle();
 
-    expect(federationService.federateUpdate).toHaveBeenCalledWith(
-      'user-1',
-      'post-1',
-      'edited',
-    );
+    expect(federationService.federateUpdate).toHaveBeenCalledWith('user-1', 'post-1', 'edited');
   });
 
   it('skips the same shapes create skips', async () => {
@@ -325,7 +321,7 @@ describe('federatePostUpdate — eligibility', () => {
       new Promise<void>((resolve) => {
         service.federatePostUpdate(makePost(), 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
   });
@@ -340,7 +336,7 @@ describe('federatePostUpdate — eligibility', () => {
       new Promise<void>((resolve) => {
         service.federatePostUpdate(makePost(), 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
     expect(federationService.federateUpdate).toHaveBeenCalled();
@@ -352,7 +348,7 @@ describe('federatePostUpdate — eligibility', () => {
       new Promise<void>((resolve) => {
         service.federatePostUpdate(makePost(), 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
   });
@@ -372,7 +368,7 @@ describe('federateNewPost — failure isolation', () => {
       new Promise<void>((resolve) => {
         service.federateNewPost(makePost(), 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
     expect(federationService.federatePost).toHaveBeenCalled();
@@ -384,7 +380,7 @@ describe('federateNewPost — failure isolation', () => {
       new Promise<void>((resolve) => {
         service.federateNewPost(makePost(), 'user-1');
         resolve();
-      }),
+      })
     ).resolves.toBeUndefined();
     await settle();
   });

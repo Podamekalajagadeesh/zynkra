@@ -19,16 +19,19 @@ export async function getPosts(): Promise<Post[]> {
   const response = await fetch(`${API_BASE_URL}/posts/my-posts`, {
     credentials: 'include',
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch posts');
   }
-  
+
   return response.json();
 }
 
 // Create a boosted post (native Zynkra ad)
-export async function createBoostedPost(postId: number, budget: string): Promise<{ success: boolean; campaignId: number }> {
+export async function createBoostedPost(
+  postId: number,
+  budget: string
+): Promise<{ success: boolean; campaignId: number }> {
   const response = await fetch(`${API_BASE_URL}/campaigns`, {
     method: 'POST',
     headers: {

@@ -136,13 +136,13 @@ export interface UserProfile {
   isProfessional?: boolean;
   website?: string | null;
   contact?: {
-      email?: string;
-      phone?: string;
-      directions?: string;
-    };
-    followStatus?: 'following' | 'requested' | 'not_following';
-    profileTheme?: string;
-    profileThemeColor?: string;
+    email?: string;
+    phone?: string;
+    directions?: string;
+  };
+  followStatus?: 'following' | 'requested' | 'not_following';
+  profileTheme?: string;
+  profileThemeColor?: string;
   // Professional profile fields
   professionalProfile?: ProfessionalProfile;
   verified?: boolean;
@@ -748,95 +748,119 @@ export interface SkillAssessmentQuestion {
   userAnswer?: string;
 }
 
-export const SKILL_ASSESSMENTS: Record<string, {
-  skillName: string;
-  questions: Omit<SkillAssessmentQuestion, 'questionId'>[];
-}> = {
-  'javascript': {
+export const SKILL_ASSESSMENTS: Record<
+  string,
+  {
+    skillName: string;
+    questions: Omit<SkillAssessmentQuestion, 'questionId'>[];
+  }
+> = {
+  javascript: {
     skillName: 'JavaScript',
     questions: [
       {
         question: 'What is the output of typeof null?',
         options: ['"null"', '"object"', '"undefined"', '"number"'],
-        correctAnswer: '"object"'
+        correctAnswer: '"object"',
       },
       {
-        question: 'Which method creates a new array with all elements that pass the test implemented by the provided function?',
+        question:
+          'Which method creates a new array with all elements that pass the test implemented by the provided function?',
         options: ['forEach()', 'map()', 'filter()', 'reduce()'],
-        correctAnswer: 'filter()'
+        correctAnswer: 'filter()',
       },
       {
         question: 'What is closure in JavaScript?',
-        options: ['A way to close browser tabs', 'A function that has access to its lexical scope', 'A CSS property', 'A database connection method'],
-        correctAnswer: 'A function that has access to its lexical scope'
-      }
-    ]
+        options: [
+          'A way to close browser tabs',
+          'A function that has access to its lexical scope',
+          'A CSS property',
+          'A database connection method',
+        ],
+        correctAnswer: 'A function that has access to its lexical scope',
+      },
+    ],
   },
-  'react': {
+  react: {
     skillName: 'React',
     questions: [
       {
         question: 'What hook is used to manage state in a functional component?',
         options: ['useEffect()', 'useState()', 'useContext()', 'useReducer()'],
-        correctAnswer: 'useState()'
+        correctAnswer: 'useState()',
       },
       {
         question: 'What is the virtual DOM?',
-        options: ['A direct copy of the browser DOM', 'A lightweight JavaScript representation of the UI', 'A CSS-in-JS library', 'A testing framework'],
-        correctAnswer: 'A lightweight JavaScript representation of the UI'
+        options: [
+          'A direct copy of the browser DOM',
+          'A lightweight JavaScript representation of the UI',
+          'A CSS-in-JS library',
+          'A testing framework',
+        ],
+        correctAnswer: 'A lightweight JavaScript representation of the UI',
       },
       {
         question: 'When does useEffect run?',
-        options: ['Only on component mount', 'After render cycle, based on dependencies', 'Before component renders', 'Never'],
-        correctAnswer: 'After render cycle, based on dependencies'
-      }
-    ]
+        options: [
+          'Only on component mount',
+          'After render cycle, based on dependencies',
+          'Before component renders',
+          'Never',
+        ],
+        correctAnswer: 'After render cycle, based on dependencies',
+      },
+    ],
   },
-  'python': {
+  python: {
     skillName: 'Python',
     questions: [
       {
         question: 'What is the output of print(type([]))?',
-        options: ['<class \'tuple\'>', '<class \'list\'>', '<class \'array\'>', '<class \'collection\'>'],
-        correctAnswer: '<class \'list\'>'
+        options: ["<class 'tuple'>", "<class 'list'>", "<class 'array'>", "<class 'collection'>"],
+        correctAnswer: "<class 'list'>",
       },
       {
         question: 'Which keyword is used to define a function in Python?',
         options: ['function', 'def', 'func', 'define'],
-        correctAnswer: 'def'
+        correctAnswer: 'def',
       },
       {
         question: 'What is a lambda function?',
-        options: ['A function that sends emails', 'An anonymous function', 'A class method', 'A database query'],
-        correctAnswer: 'An anonymous function'
-      }
-    ]
+        options: [
+          'A function that sends emails',
+          'An anonymous function',
+          'A class method',
+          'A database query',
+        ],
+        correctAnswer: 'An anonymous function',
+      },
+    ],
   },
-  'sql': {
+  sql: {
     skillName: 'SQL',
     questions: [
       {
         question: 'Which SQL statement is used to retrieve data from a database?',
         options: ['GET', 'RETRIEVE', 'SELECT', 'FETCH'],
-        correctAnswer: 'SELECT'
+        correctAnswer: 'SELECT',
       },
       {
         question: 'What clause is used to filter records?',
         options: ['SORT', 'ORDER', 'WHERE', 'FILTER'],
-        correctAnswer: 'WHERE'
+        correctAnswer: 'WHERE',
       },
       {
         question: 'Which join returns all records from both tables matching on a condition?',
         options: ['LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN'],
-        correctAnswer: 'INNER JOIN'
-      }
-    ]
-  }
+        correctAnswer: 'INNER JOIN',
+      },
+    ],
+  },
 };
 
 export const AVAILABLE_SKILL_ASSESSMENTS = Object.entries(SKILL_ASSESSMENTS).map(([id, data]) => ({
   skillId: id,
-  skillName: data.skillName
+  skillName: data.skillName,
 }));
 
 export interface ProfessionalProfile {
@@ -848,7 +872,12 @@ export interface ProfessionalProfile {
   about: string;
   experience: WorkExperience[];
   education: Education[];
-  skills: { skillId: string; name: string; endorsements: SkillEndorsement[]; assessment?: SkillAssessment }[];
+  skills: {
+    skillId: string;
+    name: string;
+    endorsements: SkillEndorsement[];
+    assessment?: SkillAssessment;
+  }[];
   certifications: Certification[];
   projects: Project[];
 }

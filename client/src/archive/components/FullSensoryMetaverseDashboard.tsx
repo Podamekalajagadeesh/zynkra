@@ -6,15 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Settings } from 'lucide-react';
 
 export const FullSensoryMetaverseDashboard: React.FC = () => {
-  const { 
-    state, 
-    isInitialized, 
-    loadEnvironment, 
+  const {
+    state,
+    isInitialized,
+    loadEnvironment,
     getEnvironments,
     addHaptic,
     addScent,
     addTaste,
-    updateEnvironmentParameters
+    updateEnvironmentParameters,
   } = useFullSensoryMetaverse();
 
   // State for sensory editing controls
@@ -49,49 +49,77 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
           <h2 className="text-2xl font-semibold text-white mb-4">Connected Sensory Devices</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Haptic Suit */}
-            <div className={`p-4 rounded-lg ${state.deviceStatus.hapticSuit.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
+            <div
+              className={`p-4 rounded-lg ${state.deviceStatus.hapticSuit.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium">Haptic Suit</span>
-                <span className={`text-xs px-2 py-1 rounded ${state.deviceStatus.hapticSuit.connected ? 'bg-green-600' : 'bg-red-600'}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${state.deviceStatus.hapticSuit.connected ? 'bg-green-600' : 'bg-red-600'}`}
+                >
                   {state.deviceStatus.hapticSuit.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
-              <p className="text-gray-400 text-sm">Battery: {state.deviceStatus.hapticSuit.batteryLevel}%</p>
-              <p className="text-gray-400 text-sm">Firmware: {state.deviceStatus.hapticSuit.firmware}</p>
+              <p className="text-gray-400 text-sm">
+                Battery: {state.deviceStatus.hapticSuit.batteryLevel}%
+              </p>
+              <p className="text-gray-400 text-sm">
+                Firmware: {state.deviceStatus.hapticSuit.firmware}
+              </p>
             </div>
 
             {/* Olfactory Interface */}
-            <div className={`p-4 rounded-lg ${state.deviceStatus.olfactoryInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
+            <div
+              className={`p-4 rounded-lg ${state.deviceStatus.olfactoryInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium">Olfactory Interface</span>
-                <span className={`text-xs px-2 py-1 rounded ${state.deviceStatus.olfactoryInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${state.deviceStatus.olfactoryInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}
+                >
                   {state.deviceStatus.olfactoryInterface.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
-              <p className="text-gray-400 text-sm">Available scents: {state.deviceStatus.olfactoryInterface.availableScents.length}</p>
+              <p className="text-gray-400 text-sm">
+                Available scents: {state.deviceStatus.olfactoryInterface.availableScents.length}
+              </p>
             </div>
 
             {/* Gustatory Interface */}
-            <div className={`p-4 rounded-lg ${state.deviceStatus.gustatoryInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
+            <div
+              className={`p-4 rounded-lg ${state.deviceStatus.gustatoryInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium">Gustatory Interface</span>
-                <span className={`text-xs px-2 py-1 rounded ${state.deviceStatus.gustatoryInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${state.deviceStatus.gustatoryInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}
+                >
                   {state.deviceStatus.gustatoryInterface.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
-              <p className="text-gray-400 text-sm">Available flavors: {state.deviceStatus.gustatoryInterface.availableFlavors.length}</p>
+              <p className="text-gray-400 text-sm">
+                Available flavors: {state.deviceStatus.gustatoryInterface.availableFlavors.length}
+              </p>
             </div>
 
             {/* Neural Interface */}
-            <div className={`p-4 rounded-lg ${state.deviceStatus.neuralInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
+            <div
+              className={`p-4 rounded-lg ${state.deviceStatus.neuralInterface.connected ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium">Neural Interface</span>
-                <span className={`text-xs px-2 py-1 rounded ${state.deviceStatus.neuralInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}>
+                <span
+                  className={`text-xs px-2 py-1 rounded ${state.deviceStatus.neuralInterface.connected ? 'bg-green-600' : 'bg-red-600'}`}
+                >
                   {state.deviceStatus.neuralInterface.connected ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
-              <p className="text-gray-400 text-sm">Latency: {state.deviceStatus.neuralInterface.latency}ms</p>
-              <p className="text-gray-400 text-sm">Calibrated: {state.deviceStatus.neuralInterface.calibrationComplete ? 'Yes' : 'No'}</p>
+              <p className="text-gray-400 text-sm">
+                Latency: {state.deviceStatus.neuralInterface.latency}ms
+              </p>
+              <p className="text-gray-400 text-sm">
+                Calibrated: {state.deviceStatus.neuralInterface.calibrationComplete ? 'Yes' : 'No'}
+              </p>
             </div>
           </div>
         </section>
@@ -101,11 +129,11 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
           <h2 className="text-2xl font-semibold text-white mb-4">Sensory Environments</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {environments.map((env) => (
-              <div 
+              <div
                 key={env.id}
                 className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${
-                  state.currentEnvironment === env.id 
-                    ? 'border-blue-500 bg-blue-900/30' 
+                  state.currentEnvironment === env.id
+                    ? 'border-blue-500 bg-blue-900/30'
                     : 'border-gray-700 bg-gray-700/50 hover:border-gray-500'
                 }`}
                 onClick={() => loadEnvironment(env.id)}
@@ -135,8 +163,8 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
             <section className="mb-8 bg-gray-800 rounded-xl p-6 shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-white">Sensory Content Editor</h2>
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   onClick={() => setShowSensoryEditor(!showSensoryEditor)}
                   className="flex items-center gap-2"
                 >
@@ -151,7 +179,9 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
                   <Card className="bg-gray-700 border-gray-600">
                     <CardHeader>
                       <CardTitle className="text-white">Ambient Temperature</CardTitle>
-                      <CardDescription className="text-gray-400">Adjust the virtual environment's temperature</CardDescription>
+                      <CardDescription className="text-gray-400">
+                        Adjust the virtual environment's temperature
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -176,7 +206,9 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
                   <Card className="bg-gray-700 border-gray-600">
                     <CardHeader>
                       <CardTitle className="text-white">Light Intensity</CardTitle>
-                      <CardDescription className="text-gray-400">Adjust the environment's overall brightness</CardDescription>
+                      <CardDescription className="text-gray-400">
+                        Adjust the environment's overall brightness
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -202,16 +234,23 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
                     <Card className="bg-gray-700 border-gray-600">
                       <CardHeader>
                         <CardTitle className="text-white">Scent Intensities</CardTitle>
-                        <CardDescription className="text-gray-400">Adjust individual scent concentrations</CardDescription>
+                        <CardDescription className="text-gray-400">
+                          Adjust individual scent concentrations
+                        </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-6">
                           {state.activeStimuli.scents.map((scent) => (
                             <div key={scent.sourceId} className="space-y-2">
                               <div className="flex items-center justify-between">
-                                <span className="text-gray-300 capitalize">{scent.scentId.replace('-', ' ')}</span>
+                                <span className="text-gray-300 capitalize">
+                                  {scent.scentId.replace('-', ' ')}
+                                </span>
                                 <span className="text-white font-medium">
-                                  {(scentIntensities[scent.sourceId] ?? scent.intensity * 100).toFixed(0)}%
+                                  {(
+                                    scentIntensities[scent.sourceId] ?? scent.intensity * 100
+                                  ).toFixed(0)}
+                                  %
                                 </span>
                               </div>
                               <Slider
@@ -220,9 +259,9 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
                                 max={100}
                                 step={1}
                                 onValueChange={(value) => {
-                                  setScentIntensities(prev => ({
+                                  setScentIntensities((prev) => ({
                                     ...prev,
-                                    [scent.sourceId]: value[0]
+                                    [scent.sourceId]: value[0],
                                   }));
                                 }}
                                 className="w-full"
@@ -235,22 +274,25 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
                   )}
 
                   {/* Apply Changes Button */}
-                  <Button 
+                  <Button
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={() => {
                       if (state.currentEnvironment) {
                         // Prepare scent modifications
-                        const scentModifications = Object.entries(scentIntensities).map(([sourceId, newIntensity]) => ({
-                          sourceId,
-                          newIntensity: newIntensity / 100,
-                          newConcentration: newIntensity / 100
-                        }));
+                        const scentModifications = Object.entries(scentIntensities).map(
+                          ([sourceId, newIntensity]) => ({
+                            sourceId,
+                            newIntensity: newIntensity / 100,
+                            newConcentration: newIntensity / 100,
+                          })
+                        );
 
                         // Apply all updates
                         updateEnvironmentParameters(state.currentEnvironment, {
                           ambientTemperature,
                           lightIntensity,
-                          scentModifications: scentModifications.length > 0 ? scentModifications : undefined
+                          scentModifications:
+                            scentModifications.length > 0 ? scentModifications : undefined,
                         });
                       }
                     }}
@@ -264,13 +306,18 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
             {/* Active Stimuli Panel */}
             <section className="bg-gray-800 rounded-xl p-6 shadow-xl">
               <h2 className="text-2xl font-semibold text-white mb-4">Active Sensory Stimuli</h2>
-              
+
               {/* Active Scents */}
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-white mb-3">Active Scents ({state.activeStimuli.scents.length})</h3>
+                <h3 className="text-lg font-medium text-white mb-3">
+                  Active Scents ({state.activeStimuli.scents.length})
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {state.activeStimuli.scents.map((scent, idx) => (
-                    <span key={idx} className="bg-purple-700 text-white px-3 py-1 rounded-full text-sm">
+                    <span
+                      key={idx}
+                      className="bg-purple-700 text-white px-3 py-1 rounded-full text-sm"
+                    >
                       {scent.scentId} ({(scent.intensity * 100).toFixed(0)}%)
                     </span>
                   ))}
@@ -279,10 +326,15 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
 
               {/* Active Haptics */}
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-white mb-3">Active Haptics ({state.activeStimuli.haptics.length})</h3>
+                <h3 className="text-lg font-medium text-white mb-3">
+                  Active Haptics ({state.activeStimuli.haptics.length})
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {state.activeStimuli.haptics.map((haptic, idx) => (
-                    <span key={idx} className="bg-orange-700 text-white px-3 py-1 rounded-full text-sm">
+                    <span
+                      key={idx}
+                      className="bg-orange-700 text-white px-3 py-1 rounded-full text-sm"
+                    >
                       {haptic.type} ({(haptic.intensity * 100).toFixed(0)}%)
                     </span>
                   ))}
@@ -291,10 +343,15 @@ export const FullSensoryMetaverseDashboard: React.FC = () => {
 
               {/* Active Visuals */}
               <div>
-                <h3 className="text-lg font-medium text-white mb-3">Active Visual Effects ({state.activeStimuli.visuals.length})</h3>
+                <h3 className="text-lg font-medium text-white mb-3">
+                  Active Visual Effects ({state.activeStimuli.visuals.length})
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {state.activeStimuli.visuals.map((visual, idx) => (
-                    <span key={idx} className="bg-pink-700 text-white px-3 py-1 rounded-full text-sm">
+                    <span
+                      key={idx}
+                      className="bg-pink-700 text-white px-3 py-1 rounded-full text-sm"
+                    >
                       {visual.type} ({(visual.intensity * 100).toFixed(0)}%)
                     </span>
                   ))}

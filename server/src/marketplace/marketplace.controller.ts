@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -13,10 +25,7 @@ export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
   @Post('transactions')
-  createTransaction(
-    @Body() createTransactionDto: CreateTransactionDto,
-    @CurrentUser() user: any,
-  ) {
+  createTransaction(@Body() createTransactionDto: CreateTransactionDto, @CurrentUser() user: any) {
     return this.marketplaceService.createTransaction(createTransactionDto, user.userId);
   }
 
@@ -44,7 +53,7 @@ export class MarketplaceController {
   updateListing(
     @Param('id') id: string,
     @Body() updateListingDto: UpdateListingDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.marketplaceService.updateListing(id, updateListingDto, user.userId);
   }

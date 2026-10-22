@@ -94,18 +94,14 @@ export const TippingLeaderboardPage = () => {
             <div
               key={entry.user.id}
               className={`flex items-center gap-4 px-4 py-3 ${
-                i % 2 === 0
-                  ? 'bg-white dark:bg-dark-800'
-                  : 'bg-dark-50 dark:bg-dark-900'
+                i % 2 === 0 ? 'bg-white dark:bg-dark-800' : 'bg-dark-50 dark:bg-dark-900'
               }`}
             >
               <div className="w-10 flex justify-center">
                 {entry.rank === 1 ? (
                   <Crown className="w-5 h-5 text-yellow-500" />
                 ) : (
-                  <span className="text-dark-500 font-semibold tabular-nums">
-                    #{entry.rank}
-                  </span>
+                  <span className="text-dark-500 font-semibold tabular-nums">#{entry.rank}</span>
                 )}
               </div>
               <div className="flex-1 min-w-0">

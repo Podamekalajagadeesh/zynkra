@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../hooks/useToast';
-import {
-  createOAuthApp,
-  listOAuthApps,
-  deleteOAuthApp,
-  rotateOAuthSecret,
-} from '../lib/api';
+import { createOAuthApp, listOAuthApps, deleteOAuthApp, rotateOAuthSecret } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -87,7 +82,7 @@ export const OAuthAppsPage = () => {
     try {
       const result = await rotateOAuthSecret(appId);
       setApps((prev) =>
-        prev.map((app) => (app.id === appId ? { ...app, clientSecret: result.clientSecret } : app)),
+        prev.map((app) => (app.id === appId ? { ...app, clientSecret: result.clientSecret } : app))
       );
       addToast('New secret generated — copy it now', 'success');
     } catch {
@@ -165,12 +160,12 @@ export const OAuthAppsPage = () => {
                     </Button>
                   </div>
                 </div>
-                {app.description && (
-                  <p className="text-sm text-dark-500">{app.description}</p>
-                )}
+                {app.description && <p className="text-sm text-dark-500">{app.description}</p>}
                 <div className="text-sm flex items-center gap-2">
                   <span className="text-dark-500">Client ID:</span>
-                  <code className="text-xs bg-dark-100 dark:bg-dark-800 px-2 py-0.5 rounded">{app.clientId}</code>
+                  <code className="text-xs bg-dark-100 dark:bg-dark-800 px-2 py-0.5 rounded">
+                    {app.clientId}
+                  </code>
                   <button onClick={() => copy(app.clientId)} aria-label="Copy client ID">
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -193,9 +188,7 @@ export const OAuthAppsPage = () => {
                     </button>
                   </div>
                 )}
-                <div className="text-xs text-dark-400">
-                  Scopes: {app.scopes.join(', ')}
-                </div>
+                <div className="text-xs text-dark-400">Scopes: {app.scopes.join(', ')}</div>
               </CardContent>
             </Card>
           ))}

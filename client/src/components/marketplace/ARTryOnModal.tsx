@@ -13,7 +13,7 @@ interface ARTryOnModalProps {
 const SUPPORTED_CATEGORIES = {
   fashion: ['sunglasses', 'hats', 'shirts', 'jackets', 'dresses'],
   beauty: ['lipstick', 'eyeshadow', 'foundation', 'mascara'],
-  home: ['furniture', 'decor', 'rugs', 'wall-art']
+  home: ['furniture', 'decor', 'rugs', 'wall-art'],
 };
 
 export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
@@ -32,8 +32,8 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   const isProductSupported = useCallback(() => {
     if (!product.category) return false;
     const category = product.category.toLowerCase();
-    return Object.values(SUPPORTED_CATEGORIES).some(cats => 
-      cats.some(c => category.includes(c))
+    return Object.values(SUPPORTED_CATEGORIES).some((cats) =>
+      cats.some((c) => category.includes(c))
     );
   }, [product]);
 
@@ -41,7 +41,12 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   useEffect(() => {
     if (product.category) {
       const category = product.category.toLowerCase();
-      if (category.includes('furniture') || category.includes('decor') || category.includes('rug') || category.includes('wall')) {
+      if (
+        category.includes('furniture') ||
+        category.includes('decor') ||
+        category.includes('rug') ||
+        category.includes('wall')
+      ) {
         setArMode('environment');
       } else {
         setArMode('face');
@@ -57,13 +62,13 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
         video: {
           facingMode: arMode === 'face' ? 'user' : 'environment',
           width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+          height: { ideal: 720 },
+        },
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play();
@@ -87,7 +92,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   // Stop camera stream
   const stopCamera = useCallback(() => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
     setIsCameraActive(false);
@@ -118,7 +123,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   const updatePlacement = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -128,7 +133,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   // Draw AR overlay
   const drawAROverlay = useCallback(() => {
     if (!canvasRef.current || !videoRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -148,11 +153,11 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
         // This is a simplified version; in production, this would use MediaPipe or similar for face tracking
         const centerX = canvas.width / 2;
         const centerY = canvas.height * 0.35;
-        
+
         // Draw product overlay at face position
         ctx.save();
         ctx.globalAlpha = 0.85;
-        
+
         // Create a temporary image for the product
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -160,7 +165,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           const aspectRatio = img.width / img.height;
           const overlayWidth = canvas.width * 0.5;
           const overlayHeight = overlayWidth / aspectRatio;
-          
+
           ctx.drawImage(
             img,
             centerX - overlayWidth / 2,
@@ -170,7 +175,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           );
         };
         img.src = product.imageUrls?.[0] || 'https://via.placeholder.com/200x100';
-        
+
         ctx.restore();
 
         // Add face detection guide
@@ -184,21 +189,20 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           canvas.height * 0.5
         );
         ctx.setLineDash([]);
-        
+
         // Instruction text
         ctx.fillStyle = '#ffffff';
         ctx.font = '18px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Position your face within the green box', centerX, canvas.height * 0.7);
-
       } else {
         // Environment-based AR overlay (home goods, furniture)
         const canvasX = (placementPosition.x / 100) * canvas.width;
         const canvasY = (placementPosition.y / 100) * canvas.height;
-        
+
         ctx.save();
         ctx.globalAlpha = 0.9;
-        
+
         // Draw 3D perspective placeholder for home goods
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -206,7 +210,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           const aspectRatio = img.width / img.height;
           const overlayWidth = canvas.width * 0.4;
           const overlayHeight = overlayWidth / aspectRatio;
-          
+
           // Simple perspective transform simulation
           ctx.drawImage(
             img,
@@ -217,7 +221,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           );
         };
         img.src = product.imageUrls?.[0] || 'https://via.placeholder.com/300x200';
-        
+
         ctx.restore();
 
         // Floor guide
@@ -232,7 +236,11 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
         ctx.fillStyle = '#ffffff';
         ctx.font = '18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Drag to move the item, tap on your space to place it', canvas.width / 2, canvas.height * 0.9);
+        ctx.fillText(
+          'Drag to move the item, tap on your space to place it',
+          canvas.width / 2,
+          canvas.height * 0.9
+        );
       }
     }
 
@@ -264,8 +272,8 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
   // Switch camera (front/back)
   const switchCamera = async () => {
     stopCamera();
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setArMode(prev => prev === 'face' ? 'environment' : 'face');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setArMode((prev) => (prev === 'face' ? 'environment' : 'face'));
   };
 
   if (!isProductSupported() && isOpen) {
@@ -275,13 +283,16 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
           <DialogHeader>
             <DialogTitle>AR Try-On Not Available</DialogTitle>
             <DialogDescription>
-              This product category doesn't support AR try-on yet. We're working on adding support for more products!
+              This product category doesn't support AR try-on yet. We're working on adding support
+              for more products!
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center p-8">
             <Info className="w-16 h-16 text-gray-400" />
           </div>
-          <Button onClick={onClose} className="w-full">Close</Button>
+          <Button onClick={onClose} className="w-full">
+            Close
+          </Button>
         </DialogContent>
       </Dialog>
     );
@@ -310,9 +321,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
               <div className="text-center text-white">
                 <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg mb-4">Start AR try-on to see how this looks on you!</p>
-                {error && (
-                  <p className="text-red-400 mb-4 max-w-md mx-auto">{error}</p>
-                )}
+                {error && <p className="text-red-400 mb-4 max-w-md mx-auto">{error}</p>}
                 <Button onClick={startCamera} className="flex items-center gap-2 mx-auto">
                   <Camera className="w-4 h-4" />
                   Start Camera
@@ -334,7 +343,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
                   onMouseUp={handleCanvasMouseUp}
                   onMouseLeave={handleCanvasMouseUp}
                 />
-                
+
                 {/* Loading state */}
                 {!isModelLoaded && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -358,7 +367,7 @@ export function ARTryOnModal({ isOpen, onClose, product }: ARTryOnModalProps) {
               >
                 <RefreshCw className="w-6 h-6 text-white" />
               </button>
-              
+
               <div className="px-4 py-2 bg-white/20 rounded-full">
                 <p className="text-white text-sm">
                   {arMode === 'face' ? 'Face Mode' : 'Room Mode'}

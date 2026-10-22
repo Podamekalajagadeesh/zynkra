@@ -8,7 +8,7 @@ import { Post } from '../posts/entities/post.entity';
 export class TagsService {
   constructor(
     @InjectRepository(Tag)
-    private readonly tagsRepository: Repository<Tag>,
+    private readonly tagsRepository: Repository<Tag>
   ) {}
 
   async parseAndCreateTags(content: string): Promise<Tag[]> {

@@ -12,13 +12,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const clientID = configService.get('GOOGLE_CLIENT_ID');
     if (!clientID) {
       new Logger(GoogleStrategy.name).warn(
-        'GOOGLE_CLIENT_ID not set — Google sign-in is disabled.',
+        'GOOGLE_CLIENT_ID not set — Google sign-in is disabled.'
       );
     }
     super({
       clientID: clientID || 'google-oauth-not-configured',
       clientSecret: configService.get('GOOGLE_CLIENT_SECRET') || 'google-oauth-not-configured',
-      callbackURL: configService.get('GOOGLE_CALLBACK_URL') || 'http://localhost:3000/auth/google/callback',
+      callbackURL:
+        configService.get('GOOGLE_CALLBACK_URL') || 'http://localhost:3000/auth/google/callback',
       scope: ['email', 'profile'],
     });
   }
@@ -27,7 +28,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: VerifyCallback,
+    done: VerifyCallback
   ): Promise<any> {
     const { name, emails, photos } = profile;
     const user = {

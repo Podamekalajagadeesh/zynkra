@@ -6,15 +6,11 @@ export class ContentFeatures1786500000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Distinct "shorts" content type for short-form video.
     await queryRunner.query(
-      `ALTER TYPE "public"."posts_posttype_enum" ADD VALUE IF NOT EXISTS 'shorts'`,
+      `ALTER TYPE "public"."posts_posttype_enum" ADD VALUE IF NOT EXISTS 'shorts'`
     );
     // Boosted posts: flag + expiry so feeds can badge/rank them.
-    await queryRunner.query(
-      `ALTER TABLE "posts" ADD "isBoosted" boolean NOT NULL DEFAULT false`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "posts" ADD "boostExpiresAt" TIMESTAMP WITH TIME ZONE`,
-    );
+    await queryRunner.query(`ALTER TABLE "posts" ADD "isBoosted" boolean NOT NULL DEFAULT false`);
+    await queryRunner.query(`ALTER TABLE "posts" ADD "boostExpiresAt" TIMESTAMP WITH TIME ZONE`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

@@ -57,9 +57,7 @@ export const GroupList = ({ onSelectGroup, selectedId, refreshKey }: GroupListPr
       setDiscover(open);
       onSelectGroup(group.id);
     } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.message
-        : undefined;
+      const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
       addToast(message || `Failed to join ${group.name}`, 'error');
     } finally {
       setJoiningId(undefined);
@@ -99,9 +97,7 @@ export const GroupList = ({ onSelectGroup, selectedId, refreshKey }: GroupListPr
             {groups.map((group) => (
               <div
                 key={group.id}
-                className={`p-md cursor-pointer ${
-                  selectedId === group.id ? 'bg-dark-100' : ''
-                }`}
+                className={`p-md cursor-pointer ${selectedId === group.id ? 'bg-dark-100' : ''}`}
               >
                 <div className="flex items-center gap-md">
                   <div className="flex-1" onClick={() => onSelectGroup(group.id)}>

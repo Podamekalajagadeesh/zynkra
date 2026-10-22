@@ -57,18 +57,22 @@ export class OAuthController {
   // User consent — issues a one-time code bound to the PKCE challenge.
   @UseGuards(JwtAuthGuard)
   @Post('authorize')
-  authorize(@Req() req, @Body() body: {
-    appId: string;
-    scopes: string[];
-    codeChallenge: string;
-    codeChallengeMethod?: string;
-  }) {
+  authorize(
+    @Req() req,
+    @Body()
+    body: {
+      appId: string;
+      scopes: string[];
+      codeChallenge: string;
+      codeChallengeMethod?: string;
+    }
+  ) {
     return this.oauthService.authorize(
       req.user.userId,
       body.appId,
       body.scopes,
       body.codeChallenge,
-      body.codeChallengeMethod,
+      body.codeChallengeMethod
     );
   }
 

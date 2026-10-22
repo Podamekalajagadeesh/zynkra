@@ -97,9 +97,9 @@ describe('InvoicesService', () => {
         taxRate: 0,
       });
 
-      await expect(
-        service.update('user-1', 'inv-1', { clientName: 'Other' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.update('user-1', 'inv-1', { clientName: 'Other' })).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 

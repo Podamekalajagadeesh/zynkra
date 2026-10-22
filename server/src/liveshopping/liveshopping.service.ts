@@ -15,7 +15,7 @@ export class LiveshoppingService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+    private readonly productRepository: Repository<Product>
   ) {}
 
   async create(createDto: CreateLiveShoppingEventDto, hostId: string): Promise<LiveShoppingEvent> {
@@ -39,7 +39,7 @@ export class LiveshoppingService {
       host,
       hostId,
       products,
-      productSettings: products.map(p => ({ productId: p.id })),
+      productSettings: products.map((p) => ({ productId: p.id })),
     });
 
     return this.liveShoppingEventRepository.save(event);
@@ -65,9 +65,13 @@ export class LiveshoppingService {
     return event;
   }
 
-  async update(id: string, updateDto: UpdateLiveShoppingEventDto, userId: string): Promise<LiveShoppingEvent> {
+  async update(
+    id: string,
+    updateDto: UpdateLiveShoppingEventDto,
+    userId: string
+  ): Promise<LiveShoppingEvent> {
     const event = await this.findOne(id);
-    
+
     // Verify user is the host
     if (event.hostId !== userId) {
       throw new Error('Only the host can update this event');
@@ -96,12 +100,12 @@ export class LiveshoppingService {
         }
       }
       event.products = products;
-      event.productSettings = products.map(p => ({ productId: p.id }));
+      event.productSettings = products.map((p) => ({ productId: p.id }));
     }
 
     // Feature a product
     if (updateDto.featuredProductId) {
-      event.productSettings = event.productSettings.map(ps => ({
+      event.productSettings = event.productSettings.map((ps) => ({
         ...ps,
         isFeatured: ps.productId === updateDto.featuredProductId,
       }));
@@ -113,7 +117,7 @@ export class LiveshoppingService {
       const flashSaleEndsAt = new Date();
       flashSaleEndsAt.setMinutes(flashSaleEndsAt.getMinutes() + durationMinutes);
 
-      event.productSettings = event.productSettings.map(ps => {
+      event.productSettings = event.productSettings.map((ps) => {
         if (ps.productId === productId) {
           return {
             ...ps,
@@ -131,7 +135,7 @@ export class LiveshoppingService {
 
   async remove(id: string, userId: string): Promise<void> {
     const event = await this.findOne(id);
-    
+
     if (event.hostId !== userId) {
       throw new Error('Only the host can delete this event');
     }

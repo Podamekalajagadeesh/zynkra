@@ -40,11 +40,20 @@ export function EditProductPage() {
         </div>
         <div>
           <label htmlFor="description">Description</label>
-          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
         <div>
           <label htmlFor="price">Price</label>
-          <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <Input
+            id="price"
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
         </div>
         <Button type="submit">Save Changes</Button>
       </form>

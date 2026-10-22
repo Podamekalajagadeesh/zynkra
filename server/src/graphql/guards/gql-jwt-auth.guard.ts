@@ -27,7 +27,7 @@ export class GqlAuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectRepository(LoginSession)
-    private readonly loginSessionsRepository: Repository<LoginSession>,
+    private readonly loginSessionsRepository: Repository<LoginSession>
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

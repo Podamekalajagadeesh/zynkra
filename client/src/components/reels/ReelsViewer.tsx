@@ -13,9 +13,9 @@ export function ReelsViewer() {
       setIsLoading(true);
       try {
         const newReels = await getReelSuggestions();
-        setReels(prev => [...prev, ...newReels]);
+        setReels((prev) => [...prev, ...newReels]);
       } catch (error) {
-        console.error("Failed to fetch reel suggestions:", error);
+        console.error('Failed to fetch reel suggestions:', error);
       } finally {
         setIsLoading(false);
       }
@@ -40,11 +40,18 @@ export function ReelsViewer() {
       className="h-screen w-screen overflow-y-scroll snap-y snap-mandatory bg-black"
     >
       {reels.map((reel) => (
-        <div key={reel.id} className="snap-start h-screen w-screen flex items-center justify-center">
+        <div
+          key={reel.id}
+          className="snap-start h-screen w-screen flex items-center justify-center"
+        >
           <ReelPlayer reel={reel} />
         </div>
       ))}
-      {isLoading && <div className="snap-start h-screen w-screen flex items-center justify-center text-white"><p>Loading reels...</p></div>}
+      {isLoading && (
+        <div className="snap-start h-screen w-screen flex items-center justify-center text-white">
+          <p>Loading reels...</p>
+        </div>
+      )}
     </div>
   );
 }

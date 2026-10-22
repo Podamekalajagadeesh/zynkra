@@ -10,7 +10,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export class InviteCodesService {
   constructor(
     @InjectRepository(InviteCode)
-    private readonly inviteCodesRepository: Repository<InviteCode>,
+    private readonly inviteCodesRepository: Repository<InviteCode>
   ) {}
 
   private generateCodeString(): string {
@@ -24,7 +24,7 @@ export class InviteCodesService {
 
   async generateCode(
     createdById?: string,
-    opts: { maxUses?: number; expiresInDays?: number } = {},
+    opts: { maxUses?: number; expiresInDays?: number } = {}
   ): Promise<InviteCode> {
     const { maxUses = 1, expiresInDays } = opts;
 
@@ -40,7 +40,7 @@ export class InviteCodesService {
       : null;
 
     return this.inviteCodesRepository.save(
-      this.inviteCodesRepository.create({ code, createdById, maxUses, expiresAt }),
+      this.inviteCodesRepository.create({ code, createdById, maxUses, expiresAt })
     );
   }
 

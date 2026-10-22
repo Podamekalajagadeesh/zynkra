@@ -49,7 +49,7 @@ export function LinksList({ refreshTrigger, onLinkDeleted }: LinksListProps) {
 
   const deleteLink = async (linkId: string) => {
     if (!window.confirm('Are you sure you want to delete this affiliate link?')) return;
-    
+
     try {
       await api.post(`/affiliates/links/${linkId}/delete`);
       onLinkDeleted();
@@ -76,7 +76,9 @@ export function LinksList({ refreshTrigger, onLinkDeleted }: LinksListProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
         <div className="text-4xl mb-4">🔗</div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No affiliate links yet</h3>
-        <p className="text-gray-600">Create your first affiliate link to start earning commissions.</p>
+        <p className="text-gray-600">
+          Create your first affiliate link to start earning commissions.
+        </p>
       </div>
     );
   }
@@ -98,7 +100,9 @@ export function LinksList({ refreshTrigger, onLinkDeleted }: LinksListProps) {
                       {link.commissionRate}% commission
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1 truncate max-w-xl">{link.destinationUrl}</p>
+                  <p className="text-sm text-gray-500 mt-1 truncate max-w-xl">
+                    {link.destinationUrl}
+                  </p>
                   <div className="flex items-center space-x-6 mt-3">
                     <div className="text-sm">
                       <span className="text-gray-500">Clicks: </span>
@@ -110,7 +114,9 @@ export function LinksList({ refreshTrigger, onLinkDeleted }: LinksListProps) {
                     </div>
                     <div className="text-sm">
                       <span className="text-gray-500">Earnings: </span>
-                      <span className="font-medium text-green-600">${link.totalEarnings.toFixed(2)}</span>
+                      <span className="font-medium text-green-600">
+                        ${link.totalEarnings.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -141,10 +147,7 @@ export function LinksList({ refreshTrigger, onLinkDeleted }: LinksListProps) {
       </div>
 
       {selectedLink && (
-        <LinkPerformanceModal
-          link={selectedLink}
-          onClose={() => setSelectedLink(null)}
-        />
+        <LinkPerformanceModal link={selectedLink} onClose={() => setSelectedLink(null)} />
       )}
     </>
   );

@@ -6,7 +6,7 @@ import { PostsService } from '../posts/posts.service';
 export class AdminService {
   constructor(
     private readonly reportsService: ReportsService,
-    private readonly postsService: PostsService,
+    private readonly postsService: PostsService
   ) {}
 
   async getReports(take: number, skip: number) {

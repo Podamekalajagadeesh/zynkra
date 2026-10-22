@@ -49,7 +49,8 @@ const walk = (dir) => {
   const out = [];
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'archive') continue;
+    if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'archive')
+      continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...walk(full));
     else if (/\.(ts|js)$/.test(entry.name)) out.push(full);
@@ -63,8 +64,12 @@ for (const rel of ['src/app.module.ts', 'src/data-source.ts']) {
   const content = read(rel);
   if (!content) continue;
   for (const line of lineNumbersOf(content, /synchronize\s*:\s*true/)) {
-    report('typeorm-synchronize-enabled', rel, line,
-      'synchronize: true must never be enabled — it will drop/alter columns. See the comment in app.module.ts.');
+    report(
+      'typeorm-synchronize-enabled',
+      rel,
+      line,
+      'synchronize: true must never be enabled — it will drop/alter columns. See the comment in app.module.ts.'
+    );
   }
 }
 
@@ -74,8 +79,12 @@ for (const rel of ['src/auth/strategies/jwt.strategy.ts', 'src/main.ts']) {
   const content = read(rel);
   if (!content) continue;
   for (const line of lineNumbersOf(content, /(secret|secretOrKey)\s*:\s*['"][^'"]{6,}['"]/)) {
-    report('hardcoded-signing-secret', rel, line,
-      'A JWT/session signing secret appears to be a string literal. Read it from config instead.');
+    report(
+      'hardcoded-signing-secret',
+      rel,
+      line,
+      'A JWT/session signing secret appears to be a string literal. Read it from config instead.'
+    );
   }
 }
 
@@ -85,8 +94,12 @@ for (const rel of ['src/main.ts', 'src/app.module.ts']) {
   const content = read(rel);
   if (!content) continue;
   for (const line of lineNumbersOf(content, /['"]?trust proxy['"]?\s*[,:=]\s*true\b/)) {
-    report('trust-proxy-true', rel, line,
-      "trust proxy must be a hop count (e.g. 1), not `true` — `true` lets clients forge their IP.");
+    report(
+      'trust-proxy-true',
+      rel,
+      line,
+      'trust proxy must be a hop count (e.g. 1), not `true` — `true` lets clients forge their IP.'
+    );
   }
 }
 
@@ -94,22 +107,36 @@ for (const rel of ['src/main.ts', 'src/app.module.ts']) {
 // Only files whose job is generating a nonce/challenge. The CAPTCHA puzzle is
 // deliberately excluded: its answer is returned to the client, so it is an
 // anti-bot speed bump, not a secret.
-for (const rel of ['src/siwe/siwe.controller.ts', 'src/wallet/wallet.controller.ts', 'src/auth/webauthn.service.ts']) {
+for (const rel of [
+  'src/siwe/siwe.controller.ts',
+  'src/wallet/wallet.controller.ts',
+  'src/auth/webauthn.service.ts',
+]) {
   const content = read(rel);
   if (!content) continue;
   for (const line of lineNumbersOf(content, /Math\.random\(\)/)) {
-    report('insecure-randomness', rel, line,
-      'Math.random() is not cryptographically secure — use crypto.randomInt/randomBytes.');
+    report(
+      'insecure-randomness',
+      rel,
+      line,
+      'Math.random() is not cryptographically secure — use crypto.randomInt/randomBytes.'
+    );
   }
 }
 
 // --- 5. Real secrets must not be committed in .env.example -----------------
 // Placeholders are fine and expected. Flag only values that look like a real
 // credential: long, and not obviously a template.
-const PLACEHOLDER = /(generate|your|example|placeholder|changeme|change[-_ ]?me|replace|insert|todo|xxx+|\$\(|<|here|foo|bar|test|dummy|localhost)/i;
+const PLACEHOLDER =
+  /(generate|your|example|placeholder|changeme|change[-_ ]?me|replace|insert|todo|xxx+|\$\(|<|here|foo|bar|test|dummy|localhost)/i;
 const envExample = read('.env.example');
 if (envExample) {
-  const secretKeys = ['JWT_SECRET', 'SESSION_SECRET', 'LINKED_ACCOUNT_ENCRYPTION_KEY', 'CRYPTO_PAYOUT_PRIVATE_KEY'];
+  const secretKeys = [
+    'JWT_SECRET',
+    'SESSION_SECRET',
+    'LINKED_ACCOUNT_ENCRYPTION_KEY',
+    'CRYPTO_PAYOUT_PRIVATE_KEY',
+  ];
   envExample.split('\n').forEach((text, i) => {
     const m = new RegExp(`^(${secretKeys.join('|')})\\s*=\\s*(.+)$`).exec(text.trim());
     if (!m) return;
@@ -117,16 +144,24 @@ if (envExample) {
     if (!value) return;
     if (PLACEHOLDER.test(value)) return;
     if (value.length < 24) return;
-    report('secret-value-in-env-example', '.env.example', i + 1,
-      `${m[1]} in .env.example looks like a real value rather than a placeholder.`);
+    report(
+      'secret-value-in-env-example',
+      '.env.example',
+      i + 1,
+      `${m[1]} in .env.example looks like a real value rather than a placeholder.`
+    );
   });
 }
 
 // --- 6. .env must be gitignored -------------------------------------------
 const gitignore = read('.gitignore');
 if (gitignore && !/^\s*\.env\s*$/m.test(gitignore) && !/^\s*\.env\*/m.test(gitignore)) {
-  report('env-not-gitignored', '.gitignore', 0,
-    '`.env` is not listed in server/.gitignore — real secrets could be committed.');
+  report(
+    'env-not-gitignored',
+    '.gitignore',
+    0,
+    '`.env` is not listed in server/.gitignore — real secrets could be committed.'
+  );
 }
 
 // --- 7. Security env validation must require the two signing secrets -------
@@ -135,8 +170,12 @@ if (envValidation) {
   for (const key of ['JWT_SECRET', 'SESSION_SECRET']) {
     const re = new RegExp(`${key}\\s*:\\s*Joi\\.[^\\n]*required\\(`);
     if (!re.test(envValidation)) {
-      report('secret-not-required-in-env-validation', 'src/common/env.validation.ts', 0,
-        `${key} must be Joi-required so the server refuses to boot without it.`);
+      report(
+        'secret-not-required-in-env-validation',
+        'src/common/env.validation.ts',
+        0,
+        `${key} must be Joi-required so the server refuses to boot without it.`
+      );
     }
   }
 }

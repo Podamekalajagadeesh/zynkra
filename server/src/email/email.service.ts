@@ -22,11 +22,16 @@ export class EmailService {
           auth: user && pass ? { user, pass } : undefined,
         });
       } catch (err) {
-        this.logger.warn('Failed to create SMTP transporter, falling back to console logging.', err as any);
+        this.logger.warn(
+          'Failed to create SMTP transporter, falling back to console logging.',
+          err as any
+        );
         this.transporter = null;
       }
     } else {
-      this.logger.warn('SMTP config not found, emails will be logged to console. Set SMTP_HOST/SMTP_PORT to enable real sending.');
+      this.logger.warn(
+        'SMTP config not found, emails will be logged to console. Set SMTP_HOST/SMTP_PORT to enable real sending.'
+      );
     }
   }
 
@@ -152,7 +157,10 @@ export class EmailService {
     }
   }
 
-  async sendLoginAlertEmail(email: string, data: { deviceName: string | null; ipAddress: string | null; suspicious: boolean }) {
+  async sendLoginAlertEmail(
+    email: string,
+    data: { deviceName: string | null; ipAddress: string | null; suspicious: boolean }
+  ) {
     const subject = 'New login to your Zynkra account';
     const text = `New login detected. Device: ${data.deviceName ?? 'unknown'}, IP: ${data.ipAddress ?? 'unknown'}.`;
     const html = `<p>New login detected.</p><p>Device: ${data.deviceName ?? 'unknown'}</p><p>IP: ${data.ipAddress ?? 'unknown'}</p>`;

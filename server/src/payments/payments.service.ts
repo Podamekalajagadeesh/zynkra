@@ -1,4 +1,12 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,11 +17,7 @@ import { Payout } from './entities/payout.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
-import {
-  DEFAULT_PLATFORM_FEE_RATE,
-  PLATFORM_USER_ID,
-  splitRevenue,
-} from './revenue-split';
+import { DEFAULT_PLATFORM_FEE_RATE, PLATFORM_USER_ID, splitRevenue } from './revenue-split';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Stripe = require('stripe');
@@ -41,18 +45,15 @@ export class PaymentsService {
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WebhooksService))
-    private readonly webhooksService: WebhooksService,
+    private readonly webhooksService: WebhooksService
   ) {
     const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     this.paymentsEnabled =
       this.configService.get<string>('PAYMENTS_ENABLED') === 'true' && !!stripeKey;
     this.webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
-    this.clientUrl =
-      this.configService.get<string>('CLIENT_URL') || 'http://127.0.0.1:5173';
+    this.clientUrl = this.configService.get<string>('CLIENT_URL') || 'http://127.0.0.1:5173';
 
-    this.stripe = stripeKey
-      ? new Stripe(stripeKey)
-      : null;
+    this.stripe = stripeKey ? new Stripe(stripeKey) : null;
 
     // Connect defaults to following PAYMENTS_ENABLED, but can be turned off
     // independently to force the manual admin-approved payout queue.
@@ -66,7 +67,7 @@ export class PaymentsService {
   private assertPaymentsEnabled() {
     if (!this.paymentsEnabled || !this.stripe) {
       throw new ServiceUnavailableException(
-        'Payments are not enabled on this instance. Set PAYMENTS_ENABLED=true and STRIPE_SECRET_KEY to enable them.',
+        'Payments are not enabled on this instance. Set PAYMENTS_ENABLED=true and STRIPE_SECRET_KEY to enable them.'
       );
     }
   }
@@ -78,7 +79,7 @@ export class PaymentsService {
   async createPaymentIntent(
     amount: number,
     currency: string,
-    options: { paymentMethodId?: string } = {},
+    options: { paymentMethodId?: string } = {}
   ): Promise<any> {
     this.assertPaymentsEnabled();
     return this.stripe.paymentIntents.create({
@@ -101,7 +102,7 @@ export class PaymentsService {
       recipientId?: string;
       platformFeeRate?: number;
       paymentMethodId?: string;
-    } = {},
+    } = {}
   ) {
     this.assertPaymentsEnabled();
     const numericAmount = Number(amount);
@@ -116,7 +117,7 @@ export class PaymentsService {
     const paymentIntent = await this.createPaymentIntent(
       Math.round(numericAmount * 100),
       currency,
-      { paymentMethodId: options.paymentMethodId },
+      { paymentMethodId: options.paymentMethodId }
     );
 
     const transaction = this.paymentRepository.create({
@@ -138,19 +139,15 @@ export class PaymentsService {
       recipient: options.recipientId ? ({ id: options.recipientId } as any) : null,
     });
 
-    const savedTransaction =
-      (await this.paymentRepository.save(transaction)) ?? transaction;
+    const savedTransaction = (await this.paymentRepository.save(transaction)) ?? transaction;
 
     let fulfillmentCompleted = false;
     if (paymentIntent.status === 'succeeded') {
       try {
-        fulfillmentCompleted = await this.confirmPaymentSucceeded(
-          paymentIntent,
-          savedTransaction,
-        );
+        fulfillmentCompleted = await this.confirmPaymentSucceeded(paymentIntent, savedTransaction);
       } catch (err: any) {
         this.logger.error(
-          `Immediate payment fulfillment deferred for ${paymentIntent.id}: ${err?.message ?? err}`,
+          `Immediate payment fulfillment deferred for ${paymentIntent.id}: ${err?.message ?? err}`
         );
       }
     }
@@ -169,11 +166,7 @@ export class PaymentsService {
     };
   }
 
-  async confirmPayment(
-    paymentId: string,
-    userId: string,
-    paymentMethodId?: string,
-  ) {
+  async confirmPayment(paymentId: string, userId: string, paymentMethodId?: string) {
     this.assertPaymentsEnabled();
     const transaction = await this.paymentRepository.findOne({
       where: { paymentId },
@@ -192,15 +185,12 @@ export class PaymentsService {
     let fulfillmentCompleted = false;
     if (paymentIntent.status === 'succeeded') {
       fulfillmentCompleted = await this.confirmPaymentSucceeded(paymentIntent);
-    } else if (
-      paymentIntent.status === 'canceled' ||
-      paymentIntent.status === 'payment_failed'
-    ) {
+    } else if (paymentIntent.status === 'canceled' || paymentIntent.status === 'payment_failed') {
       await this.markPaymentFailed(
         paymentIntent,
         paymentIntent.status === 'canceled'
           ? 'payment_intent.canceled'
-          : 'payment_intent.payment_failed',
+          : 'payment_intent.payment_failed'
       );
     }
 
@@ -243,7 +233,7 @@ export class PaymentsService {
    */
   private async creditRecipientWithSplit(
     transaction: PaymentTransaction,
-    feeRate: number = DEFAULT_PLATFORM_FEE_RATE,
+    feeRate: number = DEFAULT_PLATFORM_FEE_RATE
   ): Promise<void> {
     const recipientId = transaction.recipient?.id;
     if (!recipientId) return;
@@ -283,7 +273,7 @@ export class PaymentsService {
     amount: number,
     currency: string,
     recipientId: string,
-    payerId: string,
+    payerId: string
   ) {
     // Demo flow: never available in production, and never touches Stripe.
     if (this.configService.get<string>('NODE_ENV') === 'production') {
@@ -462,7 +452,7 @@ export class PaymentsService {
     this.assertPaymentsEnabled();
     if (!this.connectEnabled) {
       throw new ServiceUnavailableException(
-        'Stripe Connect is not enabled on this instance. Payouts are settled manually.',
+        'Stripe Connect is not enabled on this instance. Payouts are settled manually.'
       );
     }
 
@@ -501,7 +491,7 @@ export class PaymentsService {
     });
     const now = Date.now();
     return payouts.filter(
-      (payout: Payout) => !payout.dueAt || new Date(payout.dueAt).getTime() <= now,
+      (payout: Payout) => !payout.dueAt || new Date(payout.dueAt).getTime() <= now
     );
   }
 
@@ -509,12 +499,7 @@ export class PaymentsService {
    * Schedules a payout to be released automatically at `dueAt`. The wallet is
    * debited immediately; the payout stays pending until the cron releases it.
    */
-  async schedulePayout(
-    creatorId: string,
-    amount: number,
-    purpose: string,
-    dueAt: Date,
-  ) {
+  async schedulePayout(creatorId: string, amount: number, purpose: string, dueAt: Date) {
     const payoutAmount = Number(amount);
     if (!Number.isFinite(payoutAmount) || payoutAmount <= 0) {
       throw new BadRequestException('Payout amount must be greater than zero');
@@ -561,7 +546,7 @@ export class PaymentsService {
     for (const payout of due) {
       if (!payout.creator?.stripeConnectAccountId || !payout.creator.payoutsEnabled) {
         this.logger.warn(
-          `Skipped scheduled payout ${payout.id}: creator is not ready for Stripe Connect`,
+          `Skipped scheduled payout ${payout.id}: creator is not ready for Stripe Connect`
         );
         continue;
       }
@@ -569,17 +554,13 @@ export class PaymentsService {
         const result = await this.approvePayout(payout.id);
         if (result.status === 'paid') {
           this.logger.log(
-            `Auto-released scheduled payout ${payout.id} (${payout.amount} ${payout.currency})`,
+            `Auto-released scheduled payout ${payout.id} (${payout.amount} ${payout.currency})`
           );
         } else {
-          this.logger.warn(
-            `Scheduled payout ${payout.id} ended in status ${result.status}`,
-          );
+          this.logger.warn(`Scheduled payout ${payout.id} ended in status ${result.status}`);
         }
       } catch (err) {
-        this.logger.warn(
-          `Failed to auto-release payout ${payout.id}: ${(err as Error).message}`,
-        );
+        this.logger.warn(`Failed to auto-release payout ${payout.id}: ${(err as Error).message}`);
       }
     }
   }
@@ -646,7 +627,7 @@ export class PaymentsService {
       } catch (err) {
         await this.payoutRepository.update(
           { id: payout.id, status: 'processing' },
-          { status: 'pending' },
+          { status: 'pending' }
         );
         throw err;
       }
@@ -682,7 +663,7 @@ export class PaymentsService {
     } catch (err) {
       await this.payoutRepository.update(
         { id: payout.id, status: 'processing' },
-        { status: 'pending' },
+        { status: 'pending' }
       );
       throw err;
     }
@@ -703,7 +684,7 @@ export class PaymentsService {
   private async claimPendingPayout(payoutId: string): Promise<Payout> {
     const result = await this.payoutRepository.update(
       { id: payoutId, status: 'pending' },
-      { status: 'processing' },
+      { status: 'processing' }
     );
     if (result?.affected !== 1) {
       const current = await this.getPayoutOrThrow(payoutId);
@@ -715,18 +696,15 @@ export class PaymentsService {
   private async updatePayoutFromStatus(
     payoutId: string,
     fromStatus: Payout['status'],
-    patch: Record<string, any>,
+    patch: Record<string, any>
   ): Promise<boolean> {
-    const result = await this.payoutRepository.update(
-      { id: payoutId, status: fromStatus },
-      patch,
-    );
+    const result = await this.payoutRepository.update({ id: payoutId, status: fromStatus }, patch);
     return result?.affected === 1;
   }
 
   private async updateProcessingPayout(
     payoutId: string,
-    patch: Record<string, any>,
+    patch: Record<string, any>
   ): Promise<boolean> {
     return this.updatePayoutFromStatus(payoutId, 'processing', patch);
   }
@@ -744,7 +722,7 @@ export class PaymentsService {
 
   private serializePayout(
     payout: Payout,
-    extra: Record<string, any> = {},
+    extra: Record<string, any> = {}
   ): Record<string, any> & { mode?: string } {
     return {
       success: payout.status !== 'failed' && payout.status !== 'rejected',
@@ -768,7 +746,7 @@ export class PaymentsService {
     this.assertPaymentsEnabled();
     if (!this.webhookSecret) {
       throw new ServiceUnavailableException(
-        'Stripe webhooks are not configured. Set STRIPE_WEBHOOK_SECRET to enable them.',
+        'Stripe webhooks are not configured. Set STRIPE_WEBHOOK_SECRET to enable them.'
       );
     }
     try {
@@ -832,7 +810,7 @@ export class PaymentsService {
       gross,
       charge.amount_refunded != null && charge.amount_refunded > 0
         ? Math.round((charge.amount_refunded / 100) * 100) / 100
-        : gross,
+        : gross
     );
     const previousRefunded = Number(transaction.metadata?.refundedGross ?? 0);
     const refundDelta = Math.max(0, refundedGross - previousRefunded);
@@ -840,7 +818,7 @@ export class PaymentsService {
 
     const hasRecipientCredit = Object.prototype.hasOwnProperty.call(
       transaction.metadata ?? {},
-      'recipientCredited',
+      'recipientCredited'
     );
     const recipient = transaction.recipient?.id;
     const feeRate = Number(transaction.metadata?.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE);
@@ -978,7 +956,7 @@ export class PaymentsService {
    */
   private async confirmPaymentSucceeded(
     paymentIntent: any,
-    existingTransaction?: PaymentTransaction,
+    existingTransaction?: PaymentTransaction
   ): Promise<boolean> {
     const transaction =
       existingTransaction ??
@@ -1004,13 +982,11 @@ export class PaymentsService {
 
     const hasRecipientCredit = Object.prototype.hasOwnProperty.call(
       transaction.metadata ?? {},
-      'recipientCredited',
+      'recipientCredited'
     );
     const amount = Number(transaction.amount);
     if (!hasRecipientCredit && transaction.recipient?.id && amount > 0) {
-      const feeRate = Number(
-        transaction.metadata?.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE,
-      );
+      const feeRate = Number(transaction.metadata?.platformFeeRate ?? DEFAULT_PLATFORM_FEE_RATE);
       await this.creditRecipientWithSplit(transaction, feeRate);
     }
 
@@ -1054,7 +1030,7 @@ export class PaymentsService {
    * payouts with a known transfer are touched.
    */
   async syncPayoutWithStripe(
-    payout: Payout,
+    payout: Payout
   ): Promise<{ outcome: 'paid' | 'failed' | 'unchanged'; reason?: string }> {
     if (!this.stripe || !this.connectEnabled) {
       return { outcome: 'unchanged', reason: 'payments-disabled' };

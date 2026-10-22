@@ -130,7 +130,9 @@ export const CrisisResponseCommunities: React.FC = () => {
 
       try {
         setAidLoading(true);
-        const response = await api.get(`/crisis-response-communities/${selectedCommunityId}/aid-requests`);
+        const response = await api.get(
+          `/crisis-response-communities/${selectedCommunityId}/aid-requests`
+        );
         setAidRequests(response.data);
       } catch (err) {
         console.error(err);
@@ -144,17 +146,24 @@ export const CrisisResponseCommunities: React.FC = () => {
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === selectedCommunityId),
-    [communities, selectedCommunityId],
+    [communities, selectedCommunityId]
   );
 
-  const isMember = (communityId: string) => myMemberships.some((membership) => membership.communityId === communityId);
+  const isMember = (communityId: string) =>
+    myMemberships.some((membership) => membership.communityId === communityId);
 
   const joinCommunity = async (communityId: string) => {
     try {
       await api.post(`/crisis-response-communities/${communityId}/join`, {
         role: selectedRole,
-        skillsToOffer: joinForm.skillsToOffer.split(',').map((item) => item.trim()).filter(Boolean),
-        supportPreference: joinForm.supportPreference.split(',').map((item) => item.trim()).filter(Boolean),
+        skillsToOffer: joinForm.skillsToOffer
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+        supportPreference: joinForm.supportPreference
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
       });
       await fetchData();
     } catch (err) {
@@ -182,7 +191,10 @@ export const CrisisResponseCommunities: React.FC = () => {
         requestType: requestForm.requestType,
         description: requestForm.description,
         location: requestForm.location,
-        resourcesNeeded: requestForm.resourcesNeeded.split(',').map((item) => item.trim()).filter(Boolean),
+        resourcesNeeded: requestForm.resourcesNeeded
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
         contactInfo: requestForm.contactInfo,
         isUrgent: requestForm.isUrgent,
       });
@@ -195,7 +207,12 @@ export const CrisisResponseCommunities: React.FC = () => {
         contactInfo: '',
         isUrgent: true,
       });
-      await Promise.all([fetchData(), api.get(`/crisis-response-communities/${selectedCommunityId}/aid-requests`).then((response) => setAidRequests(response.data))]);
+      await Promise.all([
+        fetchData(),
+        api
+          .get(`/crisis-response-communities/${selectedCommunityId}/aid-requests`)
+          .then((response) => setAidRequests(response.data)),
+      ]);
     } catch (err) {
       console.error(err);
     }
@@ -203,8 +220,13 @@ export const CrisisResponseCommunities: React.FC = () => {
 
   const updateAidStatus = async (requestId: string, status: string) => {
     try {
-      await api.patch(`/crisis-response-communities/${selectedCommunityId}/aid-requests/${requestId}`, { status });
-      const response = await api.get(`/crisis-response-communities/${selectedCommunityId}/aid-requests`);
+      await api.patch(
+        `/crisis-response-communities/${selectedCommunityId}/aid-requests/${requestId}`,
+        { status }
+      );
+      const response = await api.get(
+        `/crisis-response-communities/${selectedCommunityId}/aid-requests`
+      );
       setAidRequests(response.data);
       await fetchData();
     } catch (err) {
@@ -275,7 +297,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Title</Label>
             <Input
               value={requestForm.title}
-              onChange={(event) => setRequestForm((current) => ({ ...current, title: event.target.value }))}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, title: event.target.value }))
+              }
               placeholder="Need bottled water for shelter"
             />
           </div>
@@ -283,7 +307,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Request type</Label>
             <Select
               value={requestForm.requestType}
-              onValueChange={(value) => setRequestForm((current) => ({ ...current, requestType: value }))}
+              onValueChange={(value) =>
+                setRequestForm((current) => ({ ...current, requestType: value }))
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -301,7 +327,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Description</Label>
             <Textarea
               value={requestForm.description}
-              onChange={(event) => setRequestForm((current) => ({ ...current, description: event.target.value }))}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, description: event.target.value }))
+              }
               rows={4}
               placeholder="Describe the relief need in detail"
             />
@@ -310,7 +338,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Location</Label>
             <Input
               value={requestForm.location}
-              onChange={(event) => setRequestForm((current) => ({ ...current, location: event.target.value }))}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, location: event.target.value }))
+              }
               placeholder="Community shelter, district, or city"
             />
           </div>
@@ -318,7 +348,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Resources needed</Label>
             <Input
               value={requestForm.resourcesNeeded}
-              onChange={(event) => setRequestForm((current) => ({ ...current, resourcesNeeded: event.target.value }))}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, resourcesNeeded: event.target.value }))
+              }
               placeholder="water, blankets, chargers"
             />
           </div>
@@ -326,7 +358,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Contact info</Label>
             <Input
               value={requestForm.contactInfo}
-              onChange={(event) => setRequestForm((current) => ({ ...current, contactInfo: event.target.value }))}
+              onChange={(event) =>
+                setRequestForm((current) => ({ ...current, contactInfo: event.target.value }))
+              }
               placeholder="Safe phone number or messaging handle"
             />
           </div>
@@ -334,7 +368,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Urgency</Label>
             <Select
               value={requestForm.isUrgent ? 'urgent' : 'standard'}
-              onValueChange={(value) => setRequestForm((current) => ({ ...current, isUrgent: value === 'urgent' }))}
+              onValueChange={(value) =>
+                setRequestForm((current) => ({ ...current, isUrgent: value === 'urgent' }))
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -360,13 +396,19 @@ export const CrisisResponseCommunities: React.FC = () => {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Your role</Label>
-            <Input value={selectedRole} onChange={(event) => setSelectedRole(event.target.value)} placeholder="coordinator, volunteer, counselor" />
+            <Input
+              value={selectedRole}
+              onChange={(event) => setSelectedRole(event.target.value)}
+              placeholder="coordinator, volunteer, counselor"
+            />
           </div>
           <div className="space-y-2">
             <Label>Skills you offer</Label>
             <Input
               value={joinForm.skillsToOffer}
-              onChange={(event) => setJoinForm((current) => ({ ...current, skillsToOffer: event.target.value }))}
+              onChange={(event) =>
+                setJoinForm((current) => ({ ...current, skillsToOffer: event.target.value }))
+              }
               placeholder="first aid, translation, logistics"
             />
           </div>
@@ -374,7 +416,9 @@ export const CrisisResponseCommunities: React.FC = () => {
             <Label>Support preference</Label>
             <Input
               value={joinForm.supportPreference}
-              onChange={(event) => setJoinForm((current) => ({ ...current, supportPreference: event.target.value }))}
+              onChange={(event) =>
+                setJoinForm((current) => ({ ...current, supportPreference: event.target.value }))
+              }
               placeholder="field support, remote triage, logistics"
             />
           </div>
@@ -388,7 +432,9 @@ export const CrisisResponseCommunities: React.FC = () => {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="text-lg">{community.name}</CardTitle>
-                  {community.description && <p className="text-sm text-gray-500 mt-1">{community.description}</p>}
+                  {community.description && (
+                    <p className="text-sm text-gray-500 mt-1">{community.description}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {community.focusAreas.map((focus) => (
@@ -411,7 +457,9 @@ export const CrisisResponseCommunities: React.FC = () => {
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <p className="text-xs uppercase text-gray-500">Regions</p>
-                  <p className="text-sm font-medium">{(community.regions ?? []).join(', ') || 'Global'}</p>
+                  <p className="text-sm font-medium">
+                    {(community.regions ?? []).join(', ') || 'Global'}
+                  </p>
                 </div>
               </div>
 
@@ -448,32 +496,61 @@ export const CrisisResponseCommunities: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {aidLoading && <p className="text-sm text-gray-500">Loading aid requests...</p>}
-            {!aidLoading && aidRequests.map((request) => (
-              <div key={request.id} className="rounded-lg border border-gray-200 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium text-sm">{request.title}</p>
-                  <div className="flex gap-2">
-                    <Badge className={request.isUrgent ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'}>
-                      {request.isUrgent ? 'urgent' : 'standard'}
-                    </Badge>
-                    <Badge className={getRequestBadge(request.status)}>{request.status}</Badge>
+            {!aidLoading &&
+              aidRequests.map((request) => (
+                <div key={request.id} className="rounded-lg border border-gray-200 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-sm">{request.title}</p>
+                    <div className="flex gap-2">
+                      <Badge
+                        className={
+                          request.isUrgent
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }
+                      >
+                        {request.isUrgent ? 'urgent' : 'standard'}
+                      </Badge>
+                      <Badge className={getRequestBadge(request.status)}>{request.status}</Badge>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{request.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+                    <span>Type: {request.requestType}</span>
+                    {request.location && <span>Location: {request.location}</span>}
+                    {request.requester?.username && (
+                      <span>Posted by: {request.requester.username}</span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateAidStatus(request.id, AidRequestStatus.IN_PROGRESS)}
+                    >
+                      Take
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateAidStatus(request.id, AidRequestStatus.FULFILLED)}
+                    >
+                      Fulfill
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateAidStatus(request.id, AidRequestStatus.CLOSED)}
+                    >
+                      Close
+                    </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">{request.description}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                  <span>Type: {request.requestType}</span>
-                  {request.location && <span>Location: {request.location}</span>}
-                  {request.requester?.username && <span>Posted by: {request.requester.username}</span>}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => updateAidStatus(request.id, AidRequestStatus.IN_PROGRESS)}>Take</Button>
-                  <Button size="sm" variant="outline" onClick={() => updateAidStatus(request.id, AidRequestStatus.FULFILLED)}>Fulfill</Button>
-                  <Button size="sm" variant="outline" onClick={() => updateAidStatus(request.id, AidRequestStatus.CLOSED)}>Close</Button>
-                </div>
-              </div>
-            ))}
+              ))}
             {!aidLoading && aidRequests.length === 0 && (
-              <p className="text-sm text-gray-500">No open aid requests yet. Create the first response request for this community.</p>
+              <p className="text-sm text-gray-500">
+                No open aid requests yet. Create the first response request for this community.
+              </p>
             )}
           </CardContent>
         </Card>

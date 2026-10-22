@@ -14,7 +14,7 @@ export class PageInboxService {
     @InjectRepository(PageConversation)
     private readonly pageConversationRepository: Repository<PageConversation>,
     @InjectRepository(PageMessage)
-    private readonly pageMessageRepository: Repository<PageMessage>,
+    private readonly pageMessageRepository: Repository<PageMessage>
   ) {}
 
   // Methods for the page inbox will go here
@@ -32,11 +32,7 @@ export class PageInboxService {
     });
   }
 
-  async createMessage(
-    conversationId: string,
-    content: string,
-    sender: User,
-  ): Promise<PageMessage> {
+  async createMessage(conversationId: string, content: string, sender: User): Promise<PageMessage> {
     const conversation = await this.getConversation(conversationId);
     const message = this.pageMessageRepository.create({
       conversation,

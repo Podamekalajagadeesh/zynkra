@@ -44,7 +44,9 @@ const DatingCrushPage = () => {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(query), 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query, doSearch]);
 
   // Close dropdown on outside click
@@ -67,10 +69,7 @@ const DatingCrushPage = () => {
       setResults([]);
       addToast(`Crush sent to ${displayName}!`, 'success');
     } catch (error: any) {
-      addToast(
-        error?.response?.data?.message || 'Failed to send crush',
-        'error',
-      );
+      addToast(error?.response?.data?.message || 'Failed to send crush', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -98,10 +97,7 @@ const DatingCrushPage = () => {
 
       <div className="relative mb-6" ref={dropdownRef}>
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
           <Input
             placeholder="Search for a user..."
             value={query}
@@ -110,7 +106,10 @@ const DatingCrushPage = () => {
           />
           {query && (
             <button
-              onClick={() => { setQuery(''); setResults([]); }}
+              onClick={() => {
+                setQuery('');
+                setResults([]);
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600"
             >
               <X size={16} />
@@ -124,15 +123,13 @@ const DatingCrushPage = () => {
               <button
                 key={user.id}
                 disabled={submitting}
-                onClick={() => handleSendCrush(user.id, user.displayName || user.username || 'user')}
+                onClick={() =>
+                  handleSendCrush(user.id, user.displayName || user.username || 'user')
+                }
                 className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-dark-50 dark:hover:bg-dark-700 transition-colors disabled:opacity-50"
               >
                 {user.pfp ? (
-                  <img
-                    src={user.pfp}
-                    alt=""
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <img src={user.pfp} alt="" className="w-10 h-10 rounded-full object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
                     {(user.displayName || user.username || '?')[0].toUpperCase()}
@@ -142,14 +139,9 @@ const DatingCrushPage = () => {
                   <p className="font-semibold text-dark-900 dark:text-white truncate">
                     {user.displayName || 'Unknown'}
                   </p>
-                  <p className="text-sm text-dark-500 truncate">
-                    @{user.username}
-                  </p>
+                  <p className="text-sm text-dark-500 truncate">@{user.username}</p>
                 </div>
-                <Heart
-                  size={18}
-                  className="text-pink-400 flex-shrink-0"
-                />
+                <Heart size={18} className="text-pink-400 flex-shrink-0" />
               </button>
             ))}
           </div>
@@ -182,9 +174,7 @@ const DatingCrushPage = () => {
       {!sentTo && !query && (
         <div className="text-center py-12">
           <Heart size={48} className="mx-auto text-pink-300 mb-4" />
-          <p className="text-dark-500">
-            Search for someone to add as your secret crush.
-          </p>
+          <p className="text-dark-500">Search for someone to add as your secret crush.</p>
         </div>
       )}
     </div>

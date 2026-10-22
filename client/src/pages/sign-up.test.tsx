@@ -10,7 +10,9 @@ import { ToastProvider } from '../contexts/ToastContext';
 // Mock WebAuthn to avoid complex browser API dependencies
 vi.mock('../components/WebAuthn', () => ({
   default: ({ children, className, variant }: any) => (
-    <button className={className} data-variant={variant}>{children}</button>
+    <button className={className} data-variant={variant}>
+      {children}
+    </button>
   ),
 }));
 
@@ -62,7 +64,9 @@ describe('SignUpPage', () => {
 
   it('does not offer passkey registration before authentication', () => {
     renderSignUpPage();
-    expect(screen.queryByRole('button', { name: /register with passkey/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /register with passkey/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders a link to the login page', () => {

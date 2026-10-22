@@ -1,4 +1,3 @@
-
 import { PageShell } from '../components/PageShell';
 import { PrivacyShortcutsSettings } from '../components/settings/privacy-shortcuts-settings';
 

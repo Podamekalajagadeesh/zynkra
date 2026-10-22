@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { SavedMarketplaceListingsService } from './saved-marketplace-listings.service';
 import { CreateSavedMarketplaceListingDto } from './dto/create-saved-marketplace-listing.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,20 +6,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('saved-marketplace-listings')
 @UseGuards(JwtAuthGuard)
 export class SavedMarketplaceListingsController {
-  constructor(
-    private readonly savedMarketplaceListingsService: SavedMarketplaceListingsService,
-  ) {}
+  constructor(private readonly savedMarketplaceListingsService: SavedMarketplaceListingsService) {}
 
   @Post()
   create(
     @Body()
     createSavedMarketplaceListingDto: CreateSavedMarketplaceListingDto,
-    @Request() req,
+    @Request() req
   ) {
-    return this.savedMarketplaceListingsService.create(
-      createSavedMarketplaceListingDto,
-      req.user,
-    );
+    return this.savedMarketplaceListingsService.create(createSavedMarketplaceListingDto, req.user);
   }
 
   @Get()

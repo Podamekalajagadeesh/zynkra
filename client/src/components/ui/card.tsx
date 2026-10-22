@@ -18,11 +18,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         className={twMerge(
-          clsx(
-            'rounded-xl transition-all duration-200',
-            cardVariants[variant],
-            className,
-          ),
+          clsx('rounded-xl transition-all duration-200', cardVariants[variant], className)
         )}
         ref={ref}
         {...props}
@@ -30,14 +26,18 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         {children}
       </div>
     );
-  },
+  }
 );
 Card.displayName = 'Card';
 
 const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={twMerge(clsx('flex flex-col space-y-1.5 p-6', className))} {...props} />
-  ),
+    <div
+      ref={ref}
+      className={twMerge(clsx('flex flex-col space-y-1.5 p-6', className))}
+      {...props}
+    />
+  )
 );
 CardHeader.displayName = 'CardHeader';
 
@@ -48,32 +48,33 @@ const CardTitle = forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadin
       className={twMerge(clsx('text-lg font-semibold leading-none tracking-tight', className))}
       {...props}
     />
-  ),
+  )
 );
 CardTitle.displayName = 'CardTitle';
 
-const CardDescription = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, ...props }, ref) => (
-    <p
-      ref={ref}
-      className={twMerge(clsx('text-sm text-dark-500 dark:text-dark-400', className))}
-      {...props}
-    />
-  ),
-);
+const CardDescription = forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={twMerge(clsx('text-sm text-dark-500 dark:text-dark-400', className))}
+    {...props}
+  />
+));
 CardDescription.displayName = 'CardDescription';
 
 const CardContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={twMerge(clsx('p-6 pt-0', className))} {...props} />
-  ),
+  )
 );
 CardContent.displayName = 'CardContent';
 
 const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={twMerge(clsx('flex items-center p-6 pt-0', className))} {...props} />
-  ),
+  )
 );
 CardFooter.displayName = 'CardFooter';
 

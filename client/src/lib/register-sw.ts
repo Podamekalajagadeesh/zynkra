@@ -21,16 +21,21 @@ export async function registerServiceWorker(): Promise<void> {
       if (event.data?.type === 'SYNC_COMPLETE') {
         console.log('Background sync completed:', event.data.timestamp);
         // Dispatch a custom event that the app can listen to
-        window.dispatchEvent(new CustomEvent('offline-sync-complete', {
-          detail: { timestamp: event.data.timestamp },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('offline-sync-complete', {
+            detail: { timestamp: event.data.timestamp },
+          })
+        );
       }
     });
 
     // Check for updates periodically
-    setInterval(() => {
-      registration.update();
-    }, 60 * 60 * 1000); // Every hour
+    setInterval(
+      () => {
+        registration.update();
+      },
+      60 * 60 * 1000
+    ); // Every hour
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }
@@ -60,5 +65,7 @@ export function isOffline(): boolean {
  * Check if we're in a service worker context.
  */
 export function isServiceWorkerContext(): boolean {
-  return typeof ServiceWorkerGlobalScope !== 'undefined' && self instanceof ServiceWorkerGlobalScope;
+  return (
+    typeof ServiceWorkerGlobalScope !== 'undefined' && self instanceof ServiceWorkerGlobalScope
+  );
 }

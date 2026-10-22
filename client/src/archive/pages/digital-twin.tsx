@@ -10,7 +10,8 @@ const DigitalTwinPage: React.FC = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">Digital Twin Personas</h1>
             <p className="text-xl text-muted-foreground">
-              Lifelike AI replicas of yourself that represent you in social spaces when you're unavailable, aligned with your values.
+              Lifelike AI replicas of yourself that represent you in social spaces when you're
+              unavailable, aligned with your values.
             </p>
           </div>
           <DigitalTwinPersona />

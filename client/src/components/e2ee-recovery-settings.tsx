@@ -52,9 +52,7 @@ export function E2eeRecoverySettings() {
       setConfirmPassphrase('');
       toast.success('Recovery backup downloaded — store it somewhere safe.');
     } catch (error_) {
-      toast.error(
-        error_ instanceof Error ? error_.message : 'Backup export failed',
-      );
+      toast.error(error_ instanceof Error ? error_.message : 'Backup export failed');
     } finally {
       setBusy(null);
     }
@@ -77,9 +75,7 @@ export function E2eeRecoverySettings() {
       toast.success('Backup restored — reloading to finish setup…');
       setTimeout(() => window.location.reload(), 1200);
     } catch (error_) {
-      toast.error(
-        error_ instanceof Error ? error_.message : 'Backup import failed',
-      );
+      toast.error(error_ instanceof Error ? error_.message : 'Backup import failed');
       setBusy(null);
     }
   };
@@ -91,10 +87,9 @@ export function E2eeRecoverySettings() {
         <div>
           <p className="font-semibold text-lg">Encryption key recovery</p>
           <p className="text-sm text-dark-500 dark:text-dark-400">
-            Direct messages are end-to-end encrypted — this device holds the only
-            copy of your private keys and session state. Export a
-            passphrase-encrypted backup before switching devices or clearing
-            browser data. The passphrase never leaves this device; if you lose
+            Direct messages are end-to-end encrypted — this device holds the only copy of your
+            private keys and session state. Export a passphrase-encrypted backup before switching
+            devices or clearing browser data. The passphrase never leaves this device; if you lose
             it, the backup cannot be opened by anyone, including us.
           </p>
         </div>
@@ -160,9 +155,8 @@ export function E2eeRecoverySettings() {
         </div>
 
         <p className="text-xs text-dark-500 dark:text-dark-400">
-          Restoring replaces this device's encryption keys and session history
-          with the backup's, and keeps the same identity — contacts never see a
-          safety-number change.
+          Restoring replaces this device's encryption keys and session history with the backup's,
+          and keeps the same identity — contacts never see a safety-number change.
         </p>
       </div>
     </div>

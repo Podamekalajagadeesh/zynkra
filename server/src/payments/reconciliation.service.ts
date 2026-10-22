@@ -24,7 +24,7 @@ export class PayoutReconciliationService {
   constructor(
     @InjectRepository(Payout)
     private readonly payoutRepository: Repository<Payout>,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentsService: PaymentsService
   ) {}
 
   /**
@@ -66,7 +66,7 @@ export class PayoutReconciliationService {
           if (transfer?.id) {
             await this.payoutRepository.update(
               { id: payout.id, status: 'processing' },
-              { stripeTransferId: transfer.id },
+              { stripeTransferId: transfer.id }
             );
             payout.stripeTransferId = transfer.id;
           }
@@ -92,7 +92,7 @@ export class PayoutReconciliationService {
       this.logger.log(
         `Payout reconciliation: ${summary.markedPaid} paid, ${summary.markedFailed} failed, ` +
           `${summary.stillProcessing} still processing, ${summary.errors.length} errors, ` +
-          `stripe balance (cents) ${JSON.stringify(summary.stripeBalance)}`,
+          `stripe balance (cents) ${JSON.stringify(summary.stripeBalance)}`
       );
     }
     return summary;

@@ -9,7 +9,10 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsEnum } from 'class-validator';
-import { VerificationCategory, VerificationWorkflow } from '../entities/verification-request.entity';
+import {
+  VerificationCategory,
+  VerificationWorkflow,
+} from '../entities/verification-request.entity';
 
 export class CreateVerificationRequestDto {
   @IsOptional()

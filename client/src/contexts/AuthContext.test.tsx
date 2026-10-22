@@ -11,7 +11,11 @@ vi.mock('../lib/api', async () => {
     setAuthToken: vi.fn(),
     uploadPublicKey: vi.fn(),
     logoutFromServer: vi.fn().mockResolvedValue({}),
-    switchAccount: vi.fn().mockResolvedValue({ accountId: 'user-2', switched: true, message: 'Account switched successfully.' }),
+    switchAccount: vi.fn().mockResolvedValue({
+      accountId: 'user-2',
+      switched: true,
+      message: 'Account switched successfully.',
+    }),
   };
 });
 
@@ -24,23 +28,47 @@ vi.mock('../services/encryption.service', () => ({
 
 // Test component that exposes AuthContext values
 function TestConsumer() {
-  const { accounts, activeAccount, user, isLoggedIn, addAccount, switchAccount, logout, setUser } = useAuth();
+  const { accounts, activeAccount, user, isLoggedIn, addAccount, switchAccount, logout, setUser } =
+    useAuth();
   return (
     <div>
       <span data-testid="account-count">{accounts.length}</span>
       <span data-testid="active-user">{activeAccount?.user?.username || 'none'}</span>
       <span data-testid="is-logged-in">{isLoggedIn.toString()}</span>
-      <button data-testid="add-account" onClick={() => addAccount({
-        user: { id: 'user-1', username: 'alice', displayName: 'Alice' } as any,
-        token: 'token-1',
-      })}>Add Account</button>
-      <button data-testid="add-second-account" onClick={() => addAccount({
-        user: { id: 'user-2', username: 'bob', displayName: 'Bob' } as any,
-        token: 'token-2',
-      })}>Add Second</button>
-      <button data-testid="switch" onClick={() => switchAccount('user-2')}>Switch</button>
-      <button data-testid="logout" onClick={() => logout()}>Logout</button>
-      <button data-testid="set-user" onClick={() => setUser({ id: 'user-1', username: 'alice-updated' } as any)}>Set User</button>
+      <button
+        data-testid="add-account"
+        onClick={() =>
+          addAccount({
+            user: { id: 'user-1', username: 'alice', displayName: 'Alice' } as any,
+            token: 'token-1',
+          })
+        }
+      >
+        Add Account
+      </button>
+      <button
+        data-testid="add-second-account"
+        onClick={() =>
+          addAccount({
+            user: { id: 'user-2', username: 'bob', displayName: 'Bob' } as any,
+            token: 'token-2',
+          })
+        }
+      >
+        Add Second
+      </button>
+      <button data-testid="switch" onClick={() => switchAccount('user-2')}>
+        Switch
+      </button>
+      <button data-testid="logout" onClick={() => logout()}>
+        Logout
+      </button>
+      <button
+        data-testid="set-user"
+        onClick={() => setUser({ id: 'user-1', username: 'alice-updated' } as any)}
+      >
+        Set User
+      </button>
     </div>
   );
 }

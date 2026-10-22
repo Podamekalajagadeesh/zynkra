@@ -16,11 +16,7 @@ import { User } from '../../users/entities/user.entity';
  * `amount` is signed: positive for credits (earnings, payout reversals),
  * negative for debits (payouts). `balanceAfter` snapshots the resulting balance.
  */
-export type LedgerEntryType =
-  | 'earning'
-  | 'payout'
-  | 'payout_reversal'
-  | 'adjustment';
+export type LedgerEntryType = 'earning' | 'payout' | 'payout_reversal' | 'adjustment';
 
 @Entity('ledger_entries')
 export class LedgerEntry {

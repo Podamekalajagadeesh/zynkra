@@ -4,10 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { Subscription } from './entities/subscription.entity';
 import { SubscriptionTier } from './entities/subscription-tier.entity';
-import {
-  SubscriptionBundle,
-  SubscriptionBundleTier,
-} from './entities/subscription-bundle.entity';
+import { SubscriptionBundle, SubscriptionBundleTier } from './entities/subscription-bundle.entity';
 import { UsersService } from '../users/users.service';
 import { PaymentsService } from '../payments/payments.service';
 
@@ -36,7 +33,13 @@ describe('SubscriptionsService (bundles)', () => {
         },
         {
           provide: getRepositoryToken(SubscriptionBundle),
-          useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
         },
         {
           provide: getRepositoryToken(SubscriptionBundleTier),
@@ -84,7 +87,7 @@ describe('SubscriptionsService (bundles)', () => {
           name: 'All access',
           price: 12,
           tierIds: ['t1', 't2'],
-        }),
+        })
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -102,7 +105,10 @@ describe('SubscriptionsService (bundles)', () => {
         name: 'All access',
         tiers: [],
       });
-      bundleTiersRepo.create.mockImplementation((data) => ({ ...data, id: Math.random().toString() }));
+      bundleTiersRepo.create.mockImplementation((data) => ({
+        ...data,
+        id: Math.random().toString(),
+      }));
 
       const result = await service.createBundle('creator-1', {
         name: 'All access',
@@ -112,7 +118,7 @@ describe('SubscriptionsService (bundles)', () => {
 
       expect(result.id).toBe('bundle-1');
       expect(bundlesRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ price: 9, isActive: true }),
+        expect.objectContaining({ price: 9, isActive: true })
       );
     });
   });
@@ -155,10 +161,10 @@ describe('SubscriptionsService (bundles)', () => {
         'subscription',
         expect.objectContaining({
           metadata: expect.objectContaining({ bundleId: 'bundle-1' }),
-        }),
+        })
       );
       expect(subscriptionsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ tier: 'bundle:All access' }),
+        expect.objectContaining({ tier: 'bundle:All access' })
       );
       expect(result).toEqual({ id: 'sub-1' });
     });
@@ -193,7 +199,7 @@ describe('SubscriptionsService (bundles)', () => {
           status: 'requires_payment_method',
           paymentId: 'pi_pending',
           clientSecret: 'secret',
-        }),
+        })
       );
       expect(subscriptionsRepo.create).not.toHaveBeenCalled();
     });
@@ -219,13 +225,13 @@ describe('SubscriptionsService (bundles)', () => {
             fulfillmentType: 'subscription',
             tierId: 'tier-monthly',
           }),
-        }),
+        })
       );
       expect(tiersRepo.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ name: 'monthly' }) }),
+        expect.objectContaining({ where: expect.objectContaining({ name: 'monthly' }) })
       );
       expect(subscriptionsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ tier: 'monthly', status: 'active' }),
+        expect.objectContaining({ tier: 'monthly', status: 'active' })
       );
       expect(result).toEqual({ id: 'sub-created' });
     });

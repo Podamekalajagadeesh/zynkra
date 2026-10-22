@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { verifyMessage } from 'ethers';
@@ -40,7 +36,7 @@ export class WalletService {
     @InjectRepository(LedgerEntry)
     private readonly ledgerRepository: Repository<LedgerEntry>,
     private readonly dataSource: DataSource,
-    private readonly httpService: HttpService,
+    private readonly httpService: HttpService
   ) {}
 
   /** The message the user must sign to prove ownership of a wallet before linking it. */
@@ -57,7 +53,7 @@ export class WalletService {
     userId: string,
     walletAddress: string,
     signature: string,
-    nonce: string | undefined,
+    nonce: string | undefined
   ): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -66,7 +62,7 @@ export class WalletService {
 
     if (!nonce) {
       throw new BadRequestException(
-        'No link challenge found. Request GET /wallet/connect/challenge first.',
+        'No link challenge found. Request GET /wallet/connect/challenge first.'
       );
     }
 
@@ -79,9 +75,7 @@ export class WalletService {
       throw new UnauthorizedException('Invalid wallet signature');
     }
     if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
-      throw new UnauthorizedException(
-        'Signature does not match the wallet address being linked',
-      );
+      throw new UnauthorizedException('Signature does not match the wallet address being linked');
     }
 
     // A wallet may only be linked to one account.
@@ -89,9 +83,7 @@ export class WalletService {
       where: { walletAddress },
     });
     if (existing && existing.id !== user.id) {
-      throw new BadRequestException(
-        'This wallet is already linked to another account',
-      );
+      throw new BadRequestException('This wallet is already linked to another account');
     }
 
     user.walletAddress = walletAddress;
@@ -125,7 +117,7 @@ export class WalletService {
   async credit(
     userId: string,
     amount: number,
-    options: WalletMovementOptions = {},
+    options: WalletMovementOptions = {}
   ): Promise<WalletBalanceSummary> {
     return this.applyMovement(userId, Number(amount), {
       type: options.type ?? 'earning',
@@ -136,7 +128,7 @@ export class WalletService {
   async debit(
     userId: string,
     amount: number,
-    options: WalletMovementOptions = {},
+    options: WalletMovementOptions = {}
   ): Promise<WalletBalanceSummary> {
     return this.applyMovement(userId, -Math.abs(Number(amount)), {
       type: options.type ?? 'payout',
@@ -155,7 +147,7 @@ export class WalletService {
   private async applyMovement(
     userId: string,
     delta: number,
-    options: WalletMovementOptions,
+    options: WalletMovementOptions
   ): Promise<WalletBalanceSummary> {
     if (!Number.isFinite(delta)) {
       throw new BadRequestException('Invalid wallet movement amount');
@@ -210,9 +202,7 @@ export class WalletService {
 
   async getNfts(walletAddress: string) {
     const url = `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}/getNFTs?owner=${walletAddress}`;
-    const response = await firstValueFrom(
-      this.httpService.get<AlchemyNftResponse>(url),
-    );
+    const response = await firstValueFrom(this.httpService.get<AlchemyNftResponse>(url));
     return response.data;
   }
 
@@ -233,7 +223,7 @@ export class WalletService {
     const isOwner = ownedNfts.some(
       (nft) =>
         nft.contract.address.toLowerCase() === nftPfpContractAddress.toLowerCase() &&
-        nft.id.tokenId === nftPfpTokenId,
+        nft.id.tokenId === nftPfpTokenId
     );
 
     if (!isOwner) {

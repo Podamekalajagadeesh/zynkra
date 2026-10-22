@@ -19,21 +19,20 @@ export const BadgeList = ({ userId }: { userId: string }) => {
         const data = await getBadges();
         if (!cancelled) {
           // If the API supports per-user filtering in the future, pass userId here
-          setBadges(Array.isArray(data) ? data : data.badges ?? []);
+          setBadges(Array.isArray(data) ? data : (data.badges ?? []));
         }
       } catch (error: any) {
         if (!cancelled) {
-          addToast(
-            error?.response?.data?.message || 'Failed to load badges',
-            'error',
-          );
+          addToast(error?.response?.data?.message || 'Failed to load badges', 'error');
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
     fetchBadges();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId, addToast]);
 
   if (loading) {
@@ -64,7 +63,7 @@ export const BadgeList = ({ userId }: { userId: string }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {badges.map(badge => (
+      {badges.map((badge) => (
         <Badge key={badge.id} badge={badge} />
       ))}
     </div>

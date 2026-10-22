@@ -33,7 +33,7 @@ export function AffiliateDashboardPage() {
 
   const handleLinkCreated = () => {
     setShowCreateModal(false);
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   return (
@@ -41,7 +41,9 @@ export function AffiliateDashboardPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Affiliate Marketing</h1>
-          <p className="text-gray-600 mt-1">Track your commissions and manage your affiliate links</p>
+          <p className="text-gray-600 mt-1">
+            Track your commissions and manage your affiliate links
+          </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -54,14 +56,14 @@ export function AffiliateDashboardPage() {
       {stats && <StatsCards stats={stats} />}
 
       <div className="mt-8">
-        <LinksList refreshTrigger={refreshTrigger} onLinkDeleted={() => setRefreshTrigger(prev => prev + 1)} />
+        <LinksList
+          refreshTrigger={refreshTrigger}
+          onLinkDeleted={() => setRefreshTrigger((prev) => prev + 1)}
+        />
       </div>
 
       {showCreateModal && (
-        <CreateLinkModal
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={handleLinkCreated}
-        />
+        <CreateLinkModal onClose={() => setShowCreateModal(false)} onSuccess={handleLinkCreated} />
       )}
     </div>
   );

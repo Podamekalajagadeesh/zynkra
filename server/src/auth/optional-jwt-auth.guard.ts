@@ -8,7 +8,7 @@ export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
     if (!err && user) {
       return user;
     }
-    
+
     // Error or no user: return null, but don't throw an error
     return null;
   }

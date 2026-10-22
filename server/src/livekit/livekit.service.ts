@@ -29,7 +29,7 @@ export class LiveKitService {
         identity: userId,
       }
     );
-    
+
     token.addGrant({
       roomJoin: true,
       room: roomName,

@@ -18,11 +18,11 @@ export class CreatePlatformIncidentDto {
   service: string;
 
   @IsIn(incidentImpacts)
-  impact: typeof incidentImpacts[number];
+  impact: (typeof incidentImpacts)[number];
 
   @IsOptional()
   @IsIn(incidentStatuses)
-  status?: typeof incidentStatuses[number];
+  status?: (typeof incidentStatuses)[number];
 }
 
 export class UpdatePlatformIncidentDto {
@@ -43,11 +43,11 @@ export class UpdatePlatformIncidentDto {
 
   @IsOptional()
   @IsIn(incidentImpacts)
-  impact?: typeof incidentImpacts[number];
+  impact?: (typeof incidentImpacts)[number];
 
   @IsOptional()
   @IsIn(incidentStatuses)
-  status?: typeof incidentStatuses[number];
+  status?: (typeof incidentStatuses)[number];
 }
 
 export class CreatePlatformMaintenanceDto {
@@ -71,7 +71,7 @@ export class CreatePlatformMaintenanceDto {
 
   @IsOptional()
   @IsIn(maintenanceStatuses)
-  status?: typeof maintenanceStatuses[number];
+  status?: (typeof maintenanceStatuses)[number];
 }
 
 export class UpdatePlatformMaintenanceDto {
@@ -100,5 +100,5 @@ export class UpdatePlatformMaintenanceDto {
 
   @IsOptional()
   @IsIn(maintenanceStatuses)
-  status?: typeof maintenanceStatuses[number];
+  status?: (typeof maintenanceStatuses)[number];
 }

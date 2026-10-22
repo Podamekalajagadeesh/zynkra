@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -147,8 +152,12 @@ describe('AuthService', () => {
         {
           provide: AccountManagementService,
           useValue: {
-            recordSecurityAlert: jest.fn().mockResolvedValue({ id: 'alert-1', type: 'suspicious_login' }),
-            createLoginApproval: jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' }),
+            recordSecurityAlert: jest
+              .fn()
+              .mockResolvedValue({ id: 'alert-1', type: 'suspicious_login' }),
+            createLoginApproval: jest
+              .fn()
+              .mockResolvedValue({ id: 'approval-1', status: 'pending' }),
           },
         },
         {
@@ -164,7 +173,9 @@ describe('AuthService', () => {
         {
           provide: LoginApprovalService,
           useValue: {
-            createLoginApprovalRequest: jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' }),
+            createLoginApprovalRequest: jest
+              .fn()
+              .mockResolvedValue({ id: 'approval-1', status: 'pending' }),
           },
         },
         {
@@ -220,19 +231,27 @@ describe('AuthService', () => {
     configService = module.get(ConfigService) as jest.Mocked<ConfigService>;
     emailService = module.get(EmailService) as jest.Mocked<EmailService>;
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
-    loginSessionRepo = module.get(getRepositoryToken(LoginSession)) as jest.Mocked<Repository<LoginSession>>;
+    loginSessionRepo = module.get(getRepositoryToken(LoginSession)) as jest.Mocked<
+      Repository<LoginSession>
+    >;
     securityAuditService = module.get(SecurityAuditService) as { logEvent: jest.Mock };
-    loginApprovalService = module.get(LoginApprovalService) as { createLoginApprovalRequest: jest.Mock };
+    loginApprovalService = module.get(LoginApprovalService) as {
+      createLoginApprovalRequest: jest.Mock;
+    };
   });
 
   // ─── trusted IP addresses ──────────────────────────────────────────────
 
   describe('trusted IP addresses', () => {
-    const reqFrom = (ip?: string) => ({ ip, socket: { remoteAddress: ip }, headers: { 'user-agent': 'jest' } });
+    const reqFrom = (ip?: string) => ({
+      ip,
+      socket: { remoteAddress: ip },
+      headers: { 'user-agent': 'jest' },
+    });
 
     beforeEach(() => {
       usersService.findByEmail.mockResolvedValue(
-        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.10'] }),
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.10'] })
       );
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (loginSessionRepo.findOne as jest.Mock).mockResolvedValue(null);
@@ -243,7 +262,7 @@ describe('AuthService', () => {
     it('marks a session from a trusted IP as trusted and not suspicious', async () => {
       const result = await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('203.0.113.10'),
+        reqFrom('203.0.113.10')
       );
 
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
@@ -255,7 +274,7 @@ describe('AuthService', () => {
     it('does not trust a session from an unlisted IP', async () => {
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('198.51.100.7'),
+        reqFrom('198.51.100.7')
       );
 
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
@@ -273,7 +292,10 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.signIn({ email: 'test@example.com', password: 'pw' } as SignInDto, reqFrom('198.51.100.7')),
+        service.signIn(
+          { email: 'test@example.com', password: 'pw' } as SignInDto,
+          reqFrom('198.51.100.7')
+        )
       ).resolves.toMatchObject({
         loginApprovalRequired: true,
         message: expect.stringMatching(/approval/i),
@@ -284,7 +306,7 @@ describe('AuthService', () => {
       const saved = await (async () => {
         await service.signIn(
           { email: 'test@example.com', password: 'pw' } as SignInDto,
-          reqFrom('::ffff:203.0.113.10'),
+          reqFrom('::ffff:203.0.113.10')
         );
         return (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
       })();
@@ -292,10 +314,12 @@ describe('AuthService', () => {
     });
 
     it('is not trusted when the user has no trusted list', async () => {
-      usersService.findByEmail.mockResolvedValue(makeUser({ emailVerified: true, trustedIpAddresses: null }));
+      usersService.findByEmail.mockResolvedValue(
+        makeUser({ emailVerified: true, trustedIpAddresses: null })
+      );
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('203.0.113.10'),
+        reqFrom('203.0.113.10')
       );
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
       expect(saved.isTrusted).toBe(false);
@@ -304,7 +328,7 @@ describe('AuthService', () => {
     it('is not trusted when the request IP cannot be determined', async () => {
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom(undefined),
+        reqFrom(undefined)
       );
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
       expect(saved.isTrusted).toBe(false);
@@ -312,12 +336,12 @@ describe('AuthService', () => {
 
     it('honours a CIDR range, not just exact addresses', async () => {
       usersService.findByEmail.mockResolvedValue(
-        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] }),
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] })
       );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('203.0.113.77'),
+        reqFrom('203.0.113.77')
       );
 
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
@@ -326,12 +350,12 @@ describe('AuthService', () => {
 
     it('does not honour an address outside a trusted CIDR', async () => {
       usersService.findByEmail.mockResolvedValue(
-        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] }),
+        makeUser({ emailVerified: true, trustedIpAddresses: ['203.0.113.0/24'] })
       );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('203.0.114.77'),
+        reqFrom('203.0.114.77')
       );
 
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
@@ -342,12 +366,12 @@ describe('AuthService', () => {
       // Resolving a hostname here would let an attacker-controlled DNS record
       // widen the allowlist, so a hostname entry simply never matches.
       usersService.findByEmail.mockResolvedValue(
-        makeUser({ emailVerified: true, trustedIpAddresses: ['evil.example.com'] }),
+        makeUser({ emailVerified: true, trustedIpAddresses: ['evil.example.com'] })
       );
 
       await service.signIn(
         { email: 'test@example.com', password: 'pw' } as SignInDto,
-        reqFrom('203.0.113.10'),
+        reqFrom('203.0.113.10')
       );
 
       const saved = (loginSessionRepo.create as jest.Mock).mock.calls[0][0];
@@ -370,7 +394,9 @@ describe('AuthService', () => {
     it('creates a user and sends a verification email', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       usersService.findByUsername.mockResolvedValue(null);
-      usersService.createUser.mockResolvedValue(makeUser({ username: 'newuser', email: 'new@example.com' }));
+      usersService.createUser.mockResolvedValue(
+        makeUser({ username: 'newuser', email: 'new@example.com' })
+      );
 
       const result = await service.signUp(dto);
 
@@ -386,11 +412,11 @@ describe('AuthService', () => {
           birthDateVerifiedAt: expect.any(Date),
           emailVerificationToken: expect.any(String),
           emailVerificationTokenExpires: expect.any(Date),
-        }),
+        })
       );
       expect(emailService.sendVerificationCode).toHaveBeenCalledWith(
         'new@example.com',
-        expect.any(String),
+        expect.any(String)
       );
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
     });
@@ -421,7 +447,9 @@ describe('AuthService', () => {
     it('does not fail signup when EmailService.sendVerificationCode fails', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       usersService.findByUsername.mockResolvedValue(null);
-      usersService.createUser.mockResolvedValue(makeUser({ username: 'newuser', email: 'new@example.com' }));
+      usersService.createUser.mockResolvedValue(
+        makeUser({ username: 'newuser', email: 'new@example.com' })
+      );
       emailService.sendVerificationCode.mockRejectedValue(new Error('Email send failed'));
 
       // User creation succeeded but email failed — signup must still succeed.
@@ -458,12 +486,14 @@ describe('AuthService', () => {
 
       usersService.findByEmail.mockResolvedValue(null);
       usersService.findByUsername.mockResolvedValue(null);
-      usersService.createUser.mockResolvedValue(makeUser({ username: 'test_user.name', email: 'special@example.com' }));
+      usersService.createUser.mockResolvedValue(
+        makeUser({ username: 'test_user.name', email: 'special@example.com' })
+      );
 
       await service.signUp(dtoWithSpecial);
 
       expect(usersService.createUser).toHaveBeenCalledWith(
-        expect.objectContaining({ username: 'test_user.name' }),
+        expect.objectContaining({ username: 'test_user.name' })
       );
     });
 
@@ -489,7 +519,10 @@ describe('AuthService', () => {
       loginSessionRepo.create.mockReturnValue({ id: 'session-1' } as any);
       loginSessionRepo.save.mockResolvedValue({ id: 'session-1' } as any);
 
-      const result = await service.signIn(dto, { headers: { 'user-agent': 'test' }, ip: '127.0.0.1' });
+      const result = await service.signIn(dto, {
+        headers: { 'user-agent': 'test' },
+        ip: '127.0.0.1',
+      });
 
       expect(result).toHaveProperty('access_token', 'jwt-token');
       expect(jwtService.sign).toHaveBeenCalled();
@@ -501,7 +534,7 @@ describe('AuthService', () => {
           message: expect.stringContaining('signed in'),
           ipAddress: '127.0.0.1',
           userAgent: 'test',
-        }),
+        })
       );
     });
 
@@ -510,14 +543,16 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
       bcrypt.compare.mockResolvedValue(false);
 
-      await expect(service.signIn(dto, { headers: { 'user-agent': 'test' }, ip: '127.0.0.1' })).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.signIn(dto, { headers: { 'user-agent': 'test' }, ip: '127.0.0.1' })
+      ).rejects.toThrow(UnauthorizedException);
       expect(securityAuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: user.id,
           eventType: 'login_failed',
           severity: 'high',
           message: expect.stringMatching(/failed/i),
-        }),
+        })
       );
     });
 
@@ -555,11 +590,13 @@ describe('AuthService', () => {
         ip: '198.51.100.25',
       });
 
-      expect(result).toEqual(expect.objectContaining({
-        loginApprovalRequired: true,
-        message: expect.stringMatching(/approval/i),
-        sessionId: 'session-suspicious',
-      }));
+      expect(result).toEqual(
+        expect.objectContaining({
+          loginApprovalRequired: true,
+          message: expect.stringMatching(/approval/i),
+          sessionId: 'session-suspicious',
+        })
+      );
       expect(jwtService.sign).not.toHaveBeenCalled();
     });
 
@@ -571,7 +608,11 @@ describe('AuthService', () => {
     });
 
     it('returns a temp token when 2FA is enabled', async () => {
-      const user = makeUser({ emailVerified: true, twoFactorEnabled: true, twoFactorSecret: 'secret' });
+      const user = makeUser({
+        emailVerified: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'secret',
+      });
       usersService.findByEmail.mockResolvedValue(user);
       bcrypt.compare.mockResolvedValue(true);
 
@@ -589,7 +630,11 @@ describe('AuthService', () => {
 
     it('throws BadRequestException when no email or username is provided', async () => {
       const { BadRequestException } = require('@nestjs/common');
-      const emptyDto: SignInDto = { email: undefined as any, username: undefined as any, password: 'password123' };
+      const emptyDto: SignInDto = {
+        email: undefined as any,
+        username: undefined as any,
+        password: 'password123',
+      };
 
       await expect(service.signIn(emptyDto)).rejects.toThrow(BadRequestException);
     });
@@ -664,7 +709,7 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({ sub: user.id }),
-        expect.anything(),
+        expect.anything()
       );
       expect(result.access_token).toBe('jwt-token');
     });
@@ -692,11 +737,11 @@ describe('AuthService', () => {
       expect(usersService.setPasswordResetToken).toHaveBeenCalledWith(
         user.id,
         expect.any(String),
-        expect.any(Date),
+        expect.any(Date)
       );
       expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
         'test@example.com',
-        expect.any(String),
+        expect.any(String)
       );
     });
 
@@ -754,7 +799,9 @@ describe('AuthService', () => {
     it('throws UnauthorizedException for invalid token', async () => {
       usersService.findByPasswordResetToken.mockResolvedValue(null);
 
-      await expect(service.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(UnauthorizedException);
+      await expect(service.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
 
     it('throws UnauthorizedException for expired token', async () => {
@@ -764,7 +811,9 @@ describe('AuthService', () => {
       });
       usersService.findByPasswordResetToken.mockResolvedValue(user);
 
-      await expect(service.resetPassword('expired-token', 'newpassword123')).rejects.toThrow(UnauthorizedException);
+      await expect(service.resetPassword('expired-token', 'newpassword123')).rejects.toThrow(
+        UnauthorizedException
+      );
       expect(usersService.save).not.toHaveBeenCalled();
     });
 
@@ -804,7 +853,9 @@ describe('AuthService', () => {
       usersService.findByPasswordResetToken.mockResolvedValue(user);
       jest.spyOn(bcrypt, 'hash').mockRejectedValueOnce(new Error('Hash failed'));
 
-      await expect(service.resetPassword('reset-token', 'newpassword123')).rejects.toThrow('Hash failed');
+      await expect(service.resetPassword('reset-token', 'newpassword123')).rejects.toThrow(
+        'Hash failed'
+      );
       expect(usersService.save).not.toHaveBeenCalled();
     });
   });
@@ -820,7 +871,10 @@ describe('AuthService', () => {
       const result = await service.resendVerification('test@example.com');
 
       expect(result.message).toContain('verification code has been sent');
-      expect(emailService.sendVerificationCode).toHaveBeenCalledWith('test@example.com', expect.any(String));
+      expect(emailService.sendVerificationCode).toHaveBeenCalledWith(
+        'test@example.com',
+        expect.any(String)
+      );
     });
 
     it('returns generic message for non-existent user (security)', async () => {
@@ -937,7 +991,9 @@ describe('AuthService', () => {
 
     it('throws UnauthorizedException for unknown email', async () => {
       usersService.findByEmail.mockResolvedValue(null);
-      await expect(service.validateUser('unknown@example.com')).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser('unknown@example.com')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 
@@ -977,11 +1033,18 @@ describe('AuthService', () => {
     bcrypt.compare.mockResolvedValue(true);
     loginSessionRepo.create.mockReturnValue(suspiciousSession);
     loginSessionRepo.save.mockResolvedValue(suspiciousSession);
-    loginSessionRepo.findOne.mockResolvedValue({ id: 'previous-session', ipAddress: '203.0.113.9', deviceName: 'Old device', revokedAt: null } as any);
+    loginSessionRepo.findOne.mockResolvedValue({
+      id: 'previous-session',
+      ipAddress: '203.0.113.9',
+      deviceName: 'Old device',
+      revokedAt: null,
+    } as any);
 
     const recordAlert = jest.fn().mockResolvedValue({ id: 'alert-1', type: 'suspicious_login' });
     const createApproval = jest.fn().mockResolvedValue({ id: 'approval-1', status: 'pending' });
-    const createLoginApprovalRequest = jest.fn().mockResolvedValue({ id: 'approval-db-1', status: 'pending' });
+    const createLoginApprovalRequest = jest
+      .fn()
+      .mockResolvedValue({ id: 'approval-db-1', status: 'pending' });
 
     const serviceWithSecurity = new AuthService(
       usersService as any,
@@ -992,7 +1055,11 @@ describe('AuthService', () => {
       notificationsService as any,
       loginSessionRepo as any,
       captchaServiceMock as any,
-      { findByCode: jest.fn(), isUsable: jest.fn().mockReturnValue(false), consume: jest.fn() } as any,
+      {
+        findByCode: jest.fn(),
+        isUsable: jest.fn().mockReturnValue(false),
+        consume: jest.fn(),
+      } as any,
       { find: jest.fn(), save: jest.fn(), create: jest.fn(), delete: jest.fn() } as any,
       {
         recordSecurityAlert: recordAlert,
@@ -1003,36 +1070,41 @@ describe('AuthService', () => {
       } as any,
       {
         createLoginApprovalRequest,
-      } as any,
+      } as any
     );
 
-    const result = await serviceWithSecurity.signIn({ email: 'test@example.com', password: 'password123' } as any, {
-      headers: { 'user-agent': 'New suspicious device', 'x-forwarded-for': '198.51.100.25' },
-      ip: '198.51.100.25',
-    });
+    const result = await serviceWithSecurity.signIn(
+      { email: 'test@example.com', password: 'password123' } as any,
+      {
+        headers: { 'user-agent': 'New suspicious device', 'x-forwarded-for': '198.51.100.25' },
+        ip: '198.51.100.25',
+      }
+    );
 
-    expect(result).toEqual(expect.objectContaining({
-      loginApprovalRequired: true,
-      message: expect.stringMatching(/approval/i),
-      sessionId: 'suspicious-session',
-    }));
+    expect(result).toEqual(
+      expect.objectContaining({
+        loginApprovalRequired: true,
+        message: expect.stringMatching(/approval/i),
+        sessionId: 'suspicious-session',
+      })
+    );
     expect(recordAlert).toHaveBeenCalledWith(
       '550e8400-e29b-41d4-a716-446655440000',
       'suspicious_login',
       expect.stringMatching(/suspicious/i),
       'high',
-      expect.objectContaining({ ipAddress: '198.51.100.25' }),
+      expect.objectContaining({ ipAddress: '198.51.100.25' })
     );
     expect(createApproval).toHaveBeenCalledWith(
       '550e8400-e29b-41d4-a716-446655440000',
-      expect.objectContaining({ deviceName: 'New suspicious device' }),
+      expect.objectContaining({ deviceName: 'New suspicious device' })
     );
     expect(createLoginApprovalRequest).toHaveBeenCalledWith(
       '550e8400-e29b-41d4-a716-446655440000',
       'New suspicious device',
       '198.51.100.25',
       'New suspicious device',
-      undefined,
+      undefined
     );
   });
 
@@ -1173,11 +1245,11 @@ describe('AuthService', () => {
       expect(loginSessionRepo.update).toHaveBeenCalledWith('s1', { lastSeenAt: expect.any(Date) });
       expect(jwtService.sign).toHaveBeenCalledWith(
         { sub: user.id, email: user.email, sid: 's1', typ: 'access', aud: 'zynkra-api' },
-        expect.anything(),
+        expect.anything()
       );
       expect(jwtService.sign).toHaveBeenCalledWith(
         { sub: user.id, sid: 's1', typ: 'refresh', aud: 'zynkra-api' },
-        expect.anything(),
+        expect.anything()
       );
     });
 
@@ -1186,15 +1258,22 @@ describe('AuthService', () => {
     });
 
     it('throws UnauthorizedException when session is revoked', async () => {
-      loginSessionRepo.findOne.mockResolvedValue({ id: 's1', revokedAt: new Date() } as LoginSession);
+      loginSessionRepo.findOne.mockResolvedValue({
+        id: 's1',
+        revokedAt: new Date(),
+      } as LoginSession);
 
-      await expect(service.refreshToken('user-1', 's1')).rejects.toThrow('Session is invalid or has been revoked.');
+      await expect(service.refreshToken('user-1', 's1')).rejects.toThrow(
+        'Session is invalid or has been revoked.'
+      );
     });
 
     it('throws UnauthorizedException when session does not exist', async () => {
       loginSessionRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.refreshToken('user-1', 'non-existent')).rejects.toThrow('Session is invalid or has been revoked.');
+      await expect(service.refreshToken('user-1', 'non-existent')).rejects.toThrow(
+        'Session is invalid or has been revoked.'
+      );
     });
 
     it('throws UnauthorizedException when user does not exist', async () => {
@@ -1233,18 +1312,27 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
       usersService.save.mockResolvedValue(user);
 
-      const result = await service.requestTrustedContactRecovery('test@example.com', 'contact@example.com');
+      const result = await service.requestTrustedContactRecovery(
+        'test@example.com',
+        'contact@example.com'
+      );
 
       expect(result.message).toContain('recovery challenge');
       expect(user.trustedRecoveryCodeHash).toBeDefined();
       expect(user.trustedRecoveryCodeExpiresAt).toBeInstanceOf(Date);
-      expect(emailService.sendTrustedRecoveryCodeEmail).toHaveBeenCalledWith('contact@example.com', expect.any(String));
+      expect(emailService.sendTrustedRecoveryCodeEmail).toHaveBeenCalledWith(
+        'contact@example.com',
+        expect.any(String)
+      );
     });
 
     it('requestTrustedContactRecovery returns generic message when user not found', async () => {
       usersService.findByEmail.mockResolvedValue(null);
 
-      const result = await service.requestTrustedContactRecovery('unknown@example.com', 'contact@example.com');
+      const result = await service.requestTrustedContactRecovery(
+        'unknown@example.com',
+        'contact@example.com'
+      );
 
       expect(result.message).toContain('recovery challenge');
       expect(emailService.sendTrustedRecoveryCodeEmail).not.toHaveBeenCalled();
@@ -1254,14 +1342,23 @@ describe('AuthService', () => {
       const user = makeUser({ trustedRecoveryContacts: ['other@example.com'] });
       usersService.findByEmail.mockResolvedValue(user);
 
-      const result = await service.requestTrustedContactRecovery('test@example.com', 'not-trusted@example.com');
+      const result = await service.requestTrustedContactRecovery(
+        'test@example.com',
+        'not-trusted@example.com'
+      );
 
       expect(result.message).toContain('recovery challenge');
       expect(usersService.save).not.toHaveBeenCalled();
     });
 
     it('verifyTrustedContactRecovery issues token on valid code', async () => {
-      const mockSession = { id: 'session-1', revokedAt: null, deviceName: 'test', ipAddress: '127.0.0.1', suspicious: false } as any;
+      const mockSession = {
+        id: 'session-1',
+        revokedAt: null,
+        deviceName: 'test',
+        ipAddress: '127.0.0.1',
+        suspicious: false,
+      } as any;
       loginSessionRepo.create.mockReturnValue(mockSession);
       loginSessionRepo.save.mockResolvedValue(mockSession);
       loginSessionRepo.findOne.mockResolvedValue(null); // for isSuspiciousSession
@@ -1275,7 +1372,11 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
       usersService.save.mockResolvedValue(user);
 
-      const result = await service.verifyTrustedContactRecovery('test@example.com', 'contact@example.com', 'ANY-CODE');
+      const result = await service.verifyTrustedContactRecovery(
+        'test@example.com',
+        'contact@example.com',
+        'ANY-CODE'
+      );
 
       expect(result.access_token).toBe('jwt-token');
       expect(user.trustedRecoveryCodeHash).toBeNull();
@@ -1291,7 +1392,7 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
 
       await expect(
-        service.verifyTrustedContactRecovery('test@example.com', 'contact@example.com', 'WRONG'),
+        service.verifyTrustedContactRecovery('test@example.com', 'contact@example.com', 'WRONG')
       ).rejects.toThrow('Recovery challenge expired.');
     });
 
@@ -1304,7 +1405,7 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
 
       await expect(
-        service.verifyTrustedContactRecovery('test@example.com', 'not-trusted@example.com', 'CODE'),
+        service.verifyTrustedContactRecovery('test@example.com', 'not-trusted@example.com', 'CODE')
       ).rejects.toThrow('Invalid recovery credentials.');
     });
   });
@@ -1312,7 +1413,13 @@ describe('AuthService', () => {
   // ─── recoverAccount ───────────────────────────────────────────────────
 
   describe('recoverAccount', () => {
-    const mockSession = { id: 'session-1', revokedAt: null, deviceName: 'test', ipAddress: '127.0.0.1', suspicious: false } as any;
+    const mockSession = {
+      id: 'session-1',
+      revokedAt: null,
+      deviceName: 'test',
+      ipAddress: '127.0.0.1',
+      suspicious: false,
+    } as any;
 
     beforeEach(() => {
       loginSessionRepo.create.mockReturnValue(mockSession);
@@ -1342,20 +1449,26 @@ describe('AuthService', () => {
       const user = makeUser({ recoveryCodeHashes: ['$2b$10$hash1'] });
       usersService.findByEmail.mockResolvedValue(user);
 
-      await expect(service.recoverAccount('test@example.com', 'WRONG')).rejects.toThrow('Invalid recovery credentials.');
+      await expect(service.recoverAccount('test@example.com', 'WRONG')).rejects.toThrow(
+        'Invalid recovery credentials.'
+      );
     });
 
     it('throws when user not found', async () => {
       usersService.findByEmail.mockResolvedValue(null);
 
-      await expect(service.recoverAccount('unknown@example.com', 'CODE')).rejects.toThrow('Invalid recovery credentials.');
+      await expect(service.recoverAccount('unknown@example.com', 'CODE')).rejects.toThrow(
+        'Invalid recovery credentials.'
+      );
     });
 
     it('throws when user has no recovery codes', async () => {
       const user = makeUser({ recoveryCodeHashes: [] });
       usersService.findByEmail.mockResolvedValue(user);
 
-      await expect(service.recoverAccount('test@example.com', 'CODE')).rejects.toThrow('Invalid recovery credentials.');
+      await expect(service.recoverAccount('test@example.com', 'CODE')).rejects.toThrow(
+        'Invalid recovery credentials.'
+      );
     });
 
     it('works with username identifier', async () => {
@@ -1421,11 +1534,11 @@ describe('AuthService', () => {
 
       expect(result.message).toContain('sign-in link');
       expect(usersService.save).toHaveBeenCalledWith(
-        expect.objectContaining({ magicLinkTokenHash: 'aabbccdd11223344' }),
+        expect.objectContaining({ magicLinkTokenHash: 'aabbccdd11223344' })
       );
       expect(emailService.sendMagicLinkEmail).toHaveBeenCalledWith(
         'test@example.com',
-        expect.stringContaining('/verify-link?token='),
+        expect.stringContaining('/verify-link?token=')
       );
     });
 
@@ -1461,7 +1574,7 @@ describe('AuthService', () => {
           emailVerified: true,
           magicLinkTokenHash: null,
           magicLinkTokenExpiresAt: null,
-        }),
+        })
       );
       expect(result.access_token).toBe('magic-jwt-token');
     });

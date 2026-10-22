@@ -55,9 +55,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               const heading = input.title ?? input.message ?? '';
               return {
                 id,
-                message: input.description
-                  ? `${heading}: ${input.description}`
-                  : heading,
+                message: input.description ? `${heading}: ${input.description}` : heading,
                 title: input.title,
                 description: input.description,
                 type: VARIANT_TO_TYPE[input.variant ?? input.type ?? 'info'],
@@ -72,7 +70,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }, toast.duration);
       }
     },
-    [removeToast],
+    [removeToast]
   );
 
   return (

@@ -78,11 +78,7 @@ export function CreateReel() {
             onChange={handleFileChange}
             className="hidden"
           />
-          <Button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-          >
+          <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline">
             <VideoIcon className="mr-2" />
             Select Video
           </Button>

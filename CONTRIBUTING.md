@@ -1,9 +1,11 @@
 # CONTRIBUTING.md
+
 **Development Guidelines & Contribution Process**
 
 ---
 
 ## Table of Contents
+
 1. [Getting Started](#getting-started)
 2. [Development Workflow](#development-workflow)
 3. [Code Standards](#code-standards)
@@ -18,6 +20,7 @@
 ## Getting Started
 
 ### 1. Fork & Clone
+
 ```bash
 # Fork on GitHub, then clone your fork
 git clone https://github.com/YOUR_USERNAME/zynkra.git
@@ -28,6 +31,7 @@ git remote add upstream https://github.com/Podamekalajagadeesh/zynkra.git
 ```
 
 ### 2. Create Development Branch
+
 ```bash
 git checkout -b feature/your-feature-name
 # or
@@ -35,6 +39,7 @@ git checkout -b bugfix/issue-number
 ```
 
 ### 3. Set Up Local Environment
+
 ```bash
 # See DEVELOPMENT.md for full setup
 cd server && npm install && npm run dev
@@ -42,6 +47,7 @@ cd ../client && npm install && npm run dev
 ```
 
 ### 4. Run Tests Before Starting
+
 ```bash
 cd server && npm run test:unit && npm run test:qa
 ```
@@ -51,32 +57,40 @@ cd server && npm run test:unit && npm run test:qa
 ## Development Workflow
 
 ### Step 1: Understand the Issue
+
 - Read the GitHub issue completely
 - Check comments for context
 - Ask questions if unclear (don't assume)
 - Assign yourself to the issue
 
 ### Step 2: Design Before Coding
+
 ```markdown
 # For significant features, create a design doc:
 
 ## Problem
+
 What are we solving?
 
 ## Solution
+
 High-level approach
 
 ## API Changes
+
 New endpoints/functions?
 
 ## Database Changes
+
 New tables/columns?
 
 ## Testing Strategy
+
 How will we test this?
 ```
 
 ### Step 3: Implement Feature
+
 - Write code incrementally (small, logical commits)
 - Test as you go (don't write all code then test)
 - Keep functions small & focused
@@ -84,6 +98,7 @@ How will we test this?
 - Add JSDoc comments for public APIs
 
 ### Step 4: Test Thoroughly
+
 ```bash
 # Unit tests
 npm run test
@@ -102,12 +117,14 @@ npm run lint
 ```
 
 ### Step 5: Submit Pull Request
+
 - Create PR with description
 - Link to related issues
 - Request review from 2+ team members
 - Address feedback promptly
 
 ### Step 6: Deploy to Production
+
 - After 2 approvals, PR is merged
 - CI/CD pipeline runs tests
 - Deployed to staging automatically
@@ -121,33 +138,36 @@ npm run lint
 ### TypeScript Standards
 
 #### Type Everything
+
 ```typescript
 // ✅ GOOD: Types are explicit
 async function getUserPosts(userId: string): Promise<Post[]> {
-  return db.posts.find({ userId })
+  return db.posts.find({ userId });
 }
 
 // ❌ BAD: No types
 async function getUserPosts(userId) {
-  return db.posts.find({ userId })
+  return db.posts.find({ userId });
 }
 ```
 
 #### Use Interfaces for Objects
+
 ```typescript
 // ✅ GOOD: Clear contract
 interface User {
-  id: string
-  username: string
-  email: string
-  createdAt: Date
+  id: string;
+  username: string;
+  email: string;
+  createdAt: Date;
 }
 
 // ❌ BAD: No structure
-type User = any
+type User = any;
 ```
 
 #### Avoid `any` Type
+
 ```typescript
 // ✅ GOOD: Specific type
 function processData(data: Record<string, unknown>): void {}
@@ -159,15 +179,16 @@ function processData(data: any): void {}
 ### React Standards
 
 #### Functional Components Only
+
 ```typescript
 // ✅ GOOD: Functional with hooks
 const UserCard: React.FC<{ userId: string }> = ({ userId }) => {
   const [user, setUser] = useState<User | null>(null)
-  
+
   useEffect(() => {
     fetchUser(userId).then(setUser)
   }, [userId])
-  
+
   return <div>{user?.name}</div>
 }
 
@@ -176,17 +197,18 @@ class UserCard extends React.Component {}
 ```
 
 #### Use Custom Hooks for Logic
+
 ```typescript
 // ✅ GOOD: Custom hook encapsulates logic
 const useUserPosts = (userId: string) => {
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  
+
   useEffect(() => {
     setIsLoading(true)
     fetchUserPosts(userId).then(setPosts).finally(() => setIsLoading(false))
   }, [userId])
-  
+
   return { posts, isLoading }
 }
 
@@ -206,6 +228,7 @@ const UserTimeline: React.FC = ({ userId }) => {
 ```
 
 #### Memoize When Needed
+
 ```typescript
 // ✅ GOOD: Memoized to prevent unnecessary re-renders
 const Post = memo(({ post }: { post: Post }) => {
@@ -217,7 +240,7 @@ const UserCard = ({ userId }: { userId: string }) => {
   const handleClick = useCallback(() => {
     trackEvent('user-card-click', { userId })
   }, [userId])
-  
+
   return <div onClick={handleClick}>{userId}</div>
 }
 ```
@@ -225,18 +248,19 @@ const UserCard = ({ userId }: { userId: string }) => {
 ### NestJS Standards
 
 #### Use Decorators Properly
+
 ```typescript
 // ✅ GOOD: Decorators are clear
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
-  
+
   @Get(':id')
   @UseGuards(AuthGuard)
   async getPost(@Param('id') id: string): Promise<Post> {
     return this.postsService.findOne(id)
   }
-  
+
   @Post()
   @UseGuards(AuthGuard)
   @UseInterceptors(ValidationPipe)
@@ -257,6 +281,7 @@ async getPost(req, res) {
 ```
 
 #### Separate Concerns
+
 ```typescript
 // ✅ GOOD: Clear separation
 // posts.controller.ts - handles HTTP
@@ -265,7 +290,7 @@ export class PostsController {
   constructor(private service: PostsService) {}
   @Get(':id')
   async getPost(@Param('id') id: string) {
-    return this.service.findOne(id)
+    return this.service.findOne(id);
   }
 }
 
@@ -273,7 +298,7 @@ export class PostsController {
 @Injectable()
 export class PostsService {
   async findOne(id: string): Promise<Post> {
-    return this.postsRepository.findOne(id)
+    return this.postsRepository.findOne(id);
   }
 }
 
@@ -281,7 +306,7 @@ export class PostsService {
 @Injectable()
 export class PostsRepository {
   async findOne(id: string): Promise<Post> {
-    return this.db.query('SELECT * FROM posts WHERE id = $1', [id])
+    return this.db.query('SELECT * FROM posts WHERE id = $1', [id]);
   }
 }
 ```
@@ -289,6 +314,7 @@ export class PostsRepository {
 ### Styling Standards
 
 #### Use Tailwind Classes
+
 ```tsx
 // ✅ GOOD: Utility classes
 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -305,6 +331,7 @@ export class PostsRepository {
 ```
 
 #### Use CSS Modules for Complex Styles
+
 ```css
 /* Post.module.css */
 .container {
@@ -322,14 +349,14 @@ export class PostsRepository {
 ```
 
 ```tsx
-import styles from './Post.module.css'
+import styles from './Post.module.css';
 
 export const Post = () => (
   <div className={styles.container}>
     <img src={avatar} className={styles.avatar} />
     <div>{content}</div>
   </div>
-)
+);
 ```
 
 ---
@@ -337,6 +364,7 @@ export const Post = () => (
 ## Git Workflow
 
 ### Branch Naming
+
 ```bash
 # Features
 git checkout -b feature/add-dark-mode
@@ -355,6 +383,7 @@ git checkout -b hotfix/critical-security-issue
 ```
 
 ### Keeping Branch Up-to-Date
+
 ```bash
 # Before submitting PR
 git fetch upstream
@@ -365,6 +394,7 @@ git push --force-with-lease origin feature/your-feature
 ```
 
 ### Squashing Commits (if needed)
+
 ```bash
 # If you have multiple commits
 git rebase -i upstream/main
@@ -379,20 +409,25 @@ git push --force-with-lease origin feature/your-feature
 ## Pull Request Process
 
 ### 1. Create Detailed PR Description
+
 ```markdown
 ## Description
+
 Brief summary of what this PR does.
 
 ## Type of Change
+
 - [ ] New feature
 - [ ] Bug fix
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Motivation & Context
+
 Why is this change needed? What problem does it solve?
 
 ## Testing Done
+
 - [ ] Unit tests added
 - [ ] Integration tests added
 - [ ] Manual testing completed
@@ -401,6 +436,7 @@ Why is this change needed? What problem does it solve?
   - [ ] Edge cases
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Comments added for complex logic
 - [ ] Documentation updated
@@ -409,25 +445,30 @@ Why is this change needed? What problem does it solve?
 - [ ] Commits are descriptive
 
 ## Screenshots (if applicable)
+
 Before/after UI screenshots
 
 ## Related Issues
+
 Closes #123
 Relates to #456
 ```
 
 ### 2. Request Reviewers
+
 - Tag 2+ team members
 - Add labels (backend, frontend, documentation, etc.)
 - Link to issue
 
 ### 3. Address Feedback
+
 - Respond to all comments
 - Make requested changes
 - Re-request review after changes
 - Don't dismiss feedback without discussion
 
 ### 4. Final Approval
+
 - Need 2+ approvals
 - All CI checks must pass
 - No conflicting changes
@@ -438,34 +479,36 @@ Relates to #456
 ## Testing Requirements
 
 ### Unit Tests
+
 ```typescript
 // ✅ GOOD: Test the service
 describe('PostsService', () => {
-  let service: PostsService
-  let repository: PostsRepository
-  
+  let service: PostsService;
+  let repository: PostsRepository;
+
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [PostsService, { provide: PostsRepository, useValue: {} }],
-    }).compile()
-    
-    service = module.get(PostsService)
-    repository = module.get(PostsRepository)
-  })
-  
+    }).compile();
+
+    service = module.get(PostsService);
+    repository = module.get(PostsRepository);
+  });
+
   it('should create a post', async () => {
-    const dto = { content: 'Test post', userId: '123' }
-    repository.create = jest.fn().mockResolvedValue({ id: '456', ...dto })
-    
-    const result = await service.create(dto)
-    
-    expect(result.id).toBe('456')
-    expect(repository.create).toHaveBeenCalledWith(dto)
-  })
-})
+    const dto = { content: 'Test post', userId: '123' };
+    repository.create = jest.fn().mockResolvedValue({ id: '456', ...dto });
+
+    const result = await service.create(dto);
+
+    expect(result.id).toBe('456');
+    expect(repository.create).toHaveBeenCalledWith(dto);
+  });
+});
 ```
 
 ### Component Tests
+
 ```typescript
 import { render, screen, fireEvent } from '@testing-library/react'
 
@@ -475,12 +518,12 @@ describe('PostCard', () => {
     render(<PostCard post={post} />)
     expect(screen.getByText('Hello world')).toBeInTheDocument()
   })
-  
+
   it('should call onDelete when delete button is clicked', () => {
     const post = { id: '1', content: 'Hello' }
     const onDelete = jest.fn()
     render(<PostCard post={post} onDelete={onDelete} />)
-    
+
     fireEvent.click(screen.getByText('Delete'))
     expect(onDelete).toHaveBeenCalledWith('1')
   })
@@ -488,6 +531,7 @@ describe('PostCard', () => {
 ```
 
 ### Test Coverage
+
 - **Backend**: Aim for 80%+ coverage
 - **Frontend**: Aim for 60%+ coverage (components harder to test)
 - **Critical paths**: 100% coverage (auth, payments, security)
@@ -497,6 +541,7 @@ describe('PostCard', () => {
 ## Commit Message Convention
 
 ### Format
+
 ```
 <type>(<scope>): <subject>
 
@@ -506,6 +551,7 @@ describe('PostCard', () => {
 ```
 
 ### Example
+
 ```
 feat(posts): add ability to edit posts
 
@@ -517,6 +563,7 @@ Breaking change: None
 ```
 
 ### Types
+
 - **feat**: New feature
 - **fix**: Bug fix
 - **docs**: Documentation
@@ -527,6 +574,7 @@ Breaking change: None
 - **chore**: Build, dependencies, etc.
 
 ### Rules
+
 - First line: max 50 characters
 - Body: wrapped at 72 characters
 - Reference issues: "Closes #123" or "Fixes #456"
@@ -539,23 +587,27 @@ Breaking change: None
 ### For Reviewers
 
 #### Functionality
+
 - [ ] Does the code do what it's supposed to do?
 - [ ] Are edge cases handled?
 - [ ] Are error cases handled?
 - [ ] Is error handling correct?
 
 #### Code Quality
+
 - [ ] Is code readable and maintainable?
 - [ ] Are functions/methods focused and small?
 - [ ] Is there unnecessary complexity?
 - [ ] Can it be simplified?
 
 #### Testing
+
 - [ ] Are tests added/updated?
 - [ ] Do tests cover happy path AND error cases?
 - [ ] Are tests meaningful (not just boilerplate)?
 
 #### Security
+
 - [ ] No hardcoded secrets or tokens?
 - [ ] Input validation present?
 - [ ] Authentication/authorization correct?
@@ -563,12 +615,14 @@ Breaking change: None
 - [ ] XSS protection?
 
 #### Performance
+
 - [ ] No obvious performance issues?
 - [ ] Database queries optimized?
 - [ ] No N+1 query problems?
 - [ ] Caching used appropriately?
 
 #### Documentation
+
 - [ ] Comments explain WHY, not WHAT?
 - [ ] JSDoc added for public APIs?
 - [ ] Database schema updated?
@@ -577,6 +631,7 @@ Breaking change: None
 ### For Authors
 
 Before requesting review:
+
 - [ ] All tests pass
 - [ ] No TypeScript errors
 - [ ] No ESLint errors
@@ -591,6 +646,7 @@ Before requesting review:
 ## Common Mistakes to Avoid
 
 ### ❌ Don't:
+
 - Commit directly to `main` (use branches)
 - Leave debugging code (console.log, debugger)
 - Write overly complex functions (>20 lines)
@@ -603,6 +659,7 @@ Before requesting review:
 - Leave TODO comments without issues
 
 ### ✅ Do:
+
 - Use descriptive branch names
 - Write small, focused functions
 - Add tests for new code

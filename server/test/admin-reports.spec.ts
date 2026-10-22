@@ -103,7 +103,13 @@ async function buildApp(opts: { role?: string; service?: any } = {}) {
     { provide: ChangelogService, useValue: { publish: jest.fn() } },
     {
       provide: SandboxEnvironmentsService,
-      useValue: { create: jest.fn(), list: jest.fn(), get: jest.fn(), update: jest.fn(), archive: jest.fn() },
+      useValue: {
+        create: jest.fn(),
+        list: jest.fn(),
+        get: jest.fn(),
+        update: jest.fn(),
+        archive: jest.fn(),
+      },
     },
     {
       provide: ConfigService,
@@ -124,13 +130,18 @@ async function buildApp(opts: { role?: string; service?: any } = {}) {
     },
     {
       provide: getRepositoryToken(User),
-      useValue: { findOne: jest.fn(async ({ where }: any) => ({ id: where.id, role: opts.role ?? 'admin' })) },
+      useValue: {
+        findOne: jest.fn(async ({ where }: any) => ({ id: where.id, role: opts.role ?? 'admin' })),
+      },
     },
     JwtStrategy,
   ];
 
   const moduleRef = await Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [AdminController],
     providers,
   }).compile();
@@ -153,7 +164,9 @@ async function buildApp(opts: { role?: string; service?: any } = {}) {
 describe('GET /admin/reports', () => {
   it('returns the report list for an admin', async () => {
     const { app, token } = await buildApp();
-    const r = await request(app.getHttpServer()).get('/admin/reports').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/admin/reports')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     await app.close();
@@ -168,7 +181,9 @@ describe('GET /admin/reports', () => {
 
   it('rejects a non-admin with 403', async () => {
     const { app, token } = await buildApp({ role: 'user' });
-    const r = await request(app.getHttpServer()).get('/admin/reports').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/admin/reports')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(403);
     await app.close();
   });
@@ -214,7 +229,11 @@ describe('GET /admin/reports/:id', () => {
 
   it('surfaces NotFound as a 404', async () => {
     const { app, token } = await buildApp({
-      service: adminServiceMock({ getReport: jest.fn(async () => { throw new NotFoundException('Report not found'); }) }),
+      service: adminServiceMock({
+        getReport: jest.fn(async () => {
+          throw new NotFoundException('Report not found');
+        }),
+      }),
     });
     const r = await request(app.getHttpServer())
       .get(`/admin/reports/${REPORT_ID}`)
@@ -259,7 +278,11 @@ describe('DELETE /admin/posts/:id', () => {
 
   it('surfaces NotFound as a 404', async () => {
     const { app, token } = await buildApp({
-      service: adminServiceMock({ deletePost: jest.fn(async () => { throw new NotFoundException('Post not found'); }) }),
+      service: adminServiceMock({
+        deletePost: jest.fn(async () => {
+          throw new NotFoundException('Post not found');
+        }),
+      }),
     });
     const r = await request(app.getHttpServer())
       .delete(`/admin/posts/${POST_ID}`)
@@ -271,13 +294,19 @@ describe('DELETE /admin/posts/:id', () => {
 
 describe('route guards', () => {
   it('protects the report routes with JwtAuthGuard and AdminGuard', () => {
-    const guards = Reflect.getMetadata('__guards__', AdminController.prototype.listReports) as any[];
+    const guards = Reflect.getMetadata(
+      '__guards__',
+      AdminController.prototype.listReports
+    ) as any[];
     expect(guards).toContain(JwtAuthGuard);
     expect(guards).toContain(AdminGuard);
   });
 
   it('protects dismissReport the same way', () => {
-    const guards = Reflect.getMetadata('__guards__', AdminController.prototype.dismissReport) as any[];
+    const guards = Reflect.getMetadata(
+      '__guards__',
+      AdminController.prototype.dismissReport
+    ) as any[];
     expect(guards).toContain(JwtAuthGuard);
     expect(guards).toContain(AdminGuard);
   });

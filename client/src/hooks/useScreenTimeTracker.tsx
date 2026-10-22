@@ -27,11 +27,14 @@ export function useScreenTimeTracker() {
           setHasShownReminder(parsed.hasShownReminder || false);
         } else {
           // Reset for new day
-          localStorage.setItem('zynkra_screen_time_tracking', JSON.stringify({
-            date: today,
-            minutes: 0,
-            hasShownReminder: false
-          }));
+          localStorage.setItem(
+            'zynkra_screen_time_tracking',
+            JSON.stringify({
+              date: today,
+              minutes: 0,
+              hasShownReminder: false,
+            })
+          );
           setTodayScreenTime(0);
           setHasShownReminder(false);
         }
@@ -40,11 +43,14 @@ export function useScreenTimeTracker() {
       }
     } else {
       // Initialize for first use
-      localStorage.setItem('zynkra_screen_time_tracking', JSON.stringify({
-        date: today,
-        minutes: 0,
-        hasShownReminder: false
-      }));
+      localStorage.setItem(
+        'zynkra_screen_time_tracking',
+        JSON.stringify({
+          date: today,
+          minutes: 0,
+          hasShownReminder: false,
+        })
+      );
     }
   }, [screenTimeEnabled]);
 
@@ -53,14 +59,17 @@ export function useScreenTimeTracker() {
     if (!screenTimeEnabled) return;
 
     const interval = setInterval(() => {
-      setTodayScreenTime(prev => {
+      setTodayScreenTime((prev) => {
         const newTime = prev + 1;
         const today = getTodayString();
-        localStorage.setItem('zynkra_screen_time_tracking', JSON.stringify({
-          date: today,
-          minutes: newTime,
-          hasShownReminder: hasShownReminder
-        }));
+        localStorage.setItem(
+          'zynkra_screen_time_tracking',
+          JSON.stringify({
+            date: today,
+            minutes: newTime,
+            hasShownReminder: hasShownReminder,
+          })
+        );
         return newTime;
       });
     }, 60000); // Update every minute
@@ -73,16 +82,22 @@ export function useScreenTimeTracker() {
     if (!screenTimeEnabled || hasShownReminder) return;
 
     if (todayScreenTime >= dailyScreenTimeLimit) {
-      toast.warning(`You've reached your daily screen time limit of ${dailyScreenTimeLimit} minutes. Consider taking a break!`, {
-        duration: 10000,
-        id: 'screen-time-limit',
-      });
+      toast.warning(
+        `You've reached your daily screen time limit of ${dailyScreenTimeLimit} minutes. Consider taking a break!`,
+        {
+          duration: 10000,
+          id: 'screen-time-limit',
+        }
+      );
       setHasShownReminder(true);
-      localStorage.setItem('zynkra_screen_time_tracking', JSON.stringify({
-        date: getTodayString(),
-        minutes: todayScreenTime,
-        hasShownReminder: true
-      }));
+      localStorage.setItem(
+        'zynkra_screen_time_tracking',
+        JSON.stringify({
+          date: getTodayString(),
+          minutes: todayScreenTime,
+          hasShownReminder: true,
+        })
+      );
     }
   }, [todayScreenTime, dailyScreenTimeLimit, screenTimeEnabled, hasShownReminder]);
 
@@ -90,6 +105,6 @@ export function useScreenTimeTracker() {
     todayScreenTime,
     dailyScreenTimeLimit,
     remainingTime: Math.max(0, dailyScreenTimeLimit - todayScreenTime),
-    isLimitReached: todayScreenTime >= dailyScreenTimeLimit
+    isLimitReached: todayScreenTime >= dailyScreenTimeLimit,
   };
 }

@@ -48,13 +48,10 @@ export const OfflineIndicator: React.FC = () => {
               : pendingChanges > 0
                 ? `${pendingChanges} pending`
                 : 'Online'
-            : 'Offline'
-          }
+            : 'Offline'}
         </span>
 
-        {isOnline && !isSyncing && pendingChanges === 0 && (
-          <Check size={14} />
-        )}
+        {isOnline && !isSyncing && pendingChanges === 0 && <Check size={14} />}
       </button>
 
       {/* Expanded details */}
@@ -62,7 +59,10 @@ export const OfflineIndicator: React.FC = () => {
         <div className="absolute bottom-12 right-0 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm">Offline Status</h3>
-            <button onClick={() => setShowDetails(false)} className="text-gray-400 hover:text-gray-600">
+            <button
+              onClick={() => setShowDetails(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
               <X size={14} />
             </button>
           </div>
@@ -85,9 +85,7 @@ export const OfflineIndicator: React.FC = () => {
             {lastSyncedAt && (
               <div className="flex justify-between">
                 <span className="text-gray-500">Last synced</span>
-                <span className="text-gray-700">
-                  {new Date(lastSyncedAt).toLocaleTimeString()}
-                </span>
+                <span className="text-gray-700">{new Date(lastSyncedAt).toLocaleTimeString()}</span>
               </div>
             )}
           </div>

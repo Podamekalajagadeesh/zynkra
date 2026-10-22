@@ -42,7 +42,7 @@ describe('UserInterestsService personalization controls', () => {
       interestsRepository as any,
       tagsRepository as any,
       postsRepository as any,
-      productsRepository as any,
+      productsRepository as any
     );
   });
 
@@ -62,14 +62,16 @@ describe('UserInterestsService personalization controls', () => {
     const result = await service.getRecommendedPosts(
       makeUser({ personalizationControls: { recommendations: false } as any }),
       1,
-      20,
+      20
     );
 
     expect(result.data).toEqual(posts);
-    expect(postsRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-      where: { visibility: PostVisibility.PUBLIC },
-      order: { createdAt: 'DESC' },
-    }));
+    expect(postsRepository.findAndCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { visibility: PostVisibility.PUBLIC },
+        order: { createdAt: 'DESC' },
+      })
+    );
     expect(interestsRepository.find).not.toHaveBeenCalled();
   });
 
@@ -80,20 +82,22 @@ describe('UserInterestsService personalization controls', () => {
     const result = await service.getRecommendedProducts(
       makeUser({ personalizationControls: { shoppingPersonalization: false } as any }),
       1,
-      20,
+      20
     );
 
     expect(result.data).toEqual(products);
-    expect(productsRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-      where: { isActive: true },
-      order: { createdAt: 'DESC' },
-    }));
+    expect(productsRepository.findAndCount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isActive: true },
+        order: { createdAt: 'DESC' },
+      })
+    );
     expect(interestsRepository.find).not.toHaveBeenCalled();
   });
 
   it('does not return similar interests when recommendations are disabled', async () => {
     const result = await service.getUserSimilarInterests(
-      makeUser({ personalizationControls: { recommendations: false } as any }),
+      makeUser({ personalizationControls: { recommendations: false } as any })
     );
 
     expect(result).toEqual([]);

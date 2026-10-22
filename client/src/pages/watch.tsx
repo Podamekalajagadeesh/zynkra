@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getWatchLaterList, removeFromWatchLater } from '../lib/api';
@@ -30,7 +29,7 @@ const WatchLaterPage = () => {
   const handleRemoveFromWatchLater = async (postId: string) => {
     try {
       await removeFromWatchLater(postId);
-      setWatchLaterPosts(watchLaterPosts.filter(post => post.id !== postId));
+      setWatchLaterPosts(watchLaterPosts.filter((post) => post.id !== postId));
       addToast('Removed from watch later', 'success');
     } catch (error) {
       console.error('Failed to remove post from watch later:', error);
@@ -59,7 +58,9 @@ const WatchLaterPage = () => {
         <div className="text-center py-12">
           <Clock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h2 className="text-xl font-semibold mb-2">Your watch later list is empty</h2>
-          <p className="text-gray-500 mb-4">Save videos to watch later by clicking the "Add to Watch Later" button on any post.</p>
+          <p className="text-gray-500 mb-4">
+            Save videos to watch later by clicking the "Add to Watch Later" button on any post.
+          </p>
           <Link to="/">
             <Button>Browse videos</Button>
           </Link>
@@ -67,15 +68,20 @@ const WatchLaterPage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {watchLaterPosts.map((item: any) => (
-            <div key={item.id} className="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden">
+            <div
+              key={item.id}
+              className="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden"
+            >
               <Link to={`/posts/${item.post.id}`}>
-                {item.post.media && item.post.media.length > 0 && item.post.media[0].type === 'video' && (
-                  <video 
-                    src={item.post.media[0].url} 
-                    controls 
-                    className="w-full h-48 object-cover"
-                  />
-                )}
+                {item.post.media &&
+                  item.post.media.length > 0 &&
+                  item.post.media[0].type === 'video' && (
+                    <video
+                      src={item.post.media[0].url}
+                      controls
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
               </Link>
               <div className="p-4">
                 <Link to={`/posts/${item.post.id}`}>
@@ -85,8 +91,8 @@ const WatchLaterPage = () => {
                   <span className="text-xs text-gray-500">
                     Saved on {new Date(item.createdAt).toLocaleDateString()}
                   </span>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleRemoveFromWatchLater(item.post.id)}
                   >

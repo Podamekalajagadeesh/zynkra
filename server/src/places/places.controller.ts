@@ -26,7 +26,7 @@ export class PlacesController {
   async getPlacePosts(
     @Param('id') id: string,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query('limit') limit: number = 20
   ) {
     return this.placesService.getPlacePosts(id, page, limit);
   }

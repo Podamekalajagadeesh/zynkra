@@ -36,7 +36,7 @@ export class FeedService {
     private readonly storiesService: StoriesService,
     private readonly trendsService: TrendsService,
     private readonly visibilityService: VisibilityService,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
     // private readonly adsService: AdsService, // AdsService commented out - broken imports
   ) {}
 
@@ -49,12 +49,20 @@ export class FeedService {
       await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
     }
     const [publicPosts, userInterests, followingIds] = await Promise.all([
-      this.postsRepository.find({
-        where: { isDraft: false },
-        relations: ['user', 'reactions', 'comments', 'tags'],
-      }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
-      user ? (this.userInterestsService?.getInterests?.(user) ?? Promise.resolve([])) : Promise.resolve([]),
-      user ? (this.usersService?.findFollowingIds?.(user.id) ?? Promise.resolve([])) : Promise.resolve([]),
+      this.postsRepository
+        .find({
+          where: { isDraft: false },
+          relations: ['user', 'reactions', 'comments', 'tags'],
+        })
+        .then((posts) =>
+          this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)
+        ),
+      user
+        ? (this.userInterestsService?.getInterests?.(user) ?? Promise.resolve([]))
+        : Promise.resolve([]),
+      user
+        ? (this.usersService?.findFollowingIds?.(user.id) ?? Promise.resolve([]))
+        : Promise.resolve([]),
     ]);
 
     // Filter out posts that contain blocked keywords or hashtags
@@ -63,18 +71,20 @@ export class FeedService {
       const blockedKeywords = user.blockedKeywords || [];
       const blockedHashtags = user.blockedHashtags || [];
       const blockedContentTypes = user.blockedContentTypes || [];
-      
-      filteredPosts = publicPosts.filter(post => {
+
+      filteredPosts = publicPosts.filter((post) => {
         const postType = (post.postType || '').toString().toLowerCase();
         if (blockedContentTypes.includes(postType)) return false;
 
-        const postHashtags = (post.tags || []).map(tag => (tag?.name || '').toString().toLowerCase());
-        const hasBlockedHashtag = postHashtags.some(tag => blockedHashtags.includes(tag));
+        const postHashtags = (post.tags || []).map((tag) =>
+          (tag?.name || '').toString().toLowerCase()
+        );
+        const hasBlockedHashtag = postHashtags.some((tag) => blockedHashtags.includes(tag));
         if (hasBlockedHashtag) return false;
 
         if (post.content) {
           const postContent = post.content.toLowerCase();
-          const hasBlockedKeyword = blockedKeywords.some(keyword => 
+          const hasBlockedKeyword = blockedKeywords.some((keyword) =>
             postContent.includes((keyword || '').toString().toLowerCase())
           );
           if (hasBlockedKeyword) return false;
@@ -85,31 +95,32 @@ export class FeedService {
     }
 
     // Get posts from followed hashtags
-    const followedHashtagNames = user ? (user.followedHashtags || []).map(ht => ht.name.toLowerCase()) : [];
-    const followedHashtagPosts = filteredPosts.filter(post => {
+    const followedHashtagNames = user
+      ? (user.followedHashtags || []).map((ht) => ht.name.toLowerCase())
+      : [];
+    const followedHashtagPosts = filteredPosts.filter((post) => {
       if (followingIds.includes(post.user.id)) return false; // Already in organic posts
-      const postHashtags = post.tags ? post.tags.map(tag => tag.name.toLowerCase()) : [];
-      return postHashtags.some(tag => followedHashtagNames.includes(tag));
+      const postHashtags = post.tags ? post.tags.map((tag) => tag.name.toLowerCase()) : [];
+      return postHashtags.some((tag) => followedHashtagNames.includes(tag));
     });
 
-    const organicPosts = filteredPosts.filter(post => followingIds.includes(post.user.id));
-    const remainingPosts = filteredPosts.filter(post => 
-      !followingIds.includes(post.user.id) && 
-      !followedHashtagPosts.includes(post)
+    const organicPosts = filteredPosts.filter((post) => followingIds.includes(post.user.id));
+    const remainingPosts = filteredPosts.filter(
+      (post) => !followingIds.includes(post.user.id) && !followedHashtagPosts.includes(post)
     );
 
     // Score followed hashtag posts and suggested posts
-    const scoredFollowedHashtagPosts = followedHashtagPosts.map(post => {
+    const scoredFollowedHashtagPosts = followedHashtagPosts.map((post) => {
       const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
 
-    const scoredRemainingPosts = remainingPosts.map(post => {
+    const scoredRemainingPosts = remainingPosts.map((post) => {
       const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
 
-    const scoredOrganicPosts = organicPosts.map(post => {
+    const scoredOrganicPosts = organicPosts.map((post) => {
       const { score, reasons } = this.calculatePostScore(post, userInterests, followingIds);
       return { post: { ...post, algorithmReasons: reasons }, score };
     });
@@ -120,15 +131,26 @@ export class FeedService {
     scoredRemainingPosts.sort((a, b) => b.score - a.score);
 
     // Convert to feed posts format
-    const organicFeedPosts: (Post & { isAd?: boolean })[] = scoredOrganicPosts.map(p => ({ ...p.post, isAd: false }));
-    const followedHashtagFeedPosts: (Post & { isAd?: boolean })[] = scoredFollowedHashtagPosts.map(p => ({ ...p.post, isAd: false }));
-    const remainingFeedPosts: (Post & { isAd?: boolean })[] = scoredRemainingPosts.map(p => ({ ...p.post, isAd: false }));
+    const organicFeedPosts: (Post & { isAd?: boolean })[] = scoredOrganicPosts.map((p) => ({
+      ...p.post,
+      isAd: false,
+    }));
+    const followedHashtagFeedPosts: (Post & { isAd?: boolean })[] = scoredFollowedHashtagPosts.map(
+      (p) => ({ ...p.post, isAd: false })
+    );
+    const remainingFeedPosts: (Post & { isAd?: boolean })[] = scoredRemainingPosts.map((p) => ({
+      ...p.post,
+      isAd: false,
+    }));
 
     // Commented out - getAdsForUser doesn't exist on AdsService
     // const ads = await this.adsService.getAdsForUser(user);
     const ads = []; // Temporary empty array
-    const adPosts: (Post & { isAd?: boolean })[] = ads.map(ad => ({ ...ad.creative.post, isAd: true, adId: ad.id }));
-
+    const adPosts: (Post & { isAd?: boolean })[] = ads.map((ad) => ({
+      ...ad.creative.post,
+      isAd: true,
+      adId: ad.id,
+    }));
 
     // Intersperse followed hashtag posts and other suggestions with organic posts
     const interleavedOrganicFeed: (Post & { isAd?: boolean })[] = [];
@@ -186,21 +208,31 @@ export class FeedService {
     return this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts);
   }
 
-  async getRecommendedFeed(user: User, limit: number = 20): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[] })[]> {
+  async getRecommendedFeed(
+    user: User,
+    limit: number = 20
+  ): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[] })[]> {
     if (!user) {
       return this.getTrendingFeed(user, limit);
     }
-    if (user.personalization === false || !normalizePersonalizationControls(user.personalizationControls).recommendations) {
+    if (
+      user.personalization === false ||
+      !normalizePersonalizationControls(user.personalizationControls).recommendations
+    ) {
       return (await this.getChronologicalFeed(user)).slice(0, limit);
     }
     await this.dataPermissions.require(user.id, DataPermission.PERSONALIZATION);
 
     const [publicPosts, userInterests, followingIds] = await Promise.all([
-      this.postsRepository.find({
-        where: { isDraft: false },
-        relations: ['user', 'reactions', 'comments', 'tags'],
-        order: { createdAt: 'DESC' },
-      }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)),
+      this.postsRepository
+        .find({
+          where: { isDraft: false },
+          relations: ['user', 'reactions', 'comments', 'tags'],
+          order: { createdAt: 'DESC' },
+        })
+        .then((posts) =>
+          this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts)
+        ),
       this.userInterestsService.getInterests(user, 20),
       this.usersService.findFollowingIds(user.id),
     ]);
@@ -221,7 +253,9 @@ export class FeedService {
 
         if (post.content) {
           const postContent = post.content.toLowerCase();
-          const hasBlockedKeyword = blockedKeywords.some((keyword) => postContent.includes(keyword.toLowerCase()));
+          const hasBlockedKeyword = blockedKeywords.some((keyword) =>
+            postContent.includes(keyword.toLowerCase())
+          );
           if (hasBlockedKeyword) return false;
         }
 
@@ -229,18 +263,31 @@ export class FeedService {
       })
       .map((post) => {
         const interestMatches = (post.tags || []).filter((tag) =>
-          userInterests.some((interest) => interest.tag?.id === tag.id || interest.tag?.name?.toLowerCase() === tag.name?.toLowerCase()),
+          userInterests.some(
+            (interest) =>
+              interest.tag?.id === tag.id ||
+              interest.tag?.name?.toLowerCase() === tag.name?.toLowerCase()
+          )
         );
 
         const followsAuthor = followingIds.includes(post.user?.id);
-        const hashtagMatch = (post.tags || []).some((tag) => followedHashtagNames.includes(tag.name.toLowerCase()));
+        const hashtagMatch = (post.tags || []).some((tag) =>
+          followedHashtagNames.includes(tag.name.toLowerCase())
+        );
         const comments = post.comments?.length || 0;
         const reactions = post.reactions?.length || 0;
         const now = Date.now();
-        const postAgeHours = Math.max(0.1, (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60));
+        const postAgeHours = Math.max(
+          0.1,
+          (now - new Date(post.createdAt).getTime()) / (1000 * 60 * 60)
+        );
         const recencyScore = Math.max(0, 1 - postAgeHours / 72);
         const interestScore = interestMatches.reduce((sum, tag) => {
-          const match = userInterests.find((interest) => interest.tag?.id === tag.id || interest.tag?.name?.toLowerCase() === tag.name?.toLowerCase());
+          const match = userInterests.find(
+            (interest) =>
+              interest.tag?.id === tag.id ||
+              interest.tag?.name?.toLowerCase() === tag.name?.toLowerCase()
+          );
           return sum + (match?.score || 0);
         }, 0);
 
@@ -253,7 +300,9 @@ export class FeedService {
           recencyScore * 3;
 
         const algorithmReasons = [
-          interestMatches.length > 0 ? `Matches your interests in ${interestMatches.map((tag) => tag.name).join(', ')}` : 'Broad discovery mix',
+          interestMatches.length > 0
+            ? `Matches your interests in ${interestMatches.map((tag) => tag.name).join(', ')}`
+            : 'Broad discovery mix',
           followsAuthor ? 'From someone you follow' : 'New creator suggestion',
           hashtagMatch ? 'Related to a topic you follow' : 'Popular in your network',
         ];
@@ -270,7 +319,17 @@ export class FeedService {
     return scoredPosts;
   }
 
-  async getFeed(user: User, options: { view?: string; limit?: number } = {}): Promise<(Post & { recommendationScore?: number; algorithmReasons?: string[]; trendScore?: number; matchedTrends?: string[] })[]> {
+  async getFeed(
+    user: User,
+    options: { view?: string; limit?: number } = {}
+  ): Promise<
+    (Post & {
+      recommendationScore?: number;
+      algorithmReasons?: string[];
+      trendScore?: number;
+      matchedTrends?: string[];
+    })[]
+  > {
     const view = options.view || 'for-you';
     const limit = Math.max(1, options.limit || 20);
 
@@ -327,9 +386,7 @@ export class FeedService {
       return !blockedKeywords.some((keyword) => content.includes(keyword));
     });
 
-    const userInterests = canPersonalize
-      ? await this.userInterestsService.getInterests(user)
-      : [];
+    const userInterests = canPersonalize ? await this.userInterestsService.getInterests(user) : [];
 
     const scoredPosts = filteredPosts.map((post) => {
       const { score } = this.calculatePostScore(post, userInterests);
@@ -348,7 +405,7 @@ export class FeedService {
     const bookmarks = await this.bookmarksService.findAll(user);
     return this.visibilityService.filterVisiblePostsForViewer(
       user.id,
-      bookmarks.map((bookmark) => bookmark.post).filter((post) => post && !post.isDraft),
+      bookmarks.map((bookmark) => bookmark.post).filter((post) => post && !post.isDraft)
     );
   }
 
@@ -358,7 +415,7 @@ export class FeedService {
     }
 
     // Get all following user IDs (for Following feed)
-    const followingIds = await this.usersService?.findFollowingIds?.(user.id) ?? [];
+    const followingIds = (await this.usersService?.findFollowingIds?.(user.id)) ?? [];
 
     if (followingIds.length === 0) {
       return [];
@@ -373,7 +430,9 @@ export class FeedService {
       relations: ['user', 'reactions', 'comments', 'tags'],
     });
 
-    const visiblePosts = posts.filter((post) => post.user?.id && followingIds.includes(post.user.id));
+    const visiblePosts = posts.filter(
+      (post) => post.user?.id && followingIds.includes(post.user.id)
+    );
     // Followed users can still be blocked (block after follow) — filter them out.
     return this.visibilityService.filterVisiblePostsForViewer(user.id, visiblePosts);
   }
@@ -388,11 +447,11 @@ export class FeedService {
       .filter(
         (subscription) =>
           subscription.status === SubscriptionStatus.ACTIVE &&
-          (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now),
+          (!subscription.expiresAt || new Date(subscription.expiresAt).getTime() > now)
       )
       .map((subscription) => subscription.creator?.id)
       .filter((id): id is string => !!id);
-    
+
     if (subscribedCreatorIds.length === 0) {
       return [];
     }
@@ -413,13 +472,17 @@ export class FeedService {
       return [];
     }
     const blockedUsers = await this.usersService.getBlockedUsers(user.id);
-    const blockedUserIds = blockedUsers.map(u => u.id);
+    const blockedUserIds = blockedUsers.map((u) => u.id);
     const stories = await this.storiesService.findActiveStoriesForUser(user.id);
 
     return stories.filter((story) => !blockedUserIds.includes(story.user.id));
   }
 
-  private calculatePostScore(post: Post, userInterests: any[], followingIds: string[] = []): { score: number; reasons: string[] } {
+  private calculatePostScore(
+    post: Post,
+    userInterests: any[],
+    followingIds: string[] = []
+  ): { score: number; reasons: string[] } {
     const reactionWeight = 1;
     const commentWeight = 2;
     const shareWeight = 3;
@@ -437,7 +500,7 @@ export class FeedService {
     const matchingTags: string[] = [];
     if (post.tags) {
       for (const tag of post.tags) {
-        const interest = userInterests.find(i => i.tag.id === tag.id);
+        const interest = userInterests.find((i) => i.tag.id === tag.id);
         if (interest) {
           interestScore += interest.score;
           matchingTags.push(tag.name);
@@ -464,30 +527,46 @@ export class FeedService {
     }
 
     const engagement = reactions * reactionWeight + comments * commentWeight + shares * shareWeight;
-    const score = engagement * recencyFactor + interestScore * interestWeight + (isFollowed ? followedBoost : 0);
+    const score =
+      engagement * recencyFactor +
+      interestScore * interestWeight +
+      (isFollowed ? followedBoost : 0);
 
     return { score, reasons };
   }
 
-  async getTrendingFeed(user: User, limit: number = 20): Promise<(Post & { trendScore?: number; matchedTrends?: string[] })[]> {
+  async getTrendingFeed(
+    user: User,
+    limit: number = 20
+  ): Promise<(Post & { trendScore?: number; matchedTrends?: string[] })[]> {
     const [posts, trends] = await Promise.all([
-      this.postsRepository.find({
-        where: { visibility: PostVisibility.PUBLIC, isDraft: false },
-        relations: ['user', 'reactions', 'comments', 'tags'],
-        order: { createdAt: 'DESC' },
-      }).then((found) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found)),
+      this.postsRepository
+        .find({
+          where: { visibility: PostVisibility.PUBLIC, isDraft: false },
+          relations: ['user', 'reactions', 'comments', 'tags'],
+          order: { createdAt: 'DESC' },
+        })
+        .then((found) =>
+          this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, found)
+        ),
       this.trendsService.getTrending(Math.max(limit, 10), 7),
     ]);
 
-    const activeTrendTags = new Set((trends || []).map((trend) => trend.tag.replace(/^#/, '').toLowerCase()));
+    const activeTrendTags = new Set(
+      (trends || []).map((trend) => trend.tag.replace(/^#/, '').toLowerCase())
+    );
 
     const scoredPosts = posts
       .filter((post) => post.visibility === PostVisibility.PUBLIC)
       .map((post) => {
         const tagNames = (post.tags || []).map((tag) => tag.name.toLowerCase());
         const matchedTrends = tagNames.filter((tagName) => activeTrendTags.has(tagName));
-        const engagementScore = (post.comments?.length || 0) * 2 + (post.reactions?.length || 0) * 0.6;
-        const recencyHours = Math.max(0.1, (Date.now() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60));
+        const engagementScore =
+          (post.comments?.length || 0) * 2 + (post.reactions?.length || 0) * 0.6;
+        const recencyHours = Math.max(
+          0.1,
+          (Date.now() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60)
+        );
         const recencyScore = Math.max(0, 12 - recencyHours) / 12;
         const trendScore = matchedTrends.length * 8 + engagementScore + recencyScore * 4;
 
@@ -534,7 +613,7 @@ export class FeedService {
   // hashtags are currently trending inside each category.
   async getExploreCategories() {
     const trendingTags = (await this.trendsService.getTrending(25)).map((t) =>
-      t.tag.replace(/^#/, '').toLowerCase(),
+      t.tag.replace(/^#/, '').toLowerCase()
     );
 
     const categories = await Promise.all(
@@ -553,7 +632,7 @@ export class FeedService {
           count,
           trending: keywords.filter((k) => trendingTags.includes(k)).slice(0, 3),
         };
-      }),
+      })
     );
 
     return { categories };
@@ -581,61 +660,68 @@ export class FeedService {
 
   async getVisualCategories() {
     const categories = [
-      { 
-        id: 'nature', 
-        name: 'Nature & Landscapes', 
-        imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+      {
+        id: 'nature',
+        name: 'Nature & Landscapes',
+        imageUrl:
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
         description: 'Stunning natural landscapes from around the world',
-        postCount: 1250
+        postCount: 1250,
       },
-      { 
-        id: 'travel', 
-        name: 'Travel & Adventure', 
-        imageUrl: 'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400&h=300&fit=crop',
+      {
+        id: 'travel',
+        name: 'Travel & Adventure',
+        imageUrl:
+          'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=400&h=300&fit=crop',
         description: 'Explore amazing destinations and travel experiences',
-        postCount: 980
+        postCount: 980,
       },
-      { 
-        id: 'food', 
-        name: 'Food & Cooking', 
-        imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
+      {
+        id: 'food',
+        name: 'Food & Cooking',
+        imageUrl:
+          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
         description: 'Delicious recipes and culinary creations',
-        postCount: 1520
+        postCount: 1520,
       },
-      { 
-        id: 'art', 
-        name: 'Art & Design', 
+      {
+        id: 'art',
+        name: 'Art & Design',
         imageUrl: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400&h=300&fit=crop',
         description: 'Creative artworks and design inspirations',
-        postCount: 870
+        postCount: 870,
       },
-      { 
-        id: 'fashion', 
-        name: 'Fashion & Style', 
-        imageUrl: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=300&fit=crop',
+      {
+        id: 'fashion',
+        name: 'Fashion & Style',
+        imageUrl:
+          'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=300&fit=crop',
         description: 'Latest fashion trends and style inspiration',
-        postCount: 1100
+        postCount: 1100,
       },
-      { 
-        id: 'animals', 
-        name: 'Animals & Pets', 
-        imageUrl: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop',
+      {
+        id: 'animals',
+        name: 'Animals & Pets',
+        imageUrl:
+          'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop',
         description: 'Cute pets and amazing wildlife',
-        postCount: 765
+        postCount: 765,
       },
-      { 
-        id: 'architecture', 
-        name: 'Architecture', 
-        imageUrl: 'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=400&h=300&fit=crop',
+      {
+        id: 'architecture',
+        name: 'Architecture',
+        imageUrl:
+          'https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=400&h=300&fit=crop',
         description: 'Incredible buildings and architectural wonders',
-        postCount: 640
+        postCount: 640,
       },
-      { 
-        id: 'photography', 
-        name: 'Photography', 
-        imageUrl: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&h=300&fit=crop',
+      {
+        id: 'photography',
+        name: 'Photography',
+        imageUrl:
+          'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=400&h=300&fit=crop',
         description: 'Professional photography and camera work',
-        postCount: 920
+        postCount: 920,
       },
     ];
     return { categories };

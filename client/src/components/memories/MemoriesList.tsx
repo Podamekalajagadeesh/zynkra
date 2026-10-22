@@ -3,7 +3,11 @@ import { MemoryCard } from './MemoryCard';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '../ui/dialog';
 import { CreateMemoryForm } from './CreateMemoryForm';
-import api, { createMemoryDocumentary, createMemoryProject, getMemoryProjects } from '../../lib/api';
+import api, {
+  createMemoryDocumentary,
+  createMemoryProject,
+  getMemoryProjects,
+} from '../../lib/api';
 import type { Post } from '../../lib/types';
 import { Badge } from '../ui/badge';
 import { Plus, Film } from 'lucide-react';
@@ -16,11 +20,21 @@ export const MemoriesList: React.FC = () => {
   const [documentaryTitle, setDocumentaryTitle] = useState('');
   const [documentaryEvent, setDocumentaryEvent] = useState('');
   const [documentaryParticipants, setDocumentaryParticipants] = useState('');
-  const [documentaryResult, setDocumentaryResult] = useState<null | { title: string; summary: string; memoryCount: number; highlights: string[] }>(null);
+  const [documentaryResult, setDocumentaryResult] = useState<null | {
+    title: string;
+    summary: string;
+    memoryCount: number;
+    highlights: string[];
+  }>(null);
   const [projectTitle, setProjectTitle] = useState('');
   const [projectTopic, setProjectTopic] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [projectResult, setProjectResult] = useState<null | { title: string; summary: string; memoryCount: number; contributorNames: string[] }>(null);
+  const [projectResult, setProjectResult] = useState<null | {
+    title: string;
+    summary: string;
+    memoryCount: number;
+    contributorNames: string[];
+  }>(null);
   const [projects, setProjects] = useState<any[]>([]);
 
   const fetchMemories = async () => {
@@ -64,7 +78,10 @@ export const MemoriesList: React.FC = () => {
         title: documentaryTitle || undefined,
         eventName: documentaryEvent || 'shared memory event',
         memoryIds: memories.slice(0, 6).map((memory) => memory.id),
-        participantNames: documentaryParticipants.split(',').map((name) => name.trim()).filter(Boolean),
+        participantNames: documentaryParticipants
+          .split(',')
+          .map((name) => name.trim())
+          .filter(Boolean),
       });
       setDocumentaryResult(result);
     } catch (error) {
@@ -77,7 +94,8 @@ export const MemoriesList: React.FC = () => {
       const result = await createMemoryProject({
         title: projectTitle || 'Collaborative memory archive',
         topic: projectTopic || 'shared memories',
-        description: projectDescription || 'A curated archive of memories built by multiple contributors.',
+        description:
+          projectDescription || 'A curated archive of memories built by multiple contributors.',
         memoryIds: memories.slice(0, 6).map((memory) => memory.id),
         contributorNames: ['You', 'Community'].filter(Boolean),
       });
@@ -105,7 +123,10 @@ export const MemoriesList: React.FC = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <CreateMemoryForm onSuccess={handleCreateSuccess} onCancel={() => setIsCreateModalOpen(false)} />
+            <CreateMemoryForm
+              onSuccess={handleCreateSuccess}
+              onCancel={() => setIsCreateModalOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -114,7 +135,9 @@ export const MemoriesList: React.FC = () => {
         <div className="flex items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-xl font-bold">Collaborative memory projects</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Curate a shared archive around a person, place, or event and invite contributors.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Curate a shared archive around a person, place, or event and invite contributors.
+            </p>
           </div>
           <Badge variant="secondary">New</Badge>
         </div>
@@ -153,7 +176,10 @@ export const MemoriesList: React.FC = () => {
         {projects.length > 0 && (
           <div className="mt-4 space-y-2">
             {projects.map((project) => (
-              <div key={project.id} className="rounded-lg border border-violet-200 bg-white/80 p-3 text-sm dark:border-violet-900/50 dark:bg-gray-950/60">
+              <div
+                key={project.id}
+                className="rounded-lg border border-violet-200 bg-white/80 p-3 text-sm dark:border-violet-900/50 dark:bg-gray-950/60"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold">{project.title}</p>
@@ -171,7 +197,9 @@ export const MemoriesList: React.FC = () => {
         <div className="flex items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-xl font-bold">Neural documentaries</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Compile memories from multiple contributors into a shared full-sensory documentary.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Compile memories from multiple contributors into a shared full-sensory documentary.
+            </p>
           </div>
           <Badge variant="secondary">New</Badge>
         </div>
@@ -214,27 +242,44 @@ export const MemoriesList: React.FC = () => {
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
               <h2 className="text-xl font-bold">Time Capsules</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Future-unlock memories waiting for their scheduled release.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Future-unlock memories waiting for their scheduled release.
+              </p>
             </div>
             <Badge variant="secondary">{timeCapsules.length} scheduled</Badge>
           </div>
           <div className="space-y-3">
             {timeCapsules.map((capsule) => (
-              <div key={capsule.id} className="rounded-xl border border-amber-200 bg-white p-4 dark:border-amber-900/50 dark:bg-gray-950">
+              <div
+                key={capsule.id}
+                className="rounded-xl border border-amber-200 bg-white p-4 dark:border-amber-900/50 dark:bg-gray-950"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{capsule.content.substring(0, 120)}{capsule.content.length > 120 ? '...' : ''}</p>
+                    <p className="font-semibold">
+                      {capsule.content.substring(0, 120)}
+                      {capsule.content.length > 120 ? '...' : ''}
+                    </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Unlocks at {capsule.timeCapsuleUnlockAt ? new Date(capsule.timeCapsuleUnlockAt).toLocaleString() : 'an unscheduled future time'}
+                      Unlocks at{' '}
+                      {capsule.timeCapsuleUnlockAt
+                        ? new Date(capsule.timeCapsuleUnlockAt).toLocaleString()
+                        : 'an unscheduled future time'}
                     </p>
                   </div>
-                  <Badge variant="outline" className="capitalize">{capsule.realityContext ?? 'neural'}</Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {capsule.realityContext ?? 'neural'}
+                  </Badge>
                 </div>
                 {capsule.timeCapsuleMessage && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-3">{capsule.timeCapsuleMessage}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-3">
+                    {capsule.timeCapsuleMessage}
+                  </p>
                 )}
                 {capsule.timeCapsuleRecipients && capsule.timeCapsuleRecipients.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-2">Recipients: {capsule.timeCapsuleRecipients.join(', ')}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Recipients: {capsule.timeCapsuleRecipients.join(', ')}
+                  </p>
                 )}
               </div>
             ))}
@@ -271,7 +316,10 @@ export const MemoriesList: React.FC = () => {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <CreateMemoryForm onSuccess={handleCreateSuccess} onCancel={() => setIsCreateModalOpen(false)} />
+              <CreateMemoryForm
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setIsCreateModalOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>

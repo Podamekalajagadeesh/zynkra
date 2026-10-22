@@ -18,11 +18,13 @@ describe('ActivityService', () => {
     };
     const service = new ActivityService(repository as any, visibilityService as any);
 
-    await expect(service.getUsersStatuses(['target-1'], 'viewer-1')).resolves.toEqual([{
-      userId: 'target-1',
-      isOnline: undefined,
-      lastSeenAt: undefined,
-    }]);
+    await expect(service.getUsersStatuses(['target-1'], 'viewer-1')).resolves.toEqual([
+      {
+        userId: 'target-1',
+        isOnline: undefined,
+        lastSeenAt: undefined,
+      },
+    ]);
   });
 
   it('returns presence when visibility and owner settings allow it', async () => {
@@ -39,10 +41,12 @@ describe('ActivityService', () => {
     const visibilityService = { canViewActivity: jest.fn().mockResolvedValue(true) };
     const service = new ActivityService(repository as any, visibilityService as any);
 
-    await expect(service.getUsersStatuses(['target-1'], 'viewer-1')).resolves.toEqual([{
-      userId: 'target-1',
-      isOnline: true,
-      lastSeenAt,
-    }]);
+    await expect(service.getUsersStatuses(['target-1'], 'viewer-1')).resolves.toEqual([
+      {
+        userId: 'target-1',
+        isOnline: true,
+        lastSeenAt,
+      },
+    ]);
   });
 });

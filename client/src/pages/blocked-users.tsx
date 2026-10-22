@@ -41,7 +41,11 @@ export function BlockedUsersPage() {
 
   if (loading) {
     return (
-      <PageShell eyebrow="Settings" title="Blocked Users" description="Loading your blocked users...">
+      <PageShell
+        eyebrow="Settings"
+        title="Blocked Users"
+        description="Loading your blocked users..."
+      >
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center justify-between rounded-lg border p-4">
@@ -58,7 +62,11 @@ export function BlockedUsersPage() {
   }
 
   return (
-    <PageShell eyebrow="Settings" title="Blocked Users" description="Manage the users you have blocked.">
+    <PageShell
+      eyebrow="Settings"
+      title="Blocked Users"
+      description="Manage the users you have blocked."
+    >
       <div className="space-y-4">
         {blockedUsers.length > 0 ? (
           blockedUsers.map((user) => (

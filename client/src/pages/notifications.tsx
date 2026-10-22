@@ -24,7 +24,9 @@ const PRIORITY_GROUPS: Array<{ key: keyof PriorityBucket; label: string; color: 
 const NotificationsPage = () => {
   const { notifications, unreadCount, markAllAsRead } = useNotifications();
   const [showSmart, setShowSmart] = useState(false);
-  const [digest, setDigest] = useState<Awaited<ReturnType<typeof getAiNotificationDigest>> | null>(null);
+  const [digest, setDigest] = useState<Awaited<ReturnType<typeof getAiNotificationDigest>> | null>(
+    null
+  );
   const [prioritized, setPrioritized] = useState<PriorityBucket | null>(null);
 
   useEffect(() => {
@@ -58,7 +60,9 @@ const NotificationsPage = () => {
             >
               <div>
                 <h3 className="font-bold">AI Smart Summary</h3>
-                <p className="text-sm text-gray-500">Prioritized digest of your notifications (server-side)</p>
+                <p className="text-sm text-gray-500">
+                  Prioritized digest of your notifications (server-side)
+                </p>
               </div>
               <span className="text-sm text-blue-500">{showSmart ? 'Hide' : 'Show'}</span>
             </button>
@@ -100,7 +104,9 @@ const NotificationsPage = () => {
                       if (!items.length) return null;
                       return (
                         <div key={group.key}>
-                          <h4 className={`text-xs font-bold uppercase tracking-wide mb-1 ${group.color}`}>
+                          <h4
+                            className={`text-xs font-bold uppercase tracking-wide mb-1 ${group.color}`}
+                          >
                             {group.label} ({items.length})
                           </h4>
                           <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -133,7 +139,7 @@ const NotificationsPage = () => {
             {notifications.length === 0 ? (
               <p className="p-4 text-gray-500">You have no notifications.</p>
             ) : (
-              notifications.map(notification => (
+              notifications.map((notification) => (
                 <NotificationItem key={notification.id} notification={notification} />
               ))
             )}

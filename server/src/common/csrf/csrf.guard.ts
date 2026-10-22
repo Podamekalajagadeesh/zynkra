@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import type { Request } from 'express';
@@ -97,7 +92,7 @@ export class CsrfGuard implements CanActivate {
     const provided = this.readToken(request);
     if (!provided) {
       throw new ForbiddenException(
-        `Missing CSRF token. Send it in the ${CSRF_HEADER} header (see GET /auth/csrf-token).`,
+        `Missing CSRF token. Send it in the ${CSRF_HEADER} header (see GET /auth/csrf-token).`
       );
     }
 
@@ -142,7 +137,7 @@ export function issueCsrfToken(
     cookie?: (name: string, value: string, options: Record<string, unknown>) => unknown;
     setHeader?: (name: string, value: string) => unknown;
   },
-  options: { cookieName: string; secure: boolean; maxAgeMs: number },
+  options: { cookieName: string; secure: boolean; maxAgeMs: number }
 ): string {
   let token = session.csrfToken;
   if (typeof token !== 'string' || token.length === 0) {

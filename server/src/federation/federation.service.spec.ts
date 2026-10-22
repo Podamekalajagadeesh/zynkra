@@ -74,7 +74,7 @@ function createService(
   options: {
     federationEnabled?: boolean;
     instanceRepository?: any;
-  } = {},
+  } = {}
 ): Harness {
   const federationEnabled = options.federationEnabled ?? false;
 
@@ -154,7 +154,7 @@ function createService(
     }),
     findOne: jest.fn(async ({ where }: any) => {
       const match = outboxLookup.find(
-        (row) => row.objectId === where.objectId && row.activityType === where.activityType,
+        (row) => row.objectId === where.objectId && row.activityType === where.activityType
       );
       return match ?? null;
     }),
@@ -210,7 +210,7 @@ function createService(
     configService,
     userService,
     postsService,
-    httpSignaturesService,
+    httpSignaturesService
   );
 
   return {
@@ -360,7 +360,7 @@ describe('processSharedInbox — Follow', () => {
         localUser: { id: 'user-1' },
         remoteUser: { id: 'remote-user-1' },
         followActivityId: 'https://example.com/activities/follow-1',
-      }),
+      })
     );
     expect(followRepository.save).toHaveBeenCalledTimes(1);
   });
@@ -458,8 +458,7 @@ describe('processSharedInbox — Follow', () => {
     });
 
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledTimes(1);
-    const [actorUrl, body, inboxUrl] =
-      httpSignaturesService.getSignedPostHeaders.mock.calls[0];
+    const [actorUrl, body, inboxUrl] = httpSignaturesService.getSignedPostHeaders.mock.calls[0];
     expect(actorUrl).toBe('http://localhost:3001/federation/users/local');
     expect(inboxUrl).toBe('https://example.com/users/alice/inbox');
     expect(typeof body).toBe('string');
@@ -475,7 +474,11 @@ describe('processSharedInbox — other activity types', () => {
   });
 
   it('increments likeCount for a known post', async () => {
-    const existing = { id: 'remote-post-1', activityId: 'https://example.com/posts/1', likeCount: 0 };
+    const existing = {
+      id: 'remote-post-1',
+      activityId: 'https://example.com/posts/1',
+      likeCount: 0,
+    };
     const { service, remotePostRepository } = createService();
     remotePostRepository.findOne.mockResolvedValue(existing);
 
@@ -491,7 +494,11 @@ describe('processSharedInbox — other activity types', () => {
   });
 
   it('increments shareCount for an Announce', async () => {
-    const existing = { id: 'remote-post-1', activityId: 'https://example.com/posts/1', shareCount: 0 };
+    const existing = {
+      id: 'remote-post-1',
+      activityId: 'https://example.com/posts/1',
+      shareCount: 0,
+    };
     const { service, remotePostRepository } = createService();
     remotePostRepository.findOne.mockResolvedValue(existing);
 
@@ -543,7 +550,11 @@ describe('processSharedInbox — other activity types', () => {
     const { service, followRepository, userService, remoteUserRepository } = createService();
     userService.findByUsername.mockResolvedValue({ id: 'user-1', username: 'localuser' });
     remoteUserRepository.findOne.mockResolvedValue({ id: 'remote-user-1' });
-    const existing = { id: 'follow-1', localUser: { id: 'user-1' }, remoteUser: { id: 'remote-user-1' } };
+    const existing = {
+      id: 'follow-1',
+      localUser: { id: 'user-1' },
+      remoteUser: { id: 'remote-user-1' },
+    };
     followRepository.findOne.mockResolvedValue(existing);
 
     const result = await service.processSharedInbox({
@@ -742,7 +753,7 @@ describe('deliverToInbox', () => {
     const result = await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     expect(attempts).toBe(2);
@@ -750,7 +761,7 @@ describe('deliverToInbox', () => {
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/local',
       JSON.stringify({ type: 'Create' }),
-      'https://example.com/inbox',
+      'https://example.com/inbox'
     );
   });
 
@@ -767,7 +778,7 @@ describe('deliverToInbox', () => {
     await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     // Signing once before the loop would leave a retry carrying the original
@@ -785,8 +796,8 @@ describe('deliverToInbox', () => {
       service.deliverToInbox(
         { baseUrl: 'https://example.com' },
         { type: 'Create' },
-        { maxAttempts: 3, retryDelayMs: 0 },
-      ),
+        { maxAttempts: 3, retryDelayMs: 0 }
+      )
     ).rejects.toThrow('permanent outage');
 
     expect(postSpy).toHaveBeenCalledTimes(3);
@@ -799,7 +810,7 @@ describe('deliverToInbox', () => {
     const result = await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     // A rejected signature is deterministic; resending identical bytes just
@@ -818,7 +829,7 @@ describe('deliverToInbox', () => {
     const result = await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     expect(postSpy).toHaveBeenCalledTimes(1);
@@ -832,7 +843,7 @@ describe('deliverToInbox', () => {
     const result = await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     expect(postSpy).toHaveBeenCalledTimes(1);
@@ -856,7 +867,7 @@ describe('deliverToInbox', () => {
     const result = await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     expect(attempts).toBe(2);
@@ -879,7 +890,7 @@ describe('deliverToInbox', () => {
     await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { retryDelayMs: 0 },
+      { retryDelayMs: 0 }
     );
 
     expect(attempts).toBe(2);
@@ -905,13 +916,13 @@ describe('deliverToInbox', () => {
     await service.deliverToInbox(
       { baseUrl: 'https://example.com' },
       { type: 'Create' },
-      { actorUsername: 'alice' },
+      { actorUsername: 'alice' }
     );
 
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/alice',
       JSON.stringify({ type: 'Create' }),
-      'https://example.com/inbox',
+      'https://example.com/inbox'
     );
   });
 });
@@ -954,7 +965,7 @@ describe('federateDelete', () => {
       deliveredTo: ['old.example'],
     });
     instanceRepository.findOne.mockImplementation(async ({ where }: any) =>
-      where.domain === 'old.example' ? INSTANCE : null,
+      where.domain === 'old.example' ? INSTANCE : null
     );
 
     const report = await service.federateDelete('user-1', 'post-1', ['new.example']);
@@ -977,7 +988,7 @@ describe('federateDelete', () => {
   it('refuses to delete while federation is disabled', async () => {
     const { service } = createService({ federationEnabled: false });
     await expect(service.federateDelete('user-1', 'post-1', ['example.com'])).rejects.toThrow(
-      'Outbound federation is disabled',
+      'Outbound federation is disabled'
     );
   });
 });
@@ -1052,8 +1063,19 @@ describe('getFederatedTimeline', () => {
     tags: [],
     likeCount: 0,
     shareCount: 0,
-    author: { id: 'ru-1', actorId: 'https://example.com/users/alice', username: 'alice', name: 'Alice', avatarUrl: null },
-    instance: { id: 'i-1', domain: 'example.com', baseUrl: 'https://example.com', software: 'mastodon' },
+    author: {
+      id: 'ru-1',
+      actorId: 'https://example.com/users/alice',
+      username: 'alice',
+      name: 'Alice',
+      avatarUrl: null,
+    },
+    instance: {
+      id: 'i-1',
+      domain: 'example.com',
+      baseUrl: 'https://example.com',
+      software: 'mastodon',
+    },
     ...overrides,
   });
 
@@ -1141,7 +1163,10 @@ describe('getFederatedTimeline', () => {
   it('drops posts from a remote user the viewer blocked', async () => {
     const { service, remotePostRepository, moderationRepository } = createService();
     remotePostRepository.createQueryBuilder = jest.fn(() =>
-      stubQuery([remotePost(), remotePost({ id: 'rp-2', author: { id: 'ru-2', actorId: 'x', username: 'bob' } })]),
+      stubQuery([
+        remotePost(),
+        remotePost({ id: 'rp-2', author: { id: 'ru-2', actorId: 'x', username: 'bob' } }),
+      ])
     );
     moderationRepository.find.mockResolvedValue([
       { isBlocked: true, isMuted: false, remoteUser: { id: 'ru-1' } },
@@ -1162,7 +1187,9 @@ describe('getFederatedTimeline', () => {
     ]);
 
     expect((await service.getFederatedTimeline('user-1')).items).toHaveLength(0);
-    expect((await service.getFederatedTimeline('user-1', { includeMuted: true })).items).toHaveLength(1);
+    expect(
+      (await service.getFederatedTimeline('user-1', { includeMuted: true })).items
+    ).toHaveLength(1);
   });
 
   it('drops posts from a blocked instance', async () => {
@@ -1213,7 +1240,7 @@ describe('sendFollow', () => {
 
     const result = await service.sendFollow(
       { objectId: 'https://example.com/users/alice' } as any,
-      'user-1',
+      'user-1'
     );
 
     expect(result.success).toBe(true);
@@ -1224,7 +1251,7 @@ describe('sendFollow', () => {
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/localuser',
       expect.any(String),
-      'https://example.com/users/alice/inbox',
+      'https://example.com/users/alice/inbox'
     );
     expect(JSON.parse(postSpy.mock.calls[0][1]).type).toBe('Follow');
   });
@@ -1241,7 +1268,7 @@ describe('sendFollow', () => {
     const { service } = createService({ federationEnabled: true });
     const result = await service.sendFollow(
       { objectId: 'https://example.com/users/alice' } as any,
-      'user-1',
+      'user-1'
     );
 
     expect(attempts).toBe(2);
@@ -1258,7 +1285,7 @@ describe('sendFollow', () => {
     // "Failed to follow remote user", hiding a 401 that means the signature is
     // wrong — the single most likely misconfiguration.
     await expect(
-      service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1'),
+      service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')
     ).rejects.toThrow(/signature rejected/);
   });
 });
@@ -1267,15 +1294,15 @@ describe('federation guard', () => {
   it('refuses to federate a post when outbound federation is disabled', async () => {
     const { service } = createService({ federationEnabled: false });
     await expect(
-      service.federatePost('user-1', { content: 'hi' } as any, ['example.com']),
+      service.federatePost('user-1', { content: 'hi' } as any, ['example.com'])
     ).rejects.toThrow('Outbound federation is disabled');
   });
 
   it('refuses to send a follow when outbound federation is disabled', async () => {
     const { service } = createService({ federationEnabled: false });
-    await expect(service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')).rejects.toThrow(
-      'Outbound federation is disabled',
-    );
+    await expect(
+      service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')
+    ).rejects.toThrow('Outbound federation is disabled');
   });
 
   it('skips unconnected and blocked target instances instead of throwing', async () => {
@@ -1296,9 +1323,7 @@ describe('federation guard', () => {
     postSpy.mockResolvedValue({ status: 202 });
     const { service } = createService({ federationEnabled: true });
 
-    const report = await service.federatePost('user-1', { content: 'hi' } as any, [
-      'example.com',
-    ]);
+    const report = await service.federatePost('user-1', { content: 'hi' } as any, ['example.com']);
 
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(postSpy.mock.calls[0][0]).toBe('https://example.com/inbox');
@@ -1320,7 +1345,7 @@ describe('federation guard', () => {
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/localuser',
       expect.any(String),
-      'https://example.com/inbox',
+      'https://example.com/inbox'
     );
   });
 
@@ -1350,11 +1375,9 @@ describe('federation guard', () => {
     postSpy.mockResolvedValue({ status: 202 });
     const { service } = createService({ federationEnabled: true });
 
-    await service.federatePost(
-      'user-1',
-      { activityId: 'post-1', content: 'hi' } as any,
-      ['example.com'],
-    );
+    await service.federatePost('user-1', { activityId: 'post-1', content: 'hi' } as any, [
+      'example.com',
+    ]);
 
     const activity = JSON.parse(postSpy.mock.calls[0][1]);
     // A Delete references the *activity* id, so the Note must carry a stable
@@ -1379,7 +1402,9 @@ describe('federation guard', () => {
 
   it('records the activity id in the outbox after a successful delivery', async () => {
     postSpy.mockResolvedValue({ status: 202 });
-    const { service, outboxRows, remotePostRepository } = createService({ federationEnabled: true });
+    const { service, outboxRows, remotePostRepository } = createService({
+      federationEnabled: true,
+    });
 
     await service.federatePost('user-1', { activityId: 'post-1', content: 'hi' } as any, [
       'example.com',
@@ -1407,7 +1432,7 @@ describe('federation guard', () => {
     const report = await service.federatePost(
       'user-1',
       { activityId: 'post-1', content: 'hi' } as any,
-      ['example.com'],
+      ['example.com']
     );
 
     // Losing the ability to retract is worse than nothing, but it must not
@@ -1427,7 +1452,7 @@ describe('federation guard', () => {
 
     const { service, instanceRepository } = createService({ federationEnabled: true });
     instanceRepository.findOne.mockImplementation(async ({ where }: any) =>
-      where.domain === 'down.example' ? null : INSTANCE,
+      where.domain === 'down.example' ? null : INSTANCE
     );
 
     const report = await service.federatePost('user-1', { content: 'hi' } as any, [
@@ -1452,7 +1477,7 @@ describe('per-user remote moderation', () => {
     await service.blockRemoteUser('user-1', 'remote-user-1');
 
     expect(moderationRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ isBlocked: true }),
+      expect.objectContaining({ isBlocked: true })
     );
   });
 
@@ -1464,7 +1489,7 @@ describe('per-user remote moderation', () => {
     await service.muteRemoteUser('user-1', 'remote-user-1');
 
     expect(moderationRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ isMuted: true }),
+      expect.objectContaining({ isMuted: true })
     );
   });
 
@@ -1472,7 +1497,9 @@ describe('per-user remote moderation', () => {
     const { service, remoteUserRepository } = createService();
     remoteUserRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.blockRemoteUser('user-1', 'missing')).rejects.toThrow('Remote user not found');
+    await expect(service.blockRemoteUser('user-1', 'missing')).rejects.toThrow(
+      'Remote user not found'
+    );
   });
 
   it('unblocks and unmutes', async () => {
@@ -1484,7 +1511,7 @@ describe('per-user remote moderation', () => {
     await service.unmuteRemoteUser('user-1', 'remote-user-1');
 
     expect(moderationRepository.save).toHaveBeenLastCalledWith(
-      expect.objectContaining({ isBlocked: false, isMuted: false }),
+      expect.objectContaining({ isBlocked: false, isMuted: false })
     );
   });
 
@@ -1619,7 +1646,7 @@ describe('local actor and collection endpoints', () => {
     });
 
     expect((await service.getLocalActor('localuser')).icon.url).toBe(
-      'http://localhost:3001/avatars/b.png',
+      'http://localhost:3001/avatars/b.png'
     );
   });
 
@@ -1759,9 +1786,7 @@ describe('local actor and collection endpoints', () => {
     expect(outbox.type).toBe('OrderedCollection');
     expect(outbox.totalItems).toBe(1);
     expect(outbox.orderedItems[0].type).toBe('Create');
-    expect(outbox.orderedItems[0].id).toBe(
-      'http://localhost:3001/federation/activities/p%201',
-    );
+    expect(outbox.orderedItems[0].id).toBe('http://localhost:3001/federation/activities/p%201');
     expect(outbox.orderedItems[0].object).toEqual({
       id: 'http://localhost:3001/posts/p 1',
       type: 'Note',
@@ -1820,7 +1845,9 @@ describe('webfinger', () => {
       instanceRepository: { findOne: jest.fn().mockResolvedValue(null) },
     });
 
-    await expect(service.webfinger('bob@unknown.example')).rejects.toThrow('Remote instance not found');
+    await expect(service.webfinger('bob@unknown.example')).rejects.toThrow(
+      'Remote instance not found'
+    );
   });
 
   it('400s when the remote lookup fails', async () => {
@@ -1858,7 +1885,7 @@ describe('instance administration', () => {
     const { service, instanceRepository, remoteUserRepository, remotePostRepository } =
       createService();
     instanceRepository.count.mockImplementation((opts: any) =>
-      Promise.resolve(opts?.where ? 2 : 3),
+      Promise.resolve(opts?.where ? 2 : 3)
     );
     remoteUserRepository.count.mockResolvedValue(5);
     remotePostRepository.count.mockResolvedValue(7);

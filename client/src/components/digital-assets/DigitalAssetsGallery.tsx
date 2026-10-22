@@ -43,7 +43,7 @@ const DigitalAssetsGallery: React.FC = () => {
     description: '',
     type: AssetType.VIRTUAL_POSSESSION,
     isTransferable: true,
-    tags: ''
+    tags: '',
   });
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const DigitalAssetsGallery: React.FC = () => {
     try {
       const response = await fetch('/api/digital-assets/my-assets', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
+          Authorization: `Bearer ${localStorage.getItem('jwt_token')}`,
         },
       });
       const data = await response.json();
@@ -72,7 +72,7 @@ const DigitalAssetsGallery: React.FC = () => {
       await fetch(`/api/digital-assets/${assetId}/sync-to-instance/${platformDomain}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
+          Authorization: `Bearer ${localStorage.getItem('jwt_token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -88,13 +88,16 @@ const DigitalAssetsGallery: React.FC = () => {
   const verifyAssetInteroperability = async (assetId: string, platform: string) => {
     setVerifyingAsset(assetId);
     try {
-      const response = await fetch(`/api/digital-assets/${assetId}/verify-interoperability/${platform}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
-        },
-      });
+      const response = await fetch(
+        `/api/digital-assets/${assetId}/verify-interoperability/${platform}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('jwt_token')}`,
+          },
+        }
+      );
       const result = await response.json();
-      setVerificationResults(prev => ({ ...prev, [assetId]: result }));
+      setVerificationResults((prev) => ({ ...prev, [assetId]: result }));
     } catch (error) {
       console.error('Failed to verify interoperability:', error);
     } finally {
@@ -126,7 +129,7 @@ const DigitalAssetsGallery: React.FC = () => {
       toast({
         title: 'Missing information',
         description: 'Please provide a name and select a file to upload',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -144,9 +147,9 @@ const DigitalAssetsGallery: React.FC = () => {
       const response = await fetch('/api/digital-assets', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
+          Authorization: `Bearer ${localStorage.getItem('jwt_token')}`,
         },
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -154,19 +157,19 @@ const DigitalAssetsGallery: React.FC = () => {
       }
 
       const newAsset = await response.json();
-      setAssets(prev => [newAsset, ...prev]);
+      setAssets((prev) => [newAsset, ...prev]);
       setUploadModalOpen(false);
       resetForm();
       toast({
         title: 'Asset uploaded successfully',
-        description: 'Your digital asset is now available across all compatible platforms'
+        description: 'Your digital asset is now available across all compatible platforms',
       });
     } catch (error) {
       console.error('Failed to upload asset:', error);
       toast({
         title: 'Upload failed',
         description: 'There was an error uploading your asset. Please try again.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setUploading(false);
@@ -179,7 +182,7 @@ const DigitalAssetsGallery: React.FC = () => {
       description: '',
       type: AssetType.VIRTUAL_POSSESSION,
       isTransferable: true,
-      tags: ''
+      tags: '',
     });
     setSelectedFile(null);
   };
@@ -190,7 +193,7 @@ const DigitalAssetsGallery: React.FC = () => {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1,2,3].map(i => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className="h-64 bg-gray-200 rounded-xl"></div>
             ))}
           </div>
@@ -209,10 +212,7 @@ const DigitalAssetsGallery: React.FC = () => {
       </div>
 
       <div className="mb-8">
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => setUploadModalOpen(true)}
-        >
+        <Button className="flex items-center gap-2" onClick={() => setUploadModalOpen(true)}>
           <Upload className="h-4 w-4" />
           Upload New Asset
         </Button>
@@ -229,11 +229,11 @@ const DigitalAssetsGallery: React.FC = () => {
 
         <TabsContent value="all" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assets.map(asset => (
+            {assets.map((asset) => (
               <Card key={asset.id} className="overflow-hidden">
                 <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                  <img 
-                    src={getAssetUrl(asset.cid)} 
+                  <img
+                    src={getAssetUrl(asset.cid)}
                     alt={asset.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -255,16 +255,19 @@ const DigitalAssetsGallery: React.FC = () => {
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Works on:</p>
                     <div className="flex flex-wrap gap-2">
-                      {asset.compatiblePlatforms.map(platform => (
-                        <span key={platform} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                      {asset.compatiblePlatforms.map((platform) => (
+                        <span
+                          key={platform}
+                          className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full"
+                        >
                           {platform}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="secondary"
                       onClick={() => syncAssetToPlatform(asset.id, 'another-platform.com')}
                       disabled={syncingAsset === asset.id}
@@ -273,8 +276,8 @@ const DigitalAssetsGallery: React.FC = () => {
                       <Share2 className="h-3 w-3" />
                       {syncingAsset === asset.id ? 'Syncing...' : 'Sync to Platform'}
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="secondary"
                       onClick={() => verifyAssetInteroperability(asset.id, 'zynkra')}
                       disabled={verifyingAsset === asset.id}
@@ -288,12 +291,16 @@ const DigitalAssetsGallery: React.FC = () => {
                         {verificationResults[asset.id].compatible ? (
                           <>
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span className="text-sm font-medium text-green-700 dark:text-green-400">Compatible</span>
+                            <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                              Compatible
+                            </span>
                           </>
                         ) : (
                           <>
                             <XCircle className="h-4 w-4 text-red-500" />
-                            <span className="text-sm font-medium text-red-700 dark:text-red-400">Not Fully Compatible</span>
+                            <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                              Not Fully Compatible
+                            </span>
                           </>
                         )}
                       </div>
@@ -308,12 +315,15 @@ const DigitalAssetsGallery: React.FC = () => {
               </Card>
             ))}
           </div>
-          
+
           {assets.length === 0 && (
             <div className="text-center py-16">
               <Globe className="h-16 w-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold mb-2">No digital assets yet</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Upload your first avatar, virtual possession, or creation to start using it across platforms</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Upload your first avatar, virtual possession, or creation to start using it across
+                platforms
+              </p>
               <Button onClick={() => setUploadModalOpen(true)}>Upload Your First Asset</Button>
             </div>
           )}
@@ -322,79 +332,97 @@ const DigitalAssetsGallery: React.FC = () => {
         {/* Similar tab content for other categories would go here */}
         <TabsContent value="avatars">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assets.filter(a => a.type === AssetType.AVATAR).map(asset => (
-              <Card key={asset.id} className="overflow-hidden">
-                {/* Same card content as above */}
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <UserCircle className="h-16 w-16 text-gray-400" />
+            {assets
+              .filter((a) => a.type === AssetType.AVATAR)
+              .map((asset) => (
+                <Card key={asset.id} className="overflow-hidden">
+                  {/* Same card content as above */}
+                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <UserCircle className="h-16 w-16 text-gray-400" />
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Interoperable avatar that works across all connected platforms</p>
-                </div>
-              </Card>
-            ))}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Interoperable avatar that works across all connected platforms
+                    </p>
+                  </div>
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
         <TabsContent value="possessions">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assets.filter(a => a.type === AssetType.VIRTUAL_POSSESSION).map(asset => (
-              <Card key={asset.id} className="overflow-hidden">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Image className="h-16 w-16 text-gray-400" />
+            {assets
+              .filter((a) => a.type === AssetType.VIRTUAL_POSSESSION)
+              .map((asset) => (
+                <Card key={asset.id} className="overflow-hidden">
+                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Image className="h-16 w-16 text-gray-400" />
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Virtual possession that travels with you across metaverse spaces</p>
-                </div>
-              </Card>
-            ))}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Virtual possession that travels with you across metaverse spaces
+                    </p>
+                  </div>
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
         <TabsContent value="creations">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assets.filter(a => a.type === AssetType.CREATION).map(asset => (
-              <Card key={asset.id} className="overflow-hidden">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Upload className="h-16 w-16 text-gray-400" />
+            {assets
+              .filter((a) => a.type === AssetType.CREATION)
+              .map((asset) => (
+                <Card key={asset.id} className="overflow-hidden">
+                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Upload className="h-16 w-16 text-gray-400" />
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Your original creation accessible everywhere you go</p>
-                </div>
-              </Card>
-            ))}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Your original creation accessible everywhere you go
+                    </p>
+                  </div>
+                </Card>
+              ))}
           </div>
         </TabsContent>
 
         <TabsContent value="nfts">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assets.filter(a => a.type === AssetType.NFT).map(asset => (
-              <Card key={asset.id} className="overflow-hidden">
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Globe className="h-16 w-16 text-gray-400" />
-                  </div>
-                  {asset.blockchainTokenId && (
-                    <div className="absolute top-3 right-3 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded">
-                      <span className="text-xs text-purple-800 dark:text-purple-300">NFT #{asset.blockchainTokenId.slice(0, 6)}</span>
+            {assets
+              .filter((a) => a.type === AssetType.NFT)
+              .map((asset) => (
+                <Card key={asset.id} className="overflow-hidden">
+                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Globe className="h-16 w-16 text-gray-400" />
                     </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Blockchain-verified digital asset with cross-platform compatibility</p>
-                </div>
-              </Card>
-            ))}
+                    {asset.blockchainTokenId && (
+                      <div className="absolute top-3 right-3 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded">
+                        <span className="text-xs text-purple-800 dark:text-purple-300">
+                          NFT #{asset.blockchainTokenId.slice(0, 6)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{asset.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Blockchain-verified digital asset with cross-platform compatibility
+                    </p>
+                  </div>
+                </Card>
+              ))}
           </div>
         </TabsContent>
       </Tabs>
@@ -410,7 +438,7 @@ const DigitalAssetsGallery: React.FC = () => {
               <Input
                 id="name"
                 value={assetForm.name}
-                onChange={(e) => setAssetForm(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setAssetForm((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="My Awesome Avatar"
               />
             </div>
@@ -419,7 +447,7 @@ const DigitalAssetsGallery: React.FC = () => {
               <Textarea
                 id="description"
                 value={assetForm.description}
-                onChange={(e) => setAssetForm(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setAssetForm((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="Describe your digital asset..."
               />
             </div>
@@ -427,7 +455,9 @@ const DigitalAssetsGallery: React.FC = () => {
               <Label htmlFor="type">Asset Type</Label>
               <Select
                 value={assetForm.type}
-                onValueChange={(value) => setAssetForm(prev => ({ ...prev, type: value as AssetType }))}
+                onValueChange={(value) =>
+                  setAssetForm((prev) => ({ ...prev, type: value as AssetType }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select asset type" />
@@ -457,16 +487,19 @@ const DigitalAssetsGallery: React.FC = () => {
               <Input
                 id="tags"
                 value={assetForm.tags}
-                onChange={(e) => setAssetForm(prev => ({ ...prev, tags: e.target.value }))}
+                onChange={(e) => setAssetForm((prev) => ({ ...prev, tags: e.target.value }))}
                 placeholder="avatar, virtual, metaverse"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => {
-              setUploadModalOpen(false);
-              resetForm();
-            }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setUploadModalOpen(false);
+                resetForm();
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={uploadAsset} disabled={uploading}>

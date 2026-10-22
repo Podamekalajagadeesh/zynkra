@@ -1,11 +1,45 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Copy, CheckCircle2, Wallet, UserRound, Loader2, BadgeCheck, QrCode, Shield, ShieldOff, Volume2, VolumeX } from 'lucide-react';
+import {
+  Copy,
+  CheckCircle2,
+  Wallet,
+  UserRound,
+  Loader2,
+  BadgeCheck,
+  QrCode,
+  Shield,
+  ShieldOff,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { Skeleton } from '../components/ui/skeleton';
 import { Button } from '../components/ui/button';
-import { getProfile, getUserProfile, linkWallet, setNftPfp as apiSetNftPfp, getNfts as apiGetNfts, getReputation, followUser, unfollowUser, getMutualFollows, removeFollower, featurePost, unfeaturePost, sendFollowRequest, cancelFollowRequest, blockUser, unblockUser, muteUser, unmuteUser, getFollowers, getUserFollowing, getThemes } from '../lib/api';
+import {
+  getProfile,
+  getUserProfile,
+  linkWallet,
+  setNftPfp as apiSetNftPfp,
+  getNfts as apiGetNfts,
+  getReputation,
+  followUser,
+  unfollowUser,
+  getMutualFollows,
+  removeFollower,
+  featurePost,
+  unfeaturePost,
+  sendFollowRequest,
+  cancelFollowRequest,
+  blockUser,
+  unblockUser,
+  muteUser,
+  unmuteUser,
+  getFollowers,
+  getUserFollowing,
+  getThemes,
+} from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
 import { useAuth } from '../hooks/useAuth';
@@ -62,7 +96,9 @@ export function ProfilePage() {
   const [followingCount, setFollowingCount] = useState(0);
   const [activeList, setActiveList] = useState<'followers' | 'following'>('followers');
   const [mutualFollows, setMutualFollows] = useState<ExtendedUserProfile[]>([]);
-  const [followStatus, setFollowStatus] = useState<'following' | 'requested' | 'not_following'>('not_following');
+  const [followStatus, setFollowStatus] = useState<'following' | 'requested' | 'not_following'>(
+    'not_following'
+  );
   const [posts, setPosts] = useState<Post[]>([]);
   const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -72,9 +108,10 @@ export function ProfilePage() {
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
   const [isSettingPfp, setIsSettingPfp] = useState<string | null>(null);
 
-
   useEffect(() => {
-    getThemes().then(setThemeCatalog).catch(() => {});
+    getThemes()
+      .then(setThemeCatalog)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -112,7 +149,9 @@ export function ProfilePage() {
           try {
             const blocked = await getBlockedUsers();
             setIsBlocked(blocked.some((u: any) => u.id === userId));
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
         const reputationData = await getReputation(profile.id);
         setReputation(reputationData?.score ?? 0);
@@ -136,9 +175,9 @@ export function ProfilePage() {
         await unfeaturePost(postId);
         addToast('Post unfeatured', 'success');
       }
-      const updatedPosts = posts.map(p => p.id === postId ? { ...p, isFeatured } : p);
+      const updatedPosts = posts.map((p) => (p.id === postId ? { ...p, isFeatured } : p));
       setPosts(updatedPosts);
-      setFeaturedPosts(updatedPosts.filter(p => p.isFeatured));
+      setFeaturedPosts(updatedPosts.filter((p) => p.isFeatured));
     } catch (error) {
       console.error('Failed to toggle featured post:', error);
       addToast('Failed to toggle featured post', 'error');
@@ -154,7 +193,7 @@ export function ProfilePage() {
             signMessage: (message) => signMessageAsync({ message }),
           });
           setUser(updatedUser);
-setCurrentUser(updatedUser);
+          setCurrentUser(updatedUser);
           addToast('Wallet linked successfully!', 'success');
         } catch (error) {
           console.error('Failed to link wallet:', error);
@@ -163,7 +202,15 @@ setCurrentUser(updatedUser);
       };
       connect();
     }
-  }, [isConnected, address, user?.walletAddress, addToast, setCurrentUser, userId, signMessageAsync]);
+  }, [
+    isConnected,
+    address,
+    user?.walletAddress,
+    addToast,
+    setCurrentUser,
+    userId,
+    signMessageAsync,
+  ]);
 
   useEffect(() => {
     const fetchNfts = async () => {
@@ -189,7 +236,7 @@ setCurrentUser(updatedUser);
     try {
       if (followStatus === 'following') {
         await unfollowUser(user.id);
-        setFollowersCount(prev => prev - 1);
+        setFollowersCount((prev) => prev - 1);
         addToast(`Unfollowed ${user.displayName || user.email}`, 'success');
         setFollowStatus('not_following');
       } else if (followStatus === 'requested') {
@@ -203,7 +250,7 @@ setCurrentUser(updatedUser);
           setFollowStatus('requested');
         } else {
           await followUser(user.id);
-          setFollowersCount(prev => prev + 1);
+          setFollowersCount((prev) => prev + 1);
           addToast(`Followed ${user.displayName || user.email}`, 'success');
           setFollowStatus('following');
         }
@@ -272,8 +319,10 @@ setCurrentUser(updatedUser);
     if (!user) return;
     try {
       await removeFollower(followerId);
-      setFollowers((prevFollowers) => (prevFollowers ?? []).filter((follower) => follower.id !== followerId));
-      setFollowersCount(prev => prev - 1);
+      setFollowers((prevFollowers) =>
+        (prevFollowers ?? []).filter((follower) => follower.id !== followerId)
+      );
+      setFollowersCount((prev) => prev - 1);
       addToast('Follower removed', 'success');
     } catch (error) {
       console.error('Failed to remove follower:', error);
@@ -295,9 +344,12 @@ setCurrentUser(updatedUser);
   // Theme lookup is resilient to server theme keys that aren't in the static
   // catalog: fall back to the default, and prefer the user's custom accent or
   // the catalog theme's accent over the static style.
-  const catalogTheme = Array.isArray(themeCatalog) ? themeCatalog.find(t => t.key === user?.profileTheme) : undefined;
-  const staticTheme = themes[(user?.profileTheme as Theme)] || themes.default;
-  const themeAccent = user?.profileThemeColor || catalogTheme?.accent || staticTheme.styles.color || '#000000';
+  const catalogTheme = Array.isArray(themeCatalog)
+    ? themeCatalog.find((t) => t.key === user?.profileTheme)
+    : undefined;
+  const staticTheme = themes[user?.profileTheme as Theme] || themes.default;
+  const themeAccent =
+    user?.profileThemeColor || catalogTheme?.accent || staticTheme.styles.color || '#000000';
   const customStyles = {
     ...staticTheme.styles,
     ['--primary' as string]: themeAccent,
@@ -318,16 +370,9 @@ setCurrentUser(updatedUser);
           <Skeleton height={72} />
         </div>
       ) : user ? (
-        <div
-          className="space-y-4"
-          style={customStyles as React.CSSProperties}
-        >
+        <div className="space-y-4" style={customStyles as React.CSSProperties}>
           {user.header && (
-            <img
-              src={user.header}
-              alt="Header"
-              className="w-full h-48 object-cover"
-            />
+            <img src={user.header} alt="Header" className="w-full h-48 object-cover" />
           )}
           <style>
             {`
@@ -342,9 +387,7 @@ setCurrentUser(updatedUser);
                 <h1 className="text-2xl font-bold profile-accent">
                   {user.displayName || user.email}
                 </h1>
-                {user.verified && (
-                  <VerificationBadge type="identity" size="md" />
-                )}
+                {user.verified && <VerificationBadge type="identity" size="md" />}
               </div>
               {user.pronouns && <p className="text-lg text-gray-500">({user.pronouns})</p>}
               {user.username && <p className="text-lg text-gray-500">@{user.username}</p>}
@@ -360,7 +403,9 @@ setCurrentUser(updatedUser);
                   QR
                 </Button>
                 <Link to="/edit-profile">
-                  <Button variant="secondary" className="profile-accent">Edit Profile</Button>
+                  <Button variant="secondary" className="profile-accent">
+                    Edit Profile
+                  </Button>
                 </Link>
               </div>
             )}
@@ -375,7 +420,11 @@ setCurrentUser(updatedUser);
                   QR
                 </Button>
                 <Button onClick={handleFollow}>
-                  {followStatus === 'following' ? 'Unfollow' : followStatus === 'requested' ? 'Requested' : 'Follow'}
+                  {followStatus === 'following'
+                    ? 'Unfollow'
+                    : followStatus === 'requested'
+                      ? 'Requested'
+                      : 'Follow'}
                 </Button>
                 <Button
                   variant={isMuted ? 'secondary' : 'outline'}
@@ -402,7 +451,12 @@ setCurrentUser(updatedUser);
               <div className="flex items-center gap-4 mt-2 text-sm text-dark-500">
                 {user.location && <span>{user.location}</span>}
                 {user.website && (
-                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="profile-accent hover:underline">
+                  <a
+                    href={user.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="profile-accent hover:underline"
+                  >
                     {user.website}
                   </a>
                 )}
@@ -414,7 +468,10 @@ setCurrentUser(updatedUser);
               )}
               <div className="flex items-center gap-2 mt-2">
                 {user.contact?.email && (
-                  <a href={`mailto:${user.contact.email}`} className="text-blue-500 hover:underline">
+                  <a
+                    href={`mailto:${user.contact.email}`}
+                    className="text-blue-500 hover:underline"
+                  >
                     Email
                   </a>
                 )}
@@ -424,7 +481,12 @@ setCurrentUser(updatedUser);
                   </a>
                 )}
                 {user.contact?.directions && (
-                  <a href={user.contact.directions} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                  <a
+                    href={user.contact.directions}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
                     Directions
                   </a>
                 )}
@@ -436,57 +498,78 @@ setCurrentUser(updatedUser);
               onClick={() => setActiveList('following')}
               className={`surface-soft p-4 text-left w-full ${activeList === 'following' ? 'ring-2 ring-primary-500' : ''}`}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Following</p>
-              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{followingCount}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
+                Following
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">
+                {followingCount}
+              </p>
             </button>
             <button
               type="button"
               onClick={() => setActiveList('followers')}
               className={`surface-soft p-4 text-left w-full ${activeList === 'followers' ? 'ring-2 ring-primary-500' : ''}`}
             >
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Followers</p>
-                <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{followersCount}</p>
-              </button>
-              <div className="lg:col-span-4">
-                <h3 className="text-lg font-semibold">
-                  {activeList === 'followers' ? 'Followers' : 'Following'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                  {(activeList === 'followers' ? followers : following).map((listUser) => (
-                    <div key={listUser.id} className="flex items-center justify-between p-2 border rounded-lg">
-                      <Link to={`/profile/${listUser.username || listUser.id}`} className="flex items-center gap-2">
-                        <img
-                          src={listUser.nftPfpUrl || `https://api.dicebear.com/6.x/micah/svg?seed=${listUser.id}`}
-                          alt={listUser.displayName || listUser.username || 'User'}
-                          className="h-10 w-10 rounded-full"
-                        />
-                        <div>
-                          <p className="font-bold">{listUser.displayName}</p>
-                          <p className="text-sm text-dark-500">@{listUser.username}</p>
-                        </div>
-                      </Link>
-                      {activeList === 'followers' && currentUser?.id === user?.id && (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveFollower(listUser.id)}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {(activeList === 'followers' ? followers : following).length === 0 && (
-                  <p className="mt-2 text-sm text-dark-500">
-                    {activeList === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
-                  </p>
-                )}
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
+                Followers
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">
+                {followersCount}
+              </p>
+            </button>
+            <div className="lg:col-span-4">
+              <h3 className="text-lg font-semibold">
+                {activeList === 'followers' ? 'Followers' : 'Following'}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                {(activeList === 'followers' ? followers : following).map((listUser) => (
+                  <div
+                    key={listUser.id}
+                    className="flex items-center justify-between p-2 border rounded-lg"
+                  >
+                    <Link
+                      to={`/profile/${listUser.username || listUser.id}`}
+                      className="flex items-center gap-2"
+                    >
+                      <img
+                        src={
+                          listUser.nftPfpUrl ||
+                          `https://api.dicebear.com/6.x/micah/svg?seed=${listUser.id}`
+                        }
+                        alt={listUser.displayName || listUser.username || 'User'}
+                        className="h-10 w-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-bold">{listUser.displayName}</p>
+                        <p className="text-sm text-dark-500">@{listUser.username}</p>
+                      </div>
+                    </Link>
+                    {activeList === 'followers' && currentUser?.id === user?.id && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveFollower(listUser.id)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="surface-soft p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Reputation</p>
-                <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">{reputation}</p>
-              </div>
+              {(activeList === 'followers' ? followers : following).length === 0 && (
+                <p className="mt-2 text-sm text-dark-500">
+                  {activeList === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+                </p>
+              )}
+            </div>
+            <div className="surface-soft p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
+                Reputation
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-dark-900 dark:text-white">
+                {reputation}
+              </p>
+            </div>
             {mutualFollows.length > 0 && (
               <div className="surface-soft p-4 lg:col-span-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
@@ -497,7 +580,10 @@ setCurrentUser(updatedUser);
                     {mutualFollows.slice(0, 5).map((mutual) => (
                       <Link to={`/profile/${mutual.username || mutual.id}`} key={mutual.id}>
                         <img
-                          src={mutual.nftPfpUrl || `https://api.dicebear.com/6.x/micah/svg?seed=${mutual.id}`}
+                          src={
+                            mutual.nftPfpUrl ||
+                            `https://api.dicebear.com/6.x/micah/svg?seed=${mutual.id}`
+                          }
                           alt={mutual.email || 'User'}
                           className="h-8 w-8 rounded-full border-2 border-white dark:border-dark-800"
                         />
@@ -516,19 +602,29 @@ setCurrentUser(updatedUser);
                   <UserRound size={20} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">Email</p>
-                  <p className="text-sm text-dark-500 dark:text-dark-400">Primary sign-in identity</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
+                    Email
+                  </p>
+                  <p className="text-sm text-dark-500 dark:text-dark-400">
+                    Primary sign-in identity
+                  </p>
                 </div>
               </div>
               {user.email ? (
                 <div className="flex items-center justify-between gap-3">
-                  <p className="min-w-0 truncate font-medium text-dark-900 dark:text-white">{user.email}</p>
+                  <p className="min-w-0 truncate font-medium text-dark-900 dark:text-white">
+                    {user.email}
+                  </p>
                   <button
                     onClick={() => copyToClipboard(user.email!, 'Email')}
                     className="rounded-full border border-dark-200 bg-white p-2 text-dark-500 shadow-sm transition-colors hover:text-primary-600 dark:border-dark-700 dark:bg-dark-900 dark:hover:text-primary-300"
                     aria-label="Copy email"
                   >
-                    {copiedField === 'Email' ? <CheckCircle2 size={18} className="text-green-600" /> : <Copy size={18} />}
+                    {copiedField === 'Email' ? (
+                      <CheckCircle2 size={18} className="text-green-600" />
+                    ) : (
+                      <Copy size={18} />
+                    )}
                   </button>
                 </div>
               ) : (
@@ -542,18 +638,28 @@ setCurrentUser(updatedUser);
                   <Wallet size={20} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">User ID</p>
-                  <p className="text-sm text-dark-500 dark:text-dark-400">Stable internal identifier</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dark-500">
+                    User ID
+                  </p>
+                  <p className="text-sm text-dark-500 dark:text-dark-400">
+                    Stable internal identifier
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="min-w-0 truncate font-mono text-sm text-dark-900 dark:text-white">{user.id}</p>
+                <p className="min-w-0 truncate font-mono text-sm text-dark-900 dark:text-white">
+                  {user.id}
+                </p>
                 <button
                   onClick={() => copyToClipboard(user.id, 'User ID')}
                   className="rounded-full border border-dark-200 bg-white p-2 text-dark-500 shadow-sm transition-colors hover:text-primary-600 dark:border-dark-700 dark:bg-dark-900 dark:hover:text-primary-300"
                   aria-label="Copy user ID"
-                  >
-                    {copiedField === 'User ID' ? <CheckCircle2 size={18} className="text-green-600" /> : <Copy size={18} />}
+                >
+                  {copiedField === 'User ID' ? (
+                    <CheckCircle2 size={18} className="text-green-600" />
+                  ) : (
+                    <Copy size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -564,7 +670,7 @@ setCurrentUser(updatedUser);
               <h2 className="text-xl font-bold">Featured Posts</h2>
               <PostList
                 posts={featuredPosts}
-                onDelete={(postId) => setPosts(posts.filter(p => p.id !== postId))}
+                onDelete={(postId) => setPosts(posts.filter((p) => p.id !== postId))}
                 onFollow={() => {}}
                 onUnfollow={() => {}}
                 onToggleFeatured={handleToggleFeatured}
@@ -576,7 +682,7 @@ setCurrentUser(updatedUser);
             <h2 className="text-xl font-bold">Posts</h2>
             <PostList
               posts={posts}
-              onDelete={(postId) => setPosts(posts.filter(p => p.id !== postId))}
+              onDelete={(postId) => setPosts(posts.filter((p) => p.id !== postId))}
               onFollow={() => {}}
               onUnfollow={() => {}}
               onToggleFeatured={handleToggleFeatured}
@@ -587,7 +693,9 @@ setCurrentUser(updatedUser);
             <div>
               <p className="section-title text-xl">Wallet</p>
               <p className="section-subtitle">
-                {user.walletAddress ? 'Manage your connected wallet and on-chain identity.' : 'Connect a wallet to unlock on-chain identity.'}
+                {user.walletAddress
+                  ? 'Manage your connected wallet and on-chain identity.'
+                  : 'Connect a wallet to unlock on-chain identity.'}
               </p>
             </div>
             <ConnectButton />
@@ -693,7 +801,6 @@ setCurrentUser(updatedUser);
               <Button variant="secondary">Manage Passkeys</Button>
             </Link>
           </div>
-
         </div>
       ) : (
         <div className="flex min-h-[40vh] items-center justify-center text-center">

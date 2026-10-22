@@ -5,7 +5,13 @@ import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { Label } from '../../components/ui/label';
 
 export function CreateProductPage() {
@@ -13,7 +19,9 @@ export function CreateProductPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [productType, setProductType] = useState<'physical' | 'digital' | 'print-on-demand' | 'nft'>('physical');
+  const [productType, setProductType] = useState<
+    'physical' | 'digital' | 'print-on-demand' | 'nft'
+  >('physical');
   const [digitalFile, setDigitalFile] = useState<File | null>(null);
   const [podProvider, setPodProvider] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -29,13 +37,13 @@ export function CreateProductPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUploading(true);
-    
+
     try {
       const productData: any = {
         name,
         description,
         price: parseFloat(price),
-        productType
+        productType,
       };
 
       // Handle digital product file upload
@@ -50,7 +58,7 @@ export function CreateProductPage() {
           provider: podProvider,
           baseCost: 0,
           shippingLocations: ['US', 'CA', 'EU'],
-          variants: []
+          variants: [],
         };
       }
 
@@ -64,7 +72,7 @@ export function CreateProductPage() {
           isLimitedEdition,
           editionNumber: editionNumber ? parseInt(editionNumber) : undefined,
           totalEditions: totalEditions ? parseInt(totalEditions) : undefined,
-          attributes: []
+          attributes: [],
         };
       }
 
@@ -85,7 +93,7 @@ export function CreateProductPage() {
           <Label htmlFor="name">Product Name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
-        
+
         <div>
           <Label htmlFor="productType">Product Type</Label>
           <Select value={productType} onValueChange={(value: any) => setProductType(value)}>
@@ -103,22 +111,33 @@ export function CreateProductPage() {
 
         <div>
           <Label htmlFor="description">Description</Label>
-          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
 
         <div>
           <Label htmlFor="price">Price ($)</Label>
-          <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
+          <Input
+            id="price"
+            type="number"
+            step="0.01"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
         </div>
 
         {/* Digital product specific field */}
         {productType === 'digital' && (
           <div>
             <Label htmlFor="digitalFile">Digital File (PDF, ZIP, etc.)</Label>
-            <Input 
-              id="digitalFile" 
-              type="file" 
-              onChange={(e) => setDigitalFile(e.target.files?.[0] || null)} 
+            <Input
+              id="digitalFile"
+              type="file"
+              onChange={(e) => setDigitalFile(e.target.files?.[0] || null)}
               required
             />
           </div>
@@ -147,20 +166,20 @@ export function CreateProductPage() {
           <>
             <div>
               <Label htmlFor="contractAddress">Contract Address</Label>
-              <Input 
-                id="contractAddress" 
-                value={contractAddress} 
-                onChange={(e) => setContractAddress(e.target.value)} 
+              <Input
+                id="contractAddress"
+                value={contractAddress}
+                onChange={(e) => setContractAddress(e.target.value)}
                 placeholder="0x..."
                 required
               />
             </div>
             <div>
               <Label htmlFor="tokenId">Token ID</Label>
-              <Input 
-                id="tokenId" 
-                value={tokenId} 
-                onChange={(e) => setTokenId(e.target.value)} 
+              <Input
+                id="tokenId"
+                value={tokenId}
+                onChange={(e) => setTokenId(e.target.value)}
                 placeholder="1"
                 required
               />
@@ -182,18 +201,18 @@ export function CreateProductPage() {
             </div>
             <div>
               <Label htmlFor="metadataUri">Metadata URI (IPFS/Arweave)</Label>
-              <Input 
-                id="metadataUri" 
-                value={metadataUri} 
-                onChange={(e) => setMetadataUri(e.target.value)} 
+              <Input
+                id="metadataUri"
+                value={metadataUri}
+                onChange={(e) => setMetadataUri(e.target.value)}
                 placeholder="ipfs://..."
                 required
               />
             </div>
             <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="isLimitedEdition" 
+              <input
+                type="checkbox"
+                id="isLimitedEdition"
                 checked={isLimitedEdition}
                 onChange={(e) => setIsLimitedEdition(e.target.checked)}
                 className="h-4 w-4"
@@ -204,21 +223,21 @@ export function CreateProductPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="editionNumber">Edition Number</Label>
-                  <Input 
-                    id="editionNumber" 
+                  <Input
+                    id="editionNumber"
                     type="number"
-                    value={editionNumber} 
-                    onChange={(e) => setEditionNumber(e.target.value)} 
+                    value={editionNumber}
+                    onChange={(e) => setEditionNumber(e.target.value)}
                     placeholder="1"
                   />
                 </div>
                 <div>
                   <Label htmlFor="totalEditions">Total Editions</Label>
-                  <Input 
-                    id="totalEditions" 
+                  <Input
+                    id="totalEditions"
                     type="number"
-                    value={totalEditions} 
-                    onChange={(e) => setTotalEditions(e.target.value)} 
+                    value={totalEditions}
+                    onChange={(e) => setTotalEditions(e.target.value)}
                     placeholder="100"
                   />
                 </div>

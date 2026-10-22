@@ -32,7 +32,7 @@ export class OpenSourceController {
   async findAll(
     @Req() req,
     @Query('status') status?: ContributionStatus,
-    @Query('type') type?: ContributionType,
+    @Query('type') type?: ContributionType
   ) {
     return this.openSourceService.findAll({ status, type });
   }
@@ -59,7 +59,7 @@ export class OpenSourceController {
   async updateContribution(
     @Param('id') id: string,
     @Req() req,
-    @Body() updateDto: UpdateContributionDto,
+    @Body() updateDto: UpdateContributionDto
   ) {
     const isAdmin = req.user.isAdmin || false;
     return this.openSourceService.updateContribution(id, req.user.userId, isAdmin, updateDto);
@@ -70,7 +70,7 @@ export class OpenSourceController {
   async assignReviewer(
     @Param('id') id: string,
     @Body('reviewerId') reviewerId: string,
-    @Req() req,
+    @Req() req
   ) {
     const isAdmin = req.user.isAdmin || false;
     if (!isAdmin) {

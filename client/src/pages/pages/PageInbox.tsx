@@ -11,7 +11,7 @@ export function PageInbox() {
 
   useEffect(() => {
     if (id) {
-      getPage(id).then(page => {
+      getPage(id).then((page) => {
         setPageName(page.name);
       });
       getPageConversations(id).then(setConversations);
@@ -25,7 +25,7 @@ export function PageInbox() {
         {conversations.map((convo) => (
           <li key={convo.id}>
             <Link to={`/dms/${convo.id}`}>
-              Conversation with {convo.participants.map(p => p.username).join(', ')}
+              Conversation with {convo.participants.map((p) => p.username).join(', ')}
             </Link>
           </li>
         ))}

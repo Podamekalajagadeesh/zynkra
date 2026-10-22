@@ -3,7 +3,16 @@ import { useState, useEffect } from 'react';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { useToast } from '../hooks/useToast';
-import { Download, Trash2, Shield, AlertTriangle, CheckCircle, FileJson, Loader2, Upload } from 'lucide-react';
+import {
+  Download,
+  Trash2,
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  FileJson,
+  Loader2,
+  Upload,
+} from 'lucide-react';
 import { api, get, del } from '../lib/api';
 
 interface ExportInfo {
@@ -23,7 +32,9 @@ const DataExportPage: React.FC = () => {
   const [deleteStep, setDeleteStep] = useState(0);
   const { addToast } = useToast();
 
-  useEffect(() => { loadInfo(); }, []);
+  useEffect(() => {
+    loadInfo();
+  }, []);
 
   const loadInfo = async () => {
     try {
@@ -67,12 +78,16 @@ const DataExportPage: React.FC = () => {
       const payload = JSON.parse(await file.text());
       const response = await api.post('/data-export/import', payload);
       const result = response.data;
-      addToast(`Data imported: ${result.posts ?? 0} posts, ${result.messages ?? 0} messages, ${result.walletEntries ?? 0} wallet entries, ${result.orders ?? 0} orders.`, 'success');
+      addToast(
+        `Data imported: ${result.posts ?? 0} posts, ${result.messages ?? 0} messages, ${result.walletEntries ?? 0} wallet entries, ${result.orders ?? 0} orders.`,
+        'success'
+      );
       await loadInfo();
     } catch (error: any) {
-      const message = error instanceof SyntaxError
-        ? 'The selected file is not valid JSON.'
-        : error?.response?.data?.message || 'Failed to import data.';
+      const message =
+        error instanceof SyntaxError
+          ? 'The selected file is not valid JSON.'
+          : error?.response?.data?.message || 'Failed to import data.';
       addToast(message, 'error');
     } finally {
       setImporting(false);
@@ -129,18 +144,14 @@ const DataExportPage: React.FC = () => {
             Download a complete copy of all your data in JSON format. This includes:
           </p>
           <ul className="space-y-2 mb-6">
-            {info?.dataTypes.map(type => (
+            {info?.dataTypes.map((type) => (
               <li key={type} className="flex items-center gap-2 text-sm">
                 <CheckCircle size={14} className="text-green-500" />
                 <span className="capitalize">{type.replace(/-/g, ' ')}</span>
               </li>
             ))}
           </ul>
-          <Button
-            onClick={handleDownload}
-            isLoading={exporting}
-            icon={<Download size={16} />}
-          >
+          <Button onClick={handleDownload} isLoading={exporting} icon={<Download size={16} />}>
             Download My Data
           </Button>
         </div>
@@ -151,7 +162,8 @@ const DataExportPage: React.FC = () => {
             Import Your Data
           </h3>
           <p className="text-sm text-dark-500 dark:text-dark-400 mb-4">
-            Restore content and settings from a Zynkra JSON export. Existing identity, payment, and verification data is not replaced.
+            Restore content and settings from a Zynkra JSON export. Existing identity, payment, and
+            verification data is not replaced.
           </p>
           <input
             id="account-data-import"
@@ -179,26 +191,28 @@ const DataExportPage: React.FC = () => {
             <li className="flex items-start gap-2">
               <CheckCircle size={14} className="text-green-500 mt-0.5" />
               <span>
-                Content: posts, comments, reactions, bookmarks, stories, articles, podcasts, courses, enrollments, profile &amp; settings.
+                Content: posts, comments, reactions, bookmarks, stories, articles, podcasts,
+                courses, enrollments, profile &amp; settings.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle size={14} className="text-green-500 mt-0.5" />
               <span>
-                DMs: threaded with their original counterparts when those users exist here; encrypted envelopes are preserved as-is.
+                DMs: threaded with their original counterparts when those users exist here;
+                encrypted envelopes are preserved as-is.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <AlertTriangle size={14} className="text-amber-500 mt-0.5" />
               <span>
-                Wallet, orders, verification &amp; linked accounts are imported as archival history only — no money is fabricated, badges aren&apos;t granted, and OAuth credentials must be re-linked.
+                Wallet, orders, verification &amp; linked accounts are imported as archival history
+                only — no money is fabricated, badges aren&apos;t granted, and OAuth credentials
+                must be re-linked.
               </span>
             </li>
             <li className="flex items-start gap-2">
               <AlertTriangle size={14} className="text-amber-500 mt-0.5" />
-              <span>
-                Import is additive: re-importing the same file duplicates content.
-              </span>
+              <span>Import is additive: re-importing the same file duplicates content.</span>
             </li>
           </ul>
         </div>
@@ -217,8 +231,8 @@ const DataExportPage: React.FC = () => {
                   This action is irreversible
                 </p>
                 <p className="text-sm text-red-600 dark:text-red-500 mt-1">
-                  All your posts, messages, articles, courses, and other content will be permanently deleted.
-                  Your account will be anonymized.
+                  All your posts, messages, articles, courses, and other content will be permanently
+                  deleted. Your account will be anonymized.
                 </p>
               </div>
             </div>
@@ -255,16 +269,15 @@ const DataExportPage: React.FC = () => {
                 </div>
               )}
               <div className="flex gap-3">
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  isLoading={deleting}
-                >
+                <Button variant="destructive" onClick={handleDelete} isLoading={deleting}>
                   {deleteStep < 2 ? 'I understand, continue' : 'Delete everything'}
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => { setShowDeleteConfirm(false); setDeleteStep(0); }}
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteStep(0);
+                  }}
                 >
                   Cancel
                 </Button>

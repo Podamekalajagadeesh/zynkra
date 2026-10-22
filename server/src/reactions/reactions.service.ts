@@ -18,14 +18,10 @@ export class ReactionsService {
     private readonly postsService: PostsService,
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
-    private readonly webhooksService: WebhooksService,
+    private readonly webhooksService: WebhooksService
   ) {}
 
-  async addReaction(
-    userId: string,
-    postId: string,
-    reaction: string,
-  ): Promise<PostReaction> {
+  async addReaction(userId: string, postId: string, reaction: string): Promise<PostReaction> {
     if (!ALLOWED_REACTIONS.has(reaction)) {
       throw new BadRequestException('Unsupported reaction type');
     }
@@ -66,11 +62,10 @@ export class ReactionsService {
 
     const saved = await this.postReactionsRepository.save(newReaction);
     if (post.user?.id && post.user.id !== userId) {
-      await this.notificationsService.createNotification(
-        post.user,
-        NotificationType.LIKE,
-        { userId, postId },
-      );
+      await this.notificationsService.createNotification(post.user, NotificationType.LIKE, {
+        userId,
+        postId,
+      });
     }
     void this.webhooksService.dispatchEvent('reaction.created', {
       postId,

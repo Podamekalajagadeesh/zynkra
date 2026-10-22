@@ -35,7 +35,9 @@ const DonationDrivesPage = () => {
       }
     };
     fetchDrives();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [addToast]);
 
   const filtered = useMemo(() => {
@@ -45,7 +47,7 @@ const DonationDrivesPage = () => {
       (d) =>
         d.title.toLowerCase().includes(q) ||
         d.description?.toLowerCase().includes(q) ||
-        d.location?.toLowerCase().includes(q),
+        d.location?.toLowerCase().includes(q)
     );
   }, [drives, searchQuery]);
 
@@ -97,10 +99,7 @@ const DonationDrivesPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Donation Drives</h1>
         <div className="relative w-60">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400"
-          />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
           <Input
             placeholder="Search drives..."
             value={searchQuery}
@@ -118,9 +117,7 @@ const DonationDrivesPage = () => {
         />
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-dark-500">
-            No drives match "{searchQuery}".
-          </p>
+          <p className="text-dark-500">No drives match "{searchQuery}".</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -142,10 +139,7 @@ const DonationDrivesPage = () => {
                       />
                     ) : (
                       <div className="w-full h-36 bg-gradient-to-br from-primary-100 to-cyan-100 dark:from-primary-900/30 dark:to-cyan-900/30 flex items-center justify-center rounded-t-xl">
-                        <Heart
-                          size={32}
-                          className="text-primary-300 dark:text-primary-700"
-                        />
+                        <Heart size={32} className="text-primary-300 dark:text-primary-700" />
                       </div>
                     )}
                     <div className="p-4">
@@ -178,8 +172,7 @@ const DonationDrivesPage = () => {
                           )}
                           {endDate && (
                             <span className="flex items-center gap-1">
-                              <Calendar size={12} />{' '}
-                              {endDate.toLocaleDateString()}
+                              <Calendar size={12} /> {endDate.toLocaleDateString()}
                             </span>
                           )}
                         </div>

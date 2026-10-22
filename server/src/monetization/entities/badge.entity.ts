@@ -15,6 +15,6 @@ export class Badge {
   @Column()
   imageUrl: string;
 
-  @ManyToMany(() => User, user => user.badges)
+  @ManyToMany(() => User, (user) => user.badges)
   users: User[];
 }

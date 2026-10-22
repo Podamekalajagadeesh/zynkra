@@ -94,10 +94,10 @@ class OnDeviceLLMService {
       this.loadPromise = null;
       const msg = error instanceof Error ? error.message : String(error);
       console.error('Failed to load on-device LLM:', msg);
-      if (msg.includes("@mlc-ai/web-llm") || msg.includes("Failed to resolve module")) {
+      if (msg.includes('@mlc-ai/web-llm') || msg.includes('Failed to resolve module')) {
         throw new Error(
           'On-device LLM is not available yet. The @mlc-ai/web-llm dependency is not installed. ' +
-          'This feature is in Preview — see the roadmap for status updates.'
+            'This feature is in Preview — see the roadmap for status updates.'
         );
       }
       throw error;
@@ -118,10 +118,7 @@ class OnDeviceLLMService {
 
     try {
       const response = await this.engine.chat.completions.create({
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
-        ],
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
         temperature: this.config.temperature,
         max_tokens: this.config.maxTokens,
         top_p: this.config.topP,

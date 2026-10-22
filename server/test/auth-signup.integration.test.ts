@@ -67,8 +67,8 @@ describe('POST /auth/signup (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -117,16 +117,14 @@ describe('POST /auth/signup (HTTP integration)', () => {
       message: 'Signup successful. Please check your email to verify your account.',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        email: 'new@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      email: 'new@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
 
     expect(response.status).toBe(201);
     expect(response.body.message).toContain('Signup successful');
@@ -143,15 +141,13 @@ describe('POST /auth/signup (HTTP integration)', () => {
   // --- Validation errors (via ValidationPipe) ---
 
   it('returns 400 when username is missing', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        email: 'new@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      email: 'new@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBeDefined();
@@ -159,82 +155,70 @@ describe('POST /auth/signup (HTTP integration)', () => {
   });
 
   it('returns 400 when email is missing', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
   });
 
   it('returns 400 when password is missing', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        email: 'new@example.com',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      email: 'new@example.com',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
   });
 
   it('returns 400 when password is too short (< 8 chars)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        email: 'new@example.com',
-        password: 'short',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      email: 'new@example.com',
+      password: 'short',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
   });
 
   it('returns 400 when email is invalid', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        email: 'not-an-email',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      email: 'not-an-email',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
   });
 
   it('returns 400 when username contains special characters', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'user name!',
-        email: 'new@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'user name!',
+      email: 'new@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
   });
 
   it('returns 400 when username is shorter than 3 characters', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'ab',
-        email: 'new@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'ab',
+      email: 'new@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signUp).not.toHaveBeenCalled();
@@ -246,16 +230,14 @@ describe('POST /auth/signup (HTTP integration)', () => {
     const { ConflictException } = require('@nestjs/common');
     authService.signUp.mockRejectedValue(new ConflictException('Email already in use'));
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        username: 'newuser',
-        email: 'taken@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signup').send({
+      username: 'newuser',
+      email: 'taken@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
 
     expect(response.status).toBe(409);
     expect(response.body.message).toContain('Email already in use');

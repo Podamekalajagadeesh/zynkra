@@ -69,16 +69,16 @@ export function SnapMapPage() {
         (position) => {
           const newLocation: [number, number] = [
             position.coords.latitude,
-            position.coords.longitude
+            position.coords.longitude,
           ];
           setUserLocation(newLocation);
-          
+
           // Emit location update to server
           if (socket && user) {
             socket.emit('update-location', {
               userId: user.user.id,
               latitude: position.coords.latitude,
-              longitude: position.coords.longitude
+              longitude: position.coords.longitude,
             });
           }
         },
@@ -88,23 +88,18 @@ export function SnapMapPage() {
       );
 
       // Watch for location updates
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const newLocation: [number, number] = [
-            position.coords.latitude,
-            position.coords.longitude
-          ];
-          setUserLocation(newLocation);
-          
-          if (socket && user) {
-            socket.emit('update-location', {
-              userId: user.user.id,
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude
-            });
-          }
+      const watchId = navigator.geolocation.watchPosition((position) => {
+        const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+        setUserLocation(newLocation);
+
+        if (socket && user) {
+          socket.emit('update-location', {
+            userId: user.user.id,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
         }
-      );
+      });
 
       return () => navigator.geolocation.clearWatch(watchId);
     }
@@ -114,10 +109,10 @@ export function SnapMapPage() {
   useEffect(() => {
     if (socket) {
       socket.on('friend-location-updated', (data: FriendLocation) => {
-        setFriendLocations(prev => {
-          const existing = prev.find(f => f.userId === data.userId);
+        setFriendLocations((prev) => {
+          const existing = prev.find((f) => f.userId === data.userId);
           if (existing) {
-            return prev.map(f => f.userId === data.userId ? data : f);
+            return prev.map((f) => (f.userId === data.userId ? data : f));
           }
           return [...prev, data];
         });
@@ -142,7 +137,7 @@ export function SnapMapPage() {
       html: `<img src="${story.imageUrl}" style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid #FFFC00; object-fit: cover;" />`,
       className: 'story-marker',
       iconSize: [50, 50],
-      iconAnchor: [25, 25]
+      iconAnchor: [25, 25],
     });
   };
 
@@ -151,7 +146,7 @@ export function SnapMapPage() {
       html: `<img src="${friend.avatar || 'https://via.placeholder.com/40'}" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #007AFF; object-fit: cover;" />`,
       className: 'friend-marker',
       iconSize: [40, 40],
-      iconAnchor: [20, 20]
+      iconAnchor: [20, 20],
     });
   };
 
@@ -163,10 +158,7 @@ export function SnapMapPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-gray-300 text-sm">Share Location</span>
-            <Switch 
-              checked={locationSharingEnabled}
-              onCheckedChange={setLocationSharingEnabled}
-            />
+            <Switch checked={locationSharingEnabled} onCheckedChange={setLocationSharingEnabled} />
           </div>
         </div>
       </div>
@@ -183,17 +175,13 @@ export function SnapMapPage() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <MapContainer
-          center={userLocation}
-          zoom={13}
-          style={{ height: '100%', width: '100%' }}
-        >
+        <MapContainer center={userLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
           <MapController center={userLocation} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
+
           {/* Current user marker */}
           {locationSharingEnabled && (
             <Marker position={userLocation}>
@@ -206,53 +194,55 @@ export function SnapMapPage() {
           )}
 
           {/* Friend markers */}
-          {activeTab === 'friends' && friendLocations.map(friend => (
-            <Marker 
-              key={friend.userId} 
-              position={[friend.latitude, friend.longitude]}
-              icon={createFriendIcon(friend)}
-              eventHandlers={{
-                click: () => setSelectedFriend(friend)
-              }}
-            >
-              <Popup>
-                <Card className="p-2 min-w-[200px]">
-                  <div className="flex items-center gap-3">
-                    <Avatar src={friend.avatar} size="md" />
-                    <div>
-                      <p className="font-semibold">{friend.displayName || friend.username}</p>
-                      <p className="text-sm text-gray-500">@{friend.username}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Last updated: {new Date(friend.lastUpdated).toLocaleTimeString()}
-                      </p>
+          {activeTab === 'friends' &&
+            friendLocations.map((friend) => (
+              <Marker
+                key={friend.userId}
+                position={[friend.latitude, friend.longitude]}
+                icon={createFriendIcon(friend)}
+                eventHandlers={{
+                  click: () => setSelectedFriend(friend),
+                }}
+              >
+                <Popup>
+                  <Card className="p-2 min-w-[200px]">
+                    <div className="flex items-center gap-3">
+                      <Avatar src={friend.avatar} size="md" />
+                      <div>
+                        <p className="font-semibold">{friend.displayName || friend.username}</p>
+                        <p className="text-sm text-gray-500">@{friend.username}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Last updated: {new Date(friend.lastUpdated).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {friend.currentStory && (
-                    <Button className="w-full mt-3" size="sm">
-                      View Story
-                    </Button>
-                  )}
-                </Card>
-              </Popup>
-            </Marker>
-          ))}
+                    {friend.currentStory && (
+                      <Button className="w-full mt-3" size="sm">
+                        View Story
+                      </Button>
+                    )}
+                  </Card>
+                </Popup>
+              </Marker>
+            ))}
 
           {/* Location story markers */}
-          {activeTab === 'stories' && locationStories.map(story => (
-            <Marker 
-              key={story.id} 
-              position={[story.latitude, story.longitude]}
-              icon={createStoryIcon(story)}
-            >
-              <Popup>
-                <div className="max-w-[250px]">
-                  <img src={story.imageUrl} alt={story.caption} className="w-full rounded-md" />
-                  <p className="mt-2 font-semibold">@{story.username}</p>
-                  <p className="text-sm text-gray-600">{story.caption}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {activeTab === 'stories' &&
+            locationStories.map((story) => (
+              <Marker
+                key={story.id}
+                position={[story.latitude, story.longitude]}
+                icon={createStoryIcon(story)}
+              >
+                <Popup>
+                  <div className="max-w-[250px]">
+                    <img src={story.imageUrl} alt={story.caption} className="w-full rounded-md" />
+                    <p className="mt-2 font-semibold">@{story.username}</p>
+                    <p className="text-sm text-gray-600">{story.caption}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
         </MapContainer>
       </div>
 
@@ -260,12 +250,14 @@ export function SnapMapPage() {
       <div className="bg-zinc-900 p-4">
         <h3 className="text-white font-semibold mb-3">Friends on Map ({friendLocations.length})</h3>
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {friendLocations.map(friend => (
-            <div 
+          {friendLocations.map((friend) => (
+            <div
               key={friend.userId}
               onClick={() => setSelectedFriend(friend)}
               className={`flex-shrink-0 cursor-pointer p-2 rounded-lg transition-all ${
-                selectedFriend?.userId === friend.userId ? 'bg-blue-600' : 'bg-zinc-800 hover:bg-zinc-700'
+                selectedFriend?.userId === friend.userId
+                  ? 'bg-blue-600'
+                  : 'bg-zinc-800 hover:bg-zinc-700'
               }`}
             >
               <Avatar src={friend.avatar} size="lg" />

@@ -29,7 +29,7 @@ export class NotificationsGateway
 
   constructor(
     private readonly wsAuth: WsAuthService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   afterInit(server: Server) {

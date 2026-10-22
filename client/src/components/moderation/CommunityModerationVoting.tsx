@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Users, ThumbsUp, ThumbsDown, Clock, AlertCircle, CheckCircle, XCircle, Vote as VoteIcon } from 'lucide-react';
+import {
+  Users,
+  ThumbsUp,
+  ThumbsDown,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Vote as VoteIcon,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -10,7 +19,7 @@ import {
   getActiveCommunityVotes,
   getCommunityVoteResults,
   submitCommunityVote,
-  CommunityVote
+  CommunityVote,
 } from '../../services/contentModerationService';
 
 export function CommunityModerationVoting() {
@@ -26,7 +35,7 @@ export function CommunityModerationVoting() {
       setLoading(true);
       const [active, completed] = await Promise.all([
         getActiveCommunityVotes(),
-        getCommunityVoteResults()
+        getCommunityVoteResults(),
       ]);
       setActiveVotes(active);
       setCompletedVotes(completed);
@@ -45,17 +54,17 @@ export function CommunityModerationVoting() {
   }, []);
 
   const handleVote = async (voteId: string, vote: 'approve' | 'remove') => {
-    setVotingIds(prev => new Set(prev).add(voteId));
+    setVotingIds((prev) => new Set(prev).add(voteId));
     try {
       await submitCommunityVote(voteId, vote);
-      setUserVotes(prev => ({ ...prev, [voteId]: vote }));
+      setUserVotes((prev) => ({ ...prev, [voteId]: vote }));
       addToast('Your vote has been submitted successfully', 'success');
       // Refresh votes to update counts
       fetchVotes();
     } catch (error) {
       addToast('Failed to submit your vote', 'error');
     } finally {
-      setVotingIds(prev => {
+      setVotingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(voteId);
         return newSet;
@@ -67,9 +76,9 @@ export function CommunityModerationVoting() {
     const end = new Date(endTime).getTime();
     const now = Date.now();
     const diff = end - now;
-    
+
     if (diff <= 0) return 'Vote ended';
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m remaining`;
@@ -80,18 +89,30 @@ export function CommunityModerationVoting() {
     if (total === 0) return { approve: 0, remove: 0 };
     return {
       approve: Math.round((vote.votes.approve / total) * 100),
-      remove: Math.round((vote.votes.remove / total) * 100)
+      remove: Math.round((vote.votes.remove / total) * 100),
     };
   };
 
   const getStatusBadge = (status: CommunityVote['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-blue-500"><Clock className="h-3 w-3 mr-1" /> Active</Badge>;
+        return (
+          <Badge className="bg-blue-500">
+            <Clock className="h-3 w-3 mr-1" /> Active
+          </Badge>
+        );
       case 'completed':
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" /> Completed</Badge>;
+        return (
+          <Badge className="bg-green-500">
+            <CheckCircle className="h-3 w-3 mr-1" /> Completed
+          </Badge>
+        );
       case 'cancelled':
-        return <Badge className="bg-gray-500"><XCircle className="h-3 w-3 mr-1" /> Cancelled</Badge>;
+        return (
+          <Badge className="bg-gray-500">
+            <XCircle className="h-3 w-3 mr-1" /> Cancelled
+          </Badge>
+        );
       default:
         return null;
     }
@@ -105,7 +126,7 @@ export function CommunityModerationVoting() {
           <h2 className="text-2xl font-bold">Community Moderation</h2>
         </div>
         <div className="grid gap-4">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <Card key={i} className="p-6">
               <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -145,11 +166,11 @@ export function CommunityModerationVoting() {
               <p className="text-gray-500">No active community moderation votes at this time</p>
             </Card>
           ) : (
-            activeVotes.map(vote => {
+            activeVotes.map((vote) => {
               const percentages = calculateVotePercentages(vote);
               const hasVoted = userVotes[vote.id];
               const isProcessing = votingIds.has(vote.id);
-              
+
               return (
                 <Card key={vote.id} className="p-6">
                   <div className="space-y-4">
@@ -157,11 +178,17 @@ export function CommunityModerationVoting() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           {getStatusBadge(vote.status)}
-                          <span className="text-sm text-gray-500">{calculateTimeRemaining(vote.endTime)}</span>
+                          <span className="text-sm text-gray-500">
+                            {calculateTimeRemaining(vote.endTime)}
+                          </span>
                         </div>
-                        <h3 className="font-semibold text-lg">Content Review: {vote.contentType}</h3>
+                        <h3 className="font-semibold text-lg">
+                          Content Review: {vote.contentType}
+                        </h3>
                         <p className="text-gray-600 mt-1">{vote.contentPreview}</p>
-                        <p className="text-sm text-gray-500 mt-1">Submitted by: {vote.authorName}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Submitted by: {vote.authorName}
+                        </p>
                       </div>
                     </div>
 
@@ -195,9 +222,17 @@ export function CommunityModerationVoting() {
                     ) : (
                       <div className="p-3 bg-gray-100 rounded-md text-center">
                         <p className="text-sm text-gray-600">
-                          You voted to <span className={userVotes[vote.id] === 'approve' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                          You voted to{' '}
+                          <span
+                            className={
+                              userVotes[vote.id] === 'approve'
+                                ? 'text-green-600 font-semibold'
+                                : 'text-red-600 font-semibold'
+                            }
+                          >
                             {userVotes[vote.id]}
-                          </span> this content
+                          </span>{' '}
+                          this content
                         </p>
                       </div>
                     )}
@@ -220,7 +255,7 @@ export function CommunityModerationVoting() {
               <p className="text-gray-500">No completed community moderation votes yet</p>
             </Card>
           ) : (
-            completedVotes.map(vote => {
+            completedVotes.map((vote) => {
               const percentages = calculateVotePercentages(vote);
               return (
                 <Card key={vote.id} className="p-6 opacity-80">
@@ -230,14 +265,20 @@ export function CommunityModerationVoting() {
                         <div className="flex items-center gap-2 mb-2">
                           {getStatusBadge(vote.status)}
                           {vote.result && (
-                            <Badge className={vote.result === 'approved' ? 'bg-green-600' : 'bg-red-600'}>
+                            <Badge
+                              className={vote.result === 'approved' ? 'bg-green-600' : 'bg-red-600'}
+                            >
                               Result: {vote.result}
                             </Badge>
                           )}
                         </div>
-                        <h3 className="font-semibold text-lg">Content Review: {vote.contentType}</h3>
+                        <h3 className="font-semibold text-lg">
+                          Content Review: {vote.contentType}
+                        </h3>
                         <p className="text-gray-600 mt-1">{vote.contentPreview}</p>
-                        <p className="text-sm text-gray-500 mt-1">Final vote count: {vote.votes.voters.length} votes</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Final vote count: {vote.votes.voters.length} votes
+                        </p>
                       </div>
                     </div>
 

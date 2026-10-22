@@ -7,9 +7,7 @@ import { useToast } from '../hooks/useToast';
 
 const VolunteerOpportunityPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [opportunity, setOpportunity] = useState<VolunteerOpportunity | null>(
-    null
-  );
+  const [opportunity, setOpportunity] = useState<VolunteerOpportunity | null>(null);
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -45,9 +43,7 @@ const VolunteerOpportunityPage = () => {
       <h1 className="text-2xl font-bold mb-4">{opportunity.title}</h1>
       <p className="mb-4">{opportunity.description}</p>
       <p className="mb-4">{opportunity.location}</p>
-      <p className="mb-4">
-        {new Date(opportunity.date).toLocaleDateString()}
-      </p>
+      <p className="mb-4">{new Date(opportunity.date).toLocaleDateString()}</p>
       <Button onClick={handleApply}>Apply</Button>
     </div>
   );

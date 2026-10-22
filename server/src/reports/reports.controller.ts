@@ -18,7 +18,7 @@ export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
     private readonly usersService: UsersService,
-    private readonly postsService: PostsService,
+    private readonly postsService: PostsService
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -26,7 +26,7 @@ export class ReportsController {
   async create(
     @Request() req,
     @Param('postId') postId: string,
-    @Body() createReportDto: CreateReportDto,
+    @Body() createReportDto: CreateReportDto
   ) {
     const reporter = await this.usersService.findOneById(req.user.userId);
     if (!reporter) {
@@ -38,10 +38,6 @@ export class ReportsController {
       throw new NotFoundException('Post not found');
     }
 
-    return this.reportsService.create(
-      createReportDto.reason,
-      reporter,
-      post,
-    );
+    return this.reportsService.create(createReportDto.reason, reporter, post);
   }
 }

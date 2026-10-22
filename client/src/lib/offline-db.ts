@@ -108,8 +108,14 @@ async function dbPut<T>(storeName: string, value: T): Promise<void> {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
     store.put(value);
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error); };
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
   });
 }
 
@@ -119,8 +125,14 @@ async function dbGet<T>(storeName: string, key: string): Promise<T | undefined> 
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
     const req = store.get(key);
-    req.onsuccess = () => { db.close(); resolve(req.result); };
-    req.onerror = () => { db.close(); reject(req.error); };
+    req.onsuccess = () => {
+      db.close();
+      resolve(req.result);
+    };
+    req.onerror = () => {
+      db.close();
+      reject(req.error);
+    };
   });
 }
 
@@ -130,8 +142,14 @@ async function dbGetAll<T>(storeName: string): Promise<T[]> {
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
     const req = store.getAll();
-    req.onsuccess = () => { db.close(); resolve(req.result); };
-    req.onerror = () => { db.close(); reject(req.error); };
+    req.onsuccess = () => {
+      db.close();
+      resolve(req.result);
+    };
+    req.onerror = () => {
+      db.close();
+      reject(req.error);
+    };
   });
 }
 
@@ -141,8 +159,14 @@ async function dbDelete(storeName: string, key: string): Promise<void> {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
     store.delete(key);
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error); };
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
   });
 }
 
@@ -153,8 +177,14 @@ async function dbGetByIndex<T>(storeName: string, indexName: string, value: any)
     const store = tx.objectStore(storeName);
     const index = store.index(indexName);
     const req = index.getAll(value);
-    req.onsuccess = () => { db.close(); resolve(req.result); };
-    req.onerror = () => { db.close(); reject(req.error); };
+    req.onsuccess = () => {
+      db.close();
+      resolve(req.result);
+    };
+    req.onerror = () => {
+      db.close();
+      reject(req.error);
+    };
   });
 }
 
@@ -213,7 +243,9 @@ export const offlineDB = {
   },
 
   // Sync Queue
-  async addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'createdAt' | 'retries' | 'status'>): Promise<SyncQueueItem> {
+  async addToSyncQueue(
+    item: Omit<SyncQueueItem, 'id' | 'createdAt' | 'retries' | 'status'>
+  ): Promise<SyncQueueItem> {
     const queueItem: SyncQueueItem = {
       ...item,
       id: `sync_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -284,7 +316,7 @@ export const offlineDB = {
     return {
       posts: posts.length,
       messages: messages.length,
-      pendingSync: pending.filter(i => i.status === 'pending').length,
+      pendingSync: pending.filter((i) => i.status === 'pending').length,
       lastSyncedAt: lastSynced,
     };
   },
@@ -294,10 +326,16 @@ export const offlineDB = {
     const db = await openDb();
     const stores = ['posts', 'messages', 'users', 'conversations', 'syncQueue', 'syncMetadata'];
     const tx = db.transaction(stores, 'readwrite');
-    stores.forEach(name => tx.objectStore(name).clear());
+    stores.forEach((name) => tx.objectStore(name).clear());
     return new Promise((resolve, reject) => {
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onerror = () => { db.close(); reject(tx.error); };
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(tx.error);
+      };
     });
   },
 };

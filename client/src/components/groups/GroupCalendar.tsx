@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+} from 'date-fns';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -73,7 +82,7 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getEventsForDay = (day: Date) => {
-    return events.filter(event => isSameDay(new Date(event.startTime), day));
+    return events.filter((event) => isSameDay(new Date(event.startTime), day));
   };
 
   return (
@@ -133,7 +142,9 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
                   onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                 />
               </div>
-              <Button onClick={handleCreateEvent} className="w-full">Create Event</Button>
+              <Button onClick={handleCreateEvent} className="w-full">
+                Create Event
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -151,7 +162,7 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-1 text-center">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
               <div key={day} className="p-2 font-medium text-sm text-muted-foreground">
                 {day}
               </div>
@@ -165,13 +176,15 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
                 >
                   <span className="text-sm">{format(day, 'd')}</span>
                   <div className="space-y-1 mt-1">
-                    {dayEvents.slice(0, 2).map(event => (
+                    {dayEvents.slice(0, 2).map((event) => (
                       <div key={event.id} className="text-xs p-1 bg-primary/10 rounded truncate">
                         {event.title}
                       </div>
                     ))}
                     {dayEvents.length > 2 && (
-                      <div className="text-xs text-muted-foreground">+{dayEvents.length - 2} more</div>
+                      <div className="text-xs text-muted-foreground">
+                        +{dayEvents.length - 2} more
+                      </div>
                     )}
                   </div>
                 </div>
@@ -184,10 +197,10 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
       <div className="space-y-2">
         <h4 className="font-medium">Upcoming Events</h4>
         {events
-          .filter(event => new Date(event.startTime) >= new Date())
+          .filter((event) => new Date(event.startTime) >= new Date())
           .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
           .slice(0, 5)
-          .map(event => (
+          .map((event) => (
             <Card key={event.id}>
               <CardHeader className="py-3">
                 <div className="flex items-center justify-between">
@@ -196,7 +209,9 @@ export function GroupCalendar({ groupId }: GroupCalendarProps) {
                     {format(new Date(event.startTime), 'MMM d, h:mm a')}
                   </CardDescription>
                 </div>
-                {event.location && <CardDescription className="text-xs">📍 {event.location}</CardDescription>}
+                {event.location && (
+                  <CardDescription className="text-xs">📍 {event.location}</CardDescription>
+                )}
               </CardHeader>
             </Card>
           ))}

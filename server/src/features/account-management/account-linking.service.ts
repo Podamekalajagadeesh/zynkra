@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
@@ -18,12 +24,17 @@ export class AccountLinkingService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private notificationsService: NotificationsService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   createOAuthState(userId: string, provider: LinkedAccountProvider): string {
-    const payload = Buffer.from(JSON.stringify({ userId, provider, expiresAt: Date.now() + 10 * 60 * 1000 })).toString('base64url');
-    const signature = crypto.createHmac('sha256', this.getEncryptionKey()).update(payload).digest('base64url');
+    const payload = Buffer.from(
+      JSON.stringify({ userId, provider, expiresAt: Date.now() + 10 * 60 * 1000 })
+    ).toString('base64url');
+    const signature = crypto
+      .createHmac('sha256', this.getEncryptionKey())
+      .update(payload)
+      .digest('base64url');
     return `${payload}.${signature}`;
   }
 
@@ -33,8 +44,14 @@ export class AccountLinkingService {
       throw new BadRequestException('Invalid account-linking state');
     }
 
-    const expected = crypto.createHmac('sha256', this.getEncryptionKey()).update(payload).digest('base64url');
-    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    const expected = crypto
+      .createHmac('sha256', this.getEncryptionKey())
+      .update(payload)
+      .digest('base64url');
+    if (
+      signature.length !== expected.length ||
+      !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+    ) {
       throw new BadRequestException('Invalid account-linking state');
     }
 
@@ -50,11 +67,17 @@ export class AccountLinkingService {
   }
 
   getOAuthStartUrl(provider: LinkedAccountProvider, state: string): string {
-    const apiUrl = this.configService.get<string>('API_URL') || this.configService.get<string>('SERVER_URL', 'http://localhost:3000');
+    const apiUrl =
+      this.configService.get<string>('API_URL') ||
+      this.configService.get<string>('SERVER_URL', 'http://localhost:3000');
     return `${apiUrl}/auth/link/${provider}?state=${encodeURIComponent(state)}`;
   }
 
-  async linkOAuthAccount(userId: string, provider: LinkedAccountProvider, profile: any): Promise<LinkedAccount> {
+  async linkOAuthAccount(
+    userId: string,
+    provider: LinkedAccountProvider,
+    profile: any
+  ): Promise<LinkedAccount> {
     return this.linkAccount(userId, {
       provider,
       externalUserId: String(profile.providerId),
@@ -78,7 +101,11 @@ export class AccountLinkingService {
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv('aes-256-gcm', this.getEncryptionKey(), iv);
     const encrypted = Buffer.concat([cipher.update(accessToken, 'utf8'), cipher.final()]);
-    return [iv.toString('base64url'), cipher.getAuthTag().toString('base64url'), encrypted.toString('base64url')].join('.');
+    return [
+      iv.toString('base64url'),
+      cipher.getAuthTag().toString('base64url'),
+      encrypted.toString('base64url'),
+    ].join('.');
   }
 
   async linkAccount(userId: string, linkAccountDto: LinkAccountDto): Promise<LinkedAccount> {
@@ -149,10 +176,14 @@ export class AccountLinkingService {
   }
 
   async unlinkAccount(userId: string, linkedAccountId: string): Promise<void> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
 
     if (!linkedAccount || linkedAccount.userId !== userId) {
-      throw new NotFoundException('Linked account not found or you do not have permission to unlink it');
+      throw new NotFoundException(
+        'Linked account not found or you do not have permission to unlink it'
+      );
     }
 
     if (linkedAccount.isPrimary) {
@@ -173,7 +204,9 @@ export class AccountLinkingService {
   }
 
   async setPrimaryAccount(userId: string, linkedAccountId: string): Promise<LinkedAccount> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
 
     if (!linkedAccount || linkedAccount.userId !== userId) {
       throw new NotFoundException('Linked account not found');
@@ -210,7 +243,9 @@ export class AccountLinkingService {
   }
 
   async getLinkedAccount(linkedAccountId: string): Promise<LinkedAccount> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
     if (!linkedAccount) {
       throw new NotFoundException('Linked account not found');
     }
@@ -227,7 +262,10 @@ export class AccountLinkingService {
     });
   }
 
-  async getLinkedAccountByProvider(userId: string, provider: LinkedAccountProvider): Promise<LinkedAccount | null> {
+  async getLinkedAccountByProvider(
+    userId: string,
+    provider: LinkedAccountProvider
+  ): Promise<LinkedAccount | null> {
     return this.linkedAccountRepository.findOne({
       where: {
         user: { id: userId },
@@ -238,7 +276,9 @@ export class AccountLinkingService {
   }
 
   async updateLastUsed(linkedAccountId: string): Promise<void> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
     if (linkedAccount) {
       linkedAccount.lastUsedAt = new Date();
       await this.linkedAccountRepository.save(linkedAccount);
@@ -246,7 +286,9 @@ export class AccountLinkingService {
   }
 
   async deactivateLinkedAccount(linkedAccountId: string): Promise<LinkedAccount> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
     if (!linkedAccount) {
       throw new NotFoundException('Linked account not found');
     }
@@ -260,7 +302,9 @@ export class AccountLinkingService {
   }
 
   async reactivateLinkedAccount(linkedAccountId: string): Promise<LinkedAccount> {
-    const linkedAccount = await this.linkedAccountRepository.findOne({ where: { id: linkedAccountId } });
+    const linkedAccount = await this.linkedAccountRepository.findOne({
+      where: { id: linkedAccountId },
+    });
     if (!linkedAccount) {
       throw new NotFoundException('Linked account not found');
     }

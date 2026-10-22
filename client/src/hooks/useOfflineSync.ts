@@ -46,13 +46,13 @@ export function useOfflineSync(): UseOfflineSyncReturn {
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => {
-      setState(prev => ({ ...prev, isOnline: true }));
+      setState((prev) => ({ ...prev, isOnline: true }));
       // Auto-sync when coming back online
       syncPendingChanges();
     };
 
     const handleOffline = () => {
-      setState(prev => ({ ...prev, isOnline: false }));
+      setState((prev) => ({ ...prev, isOnline: false }));
     };
 
     window.addEventListener('online', handleOnline);
@@ -81,7 +81,7 @@ export function useOfflineSync(): UseOfflineSyncReturn {
     try {
       const pending = await offlineDB.getPendingSyncItems();
       const lastSynced = await offlineDB.getMetadata('lastSyncedAt');
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         pendingChanges: pending.length,
         lastSyncedAt: lastSynced,
@@ -94,7 +94,7 @@ export function useOfflineSync(): UseOfflineSyncReturn {
   const syncPendingChanges = async () => {
     if (!navigator.onLine) return;
 
-    setState(prev => ({ ...prev, isSyncing: true, error: null }));
+    setState((prev) => ({ ...prev, isSyncing: true, error: null }));
 
     try {
       const pendingItems = await offlineDB.getPendingSyncItems();
@@ -127,13 +127,13 @@ export function useOfflineSync(): UseOfflineSyncReturn {
       await offlineDB.clearCompletedSyncItems();
       await updatePendingCount();
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isSyncing: false,
         lastSyncedAt: new Date().toISOString(),
       }));
     } catch (err) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isSyncing: false,
         error: err instanceof Error ? err.message : 'Sync failed',
@@ -141,21 +141,24 @@ export function useOfflineSync(): UseOfflineSyncReturn {
     }
   };
 
-  const queueChange = useCallback(async (change: {
-    type: 'post' | 'message' | 'reaction' | 'follow' | 'profile';
-    action: 'create' | 'update' | 'delete';
-    endpoint: string;
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    body?: any;
-  }) => {
-    await offlineDB.addToSyncQueue(change);
-    await updatePendingCount();
+  const queueChange = useCallback(
+    async (change: {
+      type: 'post' | 'message' | 'reaction' | 'follow' | 'profile';
+      action: 'create' | 'update' | 'delete';
+      endpoint: string;
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+      body?: any;
+    }) => {
+      await offlineDB.addToSyncQueue(change);
+      await updatePendingCount();
 
-    // Try immediate sync if online
-    if (navigator.onLine) {
-      await syncPendingChanges();
-    }
-  }, []);
+      // Try immediate sync if online
+      if (navigator.onLine) {
+        await syncPendingChanges();
+      }
+    },
+    []
+  );
 
   const forceSync = useCallback(async () => {
     await syncPendingChanges();

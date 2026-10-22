@@ -33,7 +33,7 @@ export class MediaController {
           cb(new BadRequestException('Only image, video, and audio files are allowed'), false);
         }
       },
-    }),
+    })
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) {
@@ -60,18 +60,18 @@ export class MediaController {
         } else {
           cb(
             new BadRequestException(
-              'E2EE attachments must be uploaded as application/octet-stream ciphertext',
+              'E2EE attachments must be uploaded as application/octet-stream ciphertext'
             ),
-            false,
+            false
           );
         }
       },
-    }),
+    })
   )
   async uploadE2eeAttachment(
     @UploadedFile() file: Express.Multer.File,
     @Request() req,
-    @Query('type') type?: string,
+    @Query('type') type?: string
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -104,7 +104,7 @@ export class MediaController {
           cb(new BadRequestException('Only image files are allowed'), false);
         }
       },
-    }),
+    })
   )
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
@@ -112,7 +112,7 @@ export class MediaController {
     @Query('maxWidth') maxWidth?: string,
     @Query('maxHeight') maxHeight?: string,
     @Query('quality') quality?: string,
-    @Query('format') format?: 'jpeg' | 'png' | 'webp' | 'avif',
+    @Query('format') format?: 'jpeg' | 'png' | 'webp' | 'avif'
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -125,7 +125,7 @@ export class MediaController {
         quality: quality ? parseInt(quality, 10) : undefined,
         format,
       },
-      { userId: req.user?.userId },
+      { userId: req.user?.userId }
     );
   }
 

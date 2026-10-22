@@ -31,8 +31,11 @@ const AudioLibrary = ({ onSelect, onClose }: AudioLibraryProps) => {
           </Button>
         </div>
         <div className="space-y-4">
-          {sampleAudio.map(track => (
-            <div key={track.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+          {sampleAudio.map((track) => (
+            <div
+              key={track.id}
+              className="flex items-center justify-between p-3 bg-gray-700 rounded-lg"
+            >
               <div>
                 <p className="font-semibold">{track.title}</p>
                 <p className="text-sm text-gray-400">{track.artist}</p>

@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -20,13 +27,19 @@ import { BrainwaveDevice } from './entities/brainwave-device.entity';
 import { AccountManagementService } from '../features/account-management/account-management.service';
 import { LoginApprovalService } from '../features/account-management/login-approval.service';
 import { SecurityAuditService } from '../security-audit/security-audit.service';
-import { SecurityEventType, SecurityEventSeverity } from '../security-audit/entities/security-audit.entity';
+import {
+  SecurityEventType,
+  SecurityEventSeverity,
+} from '../security-audit/entities/security-audit.entity';
 import { ipInAllowlist } from '../common/ip';
 
 class LoginApprovalRequiredException extends UnauthorizedException {
   readonly sessionId: string;
 
-  constructor(sessionId: string, message = 'This login requires approval before access is granted.') {
+  constructor(
+    sessionId: string,
+    message = 'This login requires approval before access is granted.'
+  ) {
     super(message);
     this.sessionId = sessionId;
     this.name = 'LoginApprovalRequiredException';
@@ -66,7 +79,7 @@ export class AuthService {
     private readonly brainwaveDevicesRepository: Repository<BrainwaveDevice>,
     private readonly accountManagementService?: AccountManagementService,
     private readonly securityAuditService?: SecurityAuditService,
-    private readonly loginApprovalService?: LoginApprovalService,
+    private readonly loginApprovalService?: LoginApprovalService
   ) {}
 
   private get clientUrl(): string {
@@ -109,10 +122,11 @@ export class AuthService {
     counterBuffer.writeBigUInt64BE(BigInt(counter));
     const hmac = createHmac('sha1', key).update(counterBuffer).digest();
     const offset = hmac[hmac.length - 1] & 0x0f;
-    const binary = ((hmac[offset] & 0x7f) << 24)
-      | ((hmac[offset + 1] & 0xff) << 16)
-      | ((hmac[offset + 2] & 0xff) << 8)
-      | (hmac[offset + 3] & 0xff);
+    const binary =
+      ((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff);
     return (binary % 1_000_000).toString().padStart(6, '0');
   }
 
@@ -160,7 +174,11 @@ export class AuthService {
     return null;
   }
 
-  private async createLoginSession(user: User, req?: any, isTrusted = false): Promise<LoginSession> {
+  private async createLoginSession(
+    user: User,
+    req?: any,
+    isTrusted = false
+  ): Promise<LoginSession> {
     // Resolve trust from the persisted allowlist unless the caller already
     // decided. `isTrusted` was previously never passed as true, so
     // `LoginSession.isTrusted` was always false and the trusted-IP control did
@@ -170,7 +188,8 @@ export class AuthService {
     const session = this.loginSessionsRepository.create({
       user,
       deviceName: this.getRequestDeviceName(req),
-      userAgent: typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : null,
+      userAgent:
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : null,
       ipAddress: this.getRequestIp(req),
       lastSeenAt: new Date(),
       revokedAt: null,
@@ -223,16 +242,12 @@ export class AuthService {
   }
 
   private async notifyLoginAlert(user: User, session: LoginSession): Promise<void> {
-    await this.notificationsService.createNotification(
-      user,
-      NotificationType.LOGIN_ALERT,
-      {
-        sessionId: session.id,
-        deviceName: session.deviceName,
-        ipAddress: session.ipAddress,
-        suspicious: session.suspicious,
-      },
-    );
+    await this.notificationsService.createNotification(user, NotificationType.LOGIN_ALERT, {
+      sessionId: session.id,
+      deviceName: session.deviceName,
+      ipAddress: session.ipAddress,
+      suspicious: session.suspicious,
+    });
 
     if (user.email) {
       try {
@@ -259,8 +274,11 @@ export class AuthService {
           user.id,
           session.deviceName ?? 'Unknown device',
           session.ipAddress ?? this.getRequestIp(req) ?? undefined,
-          session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
-          undefined,
+          session.userAgent ??
+            (typeof req?.headers?.['user-agent'] === 'string'
+              ? req.headers['user-agent']
+              : undefined),
+          undefined
         );
       }
 
@@ -273,21 +291,31 @@ export class AuthService {
           {
             sessionId: session.id,
             ipAddress: session.ipAddress ?? this.getRequestIp(req),
-            userAgent: session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
+            userAgent:
+              session.userAgent ??
+              (typeof req?.headers?.['user-agent'] === 'string'
+                ? req.headers['user-agent']
+                : undefined),
             deviceName: session.deviceName,
             suspicious: true,
-          },
+          }
         );
 
         await this.accountManagementService.createLoginApproval(user.id, {
           deviceName: session.deviceName ?? 'Unknown device',
           ipAddress: session.ipAddress ?? this.getRequestIp(req) ?? undefined,
-          userAgent: session.userAgent ?? (typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined),
+          userAgent:
+            session.userAgent ??
+            (typeof req?.headers?.['user-agent'] === 'string'
+              ? req.headers['user-agent']
+              : undefined),
           location: undefined,
         });
       }
     } catch (error) {
-      this.logger.warn(`Security alert flow failed for suspicious login for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Security alert flow failed for suspicious login for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -308,7 +336,7 @@ export class AuthService {
   private getTokenExpiry(rememberMe: boolean): StringValue {
     return this.configService.get<string>(
       rememberMe ? 'JWT_REMEMBER_ME_EXPIRES' : 'JWT_EXPIRES_IN',
-      rememberMe ? '30d' : '60m',
+      rememberMe ? '30d' : '60m'
     ) as StringValue;
   }
 
@@ -321,14 +349,14 @@ export class AuthService {
       'JWT_2FA_SECRET',
       createHash('sha256')
         .update(`${this.configService.get<string>('JWT_SECRET')}:two-factor`)
-        .digest('hex'),
+        .digest('hex')
     );
   }
 
   private createTokenResponse(
     user: User,
     session: LoginSession,
-    rememberMe: boolean,
+    rememberMe: boolean
   ): AuthTokenResponse {
     const audience = this.getTokenAudience();
     return {
@@ -340,7 +368,7 @@ export class AuthService {
           typ: 'access',
           aud: audience,
         },
-        { expiresIn: this.getTokenExpiry(rememberMe) },
+        { expiresIn: this.getTokenExpiry(rememberMe) }
       ),
       refresh_token: this.jwtService.sign(
         {
@@ -349,7 +377,7 @@ export class AuthService {
           typ: 'refresh',
           aud: audience,
         },
-        { expiresIn: rememberMe ? '30d' : '7d' },
+        { expiresIn: rememberMe ? '30d' : '7d' }
       ),
     };
   }
@@ -361,7 +389,7 @@ export class AuthService {
     message: string,
     metadata?: Record<string, any>,
     ipAddress?: string,
-    userAgent?: string,
+    userAgent?: string
   ): Promise<void> {
     if (!this.securityAuditService) {
       return;
@@ -378,11 +406,17 @@ export class AuthService {
         userAgent,
       });
     } catch (error) {
-      this.logger.warn(`Failed to persist security audit log for ${userId}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Failed to persist security audit log for ${userId}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
-  private async issueAccessToken(user: User, req?: any, rememberMe = false): Promise<AuthTokenResponse> {
+  private async issueAccessToken(
+    user: User,
+    req?: any,
+    rememberMe = false
+  ): Promise<AuthTokenResponse> {
     const session = await this.createLoginSession(user, req);
     await this.notifyLoginAlert(user, session);
     await this.handleSuspiciousLogin(user, session, req);
@@ -400,7 +434,7 @@ export class AuthService {
           approvalRequired: true,
         },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
 
       throw new LoginApprovalRequiredException(session.id);
@@ -417,7 +451,7 @@ export class AuthService {
         suspicious: session.suspicious,
       },
       this.getRequestIp(req) ?? undefined,
-      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
     );
 
     return this.createTokenResponse(user, session, rememberMe);
@@ -449,9 +483,10 @@ export class AuthService {
   private async enforceSigninCaptcha(
     identifier: string,
     captchaId?: string,
-    captchaAnswer?: string,
+    captchaAnswer?: string
   ): Promise<void> {
-    const requiredByConfig = this.configService.get<string>('CAPTCHA_REQUIRED_ON_SIGNIN', 'false') === 'true';
+    const requiredByConfig =
+      this.configService.get<string>('CAPTCHA_REQUIRED_ON_SIGNIN', 'false') === 'true';
     const alwaysWhenSupplied = Boolean(captchaId);
     const challengedByRisk = await this.recentFailuresForIdentifier(identifier);
 
@@ -486,11 +521,13 @@ export class AuthService {
         // identifier resolves to a user; an unknown identifier is left to the
         // per-IP throttle, which is the right place for it anyway.
         await this.resolveAuditUserId(identifier),
-        { eventType: SecurityEventType.LOGIN_FAILED, fromDate: since, take: threshold },
+        { eventType: SecurityEventType.LOGIN_FAILED, fromDate: since, take: threshold }
       );
       return total >= threshold;
     } catch (error) {
-      this.logger.warn(`Failed to read recent sign-in failures: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Failed to read recent sign-in failures: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   }
@@ -537,7 +574,11 @@ export class AuthService {
   async verifyMagicLink(token: string, req?: any): Promise<{ access_token: string }> {
     const hash = createHash('sha256').update(token).digest('hex');
     const user = await this.usersService.findByMagicLinkTokenHash(hash);
-    if (!user || !user.magicLinkTokenExpiresAt || user.magicLinkTokenExpiresAt.getTime() < Date.now()) {
+    if (
+      !user ||
+      !user.magicLinkTokenExpiresAt ||
+      user.magicLinkTokenExpiresAt.getTime() < Date.now()
+    ) {
       throw new UnauthorizedException('This sign-in link is invalid or has expired.');
     }
 
@@ -550,7 +591,8 @@ export class AuthService {
   }
 
   async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
-    const { username, email, password, birthDate, captchaId, captchaAnswer, inviteCode } = signUpDto;
+    const { username, email, password, birthDate, captchaId, captchaAnswer, inviteCode } =
+      signUpDto;
 
     if (!(await this.captchaService.verify(captchaId, captchaAnswer))) {
       throw new BadRequestException('CAPTCHA failed or expired. Please try again.');
@@ -562,13 +604,16 @@ export class AuthService {
       throw new BadRequestException(`You must be at least ${minimumAge} years old to register.`);
     }
 
-    const inviteRequired = this.configService.get<string>('INVITE_CODE_REQUIRED', 'false') === 'true';
+    const inviteRequired =
+      this.configService.get<string>('INVITE_CODE_REQUIRED', 'false') === 'true';
     if (inviteRequired && !inviteCode) {
       throw new BadRequestException('An invite code is required to register.');
     }
     let consumeInvite = false;
     if (inviteCode) {
-      consumeInvite = this.inviteCodesService.isUsable(await this.inviteCodesService.findByCode(inviteCode));
+      consumeInvite = this.inviteCodesService.isUsable(
+        await this.inviteCodesService.findByCode(inviteCode)
+      );
       if (!consumeInvite) {
         throw new BadRequestException('Invalid or expired invite code.');
       }
@@ -622,7 +667,7 @@ export class AuthService {
       SecurityEventType.LOGIN_SUCCESS,
       SecurityEventSeverity.LOW,
       `User ${user.email} created a new account and initiated email verification.`,
-      { username: user.username, method: 'email_signup' },
+      { username: user.username, method: 'email_signup' }
     );
 
     return {
@@ -692,7 +737,7 @@ export class AuthService {
       `User ${user.email} verified their email address.`,
       { verificationMethod: 'token' },
       this.getRequestIp(req) ?? undefined,
-      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
     );
 
     return this.issueAccessToken(user, req);
@@ -739,12 +784,12 @@ export class AuthService {
           `(${user.emailVerificationAttempts}/${maxAttempts}).`,
         { reason: 'invalid_verification_code', attempts: user.emailVerificationAttempts },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
 
       if (user.emailVerificationAttempts >= maxAttempts) {
         throw new UnauthorizedException(
-          `Too many incorrect codes. Try again in ${lockoutMs} minutes or request a new one.`,
+          `Too many incorrect codes. Try again in ${lockoutMs} minutes or request a new one.`
         );
       }
 
@@ -772,10 +817,10 @@ export class AuthService {
     if (user.emailVerificationLockedUntil > new Date()) {
       const minutes = Math.max(
         1,
-        Math.ceil((user.emailVerificationLockedUntil.getTime() - Date.now()) / 60_000),
+        Math.ceil((user.emailVerificationLockedUntil.getTime() - Date.now()) / 60_000)
       );
       throw new UnauthorizedException(
-        `Too many incorrect codes. Try again in ${minutes} minute(s) or request a new one.`,
+        `Too many incorrect codes. Try again in ${minutes} minute(s) or request a new one.`
       );
     }
     // Lockout has elapsed — let them try again, but keep the escalated counter.
@@ -784,8 +829,13 @@ export class AuthService {
 
   async signIn(
     signInDto: SignInDto,
-    req?: any,
-  ): Promise<AuthTokenResponse | { twoFactorEnabled: true; tempToken: string } | { loginApprovalRequired: true; message: string; sessionId: string } | { reactivationRequired: true; message: string }> {
+    req?: any
+  ): Promise<
+    | AuthTokenResponse
+    | { twoFactorEnabled: true; tempToken: string }
+    | { loginApprovalRequired: true; message: string; sessionId: string }
+    | { reactivationRequired: true; message: string }
+  > {
     const { email, username, password, rememberMe, captchaId, captchaAnswer } = signInDto;
     const identifier = email || username;
 
@@ -812,7 +862,7 @@ export class AuthService {
         `Failed login attempt for ${user.email ?? user.username ?? user.id}.`,
         { reason: 'invalid_password' },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -825,7 +875,7 @@ export class AuthService {
         `Login blocked for unverified account ${user.email ?? user.username ?? user.id}.`,
         { reason: 'email_unverified' },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
       throw new UnauthorizedException('Please verify your email before logging in.');
     }
@@ -849,7 +899,7 @@ export class AuthService {
         {
           secret: this.getTwoFactorSecret(),
           expiresIn: '10m',
-        },
+        }
       );
       await this.recordSecurityEvent(
         user.id,
@@ -858,7 +908,7 @@ export class AuthService {
         `2FA challenge initiated for ${user.email ?? user.username ?? user.id}.`,
         { rememberMe: rememberMe ?? false },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
       return { twoFactorEnabled: true, tempToken };
     }
@@ -880,7 +930,7 @@ export class AuthService {
           approvalRequired: true,
         },
         this.getRequestIp(req) ?? undefined,
-        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+        typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
       );
 
       return {
@@ -901,7 +951,7 @@ export class AuthService {
         suspicious: session.suspicious,
       },
       this.getRequestIp(req) ?? undefined,
-      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+      typeof req?.headers?.['user-agent'] === 'string' ? req.headers['user-agent'] : undefined
     );
 
     return this.createTokenResponse(user, session, rememberMe);
@@ -970,7 +1020,7 @@ export class AuthService {
       SecurityEventType.PASSWORD_RESET_COMPLETED,
       SecurityEventSeverity.HIGH,
       `User ${user.email ?? user.username ?? user.id} reset their password.`,
-      { source: 'password_reset_token' },
+      { source: 'password_reset_token' }
     );
 
     return { message: 'Password has been reset successfully.' };
@@ -1004,7 +1054,9 @@ export class AuthService {
 
     if (user.twoFactorEnabled) {
       if (!token || !user.twoFactorSecret || !this.verifyTotp(user.twoFactorSecret, token)) {
-        throw new UnauthorizedException('A valid 2FA token is required to replace the current authenticator.');
+        throw new UnauthorizedException(
+          'A valid 2FA token is required to replace the current authenticator.'
+        );
       }
     }
 
@@ -1037,7 +1089,7 @@ export class AuthService {
       SecurityEventType.TOTP_ENABLED,
       SecurityEventSeverity.MEDIUM,
       `User ${user.email ?? user.username ?? user.id} enabled 2FA.`,
-      { method: 'totp' },
+      { method: 'totp' }
     );
 
     return { message: 'Two-factor authentication enabled.' };
@@ -1054,14 +1106,16 @@ export class AuthService {
     };
   }
 
-  async getBrainwaveDevices(userId: string): Promise<Array<{
-    id: string;
-    deviceModel: string;
-    firmware: string;
-    registeredAt: string;
-    lastUsed: string;
-    accuracy: number;
-  }>> {
+  async getBrainwaveDevices(userId: string): Promise<
+    Array<{
+      id: string;
+      deviceModel: string;
+      firmware: string;
+      registeredAt: string;
+      lastUsed: string;
+      accuracy: number;
+    }>
+  > {
     const devices = await this.brainwaveDevicesRepository.find({
       where: { user: { id: userId } },
       order: { registeredAt: 'DESC' },
@@ -1077,7 +1131,10 @@ export class AuthService {
     }));
   }
 
-  async registerBrainwaveDevice(userId: string, deviceModel?: string): Promise<{ message: string; deviceId: string }> {
+  async registerBrainwaveDevice(
+    userId: string,
+    deviceModel?: string
+  ): Promise<{ message: string; deviceId: string }> {
     const device = this.brainwaveDevicesRepository.create({
       user: { id: userId } as User,
       deviceModel: deviceModel?.trim() || 'Unspecified device',
@@ -1090,7 +1147,10 @@ export class AuthService {
   }
 
   async removeBrainwaveDevice(userId: string, deviceId: string): Promise<{ message: string }> {
-    const result = await this.brainwaveDevicesRepository.delete({ id: deviceId, user: { id: userId } });
+    const result = await this.brainwaveDevicesRepository.delete({
+      id: deviceId,
+      user: { id: userId },
+    });
     if (result.affected === 0) {
       throw new NotFoundException('Device not found.');
     }
@@ -1118,14 +1178,20 @@ export class AuthService {
       SecurityEventType.TOTP_DISABLED,
       SecurityEventSeverity.MEDIUM,
       `User ${user.email ?? user.username ?? user.id} disabled 2FA.`,
-      { method: 'totp' },
+      { method: 'totp' }
     );
 
     return { message: 'Two-factor authentication disabled.' };
   }
 
   async verify2FALogin(tempToken: string, token: string, req?: any): Promise<AuthTokenResponse> {
-    let payload: { sub: string; purpose?: string; typ?: string; aud?: string | string[]; rememberMe?: boolean };
+    let payload: {
+      sub: string;
+      purpose?: string;
+      typ?: string;
+      aud?: string | string[];
+      rememberMe?: boolean;
+    };
 
     try {
       payload = this.jwtService.verify(tempToken, {
@@ -1179,7 +1245,11 @@ export class AuthService {
     return `${code.slice(0, 4)}-${code.slice(4, 8)}`;
   }
 
-  async recoverAccount(identifier: string, recoveryCode: string, req?: any): Promise<{ access_token: string }> {
+  async recoverAccount(
+    identifier: string,
+    recoveryCode: string,
+    req?: any
+  ): Promise<{ access_token: string }> {
     const user = identifier.includes('@')
       ? await this.usersService.findByEmail(identifier)
       : await this.usersService.findByUsername(identifier);
@@ -1189,7 +1259,10 @@ export class AuthService {
     }
 
     const normalizedRecoveryCode = recoveryCode.trim().toUpperCase();
-    const matchingIndex = await this.findRecoveryCodeIndex(user.recoveryCodeHashes, normalizedRecoveryCode);
+    const matchingIndex = await this.findRecoveryCodeIndex(
+      user.recoveryCodeHashes,
+      normalizedRecoveryCode
+    );
 
     if (matchingIndex === -1) {
       throw new UnauthorizedException('Invalid recovery credentials.');
@@ -1216,7 +1289,9 @@ export class AuthService {
       methods: {
         passwordReset: Boolean(user?.email),
         recoveryCodes: Boolean(user?.recoveryCodeHashes?.length),
-        trustedContacts: (user?.trustedRecoveryContacts ?? []).map((email) => this.maskEmail(email)),
+        trustedContacts: (user?.trustedRecoveryContacts ?? []).map((email) =>
+          this.maskEmail(email)
+        ),
       },
     };
   }
@@ -1230,7 +1305,10 @@ export class AuthService {
     return { contacts: user.trustedRecoveryContacts ?? [] };
   }
 
-  async setTrustedRecoveryContacts(userId: string, contacts: string[]): Promise<{ contacts: string[]; message: string }> {
+  async setTrustedRecoveryContacts(
+    userId: string,
+    contacts: string[]
+  ): Promise<{ contacts: string[]; message: string }> {
     const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -1238,10 +1316,8 @@ export class AuthService {
 
     const normalizedContacts = Array.from(
       new Set(
-        contacts
-          .map((email) => email.trim().toLowerCase())
-          .filter((email) => email.includes('@')),
-      ),
+        contacts.map((email) => email.trim().toLowerCase()).filter((email) => email.includes('@'))
+      )
     ).slice(0, 5);
 
     user.trustedRecoveryContacts = normalizedContacts;
@@ -1253,7 +1329,10 @@ export class AuthService {
     };
   }
 
-  async requestTrustedContactRecovery(identifier: string, contactEmail: string): Promise<{ message: string }> {
+  async requestTrustedContactRecovery(
+    identifier: string,
+    contactEmail: string
+  ): Promise<{ message: string }> {
     const user = identifier.includes('@')
       ? await this.usersService.findByEmail(identifier)
       : await this.usersService.findByUsername(identifier);
@@ -1284,7 +1363,7 @@ export class AuthService {
     identifier: string,
     contactEmail: string,
     code: string,
-    req?: any,
+    req?: any
   ): Promise<{ access_token: string }> {
     const user = identifier.includes('@')
       ? await this.usersService.findByEmail(identifier)
@@ -1299,11 +1378,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid recovery credentials.');
     }
 
-    if (!user.trustedRecoveryCodeHash || !user.trustedRecoveryCodeExpiresAt || user.trustedRecoveryCodeExpiresAt < new Date()) {
+    if (
+      !user.trustedRecoveryCodeHash ||
+      !user.trustedRecoveryCodeExpiresAt ||
+      user.trustedRecoveryCodeExpiresAt < new Date()
+    ) {
       throw new UnauthorizedException('Recovery challenge expired.');
     }
 
-    const isValidCode = this.hashRecoveryCode(code.trim().toUpperCase()) === user.trustedRecoveryCodeHash;
+    const isValidCode =
+      this.hashRecoveryCode(code.trim().toUpperCase()) === user.trustedRecoveryCodeHash;
     if (!isValidCode) {
       throw new UnauthorizedException('Invalid recovery credentials.');
     }
@@ -1315,7 +1399,10 @@ export class AuthService {
     return this.issueAccessToken(user, req);
   }
 
-  private async findRecoveryCodeIndex(hashedCodes: string[], recoveryCode: string): Promise<number> {
+  private async findRecoveryCodeIndex(
+    hashedCodes: string[],
+    recoveryCode: string
+  ): Promise<number> {
     for (let index = 0; index < hashedCodes.length; index += 1) {
       const isMatch = await bcrypt.compare(recoveryCode, hashedCodes[index]);
       if (isMatch) {
@@ -1326,10 +1413,7 @@ export class AuthService {
     return -1;
   }
 
-  private serializeLoginSession(
-    session: LoginSession,
-    currentSessionId?: string,
-  ) {
+  private serializeLoginSession(session: LoginSession, currentSessionId?: string) {
     return {
       id: session.id,
       deviceName: session.deviceName,
@@ -1465,12 +1549,17 @@ export class AuthService {
     return { message: 'Signed out successfully.' };
   }
 
-  async revokeAllOtherSessions(userId: string, currentSessionId?: string): Promise<{ message: string }> {
+  async revokeAllOtherSessions(
+    userId: string,
+    currentSessionId?: string
+  ): Promise<{ message: string }> {
     const sessions = await this.loginSessionsRepository.find({
       where: { user: { id: userId } },
     });
 
-    const sessionsToRevoke = sessions.filter((session) => session.id !== currentSessionId && !session.revokedAt);
+    const sessionsToRevoke = sessions.filter(
+      (session) => session.id !== currentSessionId && !session.revokedAt
+    );
 
     for (const session of sessionsToRevoke) {
       session.revokedAt = new Date();

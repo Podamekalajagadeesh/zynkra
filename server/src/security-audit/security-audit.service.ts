@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
-import { SecurityAuditLog, SecurityEventType, SecurityEventSeverity } from './entities/security-audit.entity';
+import {
+  SecurityAuditLog,
+  SecurityEventType,
+  SecurityEventSeverity,
+} from './entities/security-audit.entity';
 import { User } from '../users/entities/user.entity';
 
 export interface CreateAuditLogDto {
@@ -22,7 +26,7 @@ export class SecurityAuditService {
     @InjectRepository(SecurityAuditLog)
     private readonly auditRepository: Repository<SecurityAuditLog>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async logEvent(dto: CreateAuditLogDto): Promise<SecurityAuditLog> {
@@ -37,17 +41,26 @@ export class SecurityAuditService {
     });
 
     const saved = await this.auditRepository.save(entry);
-    this.logger.log(`Security audit: [${dto.severity}] ${dto.eventType} - ${dto.message} (user: ${dto.userId})`);
+    this.logger.log(
+      `Security audit: [${dto.severity}] ${dto.eventType} - ${dto.message} (user: ${dto.userId})`
+    );
     return saved;
   }
 
   async getUserAuditLog(
     userId: string,
-    options: { take?: number; skip?: number; eventType?: SecurityEventType; severity?: SecurityEventSeverity; fromDate?: Date } = {},
+    options: {
+      take?: number;
+      skip?: number;
+      eventType?: SecurityEventType;
+      severity?: SecurityEventSeverity;
+      fromDate?: Date;
+    } = {}
   ): Promise<{ logs: SecurityAuditLog[]; total: number }> {
     const { take = 50, skip = 0, eventType, severity, fromDate } = options;
 
-    const qb = this.auditRepository.createQueryBuilder('log')
+    const qb = this.auditRepository
+      .createQueryBuilder('log')
       .where('log.userId = :userId', { userId })
       .orderBy('log.createdAt', 'DESC')
       .take(take)
@@ -97,7 +110,11 @@ export class SecurityAuditService {
       lowCount: 0,
       byEventType: {} as Record<SecurityEventType, number>,
       recentCriticalEvents: logs
-        .filter((l) => l.severity === SecurityEventSeverity.CRITICAL || l.severity === SecurityEventSeverity.HIGH)
+        .filter(
+          (l) =>
+            l.severity === SecurityEventSeverity.CRITICAL ||
+            l.severity === SecurityEventSeverity.HIGH
+        )
         .slice(0, 10),
     };
 
@@ -132,7 +149,9 @@ export class SecurityAuditService {
       severity: SecurityEventSeverity.LOW,
     });
 
-    this.logger.log(`Cleaned up ${result.affected} old low-severity audit logs older than ${retentionDays} days`);
+    this.logger.log(
+      `Cleaned up ${result.affected} old low-severity audit logs older than ${retentionDays} days`
+    );
     return result.affected ?? 0;
   }
 }

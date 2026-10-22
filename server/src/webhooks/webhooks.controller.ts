@@ -29,7 +29,7 @@ export class WebhooksController {
   @Post('stripe')
   async handleStripe(
     @Req() req: RawBodyRequest<Request>,
-    @Headers('stripe-signature') signature: string,
+    @Headers('stripe-signature') signature: string
   ) {
     if (!signature) {
       throw new BadRequestException('Missing stripe-signature header');
@@ -54,11 +54,7 @@ export class WebhooksController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('endpoints/:id')
-  updateEndpoint(
-    @Req() req,
-    @Param('id') id: string,
-    @Body() dto: UpdateWebhookEndpointDto,
-  ) {
+  updateEndpoint(@Req() req, @Param('id') id: string, @Body() dto: UpdateWebhookEndpointDto) {
     return this.webhooksService.updateEndpoint(req.user.userId, id, dto);
   }
 

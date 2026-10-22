@@ -1,7 +1,9 @@
 # ARCHITECTURE.md
+
 **System Design, Tech Stack, and Module Structure**
 
 ## Table of Contents
+
 1. [Tech Stack](#tech-stack)
 2. [System Architecture](#system-architecture)
 3. [Database Schema](#database-schema)
@@ -16,52 +18,56 @@
 ## Tech Stack
 
 ### Frontend
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Framework** | React 18 | UI library |
-| **Build Tool** | Vite | Fast bundler & dev server |
-| **Language** | TypeScript | Type safety |
-| **Styling** | Tailwind CSS | Utility-first CSS |
-| **State** | React Context + Hooks | State management |
-| **HTTP Client** | Axios/Fetch API | API calls |
-| **Real-time** | Socket.io Client | WebSocket communication |
-| **Testing** | Vitest + React Testing Lib | Unit & component tests |
-| **Code Quality** | ESLint + Prettier | Linting & formatting |
-| **Crypto** | libsodium.js + libsignal-protocol-typescript | Client-side crypto (1:1 DMs are E2EE) |
-| **Offline** | IndexedDB + Service Workers | Offline-first support |
+
+| Layer            | Technology                                   | Purpose                               |
+| ---------------- | -------------------------------------------- | ------------------------------------- |
+| **Framework**    | React 18                                     | UI library                            |
+| **Build Tool**   | Vite                                         | Fast bundler & dev server             |
+| **Language**     | TypeScript                                   | Type safety                           |
+| **Styling**      | Tailwind CSS                                 | Utility-first CSS                     |
+| **State**        | React Context + Hooks                        | State management                      |
+| **HTTP Client**  | Axios/Fetch API                              | API calls                             |
+| **Real-time**    | Socket.io Client                             | WebSocket communication               |
+| **Testing**      | Vitest + React Testing Lib                   | Unit & component tests                |
+| **Code Quality** | ESLint + Prettier                            | Linting & formatting                  |
+| **Crypto**       | libsodium.js + libsignal-protocol-typescript | Client-side crypto (1:1 DMs are E2EE) |
+| **Offline**      | IndexedDB + Service Workers                  | Offline-first support                 |
 
 ### Backend
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Framework** | NestJS | Scalable server framework |
-| **Language** | TypeScript | Type safety |
-| **Database** | PostgreSQL 14+ | Relational data store |
-| **ORM** | TypeORM | Database abstraction |
-| **API** | REST + GraphQL (optional) | API endpoints |
-| **Real-time** | Socket.io | WebSocket server |
-| **Authentication** | JWT | Token-based auth |
-| **Validation** | class-validator | Input validation |
-| **Testing** | Jest | Unit & integration tests |
-| **Caching** | Redis (optional) | In-memory cache |
-| **Job Queue** | Bull (optional) | Background jobs |
-| **File Storage** | Local disk (`UPLOAD_DIR`) + optional `CDN_BASE_URL` | Media storage (S3 not wired yet) |
+
+| Layer              | Technology                                          | Purpose                          |
+| ------------------ | --------------------------------------------------- | -------------------------------- |
+| **Framework**      | NestJS                                              | Scalable server framework        |
+| **Language**       | TypeScript                                          | Type safety                      |
+| **Database**       | PostgreSQL 14+                                      | Relational data store            |
+| **ORM**            | TypeORM                                             | Database abstraction             |
+| **API**            | REST + GraphQL (optional)                           | API endpoints                    |
+| **Real-time**      | Socket.io                                           | WebSocket server                 |
+| **Authentication** | JWT                                                 | Token-based auth                 |
+| **Validation**     | class-validator                                     | Input validation                 |
+| **Testing**        | Jest                                                | Unit & integration tests         |
+| **Caching**        | Redis (optional)                                    | In-memory cache                  |
+| **Job Queue**      | Bull (optional)                                     | Background jobs                  |
+| **File Storage**   | Local disk (`UPLOAD_DIR`) + optional `CDN_BASE_URL` | Media storage (S3 not wired yet) |
 
 ### Infrastructure
-| Service | Technology | Purpose |
-|---------|-----------|---------|
-| **Messaging** | Socket.io | Real-time DMs, notifications |
-| **Media** | LiveKit | Video/voice calls |
-| **Federation** | ActivityPub | Decentralized social |
-| **Storage** | IPFS | Decentralized content |
-| **Blockchain** | Ethereum / Polygon | Identity, payments |
-| **Search** | Meilisearch (optional) | Full-text search |
-| **Email** | SendGrid / SMTP | Transactional email |
+
+| Service        | Technology             | Purpose                      |
+| -------------- | ---------------------- | ---------------------------- |
+| **Messaging**  | Socket.io              | Real-time DMs, notifications |
+| **Media**      | LiveKit                | Video/voice calls            |
+| **Federation** | ActivityPub            | Decentralized social         |
+| **Storage**    | IPFS                   | Decentralized content        |
+| **Blockchain** | Ethereum / Polygon     | Identity, payments           |
+| **Search**     | Meilisearch (optional) | Full-text search             |
+| **Email**      | SendGrid / SMTP        | Transactional email          |
 
 ---
 
 ## System Architecture
 
 ### High-Level Overview
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Users                                 │
@@ -103,6 +109,7 @@
 ```
 
 ### Request Flow
+
 ```
 Client Request
     │
@@ -126,6 +133,7 @@ Client Request
 ## Database Schema
 
 ### Core Tables
+
 ```sql
 -- Users
 CREATE TABLE users (
@@ -204,6 +212,7 @@ CREATE TABLE conversations (
 ```
 
 ### Indexing Strategy
+
 ```sql
 -- Performance indexes
 CREATE INDEX idx_posts_user_id ON posts(user_id);
@@ -224,7 +233,9 @@ CREATE INDEX idx_users_username ON users(username);
 ### Core Modules
 
 #### 1. **Users Module** (`src/users/`)
+
 Handles user accounts, profiles, authentication.
+
 ```
 users/
 ├── users.controller.ts      # Routes: GET /users, POST /users, GET /users/:id
@@ -235,7 +246,9 @@ users/
 ```
 
 #### 2. **Auth Module** (`src/auth/`)
+
 Handles authentication (JWT, OAuth, login/signup).
+
 ```
 auth/
 ├── auth.controller.ts       # Routes: POST /auth/login, POST /auth/register
@@ -246,7 +259,9 @@ auth/
 ```
 
 #### 3. **Posts Module** (`src/posts/`)
+
 Handles post creation, editing, deletion.
+
 ```
 posts/
 ├── posts.controller.ts      # Routes: GET /posts, POST /posts, DELETE /posts/:id
@@ -257,7 +272,9 @@ posts/
 ```
 
 #### 4. **Comments Module** (`src/comments/`)
+
 Handles comments on posts.
+
 ```
 comments/
 ├── comments.controller.ts   # Routes for comments
@@ -267,7 +284,9 @@ comments/
 ```
 
 #### 5. **Reactions Module** (`src/reactions/`)
+
 Handles likes, reactions, etc.
+
 ```
 reactions/
 ├── reactions.controller.ts  # POST /posts/:id/reactions
@@ -276,7 +295,9 @@ reactions/
 ```
 
 #### 6. **DMs Module** (`src/dms/`)
+
 Handles direct messaging. Client may encrypt 1:1 messages (Signal Protocol); server stores content as received — full server-enforced E2EE is not yet implemented.
+
 ```
 dms/
 ├── dms.controller.ts        # Routes: GET /dms, POST /dms
@@ -286,7 +307,9 @@ dms/
 ```
 
 #### 7. **Feed Module** (`src/feed/`)
+
 Handles feed algorithms (FYP, chronological, following).
+
 ```
 feed/
 ├── feed.controller.ts       # GET /feed/home, GET /feed/discover
@@ -295,7 +318,9 @@ feed/
 ```
 
 #### 8. **Follows Module** (`src/follows/`)
+
 Handles follow/unfollow relationships.
+
 ```
 follows/
 ├── follows.controller.ts    # POST /users/:id/follow
@@ -306,7 +331,9 @@ follows/
 ### Commerce Modules
 
 #### 9. **Payments Module** (`src/payments/`)
+
 Stripe payments, Connect payouts, and the 90/10 revenue split.
+
 ```
 payments/
 ├── payments.controller.ts
@@ -318,13 +345,16 @@ payments/
 ```
 
 Companion modules:
+
 - `src/wallet/` — append-only `ledger_entries` + atomic balance mutations (row lock).
 - `src/monetization/creator-monetization.service.ts` — wallet tips/subs/PPV with platform fee to the system wallet.
 - `src/webhooks/` — Stripe ingress (`POST /webhooks/stripe`) + outbound event delivery.
 - Platform fee account: fixed user id `PLATFORM_USER_ID` (`revenue-split.ts`), seeded by migration `PlatformSystemUser1789200000000`.
 
 #### 10. **Marketplace Module** (`src/marketplace/`)
+
 Handles product listings, sales.
+
 ```
 marketplace/
 ├── marketplace.controller.ts
@@ -334,7 +364,9 @@ marketplace/
 ```
 
 #### 11. **Search Module** (`src/search/`)
+
 Postgres full-text search across users, posts, hashtags, places, groups, events, and products.
+
 ```
 search/
 ├── search.controller.ts      # GET /search, GET /search/advanced, POST /search/reverse-image
@@ -342,18 +374,23 @@ search/
 ├── search.module.ts
 └── search.service.spec.ts
 ```
+
 Reverse-image search is Preview only (returns recent public image posts, not perceptual matching).
 
 #### 12. **Crypto Module** (`src/crypto/`)
+
 Handles blockchain, wallets, NFTs.
 
 #### 13. **ActivityPub Module** (`src/federation/`)
+
 Handles federation with other servers (Mastodon, Pixelfed).
 
 #### 14. **IPFS Module** (`src/ipfs/`)
+
 Handles decentralized storage.
 
 #### 15. **Notifications Module** (`src/notifications/`)
+
 Handles WebSocket notifications, notifications feed.
 
 ---
@@ -361,6 +398,7 @@ Handles WebSocket notifications, notifications feed.
 ## Frontend Architecture
 
 ### Component Hierarchy
+
 ```
 App
 ├── Layouts/
@@ -389,24 +427,26 @@ App
 ```
 
 ### State Management
+
 ```typescript
 // Using React Context + Hooks (no Redux needed)
 
 // AuthContext - manages authentication state
-const { user, login, logout } = useAuth()
+const { user, login, logout } = useAuth();
 
 // Fetch data from API
-const [posts, setPosts] = useState([])
+const [posts, setPosts] = useState([]);
 useEffect(() => {
-  fetchPosts().then(setPosts)
-}, [])
+  fetchPosts().then(setPosts);
+}, []);
 
 // Local UI state
-const [isLoading, setIsLoading] = useState(false)
-const [error, setError] = useState(null)
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState(null);
 ```
 
 ### File Structure
+
 ```
 client/src/
 ├── components/           # Reusable React components
@@ -453,6 +493,7 @@ client/src/
 ## Real-Time Communication
 
 ### WebSocket Architecture
+
 ```
 ┌──────────────┐              ┌──────────────────────┐
 │  Client 1    │              │   NestJS Server      │
@@ -468,18 +509,19 @@ client/src/
 ```
 
 ### Socket Events
+
 ```typescript
 // Frontend sends
-socket.emit('post:create', { content: 'Hello!' })
-socket.emit('post:like', { postId: '123' })
-socket.emit('message:send', { content: 'Hi', recipientId: '456' })
+socket.emit('post:create', { content: 'Hello!' });
+socket.emit('post:like', { postId: '123' });
+socket.emit('message:send', { content: 'Hi', recipientId: '456' });
 
 // Backend broadcasts
-socket.on('post:created', (post) => {})
-socket.on('post:liked', (post) => {})
-socket.on('message:received', (message) => {})
-socket.on('user:online', (user) => {})
-socket.on('notification', (notification) => {})
+socket.on('post:created', (post) => {});
+socket.on('post:liked', (post) => {});
+socket.on('message:received', (message) => {});
+socket.on('user:online', (user) => {});
+socket.on('notification', (notification) => {});
 ```
 
 ---
@@ -487,6 +529,7 @@ socket.on('notification', (notification) => {})
 ## Security & Encryption
 
 ### Authentication Flow
+
 ```
 1. User registers
    ├─ Hash password with bcrypt
@@ -517,37 +560,39 @@ socket.on('notification', (notification) => {})
 > [ROADMAP](ROADMAP.md) for the path to full E2EE.
 
 Planned flow once E2EE is fully active:
+
 ```typescript
 // Sending a DM
-const message = "Secret message"
-const publicKey = getRecipientPublicKey()
+const message = 'Secret message';
+const publicKey = getRecipientPublicKey();
 
 // Encrypt with recipient's public key
-const encrypted = await encrypt(message, publicKey)
+const encrypted = await encrypt(message, publicKey);
 
 // Send encrypted to server (server can't read it)
-await sendDM({ 
+await sendDM({
   content: encrypted,
-  recipientId: '456'
-})
+  recipientId: '456',
+});
 
 // Receiving a DM
-const encryptedMessage = await receiveDM()
-const privateKey = getUserPrivateKey() // Only user has this
+const encryptedMessage = await receiveDM();
+const privateKey = getUserPrivateKey(); // Only user has this
 
 // Decrypt with user's private key
-const decrypted = await decrypt(encryptedMessage, privateKey)
+const decrypted = await decrypt(encryptedMessage, privateKey);
 // Only this user can read the message
 ```
 
 ### Stored Keys
+
 ```typescript
 // User's keypair stored locally (browser storage)
-localStorage.setItem('privateKey', privateKey)
-sessionStorage.setItem('publicKey', publicKey)
+localStorage.setItem('privateKey', privateKey);
+sessionStorage.setItem('publicKey', publicKey);
 
 // Server stores only public key
-users.publicKey = publicKey
+users.publicKey = publicKey;
 ```
 
 ---
@@ -555,6 +600,7 @@ users.publicKey = publicKey
 ## Performance Considerations
 
 ### Frontend Optimization
+
 ```typescript
 // 1. Code Splitting - Load pages lazily
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -581,6 +627,7 @@ async function fetchPostsWithCache(id) {
 ```
 
 ### Backend Optimization
+
 ```typescript
 // 1. Database Queries - Use indexes and pagination
 const posts = await db.posts
@@ -604,6 +651,7 @@ await emailQueue.add({ userId, email })
 ```
 
 ### Monitoring & Profiling
+
 ```bash
 # Frontend bundle analysis
 npm run build
@@ -620,6 +668,7 @@ npm run analyze
 ## Deployment Architecture
 
 ### Production Setup (Simplified)
+
 ```
 ┌─────────────────────────────────────────┐
 │         CloudFlare CDN                  │

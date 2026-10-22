@@ -19,7 +19,7 @@ import { InsightsService } from './insights.service';
 export class PagesController {
   constructor(
     private readonly pagesService: PagesService,
-    private readonly insightsService: InsightsService,
+    private readonly insightsService: InsightsService
   ) {}
 
   @UseGuards(JwtAuthGuard)

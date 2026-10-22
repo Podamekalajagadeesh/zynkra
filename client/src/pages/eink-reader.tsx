@@ -85,13 +85,15 @@ export function EInkReaderPage() {
   }, [selectedArticle]);
 
   const wrapperClassName = useMemo(() => {
-    return theme === 'night'
-      ? 'bg-[#111827] text-[#f9fafb]'
-      : 'bg-[#f7f3ea] text-[#111827]';
+    return theme === 'night' ? 'bg-[#111827] text-[#f9fafb]' : 'bg-[#f7f3ea] text-[#111827]';
   }, [theme]);
 
   return (
-    <PageShell eyebrow="Advanced mode" title="E-ink reader" description="Low-power reading designed for reflective displays.">
+    <PageShell
+      eyebrow="Advanced mode"
+      title="E-ink reader"
+      description="Low-power reading designed for reflective displays."
+    >
       <div className={`rounded-3xl border border-black/10 p-4 shadow-sm ${wrapperClassName}`}>
         {/* Toolbar */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -100,7 +102,9 @@ export function EInkReaderPage() {
               {sidebarOpen ? 'Hide list' : 'Show list'}
             </Button>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Reading mode</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">
+                Reading mode
+              </div>
               <div className="text-sm opacity-80">Battery-friendly layout active</div>
             </div>
           </div>
@@ -167,7 +171,8 @@ export function EInkReaderPage() {
                   <h2 className="text-2xl font-semibold">{selectedArticle.title}</h2>
                   <p className="text-sm opacity-75">{selectedArticle.subtitle}</p>
                   <p className="text-xs opacity-50">
-                    By {selectedArticle.author.displayName} &middot; {selectedArticle.readingTime} min read
+                    By {selectedArticle.author.displayName} &middot; {selectedArticle.readingTime}{' '}
+                    min read
                   </p>
                 </header>
                 {paragraphs.map((p, i) => (

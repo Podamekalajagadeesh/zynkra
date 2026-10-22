@@ -13,9 +13,9 @@ interface JobDetailViewProps {
 const jobTypeLabels = {
   'full-time': 'Full-time',
   'part-time': 'Part-time',
-  'contract': 'Contract',
-  'remote': 'Remote',
-  'hybrid': 'Hybrid'
+  contract: 'Contract',
+  remote: 'Remote',
+  hybrid: 'Hybrid',
 };
 
 export const JobDetailView = ({ job, isAdmin, onApply }: JobDetailViewProps) => {
@@ -40,8 +40,8 @@ export const JobDetailView = ({ job, isAdmin, onApply }: JobDetailViewProps) => 
           </span>
           {job.salary && (
             <span className="flex items-center gap-1">
-              <DollarSign size={16} />
-              ${job.salary.min.toLocaleString()} - ${job.salary.max.toLocaleString()} {job.salary.currency}
+              <DollarSign size={16} />${job.salary.min.toLocaleString()} - $
+              {job.salary.max.toLocaleString()} {job.salary.currency}
             </span>
           )}
           <span className="flex items-center gap-1">
@@ -91,7 +91,9 @@ export const JobDetailView = ({ job, isAdmin, onApply }: JobDetailViewProps) => 
       )}
 
       <div className="flex justify-between items-center pt-4 border-t">
-        <span className="text-sm text-gray-500">{job.applications.length} candidates have applied</span>
+        <span className="text-sm text-gray-500">
+          {job.applications.length} candidates have applied
+        </span>
         {!isAdmin && <Button onClick={onApply}>Apply Now</Button>}
       </div>
     </div>

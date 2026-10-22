@@ -24,15 +24,22 @@ export class TrendsService {
     @InjectRepository(Trend)
     private readonly trendsRepository: Repository<Trend>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
-  async processContent(content: string, contentType: 'post' | 'comment' | 'story', authorWeight: number = 1, location?: string): Promise<void> {
+  async processContent(
+    content: string,
+    contentType: 'post' | 'comment' | 'story',
+    authorWeight: number = 1,
+    location?: string
+  ): Promise<void> {
     const hashtags = content.match(/#\w+/g) || [];
-    
+
     if (hashtags.length === 0) return;
 
-    this.logger.debug(`Processing ${hashtags.length} hashtags from ${contentType}${location ? ` at location: ${location}` : ''}`);
+    this.logger.debug(
+      `Processing ${hashtags.length} hashtags from ${contentType}${location ? ` at location: ${location}` : ''}`
+    );
 
     for (const tag of hashtags) {
       const normalizedTag = tag.toLowerCase();
@@ -42,14 +49,18 @@ export class TrendsService {
     }
   }
 
-  private async updateTrendScore(tag: string, incrementMultiplier: number = 1, location?: string): Promise<void> {
+  private async updateTrendScore(
+    tag: string,
+    incrementMultiplier: number = 1,
+    location?: string
+  ): Promise<void> {
     // If we have a location, try to find a location-specific trend first
-    let trend = location 
+    let trend = location
       ? await this.trendsRepository.findOne({ where: { tag, location } })
       : await this.trendsRepository.findOne({ where: { tag, location: null } });
-    
+
     const increment = this.config.baseIncrement * incrementMultiplier;
-    
+
     if (trend) {
       // Apply time decay before incrementing
       const hoursSinceLastUpdate = (Date.now() - trend.lastUpdated.getTime()) / (1000 * 60 * 60);
@@ -57,7 +68,7 @@ export class TrendsService {
       trend.score = trend.score * decayMultiplier + increment;
       trend.occurrenceCount += 1;
       trend.lastUpdated = new Date();
-      
+
       await this.trendsRepository.save(trend);
     } else {
       trend = this.trendsRepository.create({
@@ -85,15 +96,19 @@ export class TrendsService {
   }
 
   // Get location-specific trending topics
-  async getTrendingByLocation(location: string, limit: number = 10, days: number = 7): Promise<Trend[]> {
+  async getTrendingByLocation(
+    location: string,
+    limit: number = 10,
+    days: number = 7
+  ): Promise<Trend[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     return this.trendsRepository
       .createQueryBuilder('trend')
-      .where('trend.lastUpdated >= :cutoff AND trend.location = :location', { 
+      .where('trend.lastUpdated >= :cutoff AND trend.location = :location', {
         cutoff: cutoffDate,
-        location: location 
+        location: location,
       })
       .orderBy('trend.score', 'DESC')
       .take(limit)
@@ -112,8 +127,8 @@ export class TrendsService {
     }
 
     // Get trends based on what user has already followed, plus similar popular ones
-    const followedTags = user.followedTrends?.map(t => t.tag) || [];
-    
+    const followedTags = user.followedTrends?.map((t) => t.tag) || [];
+
     // If user follows nothing, just return global trends
     if (followedTags.length === 0) {
       return this.getTrending(limit, 7);
@@ -121,10 +136,12 @@ export class TrendsService {
 
     // Get global trends first, then prioritize those that match user's interests
     const globalTrends = await this.getTrending(20, 7);
-    
+
     // Boost score for trends similar to what user follows
-    const scoredTrends = globalTrends.map(trend => {
-      const isFollowed = followedTags.some(tag => trend.tag.includes(tag) || tag.includes(trend.tag));
+    const scoredTrends = globalTrends.map((trend) => {
+      const isFollowed = followedTags.some(
+        (tag) => trend.tag.includes(tag) || tag.includes(trend.tag)
+      );
       return {
         ...trend,
         personalizedScore: isFollowed ? trend.score * 1.5 : trend.score,
@@ -154,7 +171,11 @@ export class TrendsService {
     });
   }
 
-  async incrementTrendForEvent(tag: string, eventType: 'share' | 'like' | 'comment', authorWeight: number = 1): Promise<void> {
+  async incrementTrendForEvent(
+    tag: string,
+    eventType: 'share' | 'like' | 'comment',
+    authorWeight: number = 1
+  ): Promise<void> {
     const eventWeights = {
       share: 1.5,
       like: 0.5,
@@ -168,7 +189,7 @@ export class TrendsService {
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupOldTrends(): Promise<void> {
     this.logger.debug('Running trends cleanup job');
-    
+
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -188,10 +209,10 @@ export class TrendsService {
   async extractAndScoreHashtags(content: string): Promise<void> {
     const hashtagRegex = /#(\w+)/g;
     const matches = content.match(hashtagRegex);
-    
+
     if (!matches) return;
 
-    const uniqueHashtags = [...new Set(matches.map(match => match.slice(1).toLowerCase()))];
+    const uniqueHashtags = [...new Set(matches.map((match) => match.slice(1).toLowerCase()))];
 
     for (const hashtag of uniqueHashtags) {
       await this.trackHashtag(hashtag, 'post');
@@ -214,7 +235,7 @@ export class TrendsService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async recalculateAllScores(): Promise<void> {
     this.logger.debug('Running daily trend score recalculation');
-    
+
     const allTrends = await this.trendsRepository.find();
     let updatedCount = 0;
 
@@ -222,7 +243,7 @@ export class TrendsService {
       const hoursSinceLastUpdate = (Date.now() - trend.lastUpdated.getTime()) / (1000 * 60 * 60);
       const decayMultiplier = Math.pow(1 - this.config.decayRate, hoursSinceLastUpdate);
       const newScore = trend.score * decayMultiplier;
-      
+
       if (newScore < this.config.threshold) {
         await this.trendsRepository.remove(trend);
       } else if (newScore !== trend.score) {

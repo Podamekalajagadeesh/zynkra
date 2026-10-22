@@ -13,7 +13,7 @@ export class MentionsController {
   async getMyMentions(
     @CurrentUser() user: User,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query('limit') limit: number = 20
   ) {
     return this.mentionsService.getUserMentions(user, page, limit);
   }

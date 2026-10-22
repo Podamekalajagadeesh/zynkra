@@ -19,9 +19,7 @@ export function PageConversationList({
             className="cursor-pointer p-4 hover:bg-gray-100"
             onClick={() => onSelectConversation(conversation)}
           >
-            {conversation.participants
-              .map((p) => p.username)
-              .join(', ')}
+            {conversation.participants.map((p) => p.username).join(', ')}
           </li>
         ))}
       </ul>

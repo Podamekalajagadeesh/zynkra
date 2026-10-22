@@ -1,4 +1,3 @@
-
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
@@ -37,7 +36,7 @@ export class DataExportService {
     @InjectRepository(ExportSchedule)
     private scheduleRepository: Repository<ExportSchedule>,
     private readonly exportService: ExportService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /** Where archives are written. Outside `uploads/` so they are NOT publicly served. */
@@ -80,22 +79,20 @@ export class DataExportService {
   }
 
   /** Recent export history (deletion workflows filtered out). */
-  async listHistory(userId: string): Promise<Array<{
-    id: string;
-    status: string;
-    origin: string;
-    fileUrl: string | null;
-    sizeBytes: number | null;
-    createdAt: string;
-  }>> {
+  async listHistory(userId: string): Promise<
+    Array<{
+      id: string;
+      status: string;
+      origin: string;
+      fileUrl: string | null;
+      sizeBytes: number | null;
+      createdAt: string;
+    }>
+  > {
     const rows = await this.dataExportRepository.find({
       where: {
         user: { id: userId },
-        status: In([
-          DataExportStatus.PENDING,
-          DataExportStatus.COMPLETED,
-          DataExportStatus.FAILED,
-        ]),
+        status: In([DataExportStatus.PENDING, DataExportStatus.COMPLETED, DataExportStatus.FAILED]),
       },
       order: { createdAt: 'DESC' },
       take: 20,
@@ -145,7 +142,7 @@ export class DataExportService {
 
   async updateSchedule(
     userId: string,
-    dto: { enabled?: boolean; intervalDays?: number },
+    dto: { enabled?: boolean; intervalDays?: number }
   ): Promise<ExportScheduleView> {
     const existing = await this.scheduleRepository.findOne({
       where: { user: { id: userId } },
@@ -154,7 +151,7 @@ export class DataExportService {
     const intervalDays = dto.intervalDays ?? existing?.intervalDays ?? 30;
     if (!ALLOWED_EXPORT_INTERVALS.includes(intervalDays)) {
       throw new BadRequestException(
-        `intervalDays must be one of: ${ALLOWED_EXPORT_INTERVALS.join(', ')}`,
+        `intervalDays must be one of: ${ALLOWED_EXPORT_INTERVALS.join(', ')}`
       );
     }
 
@@ -171,9 +168,7 @@ export class DataExportService {
     // Predictable cadence: (re-)arming always starts counting from now, so
     // toggling or changing the interval schedules the first run one full
     // interval out — no surprise heavy job on enable.
-    schedule.nextExportAt = enabled
-      ? new Date(Date.now() + intervalDays * DAY_MS)
-      : null;
+    schedule.nextExportAt = enabled ? new Date(Date.now() + intervalDays * DAY_MS) : null;
 
     const saved = await this.scheduleRepository.save(schedule);
     return this.toScheduleView(saved);
@@ -226,7 +221,7 @@ export class DataExportService {
         } catch (error) {
           this.logger.error(
             `Scheduled export failed for user ${user.id}`,
-            error instanceof Error ? error.stack : undefined,
+            error instanceof Error ? error.stack : undefined
           );
           schedule.nextExportAt = new Date(Date.now() + HOUR_MS);
         }
@@ -295,7 +290,7 @@ export class DataExportService {
 
     if (archivesExpired > 0 || filesDeleted > 0) {
       this.logger.log(
-        `Export retention: expired ${archivesExpired} archive(s), removed ${filesDeleted} file(s)`,
+        `Export retention: expired ${archivesExpired} archive(s), removed ${filesDeleted} file(s)`
       );
     }
     return { archivesExpired, filesDeleted };
@@ -329,7 +324,10 @@ export class DataExportService {
       banned: true,
     });
 
-    return { success: true, message: 'Account deletion scheduled. All data will be permanently removed within 30 days.' };
+    return {
+      success: true,
+      message: 'Account deletion scheduled. All data will be permanently removed within 30 days.',
+    };
   }
 
   @Cron(CronExpression.EVERY_HOUR, { name: 'data-export-deletions' })

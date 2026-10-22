@@ -30,7 +30,7 @@ export class WsAuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @InjectRepository(LoginSession)
-    private readonly loginSessionsRepository: Repository<LoginSession>,
+    private readonly loginSessionsRepository: Repository<LoginSession>
   ) {}
 
   /**
@@ -43,7 +43,7 @@ export class WsAuthService {
     const principal = await this.resolvePrincipal(client);
     if (!principal) {
       this.logger.debug(
-        `Rejecting unauthenticated socket ${client.id} (namespace: ${client.nsp?.name ?? 'default'})`,
+        `Rejecting unauthenticated socket ${client.id} (namespace: ${client.nsp?.name ?? 'default'})`
       );
       client.disconnect(true);
       return false;

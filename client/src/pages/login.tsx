@@ -25,12 +25,7 @@ import axios from 'axios';
 
 import { AuthLayout } from '../components/AuthLayout';
 
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 const WebAuthn = lazy(() => import('../components/WebAuthn'));
 
@@ -50,7 +45,9 @@ export function LoginPage() {
   const [recoveryCode, setRecoveryCode] = useState('');
   const [trustedContactEmail, setTrustedContactEmail] = useState('');
   const [trustedContactCode, setTrustedContactCode] = useState('');
-  const [recoveryOptions, setRecoveryOptions] = useState<{ trustedContacts: string[] } | null>(null);
+  const [recoveryOptions, setRecoveryOptions] = useState<{ trustedContacts: string[] } | null>(
+    null
+  );
   const [isResending, setIsResending] = useState(false);
   const [verifyCode, setVerifyCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -173,60 +170,60 @@ export function LoginPage() {
     }
   };
 
-    const handleVerifyCode = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      if (!identifier || !identifier.includes('@')) {
-        setError('Enter the email you used to sign up in the field above first.');
-        return;
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!identifier || !identifier.includes('@')) {
+      setError('Enter the email you used to sign up in the field above first.');
+      return;
+    }
+    if (!verifyCode || verifyCode.length !== 6) {
+      setError('Please enter the 6-digit code sent to your email');
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const response = await api.post('/auth/verify-code', { email: identifier, code: verifyCode });
+      const { access_token } = response.data;
+      setAuthToken(access_token);
+      const user = await getProfile();
+      await addAccount({ user, token: access_token });
+      addToast('Email verified! You are now logged in.', 'success');
+      navigate('/');
+    } catch (err) {
+      setIsVerifying(false);
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Verification failed');
+        addToast(err.response.data.message || 'Verification failed', 'error');
+      } else {
+        setError('An unexpected error occurred');
+        addToast('An unexpected error occurred', 'error');
       }
-      if (!verifyCode || verifyCode.length !== 6) {
-        setError('Please enter the 6-digit code sent to your email');
-        return;
-      }
-      setIsVerifying(true);
-      try {
-        const response = await api.post('/auth/verify-code', { email: identifier, code: verifyCode });
-        const { access_token } = response.data;
-        setAuthToken(access_token);
-        const user = await getProfile();
-        await addAccount({ user, token: access_token });
-        addToast('Email verified! You are now logged in.', 'success');
-        navigate('/');
-      } catch (err) {
-        setIsVerifying(false);
-        if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || 'Verification failed');
-          addToast(err.response.data.message || 'Verification failed', 'error');
-        } else {
-          setError('An unexpected error occurred');
-          addToast('An unexpected error occurred', 'error');
-        }
-      }
-    };
+    }
+  };
 
-    const handleResendVerification = async () => {
-      setError(null);
-      if (!identifier || !identifier.includes('@')) {
-        setError('Please enter the email you used to sign up in the Email or Username field.');
-        return;
+  const handleResendVerification = async () => {
+    setError(null);
+    if (!identifier || !identifier.includes('@')) {
+      setError('Please enter the email you used to sign up in the Email or Username field.');
+      return;
+    }
+    setIsResending(true);
+    try {
+      const resp = await resendVerification({ email: identifier });
+      addToast(resp.message || 'Verification email sent', 'info');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Failed to resend verification email');
+        addToast(err.response.data.message || 'Failed to resend verification email', 'error');
+      } else {
+        setError('Failed to resend verification email');
+        addToast('Failed to resend verification email', 'error');
       }
-      setIsResending(true);
-      try {
-        const resp = await resendVerification({ email: identifier });
-        addToast(resp.message || 'Verification email sent', 'info');
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || 'Failed to resend verification email');
-          addToast(err.response.data.message || 'Failed to resend verification email', 'error');
-        } else {
-          setError('Failed to resend verification email');
-          addToast('Failed to resend verification email', 'error');
-        }
-      } finally {
-        setIsResending(false);
-      }
-    };
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handle2FALogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -424,16 +421,23 @@ export function LoginPage() {
                 </Button>
               </form>
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={handleResendVerification} disabled={isResending}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={isResending}
+                >
                   {isResending ? 'Resending...' : 'Resend verification email'}
                 </Button>
-                <div className="text-xs text-dark-500 dark:text-dark-300">Make sure your email is entered above.</div>
+                <div className="text-xs text-dark-500 dark:text-dark-300">
+                  Make sure your email is entered above.
+                </div>
               </div>
             </div>
           ) : null}
         </div>
       )}
-      
+
       <Tabs defaultValue="password" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="password">Password</TabsTrigger>
@@ -579,7 +583,12 @@ export function LoginPage() {
                 required
                 placeholder="you@example.com or zynkra"
               />
-              <Button type="button" variant="outline" className="w-full" onClick={handleLoadRecoveryOptions}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleLoadRecoveryOptions}
+              >
                 Check Recovery Options
               </Button>
               {recoveryOptions?.trustedContacts?.length ? (
@@ -631,7 +640,12 @@ export function LoginPage() {
                 placeholder="ABC123"
               />
             </div>
-            <Button type="button" variant="outline" className="w-full" onClick={handleRequestTrustedRecoveryCode}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleRequestTrustedRecoveryCode}
+            >
               Send Code To Trusted Contact
             </Button>
             <Button
@@ -716,9 +730,7 @@ export function LoginPage() {
         <TabsContent value="wallet">
           <div className="space-y-3">
             <Button
-              onClick={() =>
-                (window.location.href = `${API_BASE_URL}/auth/google`)
-              }
+              onClick={() => (window.location.href = `${API_BASE_URL}/auth/google`)}
               className="w-full"
               variant="outline"
             >
@@ -745,10 +757,7 @@ export function LoginPage() {
       </Tabs>
       <p className="mt-8 text-center text-sm text-dark-500 dark:text-white/70">
         Don&apos;t have an account?{' '}
-        <Link
-          to="/signup"
-          className="font-medium text-primary-600 dark:text-white hover:underline"
-        >
+        <Link to="/signup" className="font-medium text-primary-600 dark:text-white hover:underline">
           Sign up
         </Link>
       </p>

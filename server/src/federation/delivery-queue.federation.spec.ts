@@ -61,16 +61,12 @@ function createHarness(overrides: { federationEnabled?: boolean } = {}) {
         // IsNull() / Not(IsNull()) both arrive; distinguish by presence of value.
         const isNullMarker = where.completedAt as any;
         const wantNull = isNullMarker === null || isNullMarker?.type === 'isNull';
-        result = result.filter((r) =>
-          wantNull ? r.completedAt === null : r.completedAt !== null,
-        );
+        result = result.filter((r) => (wantNull ? r.completedAt === null : r.completedAt !== null));
       }
       if (where.nextRetryAt !== undefined) {
         const op = where.nextRetryAt as any;
         const value = op?.value ?? op;
-        result = result.filter(
-          (r) => r.nextRetryAt !== null && r.nextRetryAt <= (value as Date),
-        );
+        result = result.filter((r) => r.nextRetryAt !== null && r.nextRetryAt <= (value as Date));
       }
       if (options?.take) result = result.slice(0, options.take);
       return result;
@@ -83,7 +79,7 @@ function createHarness(overrides: { federationEnabled?: boolean } = {}) {
             (!where.activityId || r.activityId === where.activityId) &&
             (!where.inboxUrl || r.inboxUrl === where.inboxUrl) &&
             (where.completedAt === undefined || r.completedAt === null) &&
-            (where.dead === undefined || r.dead === where.dead),
+            (where.dead === undefined || r.dead === where.dead)
         ) ?? null
       );
     }),
@@ -102,7 +98,7 @@ function createHarness(overrides: { federationEnabled?: boolean } = {}) {
           : (!criteria.activityId || r.activityId === criteria.activityId) &&
             (!criteria.instanceDomain || r.instanceDomain === criteria.instanceDomain) &&
             (criteria.completedAt === undefined || r.completedAt === null) &&
-            (criteria.dead === undefined || r.dead === criteria.dead),
+            (criteria.dead === undefined || r.dead === criteria.dead)
       );
       for (const target of targets) Object.assign(target, patch);
       return { affected: targets.length };
@@ -149,7 +145,7 @@ function createHarness(overrides: { federationEnabled?: boolean } = {}) {
     configService,
     userService,
     { findPostsByUserId: jest.fn().mockResolvedValue([]) },
-    httpSignaturesService,
+    httpSignaturesService
   ) as FederationService;
 
   return { service: service as any, rows, deliveryAttemptRepository, instanceRepository };
@@ -177,7 +173,7 @@ describe('federation delivery dead-letter queue', () => {
   it('retains a retryable failure with the payload verbatim', async () => {
     const { service, rows } = createHarness();
     postSpy.mockImplementation(() =>
-      Promise.reject({ response: { status: 503 }, isAxiosError: true }),
+      Promise.reject({ response: { status: 503 }, isAxiosError: true })
     );
 
     const report = await (service as any).fanOut('user-1', ACTIVITY, ['peer.example']);
@@ -202,7 +198,7 @@ describe('federation delivery dead-letter queue', () => {
   it('stores deterministic rejections dead immediately', async () => {
     const { service, rows } = createHarness();
     postSpy.mockImplementation(() =>
-      Promise.reject({ response: { status: 403 }, isAxiosError: true }),
+      Promise.reject({ response: { status: 403 }, isAxiosError: true })
     );
 
     await (service as any).fanOut('user-1', ACTIVITY, ['peer.example']);
@@ -217,7 +213,7 @@ describe('federation delivery dead-letter queue', () => {
   it('marks a prior pending row delivered when a later fan-out succeeds', async () => {
     const { service, rows } = createHarness();
     postSpy.mockImplementation(() =>
-      Promise.reject({ response: { status: 503 }, isAxiosError: true }),
+      Promise.reject({ response: { status: 503 }, isAxiosError: true })
     );
     await (service as any).fanOut('user-1', ACTIVITY, ['peer.example']);
     expect(rows[0].completedAt).toBeNull();
@@ -328,7 +324,7 @@ describe('federation delivery dead-letter queue', () => {
       completedAt: null,
     });
     postSpy.mockImplementation(() =>
-      Promise.reject({ response: { status: 503 }, isAxiosError: true }),
+      Promise.reject({ response: { status: 503 }, isAxiosError: true })
     );
 
     await (service as any).redriveFailedDeliveries();

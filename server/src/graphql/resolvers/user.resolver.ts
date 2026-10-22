@@ -27,13 +27,13 @@ export class GqlUser {
 export class UserResolver {
   constructor(
     private readonly usersService: UsersService,
-    private readonly visibilityService: VisibilityService,
+    private readonly visibilityService: VisibilityService
   ) {}
 
   @Query(() => GqlUser, { nullable: true })
   async user(
     @Args('id', { type: () => ID }) id: string,
-    @Context() context: any,
+    @Context() context: any
   ): Promise<GqlUser | null> {
     const viewerId: string = context?.req?.user?.userId;
     if (!viewerId) {

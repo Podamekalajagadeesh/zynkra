@@ -42,7 +42,7 @@ const mockForumPosts: {
   {
     id: '3',
     title: 'Best laptop for programming in 2024',
-    content: 'Looking to upgrade my work laptop. What are everyone\'s recommendations?',
+    content: "Looking to upgrade my work laptop. What are everyone's recommendations?",
     author: { id: 'user2', email: null, walletAddress: null },
     createdAt: new Date('2024-05-28').toISOString(),
     replies: 89,
@@ -63,12 +63,13 @@ export const ForumChannelView = ({ channelName }: ForumChannelViewProps) => {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
 
-  const pinnedPosts = posts.filter(post => post.isPinned);
-  const regularPosts = posts.filter(post => !post.isPinned);
+  const pinnedPosts = posts.filter((post) => post.isPinned);
+  const regularPosts = posts.filter((post) => !post.isPinned);
 
-  const filteredPosts = [...pinnedPosts, ...regularPosts].filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPosts = [...pinnedPosts, ...regularPosts].filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCreatePost = (e: React.FormEvent) => {
@@ -98,8 +99,7 @@ export const ForumChannelView = ({ channelName }: ForumChannelViewProps) => {
       <div className="p-4 border-b border-dark-200 dark:border-dark-800">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-lg flex items-center gap-2">
-            <FileText size={20} className="text-purple-500" />
-            #{channelName}
+            <FileText size={20} className="text-purple-500" />#{channelName}
           </h3>
           <Button onClick={() => setShowCreatePost(true)} className="gap-2">
             <Plus size={16} />
@@ -107,7 +107,10 @@ export const ForumChannelView = ({ channelName }: ForumChannelViewProps) => {
           </Button>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-400" size={16} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-400"
+            size={16}
+          />
           <Input
             placeholder="Search forum posts..."
             value={searchQuery}
@@ -147,7 +150,7 @@ export const ForumChannelView = ({ channelName }: ForumChannelViewProps) => {
 
       {/* Posts list */}
       <div className="flex-1 overflow-y-auto">
-        {filteredPosts.map(post => (
+        {filteredPosts.map((post) => (
           <div
             key={post.id}
             className={`p-4 border-b border-dark-200 dark:border-dark-800 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors cursor-pointer ${
@@ -163,12 +166,24 @@ export const ForumChannelView = ({ channelName }: ForumChannelViewProps) => {
                   )}
                   <h4 className="font-medium truncate">{post.title}</h4>
                   {post.isLocked && (
-                    <svg className="w-4 h-4 text-dark-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg
+                      className="w-4 h-4 text-dark-400 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
                     </svg>
                   )}
                 </div>
-                <p className="text-sm text-dark-500 dark:text-dark-400 line-clamp-2 mb-2">{post.content}</p>
+                <p className="text-sm text-dark-500 dark:text-dark-400 line-clamp-2 mb-2">
+                  {post.content}
+                </p>
                 <div className="flex items-center gap-4 text-xs text-dark-500 dark:text-dark-400">
                   <span>u/{post.author.id}</span>
                   <span>{new Date(post.createdAt).toLocaleDateString()}</span>

@@ -51,7 +51,10 @@ describe('ExportService data permissions', () => {
       emptyRepository(),
       emptyRepository(),
     ];
-    const service = Reflect.construct(ExportService, [...repositories, configStub]) as ExportService;
+    const service = Reflect.construct(ExportService, [
+      ...repositories,
+      configStub,
+    ]) as ExportService;
 
     const permitted = await service.exportUserData('user-1');
 
@@ -63,11 +66,17 @@ describe('ExportService data permissions', () => {
         personalizationControls: { feedPersonalization: false },
       },
     });
-    expect(permitted.analytics).toEqual(expect.objectContaining({
-      posts: { count: 0, comments: 0, reactions: 0 },
-      audience: { following: 0, followers: 0 },
-    }));
-    expect(permitted.exportManifest.enabledCategories).toEqual(['profile', 'personalization', 'analytics']);
+    expect(permitted.analytics).toEqual(
+      expect.objectContaining({
+        posts: { count: 0, comments: 0, reactions: 0 },
+        audience: { following: 0, followers: 0 },
+      })
+    );
+    expect(permitted.exportManifest.enabledCategories).toEqual([
+      'profile',
+      'personalization',
+      'analytics',
+    ]);
   });
 
   it('omits personalization and analytics data when disabled', async () => {
@@ -103,13 +112,18 @@ describe('ExportService data permissions', () => {
       emptyRepository(),
       emptyRepository(),
     ];
-    const service = Reflect.construct(ExportService, [...repositories, configStub]) as ExportService;
+    const service = Reflect.construct(ExportService, [
+      ...repositories,
+      configStub,
+    ]) as ExportService;
 
     const restricted = await service.exportUserData('user-2');
 
     expect(restricted.personalization).toEqual({});
     expect(restricted.analytics).toEqual({});
-    expect(restricted.exportManifest.omittedCategories).toEqual(expect.arrayContaining(['personalization', 'analytics']));
+    expect(restricted.exportManifest.omittedCategories).toEqual(
+      expect.arrayContaining(['personalization', 'analytics'])
+    );
   });
 });
 
@@ -147,7 +161,9 @@ const buildService = (overrides: Partial<Record<RepoKey, Record<string, any>>> =
       remove: jest.fn().mockResolvedValue([]),
       save: jest
         .fn()
-        .mockImplementation((...args: any[]) => Promise.resolve(args.length > 1 ? args[1] : args[0])),
+        .mockImplementation((...args: any[]) =>
+          Promise.resolve(args.length > 1 ? args[1] : args[0])
+        ),
       create: jest.fn().mockImplementation((_entity: any, value: any) => value),
       createQueryBuilder: jest.fn(),
       ...overrides[key],
@@ -155,7 +171,10 @@ const buildService = (overrides: Partial<Record<RepoKey, Record<string, any>>> =
     repos[key] = repository;
     return repository;
   });
-  return { service: Reflect.construct(ExportService, [...ordered, configStub]) as ExportService, repos };
+  return {
+    service: Reflect.construct(ExportService, [...ordered, configStub]) as ExportService,
+    repos,
+  };
 };
 
 const buildImportManager = (
@@ -165,7 +184,7 @@ const buildImportManager = (
     targets?: any[];
     existingFollows?: any[];
     existingConversations?: any[];
-  } = {},
+  } = {}
 ) => {
   const saves: Array<{ entity: string; value: any }> = [];
   const manager = {
@@ -237,7 +256,9 @@ const fullUser = () => ({
   closeFriends: [{ username: 'buddy' }],
 });
 
-const fullRepositories = (receivedMessages: any[] = []): Partial<Record<RepoKey, Record<string, any>>> => ({
+const fullRepositories = (
+  receivedMessages: any[] = []
+): Partial<Record<RepoKey, Record<string, any>>> => ({
   posts: {
     find: jest.fn().mockResolvedValue([
       {
@@ -259,7 +280,14 @@ const fullRepositories = (receivedMessages: any[] = []): Partial<Record<RepoKey,
         reelEffect: { id: 'fx-1' },
       },
       { id: 'p3', content: 'third post', postType: 'feed', visibility: 'followers', createdAt: T1 },
-      { id: 'p4', content: 'second reel', postType: 'reel', visibility: 'public', createdAt: T1, reelEffect: { id: 'fx-2' } },
+      {
+        id: 'p4',
+        content: 'second reel',
+        postType: 'reel',
+        visibility: 'public',
+        createdAt: T1,
+        reelEffect: { id: 'fx-2' },
+      },
     ]),
   },
   messages: {
@@ -317,19 +345,30 @@ const fullRepositories = (receivedMessages: any[] = []): Partial<Record<RepoKey,
   },
   comments: {
     find: jest.fn().mockResolvedValue([
-      { id: 'cm1', content: 'nice', post: { id: 'p1' }, parent: { id: 'cm0' }, sentiment: 'positive', createdAt: T1 },
+      {
+        id: 'cm1',
+        content: 'nice',
+        post: { id: 'p1' },
+        parent: { id: 'cm0' },
+        sentiment: 'positive',
+        createdAt: T1,
+      },
       { id: 'cm2', content: 'reply', post: { id: 'p2' }, sentiment: null, createdAt: T1 },
       { id: 'cm3', content: 'orphan' },
     ]),
   },
-  reactions: { find: jest.fn().mockResolvedValue([{ id: 'r1', reaction: 'like', post: { id: 'p1' } }]) },
+  reactions: {
+    find: jest.fn().mockResolvedValue([{ id: 'r1', reaction: 'like', post: { id: 'p1' } }]),
+  },
   follows: {
     find: jest
       .fn()
       .mockResolvedValueOnce([{ following: { id: 'u2', username: 'friend' }, followedAt: T1 }])
       .mockResolvedValueOnce([{ follower: { id: 'u3', username: 'fan' }, followedAt: T2 }]),
   },
-  bookmarks: { find: jest.fn().mockResolvedValue([{ id: 'b1', post: { id: 'p1' }, createdAt: T1 }]) },
+  bookmarks: {
+    find: jest.fn().mockResolvedValue([{ id: 'b1', post: { id: 'p1' }, createdAt: T1 }]),
+  },
   stories: {
     find: jest.fn().mockResolvedValue([
       {
@@ -347,25 +386,56 @@ const fullRepositories = (receivedMessages: any[] = []): Partial<Record<RepoKey,
       { id: 's2', textContent: 'story two', mediaUrl: null, createdAt: T1, expiresAt: T2 },
     ]),
   },
-  groupMembers: { find: jest.fn().mockResolvedValue([{ group: { id: 'g1', name: 'Gardening' }, role: 'owner' }]) },
-  notifications: {
-    find: jest.fn().mockResolvedValue([{ id: 'n1', type: 'like', data: { postId: 'p1' }, read: false, createdAt: T1 }]),
+  groupMembers: {
+    find: jest.fn().mockResolvedValue([{ group: { id: 'g1', name: 'Gardening' }, role: 'owner' }]),
   },
-  orders: { find: jest.fn().mockResolvedValue([{ id: 'o1', total: 42, status: 'paid', items: [{}, {}], createdAt: T1 }]) },
-  ledger: {
+  notifications: {
     find: jest
       .fn()
       .mockResolvedValue([
-        { id: 'l1', type: 'earning', amount: 5, balanceAfter: 10, currency: 'usd', reference: 'ref', purpose: 'payout', createdAt: T1 },
+        { id: 'n1', type: 'like', data: { postId: 'p1' }, read: false, createdAt: T1 },
       ]),
   },
-  articles: { find: jest.fn().mockResolvedValue([{ id: 'a1', title: 'Article', content: 'words', publishedAt: T1 }]) },
-  podcasts: {
-    find: jest.fn().mockResolvedValue([{ id: 'po1', title: 'Podcast', description: 'talk', audioUrl: 'a.mp3', createdAt: T1 }]),
+  orders: {
+    find: jest
+      .fn()
+      .mockResolvedValue([{ id: 'o1', total: 42, status: 'paid', items: [{}, {}], createdAt: T1 }]),
   },
-  courses: { find: jest.fn().mockResolvedValue([{ id: 'co1', title: 'Course', description: 'learn', createdAt: T1 }]) },
+  ledger: {
+    find: jest.fn().mockResolvedValue([
+      {
+        id: 'l1',
+        type: 'earning',
+        amount: 5,
+        balanceAfter: 10,
+        currency: 'usd',
+        reference: 'ref',
+        purpose: 'payout',
+        createdAt: T1,
+      },
+    ]),
+  },
+  articles: {
+    find: jest
+      .fn()
+      .mockResolvedValue([{ id: 'a1', title: 'Article', content: 'words', publishedAt: T1 }]),
+  },
+  podcasts: {
+    find: jest
+      .fn()
+      .mockResolvedValue([
+        { id: 'po1', title: 'Podcast', description: 'talk', audioUrl: 'a.mp3', createdAt: T1 },
+      ]),
+  },
+  courses: {
+    find: jest
+      .fn()
+      .mockResolvedValue([{ id: 'co1', title: 'Course', description: 'learn', createdAt: T1 }]),
+  },
   enrollments: {
-    find: jest.fn().mockResolvedValue([{ courseId: 'co1', progress: 60, isCompleted: false, createdAt: T1 }]),
+    find: jest
+      .fn()
+      .mockResolvedValue([{ courseId: 'co1', progress: 60, isCompleted: false, createdAt: T1 }]),
   },
   verification: {
     find: jest.fn().mockResolvedValue([
@@ -386,7 +456,14 @@ const fullRepositories = (receivedMessages: any[] = []): Partial<Record<RepoKey,
   },
   connectedAccounts: {
     find: jest.fn().mockResolvedValue([
-      { id: 'ca1', platform: 'google', platformUsername: 'ada', platformUserId: '1', isActive: true, createdAt: T1 },
+      {
+        id: 'ca1',
+        platform: 'google',
+        platformUsername: 'ada',
+        platformUserId: '1',
+        isActive: true,
+        createdAt: T1,
+      },
     ]),
   },
 });
@@ -455,7 +532,7 @@ describe('ExportService.exportUserData', () => {
       expect(repos.follows.find).toHaveBeenCalledTimes(2);
       expect(result.version).toBe('2.1.0');
       expect(Number.isNaN(Date.parse(result.exportedAt))).toBe(false);
-    },
+    }
   );
 
   it('skips the received-message query when the account has no conversations', async () => {
@@ -520,19 +597,35 @@ describe('ExportService.exportUserData', () => {
       walletAddress: '0xabc',
     });
     expect(result.posts.map((post) => post.id)).toEqual(['p1', 'p2', 'p3', 'p4']);
-    expect(result.posts[0].media).toEqual([{ url: 'u1', type: 'image', sortOrder: 0, altText: 'alt' }]);
+    expect(result.posts[0].media).toEqual([
+      { url: 'u1', type: 'image', sortOrder: 0, altText: 'alt' },
+    ]);
     expect(result.posts[2].media).toEqual([]);
     expect(result.posts[1]).toEqual(
-      expect.objectContaining({ isReel: true, postType: 'reel', visibility: 'public' }),
+      expect.objectContaining({ isReel: true, postType: 'reel', visibility: 'public' })
     );
     expect(result.reels).toEqual([
       { id: 'p2', mediaUrl: 'r2', caption: 'reel caption' },
       { id: 'p4', mediaUrl: null, caption: 'second reel' },
     ]);
     expect(result.comments).toEqual([
-      { id: 'cm1', content: 'nice', postId: 'p1', parentId: 'cm0', sentiment: 'positive', createdAt: T1 },
+      {
+        id: 'cm1',
+        content: 'nice',
+        postId: 'p1',
+        parentId: 'cm0',
+        sentiment: 'positive',
+        createdAt: T1,
+      },
       { id: 'cm2', content: 'reply', postId: 'p2', parentId: null, sentiment: null, createdAt: T1 },
-      { id: 'cm3', content: 'orphan', postId: undefined, parentId: null, sentiment: undefined, createdAt: undefined },
+      {
+        id: 'cm3',
+        content: 'orphan',
+        postId: undefined,
+        parentId: null,
+        sentiment: undefined,
+        createdAt: undefined,
+      },
     ]);
     expect(result.reactions).toEqual([{ id: 'r1', reaction: 'like', postId: 'p1' }]);
     expect(result.follows).toEqual({
@@ -547,7 +640,7 @@ describe('ExportService.exportUserData', () => {
         backgroundOptions: { color: 'red' },
         arFilterName: 'neon',
         music: 'song.mp3',
-      }),
+      })
     );
     expect(result.stories[0].elements).toEqual([{ type: 'text', zIndex: 1 }]);
     expect(result.stories[1].elements).toEqual([]);
@@ -599,7 +692,13 @@ describe('ExportService.exportUserData', () => {
         isEncrypted: true,
         otherParticipant: { userId: 'peer', username: 'pal' },
       },
-      { id: 'c2', type: ConversationType.GROUP, name: 'Squad', isEncrypted: false, otherParticipant: null },
+      {
+        id: 'c2',
+        type: ConversationType.GROUP,
+        name: 'Squad',
+        isEncrypted: false,
+        otherParticipant: null,
+      },
     ]);
     expect(result.verification).toEqual([
       {
@@ -617,21 +716,47 @@ describe('ExportService.exportUserData', () => {
       },
     ]);
     expect(result.linkedAccounts).toEqual([
-      { id: 'ca1', platform: 'google', platformUsername: 'ada', platformUserId: '1', isActive: true, createdAt: T1 },
+      {
+        id: 'ca1',
+        platform: 'google',
+        platformUsername: 'ada',
+        platformUserId: '1',
+        isActive: true,
+        createdAt: T1,
+      },
     ]);
-    expect(result.articles).toEqual([{ id: 'a1', title: 'Article', content: 'words', publishedAt: T1 }]);
+    expect(result.articles).toEqual([
+      { id: 'a1', title: 'Article', content: 'words', publishedAt: T1 },
+    ]);
     expect(result.podcasts).toEqual([
       { id: 'po1', title: 'Podcast', description: 'talk', audioUrl: 'a.mp3', createdAt: T1 },
     ]);
-    expect(result.courses).toEqual([{ id: 'co1', title: 'Course', description: 'learn', createdAt: T1 }]);
-    expect(result.enrollments).toEqual([{ courseId: 'co1', progress: 60, isCompleted: false, enrolledAt: T1 }]);
-    expect(result.groupMemberships).toEqual([{ groupId: 'g1', groupName: 'Gardening', role: 'owner' }]);
+    expect(result.courses).toEqual([
+      { id: 'co1', title: 'Course', description: 'learn', createdAt: T1 },
+    ]);
+    expect(result.enrollments).toEqual([
+      { courseId: 'co1', progress: 60, isCompleted: false, enrolledAt: T1 },
+    ]);
+    expect(result.groupMemberships).toEqual([
+      { groupId: 'g1', groupName: 'Gardening', role: 'owner' },
+    ]);
     expect(result.notifications).toEqual([
       { id: 'n1', type: 'like', data: { postId: 'p1' }, read: false, createdAt: T1 },
     ]);
-    expect(result.orders).toEqual([{ id: 'o1', total: 42, status: 'paid', itemCount: 2, createdAt: T1 }]);
+    expect(result.orders).toEqual([
+      { id: 'o1', total: 42, status: 'paid', itemCount: 2, createdAt: T1 },
+    ]);
     expect(result.wallet).toEqual([
-      { id: 'l1', type: 'earning', amount: 5, balanceAfter: 10, currency: 'usd', reference: 'ref', purpose: 'payout', createdAt: T1 },
+      {
+        id: 'l1',
+        type: 'earning',
+        amount: 5,
+        balanceAfter: 10,
+        currency: 'usd',
+        reference: 'ref',
+        purpose: 'payout',
+        createdAt: T1,
+      },
     ]);
     expect(result.settings).toStrictEqual({
       postVisibility: 'public',
@@ -715,11 +840,13 @@ describe('ExportService.importFromJson', () => {
       } as any);
 
       expect(summary).toEqual(
-        expect.objectContaining({ imported: true, posts: 1, follows: 0, walletEntries: 0 }),
+        expect.objectContaining({ imported: true, posts: 1, follows: 0, walletEntries: 0 })
       );
-      expect(saves.find((entry) => entry.entity === 'User')?.value.displayName).toBe('Defaulted Name');
+      expect(saves.find((entry) => entry.entity === 'User')?.value.displayName).toBe(
+        'Defaulted Name'
+      );
       expect(saves.filter((entry) => entry.entity === 'Post')).toHaveLength(1);
-    },
+    }
   );
 
   const fullPayload = (): any => ({
@@ -789,7 +916,13 @@ describe('ExportService.importFromJson', () => {
       { title: 'T', content: '' },
     ],
     podcasts: [
-      { id: 'po1', title: 'Cast One', description: 'd1', audioUrl: 'a1', createdAt: '2026-02-01T00:00:00.000Z' },
+      {
+        id: 'po1',
+        title: 'Cast One',
+        description: 'd1',
+        audioUrl: 'a1',
+        createdAt: '2026-02-01T00:00:00.000Z',
+      },
       { id: 'po2', title: 'Cast Two', description: 'd2' },
       { title: 'No Description' },
     ],
@@ -804,7 +937,12 @@ describe('ExportService.importFromJson', () => {
       { courseId: 'ghost' },
     ],
     follows: {
-      following: [{ username: 'target' }, { username: 'me' }, { username: 'existing' }, { username: '' }],
+      following: [
+        { username: 'target' },
+        { username: 'me' },
+        { username: 'existing' },
+        { username: '' },
+      ],
       followers: [],
     },
     conversations: [
@@ -815,7 +953,12 @@ describe('ExportService.importFromJson', () => {
       { id: 'conv-5', type: ConversationType.ONE_TO_ONE, otherParticipant: { username: 'peer' } },
     ],
     messages: [
-      { conversationId: 'conv-1', direction: 'sent', content: 'hello', createdAt: '2026-02-01T00:00:00.000Z' },
+      {
+        conversationId: 'conv-1',
+        direction: 'sent',
+        content: 'hello',
+        createdAt: '2026-02-01T00:00:00.000Z',
+      },
       {
         conversationId: 'conv-1',
         direction: 'received',
@@ -856,7 +999,13 @@ describe('ExportService.importFromJson', () => {
       {},
     ],
     linkedAccounts: [
-      { platform: 'google', platformUsername: 'g', platformUserId: '1', isActive: true, createdAt: '2026-02-01T00:00:00.000Z' },
+      {
+        platform: 'google',
+        platformUsername: 'g',
+        platformUserId: '1',
+        isActive: true,
+        createdAt: '2026-02-01T00:00:00.000Z',
+      },
       { platform: '', platformUsername: 'empty' },
       { platformUsername: 'missing-platform' },
     ],
@@ -890,7 +1039,9 @@ describe('ExportService.importFromJson', () => {
         { id: 'u-exist', username: 'existing' },
       ],
       existingFollows: [{ followerId: 'user-1', followingId: 'u-exist' }],
-      existingConversations: [{ id: 'existing-1', participants: [{ id: 'user-1' }, { id: 'peer2-id' }] }],
+      existingConversations: [
+        { id: 'existing-1', participants: [{ id: 'user-1' }, { id: 'peer2-id' }] },
+      ],
     });
     const { service } = buildService({ posts: { manager: { transaction } } });
 
@@ -925,7 +1076,7 @@ describe('ExportService.importFromJson', () => {
         accountType: 'creator',
         postVisibility: 'public',
         profileTheme: 'dark',
-      }),
+      })
     );
     expect(saves.filter((entry) => entry.entity === 'Post')).toHaveLength(3);
     expect(saves.filter((entry) => entry.entity === 'Comment')).toHaveLength(1);
@@ -944,12 +1095,14 @@ describe('ExportService.importFromJson', () => {
     expect(saves.filter((entry) => entry.entity === 'VerificationRequest')).toHaveLength(2);
     expect(saves.filter((entry) => entry.entity === 'ConnectedAccount')).toHaveLength(1);
     expect(saves.find((entry) => entry.entity === 'Conversation')?.value).toEqual(
-      expect.objectContaining({ type: ConversationType.ONE_TO_ONE, isEncrypted: true }),
+      expect.objectContaining({ type: ConversationType.ONE_TO_ONE, isEncrypted: true })
     );
     expect(saves.find((entry) => entry.entity === 'Article')?.value.slug).toBe('hello-world-a1');
-    expect(saves.filter((entry) => entry.entity === 'Article')[2].value.slug).toBe('untitled-punct');
+    expect(saves.filter((entry) => entry.entity === 'Article')[2].value.slug).toBe(
+      'untitled-punct'
+    );
     expect(saves.find((entry) => entry.entity === 'LedgerEntry')?.value.metadata).toEqual(
-      expect.objectContaining({ imported: true }),
+      expect.objectContaining({ imported: true })
     );
   });
 
@@ -1007,7 +1160,7 @@ describe('ExportService.importFromJson', () => {
     const savedEntities = saves.map((entry) => entry.entity);
     expect(savedEntities).toEqual(['User', 'Post']);
     expect(saves.find((entry) => entry.entity === 'User')?.value).toEqual(
-      expect.objectContaining({ displayName: 'Original', postVisibility: 'private' }),
+      expect.objectContaining({ displayName: 'Original', postVisibility: 'private' })
     );
   });
 
@@ -1016,7 +1169,7 @@ describe('ExportService.importFromJson', () => {
     const { service } = buildService({ posts: { manager: { transaction } } });
 
     await expect(service.importFromJson('user-1', { user: {} } as any)).rejects.toBeInstanceOf(
-      NotFoundException,
+      NotFoundException
     );
     expect(transaction).toHaveBeenCalledTimes(1);
   });
@@ -1032,7 +1185,7 @@ describe('ExportService.importFromJson', () => {
     const { service } = buildService();
 
     await expect(service.importFromJson('user-1', payload as any)).rejects.toThrow(
-      'Invalid export data: missing user object',
+      'Invalid export data: missing user object'
     );
   });
 
@@ -1040,7 +1193,7 @@ describe('ExportService.importFromJson', () => {
     const { service } = buildService();
 
     await expect(
-      service.importFromJson('user-1', { user: {}, version: '1.0' } as any),
+      service.importFromJson('user-1', { user: {}, version: '1.0' } as any)
     ).rejects.toThrow('Unsupported export version. Expected version 2.x.');
   });
 
@@ -1051,7 +1204,7 @@ describe('ExportService.importFromJson', () => {
     const { service } = buildService();
 
     await expect(
-      service.importFromJson('user-1', { user: {}, [collection]: value } as any),
+      service.importFromJson('user-1', { user: {}, [collection]: value } as any)
     ).rejects.toThrow(`Invalid export data: ${collection} must be an array`);
   });
 
@@ -1060,7 +1213,7 @@ describe('ExportService.importFromJson', () => {
     const posts = Array.from({ length: 10001 }, (_unused, index) => ({ id: `p${index}` }));
 
     await expect(service.importFromJson('user-1', { user: {}, posts } as any)).rejects.toThrow(
-      'Invalid export data: posts exceeds the 10000 item limit',
+      'Invalid export data: posts exceeds the 10000 item limit'
     );
   });
 
@@ -1069,7 +1222,7 @@ describe('ExportService.importFromJson', () => {
     const messages = Array.from({ length: 100001 }, (_unused, index) => ({ id: `m${index}` }));
 
     await expect(service.importFromJson('user-1', { user: {}, messages } as any)).rejects.toThrow(
-      'Invalid export data: messages exceeds the 100000 item limit',
+      'Invalid export data: messages exceeds the 100000 item limit'
     );
   });
 
@@ -1081,7 +1234,7 @@ describe('ExportService.importFromJson', () => {
     const { service } = buildService();
 
     await expect(service.importFromJson('user-1', { user: {}, follows } as any)).rejects.toThrow(
-      'Invalid export data: follows must contain following and followers arrays',
+      'Invalid export data: follows must contain following and followers arrays'
     );
   });
 });
@@ -1124,7 +1277,7 @@ describe('ExportService.deleteAllUserData', () => {
     const { service } = buildService();
 
     await expect(service.deleteAllUserData('missing-user')).rejects.toBeInstanceOf(
-      NotFoundException,
+      NotFoundException
     );
   });
 
@@ -1177,7 +1330,7 @@ describe('ExportService.deleteAllUserData', () => {
         email: 'deleted_abcdef12@zynkra.deleted',
         bio: null,
         avatar: null,
-      }),
+      })
     );
   });
 });

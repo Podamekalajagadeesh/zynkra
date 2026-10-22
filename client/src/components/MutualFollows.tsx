@@ -55,9 +55,7 @@ export function MutualFollows({ userId }: MutualFollowsProps) {
         ))}
       </div>
       {mutualFollows.length > 5 && (
-        <p className="mt-2 text-sm text-dark-500">
-          + {mutualFollows.length - 5} more
-        </p>
+        <p className="mt-2 text-sm text-dark-500">+ {mutualFollows.length - 5} more</p>
       )}
     </div>
   );

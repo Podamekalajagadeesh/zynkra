@@ -74,7 +74,9 @@ export class DeepfakeDetectionService {
         try {
           return await this.analyzeImageWithVisionModel(imageUrl, predictions);
         } catch (error: any) {
-          this.logger.warn(`Vision model analysis failed, falling back to heuristics: ${error.message}`);
+          this.logger.warn(
+            `Vision model analysis failed, falling back to heuristics: ${error.message}`
+          );
         }
       }
 
@@ -139,9 +141,7 @@ export class DeepfakeDetectionService {
         faceAnalysis: {
           facesDetected: avgFaces || 1,
           faceConfidences:
-            frameFaceConfidences.length > 0
-              ? frameFaceConfidences
-              : [avgFaceConfidence || 0.9],
+            frameFaceConfidences.length > 0 ? frameFaceConfidences : [avgFaceConfidence || 0.9],
         },
       };
     } catch (error) {
@@ -154,7 +154,7 @@ export class DeepfakeDetectionService {
 
   private async analyzeImageWithVisionModel(
     imageUrl: string,
-    nsfwPredictions: any[],
+    nsfwPredictions: any[]
   ): Promise<DeepfakeDetectionResult> {
     const prompt = `Analyze this image for signs of AI generation, deepfake manipulation, or digital tampering.
 
@@ -233,10 +233,7 @@ Return ONLY a valid JSON object with this exact shape:
 
   // ── Heuristic fallbacks ────────────────────────────────────────────────
 
-  private analyzeImageHeuristic(
-    nsfwPredictions: any[],
-    image: any,
-  ): DeepfakeDetectionResult {
+  private analyzeImageHeuristic(nsfwPredictions: any[], image: any): DeepfakeDetectionResult {
     let score = 0;
     const pornPrediction = nsfwPredictions.find((p) => p.className === 'Porn');
     const hentaiPrediction = nsfwPredictions.find((p) => p.className === 'Hentai');
@@ -267,7 +264,7 @@ Return ONLY a valid JSON object with this exact shape:
   private analyzeSyntheticFrame(
     videoUrl: string,
     frameIndex: number,
-    totalFrames: number,
+    totalFrames: number
   ): {
     deepfakeScore: number;
     faceConfidence: number;

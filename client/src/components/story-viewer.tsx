@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Story, UserProfile, PostAuthor, ScreenshotProtectionSettings, StoryElement } from '../lib/types';
+import {
+  Story,
+  UserProfile,
+  PostAuthor,
+  ScreenshotProtectionSettings,
+  StoryElement,
+} from '../lib/types';
 import { X, Send, Crown, EyeOff, Users, Search } from 'lucide-react';
 import { Mention } from './Mention';
 import { Poll } from './poll';
@@ -7,13 +13,7 @@ import { addStoryReaction, addStoryReply, trackStoryView, getStoryViews } from '
 import { useScreenshotProtection } from '../hooks/useScreenshotProtection';
 import { ScreenshotProtectionLevel } from '../lib/types';
 import { useIsPremium } from '../hooks/useIsPremium';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
 
 const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
@@ -45,17 +45,19 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   // Fetch story viewers when active story changes
   useEffect(() => {
     if (activeStory) {
-      getStoryViews(activeStory.id).then(views => {
-        setStoryViewers(views || []);
-      }).catch(error => {
-        console.error('Failed to fetch story viewers:', error);
-        setStoryViewers([]);
-      });
+      getStoryViews(activeStory.id)
+        .then((views) => {
+          setStoryViewers(views || []);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch story viewers:', error);
+          setStoryViewers([]);
+        });
     }
   }, [activeStory?.id]);
 
   // Filter viewers based on search query
-  const filteredViewers = storyViewers.filter(viewer => {
+  const filteredViewers = storyViewers.filter((viewer) => {
     const searchLower = viewerSearchQuery.toLowerCase();
     return (
       viewer.username?.toLowerCase().includes(searchLower) ||
@@ -64,25 +66,29 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       viewer.walletAddress?.toLowerCase().includes(searchLower)
     );
   });
-  
+
   // Apply screenshot protection if enabled for this story
   // `Story.user` is typed as the minimal `PostAuthor`; the API also returns
   // screenshot-protection settings on it, so widen locally to read them.
-  const storyUser = activeStory.user as PostAuthor & { screenshotProtection?: ScreenshotProtectionSettings };
+  const storyUser = activeStory.user as PostAuthor & {
+    screenshotProtection?: ScreenshotProtectionSettings;
+  };
   const shouldApplyProtection = Boolean(
-    storyUser.screenshotProtection?.enabled && storyUser.screenshotProtection?.applyToStories,
+    storyUser.screenshotProtection?.enabled && storyUser.screenshotProtection?.applyToStories
   );
 
   const { protectionRef } = useScreenshotProtection({
     enabled: shouldApplyProtection,
-    level: (storyUser.screenshotProtection?.level as ScreenshotProtectionLevel) || ScreenshotProtectionLevel.WARNING_ONLY,
+    level:
+      (storyUser.screenshotProtection?.level as ScreenshotProtectionLevel) ||
+      ScreenshotProtectionLevel.WARNING_ONLY,
     contentTitle: 'this story',
   });
 
   // Track view when story opens
   useEffect(() => {
     if (activeStory) {
-      trackStoryView(activeStory.id, isAnonymousView).catch(error => {
+      trackStoryView(activeStory.id, isAnonymousView).catch((error) => {
         console.error('Failed to track story view:', error);
       });
     }
@@ -104,27 +110,30 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   useEffect(() => {
     if (floatingReactions.length > 0) {
       const timer = setTimeout(() => {
-        setFloatingReactions(prev => prev.slice(1));
+        setFloatingReactions((prev) => prev.slice(1));
       }, 2500);
       return () => clearTimeout(timer);
     }
   }, [floatingReactions]);
 
-  const triggerAnimatedReaction = useCallback((reaction: string) => {
-    if (!isPremium) return;
-    
-    const newReactions: AnimatedReaction[] = [];
-    // Create 15 floating emojis that spread across the screen
-    for (let i = 0; i < 15; i++) {
-      newReactions.push({
-        id: Date.now() + i,
-        emoji: reaction,
-        x: Math.random() * 80 + 10, // Random X position (10-90%)
-        y: Math.random() * 60 + 20, // Random Y position (20-80%)
-      });
-    }
-    setFloatingReactions(prev => [...prev, ...newReactions]);
-  }, [isPremium]);
+  const triggerAnimatedReaction = useCallback(
+    (reaction: string) => {
+      if (!isPremium) return;
+
+      const newReactions: AnimatedReaction[] = [];
+      // Create 15 floating emojis that spread across the screen
+      for (let i = 0; i < 15; i++) {
+        newReactions.push({
+          id: Date.now() + i,
+          emoji: reaction,
+          x: Math.random() * 80 + 10, // Random X position (10-90%)
+          y: Math.random() * 60 + 20, // Random Y position (20-80%)
+        });
+      }
+      setFloatingReactions((prev) => [...prev, ...newReactions]);
+    },
+    [isPremium]
+  );
 
   const handleReaction = async (reaction: string) => {
     if (!activeStory) return;
@@ -157,19 +166,32 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const pollElement = activeStory.elements?.find((e) => e.type === 'poll');
   // The shared `StoryElement` type does not model 'mention' elements, but the
   // API returns them with a `username` field. Widen locally to read them.
-  type MentionElement = Omit<StoryElement, 'type' | 'data'> & { type: 'mention'; data: { username: string } };
-  const mentionElement = (activeStory.elements as Array<StoryElement | MentionElement> | undefined)?.find(
-    (e): e is MentionElement => e.type === 'mention'
-  );
+  type MentionElement = Omit<StoryElement, 'type' | 'data'> & {
+    type: 'mention';
+    data: { username: string };
+  };
+  const mentionElement = (
+    activeStory.elements as Array<StoryElement | MentionElement> | undefined
+  )?.find((e): e is MentionElement => e.type === 'mention');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div ref={protectionRef} className="relative h-full max-h-[90vh] w-full max-w-md rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        ref={protectionRef}
+        className="relative h-full max-h-[90vh] w-full max-w-md rounded-lg overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="absolute top-0 left-0 w-full h-2 bg-gray-500/50">
-          <div className="h-full bg-white" style={{ width: '100%', animation: 'progress 5s linear forwards' }} />
+          <div
+            className="h-full bg-white"
+            style={{ width: '100%', animation: 'progress 5s linear forwards' }}
+          />
         </div>
         <img src={activeStory.mediaUrl} alt="Story" className="h-full w-full object-cover" />
-        
+
         {/* Animated floating reactions */}
         {floatingReactions.map((floating) => (
           <div
@@ -191,15 +213,17 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
             alt={activeStory.user.walletAddress || activeStory.user.email || 'User'}
             className="h-10 w-10 rounded-full border-2 border-white"
           />
-          <span className="font-bold">{activeStory.user.walletAddress || activeStory.user.email || 'User'}</span>
+          <span className="font-bold">
+            {activeStory.user.walletAddress || activeStory.user.email || 'User'}
+          </span>
           {isPremium && <Crown size={16} className="text-yellow-400" />}
         </div>
         <button onClick={onClose} className="absolute top-4 right-4 text-white">
           <X size={24} />
         </button>
         {isPremium && (
-          <button 
-            onClick={() => setIsAnonymousView(!isAnonymousView)} 
+          <button
+            onClick={() => setIsAnonymousView(!isAnonymousView)}
             className={`absolute top-4 right-12 ${isAnonymousView ? 'text-yellow-400' : 'text-white'}`}
             title={isAnonymousView ? 'Anonymous viewing enabled' : 'Enable anonymous viewing'}
           >
@@ -219,7 +243,10 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
               <DialogTitle>Story Viewers ({storyViewers.length})</DialogTitle>
             </DialogHeader>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                size={18}
+              />
               <Input
                 placeholder="Search viewers..."
                 value={viewerSearchQuery}
@@ -230,15 +257,22 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
             <div className="max-h-80 overflow-y-auto space-y-2">
               {filteredViewers.length > 0 ? (
                 filteredViewers.map((viewer) => (
-                  <div key={viewer.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <div
+                    key={viewer.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
                     <img
                       src={viewer.pfp || `https://i.pravatar.cc/150?u=${viewer.id}`}
                       alt={viewer.username || viewer.displayName || 'User'}
                       className="h-10 w-10 rounded-full"
                     />
                     <div>
-                      <p className="font-medium">{viewer.displayName || viewer.username || viewer.email || 'Anonymous User'}</p>
-                      <p className="text-sm text-gray-500">@{viewer.username || viewer.walletAddress?.slice(0, 8) || 'unknown'}</p>
+                      <p className="font-medium">
+                        {viewer.displayName || viewer.username || viewer.email || 'Anonymous User'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        @{viewer.username || viewer.walletAddress?.slice(0, 8) || 'unknown'}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -251,10 +285,7 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
           </DialogContent>
         </Dialog>
         {pollElement && 'question' in pollElement.data && 'options' in pollElement.data && (
-          <Poll
-            question={pollElement.data.question}
-            options={pollElement.data.options}
-          />
+          <Poll question={pollElement.data.question} options={pollElement.data.options} />
         )}
         {mentionElement && 'username' in mentionElement.data && (
           <Mention username={mentionElement.data.username} />

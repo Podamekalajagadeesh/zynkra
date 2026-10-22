@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Param,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreatorMonetizationService } from './creator-monetization.service';
 
@@ -25,7 +35,7 @@ export class CreatorMonetizationController {
       req.user.userId || req.user.id,
       body.creatorId,
       body.amount,
-      body.message,
+      body.message
     );
   }
 
@@ -36,25 +46,29 @@ export class CreatorMonetizationController {
     return this.monetizationService.processSubscription(
       req.user.userId || req.user.id,
       body.creatorId,
-      body.tierId,
+      body.tierId
     );
   }
 
   @Post('pay-per-view')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  purchaseContent(@Req() req, @Body() body: {
-    creatorId: string;
-    contentId: string;
-    contentType: 'article' | 'podcast' | 'course' | 'post';
-    price: number;
-  }) {
+  purchaseContent(
+    @Req() req,
+    @Body()
+    body: {
+      creatorId: string;
+      contentId: string;
+      contentType: 'article' | 'podcast' | 'course' | 'post';
+      price: number;
+    }
+  ) {
     return this.monetizationService.processPayPerView(
       req.user.userId || req.user.id,
       body.creatorId,
       body.contentId,
       body.contentType,
-      body.price,
+      body.price
     );
   }
 

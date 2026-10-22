@@ -32,7 +32,9 @@ function SearchResultsPage() {
   const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
   const [isVoiceSearchActive, setIsVoiceSearchActive] = useState(false);
   const [voiceSearchError, setVoiceSearchError] = useState<string | null>(null);
-  const [webResults, setWebResults] = useState<{ title: string; snippet?: string; url: string }[]>([]);
+  const [webResults, setWebResults] = useState<{ title: string; snippet?: string; url: string }[]>(
+    []
+  );
   const [isWebSearchLoading, setIsWebSearchLoading] = useState(false);
   const [followUpQuery, setFollowUpQuery] = useState('');
   const [isFollowUpLoading, setIsFollowUpLoading] = useState(false);
@@ -121,16 +123,20 @@ function SearchResultsPage() {
         ? await searchByImageAndText(file, query.trim())
         : await searchByImageAndText(file, '');
       const imageResults = data?.imageSearchResults ?? [];
-      setResults((prev) => prev ? { ...prev, imageSearchResults: imageResults } : { 
-        users: data?.users ?? [],
-        posts: data?.posts ?? [],
-        hashtags: data?.hashtags ?? [],
-        places: data?.places ?? [],
-        groups: data?.groups ?? [],
-        events: data?.events ?? [],
-        products: data?.products ?? [],
-        imageSearchResults: imageResults,
-      });
+      setResults((prev) =>
+        prev
+          ? { ...prev, imageSearchResults: imageResults }
+          : {
+              users: data?.users ?? [],
+              posts: data?.posts ?? [],
+              hashtags: data?.hashtags ?? [],
+              places: data?.places ?? [],
+              groups: data?.groups ?? [],
+              events: data?.events ?? [],
+              products: data?.products ?? [],
+              imageSearchResults: imageResults,
+            }
+      );
     } catch (error) {
       console.error('Reverse image search failed:', error);
     } finally {
@@ -197,15 +203,21 @@ function SearchResultsPage() {
           onChange={handleImageSearch}
           className="hidden"
         />
-          <Button 
+        <Button
           onClick={triggerImageUpload}
           variant="secondary"
           className="flex items-center gap-2"
           disabled={isImageSearchLoading}
         >
-          {isImageSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+          {isImageSearchLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
           Reverse Image Search
-          <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
+          <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            Preview
+          </span>
         </Button>
         <Button
           onClick={isVoiceSearchActive ? stopVoiceSearch : startVoiceSearch}
@@ -222,7 +234,11 @@ function SearchResultsPage() {
           className="flex items-center gap-2"
           disabled={isWebSearchLoading || !query.trim()}
         >
-          {isWebSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+          {isWebSearchLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Globe className="h-4 w-4" />
+          )}
           Web Results
         </Button>
       </div>
@@ -253,9 +269,17 @@ function SearchResultsPage() {
         <section className="mb-6 space-y-3" aria-label="Web search results">
           <h2 className="text-xl font-bold">Web results</h2>
           {webResults.map((result) => (
-            <a key={result.url} href={result.url} target="_blank" rel="noreferrer" className="block rounded-lg border border-dark-200 p-4 hover:bg-dark-50 dark:border-dark-700 dark:hover:bg-dark-800">
+            <a
+              key={result.url}
+              href={result.url}
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded-lg border border-dark-200 p-4 hover:bg-dark-50 dark:border-dark-700 dark:hover:bg-dark-800"
+            >
               <p className="font-semibold text-primary-700 dark:text-primary-300">{result.title}</p>
-              {result.snippet && <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">{result.snippet}</p>}
+              {result.snippet && (
+                <p className="mt-1 text-sm text-dark-600 dark:text-dark-300">{result.snippet}</p>
+              )}
               <p className="mt-2 truncate text-xs text-dark-500">{result.url}</p>
             </a>
           ))}
@@ -279,7 +303,9 @@ function SearchResultsPage() {
             <TabsTrigger value="events">Events ({results.events?.length || 0})</TabsTrigger>
             <TabsTrigger value="products">Products ({results.products?.length || 0})</TabsTrigger>
             {results.imageSearchResults && (
-              <TabsTrigger value="reverse-image">Image Matches ({results.imageSearchResults.length})</TabsTrigger>
+              <TabsTrigger value="reverse-image">
+                Image Matches ({results.imageSearchResults.length})
+              </TabsTrigger>
             )}
           </TabsList>
 
@@ -294,7 +320,11 @@ function SearchResultsPage() {
                       to={`/profile/${user.id}`}
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors flex items-center gap-4"
                     >
-                      <Avatar src={user.profile.avatarUrl} alt={user.username} className="h-12 w-12" />
+                      <Avatar
+                        src={user.profile.avatarUrl}
+                        alt={user.username}
+                        className="h-12 w-12"
+                      />
                       <div>
                         <p className="font-bold">{user.profile.displayName ?? user.username}</p>
                         <p className="text-sm text-dark-500 dark:text-dark-400">@{user.username}</p>
@@ -316,7 +346,9 @@ function SearchResultsPage() {
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                       <p className="font-bold text-primary-600">#{tag.name}</p>
-                      <p className="text-sm text-dark-500 dark:text-dark-400">{tag.postCount?.toLocaleString() || 0} posts</p>
+                      <p className="text-sm text-dark-500 dark:text-dark-400">
+                        {tag.postCount?.toLocaleString() || 0} posts
+                      </p>
                     </Link>
                   ))}
                 </div>
@@ -352,7 +384,9 @@ function SearchResultsPage() {
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                       <p className="font-bold">{group.name}</p>
-                      <p className="text-sm text-dark-500 dark:text-dark-400">{group.memberCount?.toLocaleString() || 0} members</p>
+                      <p className="text-sm text-dark-500 dark:text-dark-400">
+                        {group.memberCount?.toLocaleString() || 0} members
+                      </p>
                     </Link>
                   ))}
                 </div>
@@ -370,7 +404,9 @@ function SearchResultsPage() {
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                       <p className="font-bold">{event.title}</p>
-                      <p className="text-sm text-dark-500 dark:text-dark-400">{new Date(event.date).toLocaleDateString()}</p>
+                      <p className="text-sm text-dark-500 dark:text-dark-400">
+                        {new Date(event.date).toLocaleDateString()}
+                      </p>
                     </Link>
                   ))}
                 </div>
@@ -388,7 +424,11 @@ function SearchResultsPage() {
                       className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                       {product.imageUrls?.[0] && (
-                        <img src={product.imageUrls[0]} alt={product.name} className="w-full h-40 object-cover rounded-md mb-2" />
+                        <img
+                          src={product.imageUrls[0]}
+                          alt={product.name}
+                          className="w-full h-40 object-cover rounded-md mb-2"
+                        />
                       )}
                       <p className="font-bold">{product.name}</p>
                       <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
@@ -409,7 +449,9 @@ function SearchResultsPage() {
               <div>
                 <div className="mb-4 flex items-center gap-3">
                   <h2 className="text-xl font-bold">Reverse Image Search Matches</h2>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                    Preview
+                  </span>
                 </div>
                 <p className="mb-3 text-sm text-dark-500 dark:text-dark-400">
                   Showing recent public image posts — not perceptual reverse-image matching.
@@ -418,9 +460,18 @@ function SearchResultsPage() {
               </div>
             )}
 
-            {results.users.length === 0 && results.posts.length === 0 && (results.hashtags?.length || 0) === 0 && (results.places?.length || 0) === 0 && (results.groups?.length || 0) === 0 && (results.events?.length || 0) === 0 && (results.products?.length || 0) === 0 && (results.imageSearchResults?.length || 0) === 0 && (
-              <p className="text-dark-500 dark:text-dark-400">No results found for your search query.</p>
-            )}
+            {results.users.length === 0 &&
+              results.posts.length === 0 &&
+              (results.hashtags?.length || 0) === 0 &&
+              (results.places?.length || 0) === 0 &&
+              (results.groups?.length || 0) === 0 &&
+              (results.events?.length || 0) === 0 &&
+              (results.products?.length || 0) === 0 &&
+              (results.imageSearchResults?.length || 0) === 0 && (
+                <p className="text-dark-500 dark:text-dark-400">
+                  No results found for your search query.
+                </p>
+              )}
           </TabsContent>
 
           <TabsContent value="users">
@@ -432,7 +483,11 @@ function SearchResultsPage() {
                     to={`/profile/${user.id}`}
                     className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors flex items-center gap-4"
                   >
-                    <Avatar src={user.profile.avatarUrl} alt={user.username} className="h-12 w-12" />
+                    <Avatar
+                      src={user.profile.avatarUrl}
+                      alt={user.username}
+                      className="h-12 w-12"
+                    />
                     <div>
                       <p className="font-bold">{user.profile.displayName ?? user.username}</p>
                       <p className="text-sm text-dark-500 dark:text-dark-400">@{user.username}</p>
@@ -463,7 +518,9 @@ function SearchResultsPage() {
                     className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                   >
                     <p className="font-bold text-primary-600">#{tag.name}</p>
-                    <p className="text-sm text-dark-500 dark:text-dark-400">{tag.postCount?.toLocaleString() || 0} posts</p>
+                    <p className="text-sm text-dark-500 dark:text-dark-400">
+                      {tag.postCount?.toLocaleString() || 0} posts
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -501,7 +558,9 @@ function SearchResultsPage() {
                     className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                   >
                     <p className="font-bold">{group.name}</p>
-                    <p className="text-sm text-dark-500 dark:text-dark-400">{group.memberCount?.toLocaleString() || 0} members</p>
+                    <p className="text-sm text-dark-500 dark:text-dark-400">
+                      {group.memberCount?.toLocaleString() || 0} members
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -520,7 +579,9 @@ function SearchResultsPage() {
                     className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                   >
                     <p className="font-bold">{event.title}</p>
-                    <p className="text-sm text-dark-500 dark:text-dark-400">{new Date(event.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-dark-500 dark:text-dark-400">
+                      {new Date(event.date).toLocaleDateString()}
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -532,41 +593,47 @@ function SearchResultsPage() {
           <TabsContent value="products">
             {results.products?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {results.products.map((product) => (
-                <Link
-                  key={product.id}
-                  to={`/marketplace/products/${product.id}`}
-                  className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
-                >
-                  {product.imageUrls?.[0] && (
-                    <img src={product.imageUrls[0]} alt={product.name} className="w-full h-40 object-cover rounded-md mb-2" />
-                  )}
-                  <p className="font-bold">{product.name}</p>
-                  <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
-                </Link>
-              ))}
+                {results.products.map((product) => (
+                  <Link
+                    key={product.id}
+                    to={`/marketplace/products/${product.id}`}
+                    className="p-4 rounded-lg border border-dark-200 dark:border-dark-700 hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
+                  >
+                    {product.imageUrls?.[0] && (
+                      <img
+                        src={product.imageUrls[0]}
+                        alt={product.name}
+                        className="w-full h-40 object-cover rounded-md mb-2"
+                      />
+                    )}
+                    <p className="font-bold">{product.name}</p>
+                    <p className="text-sm text-primary-600">${product.price?.toLocaleString()}</p>
+                  </Link>
+                ))}
               </div>
             ) : (
               <p className="text-dark-500 dark:text-dark-400">No products found.</p>
             )}
           </TabsContent>
 
-            {results.imageSearchResults && (
-              <TabsContent value="reverse-image">
-                <div className="mb-4 flex items-center gap-3">
-                  <h2 className="text-xl font-bold">Image Matches</h2>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Preview</span>
-                </div>
-                <p className="mb-3 text-sm text-dark-500 dark:text-dark-400">
-                  Recent public image posts, not perceptual reverse-image matching.
-                </p>
-                {results.imageSearchResults.length > 0 ? (
-                  <PostList posts={results.imageSearchResults} onDelete={handleDelete} />
-                ) : (
-                  <p className="text-dark-500 dark:text-dark-400">No matching images found.</p>
-                )}
-              </TabsContent>
-            )}
+          {results.imageSearchResults && (
+            <TabsContent value="reverse-image">
+              <div className="mb-4 flex items-center gap-3">
+                <h2 className="text-xl font-bold">Image Matches</h2>
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                  Preview
+                </span>
+              </div>
+              <p className="mb-3 text-sm text-dark-500 dark:text-dark-400">
+                Recent public image posts, not perceptual reverse-image matching.
+              </p>
+              {results.imageSearchResults.length > 0 ? (
+                <PostList posts={results.imageSearchResults} onDelete={handleDelete} />
+              ) : (
+                <p className="text-dark-500 dark:text-dark-400">No matching images found.</p>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       )}
     </PageShell>

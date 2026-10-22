@@ -52,7 +52,10 @@ export function ForgotPasswordPage() {
       )}
       {isSubmitted ? (
         <div className="text-center">
-          <p>If an account with that email exists, we've sent a password reset link to your email address.</p>
+          <p>
+            If an account with that email exists, we've sent a password reset link to your email
+            address.
+          </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,23 +70,14 @@ export function ForgotPasswordPage() {
               placeholder="you@example.com"
             />
           </div>
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
             {isLoading ? 'Sending...' : 'Send Password Reset Link'}
           </Button>
         </form>
       )}
       <p className="mt-8 text-center text-sm text-dark-500 dark:text-white/70">
         Remember your password?{' '}
-        <Link
-          to="/login"
-          className="font-medium text-primary-600 dark:text-white hover:underline"
-        >
+        <Link to="/login" className="font-medium text-primary-600 dark:text-white hover:underline">
           Log In
         </Link>
       </p>

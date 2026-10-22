@@ -33,7 +33,8 @@ function openQueueDatabase(): Promise<IDBDatabase> {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('Failed to open offline sync database'));
+    request.onerror = () =>
+      reject(request.error || new Error('Failed to open offline sync database'));
   });
 }
 
@@ -43,7 +44,9 @@ async function getQueueStore(): Promise<IDBObjectStore> {
   return transaction.objectStore(STORE_NAME);
 }
 
-export async function enqueueOfflineOperation(operation: Omit<QueuedOperation, 'id' | 'createdAt' | 'attempts' | 'status'>): Promise<QueuedOperation> {
+export async function enqueueOfflineOperation(
+  operation: Omit<QueuedOperation, 'id' | 'createdAt' | 'attempts' | 'status'>
+): Promise<QueuedOperation> {
   const queuedOperation: QueuedOperation = {
     id: `op-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
@@ -86,7 +89,10 @@ export async function clearOfflineOperation(operationId: string): Promise<void> 
   });
 }
 
-async function updateOfflineOperation(operationId: string, updates: Partial<QueuedOperation>): Promise<void> {
+async function updateOfflineOperation(
+  operationId: string,
+  updates: Partial<QueuedOperation>
+): Promise<void> {
   const db = await openQueueDatabase();
   const transaction = db.transaction(STORE_NAME, 'readwrite');
   const store = transaction.objectStore(STORE_NAME);
@@ -117,7 +123,9 @@ function getAuthHeader(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function uploadQueuedMedia(media: Array<{ fileName: string; mimeType: string; dataUrl: string; altText?: string }>) {
+async function uploadQueuedMedia(
+  media: Array<{ fileName: string; mimeType: string; dataUrl: string; altText?: string }>
+) {
   const uploadedMedia: Array<{ url: string; type: string; altText?: string }> = [];
 
   for (const item of media) {
@@ -142,7 +150,11 @@ async function uploadQueuedMedia(media: Array<{ fileName: string; mimeType: stri
     const data = await response.json();
     uploadedMedia.push({
       url: data.url,
-      type: item.mimeType.startsWith('video') ? 'video' : item.mimeType.startsWith('audio') ? 'audio' : 'image',
+      type: item.mimeType.startsWith('video')
+        ? 'video'
+        : item.mimeType.startsWith('audio')
+          ? 'audio'
+          : 'image',
       altText: item.altText,
     });
   }
@@ -191,7 +203,9 @@ async function executeQueuedOperation(operation: QueuedOperation): Promise<void>
 
     if (!response.ok) {
       const text = await response.text();
-      const error = new Error(`Sync failed: ${response.status} ${text}`) as Error & { statusCode?: number };
+      const error = new Error(`Sync failed: ${response.status} ${text}`) as Error & {
+        statusCode?: number;
+      };
       error.statusCode = response.status;
       throw error;
     }
@@ -252,15 +266,21 @@ export async function syncPendingOfflineOperations(): Promise<number> {
   return syncedCount;
 }
 
-async function attemptBackgroundSyncRegistration(registration?: ServiceWorkerRegistration): Promise<void> {
+async function attemptBackgroundSyncRegistration(
+  registration?: ServiceWorkerRegistration
+): Promise<void> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
   try {
-    const readyRegistration = registration ?? await navigator.serviceWorker.ready;
+    const readyRegistration = registration ?? (await navigator.serviceWorker.ready);
 
     if ('sync' in readyRegistration) {
       try {
-        await (readyRegistration as ServiceWorkerRegistration & { sync?: { register(tag: string): Promise<void> } }).sync?.register(SYNC_TAG);
+        await (
+          readyRegistration as ServiceWorkerRegistration & {
+            sync?: { register(tag: string): Promise<void> };
+          }
+        ).sync?.register(SYNC_TAG);
         localStorage.removeItem(REGISTRATION_RETRY_KEY);
         return;
       } catch (err) {
@@ -279,7 +299,9 @@ async function attemptBackgroundSyncRegistration(registration?: ServiceWorkerReg
 
     try {
       const raw = localStorage.getItem(REGISTRATION_RETRY_KEY);
-      const state = raw ? JSON.parse(raw) as { attempts: number; nextAt: number } : { attempts: 0, nextAt: 0 };
+      const state = raw
+        ? (JSON.parse(raw) as { attempts: number; nextAt: number })
+        : { attempts: 0, nextAt: 0 };
       const now = Date.now();
       if (now < state.nextAt) return;
 
@@ -291,7 +313,10 @@ async function attemptBackgroundSyncRegistration(registration?: ServiceWorkerReg
       // ignore storage errors
     }
   } catch (err) {
-    console.warn('Service worker ready check failed when attempting background sync registration:', err);
+    console.warn(
+      'Service worker ready check failed when attempting background sync registration:',
+      err
+    );
   }
 }
 
@@ -354,10 +379,15 @@ export function initializeOfflineSync(): () => void {
   };
 }
 
-export async function getOfflineSyncStatus(): Promise<{ pendingCount: number; conflictedCount: number }> {
+export async function getOfflineSyncStatus(): Promise<{
+  pendingCount: number;
+  conflictedCount: number;
+}> {
   const pending = await getPendingOfflineOperations();
   return {
-    pendingCount: pending.filter((operation) => operation.status === 'queued' || operation.status === 'failed').length,
+    pendingCount: pending.filter(
+      (operation) => operation.status === 'queued' || operation.status === 'failed'
+    ).length,
     conflictedCount: pending.filter((operation) => operation.status === 'conflict').length,
   };
 }

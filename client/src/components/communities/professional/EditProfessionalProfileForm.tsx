@@ -3,7 +3,14 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { useToast } from '../../../hooks/useToast';
-import { ProfessionalProfile, WorkExperience, Education, Certification, Project, Skill } from '../../../lib/types';
+import {
+  ProfessionalProfile,
+  WorkExperience,
+  Education,
+  Certification,
+  Project,
+  Skill,
+} from '../../../lib/types';
 
 // Common skills for professional communities
 const availableSkills: Skill[] = [
@@ -25,7 +32,11 @@ interface EditProfessionalProfileFormProps {
   onSave: () => void;
 }
 
-export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSave }: EditProfessionalProfileFormProps) => {
+export const EditProfessionalProfileForm = ({
+  communityId,
+  currentProfile,
+  onSave,
+}: EditProfessionalProfileFormProps) => {
   const { showToast } = useToast();
   const [headline, setHeadline] = useState(currentProfile.headline);
   const [currentCompany, setCurrentCompany] = useState(currentProfile.currentCompany || '');
@@ -34,44 +45,52 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
   const [about, setAbout] = useState(currentProfile.about);
   const [experience, setExperience] = useState<WorkExperience[]>(currentProfile.experience);
   const [education, setEducation] = useState<Education[]>(currentProfile.education);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(currentProfile.skills.map(s => s.skillId));
-  const [certifications, setCertifications] = useState<Certification[]>(currentProfile.certifications);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(
+    currentProfile.skills.map((s) => s.skillId)
+  );
+  const [certifications, setCertifications] = useState<Certification[]>(
+    currentProfile.certifications
+  );
   const [projects, setProjects] = useState<Project[]>(currentProfile.projects);
 
   const addExperience = () => {
-    setExperience([...experience, {
-      id: Date.now().toString(),
-      title: '',
-      company: '',
-      location: '',
-      employmentType: 'full-time',
-      startDate: '',
-      description: ''
-    }]);
+    setExperience([
+      ...experience,
+      {
+        id: Date.now().toString(),
+        title: '',
+        company: '',
+        location: '',
+        employmentType: 'full-time',
+        startDate: '',
+        description: '',
+      },
+    ]);
   };
 
   const addEducation = () => {
-    setEducation([...education, {
-      id: Date.now().toString(),
-      school: '',
-      degree: '',
-      fieldOfStudy: '',
-      startDate: '',
-      endDate: ''
-    }]);
+    setEducation([
+      ...education,
+      {
+        id: Date.now().toString(),
+        school: '',
+        degree: '',
+        fieldOfStudy: '',
+        startDate: '',
+        endDate: '',
+      },
+    ]);
   };
 
   const toggleSkill = (skillId: string) => {
-    setSelectedSkills(prev => 
-      prev.includes(skillId) 
-        ? prev.filter(id => id !== skillId)
-        : [...prev, skillId]
+    setSelectedSkills((prev) =>
+      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]
     );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // In a real app, this would save the profile to the server
     const updatedProfile: ProfessionalProfile = {
       ...currentProfile,
@@ -82,24 +101,25 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
       about,
       experience,
       education,
-      skills: selectedSkills.map(skillId => {
-        const skill = availableSkills.find(s => s.id === skillId)!;
+      skills: selectedSkills.map((skillId) => {
+        const skill = availableSkills.find((s) => s.id === skillId)!;
         return {
           skillId,
           name: skill.name,
-          endorsements: currentProfile.skills.find(s => s.skillId === skillId)?.endorsements || []
+          endorsements:
+            currentProfile.skills.find((s) => s.skillId === skillId)?.endorsements || [],
         };
       }),
       certifications,
-      projects
+      projects,
     };
 
     console.log('Updated professional profile:', updatedProfile);
-    
+
     showToast({
       title: 'Profile saved!',
       description: 'Your professional profile has been updated.',
-      type: 'success'
+      type: 'success',
     });
 
     onSave();
@@ -159,8 +179,11 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Skills</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {availableSkills.map(skill => (
-            <label key={skill.id} className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+          {availableSkills.map((skill) => (
+            <label
+              key={skill.id}
+              className="flex items-center gap-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
               <input
                 type="checkbox"
                 checked={selectedSkills.includes(skill.id)}
@@ -177,7 +200,9 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Work Experience</h3>
-          <Button type="button" variant="secondary" size="sm" onClick={addExperience}>Add Experience</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={addExperience}>
+            Add Experience
+          </Button>
         </div>
         {experience.map((exp, index) => (
           <div key={exp.id} className="p-4 border rounded-lg space-y-3">
@@ -227,7 +252,9 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Education</h3>
-          <Button type="button" variant="secondary" size="sm" onClick={addEducation}>Add Education</Button>
+          <Button type="button" variant="secondary" size="sm" onClick={addEducation}>
+            Add Education
+          </Button>
         </div>
         {education.map((edu, index) => (
           <div key={edu.id} className="p-4 border rounded-lg space-y-3">
@@ -265,7 +292,9 @@ export const EditProfessionalProfileForm = ({ communityId, currentProfile, onSav
       </div>
 
       <div className="flex justify-end gap-2 pt-4 sticky bottom-0 bg-white dark:bg-gray-900 border-t p-4 -mx-4">
-        <Button type="button" variant="secondary" onClick={onSave}>Cancel</Button>
+        <Button type="button" variant="secondary" onClick={onSave}>
+          Cancel
+        </Button>
         <Button type="submit">Save Profile</Button>
       </div>
     </form>

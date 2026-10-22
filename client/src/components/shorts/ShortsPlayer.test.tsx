@@ -4,9 +4,24 @@ import ShortsPlayer from './ShortsPlayer';
 
 describe('ShortsPlayer', () => {
   const shorts = [
-    { id: 'reel-1', videoUrl: '/video1.mp4', content: 'First short', user: { id: 'u1', username: 'user1' } } as any,
-    { id: 'reel-2', videoUrl: '/video2.mp4', content: 'Second short', user: { id: 'u2', username: 'user2' } } as any,
-    { id: 'reel-3', videoUrl: '/video3.mp4', content: 'Third short', user: { id: 'u3', username: 'user3' } } as any,
+    {
+      id: 'reel-1',
+      videoUrl: '/video1.mp4',
+      content: 'First short',
+      user: { id: 'u1', username: 'user1' },
+    } as any,
+    {
+      id: 'reel-2',
+      videoUrl: '/video2.mp4',
+      content: 'Second short',
+      user: { id: 'u2', username: 'user2' },
+    } as any,
+    {
+      id: 'reel-3',
+      videoUrl: '/video3.mp4',
+      content: 'Third short',
+      user: { id: 'u3', username: 'user3' },
+    } as any,
   ];
 
   it('renders a video element for each short', () => {

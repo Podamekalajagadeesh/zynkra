@@ -85,17 +85,26 @@ export function PasskeyManagementPage() {
             <KeyRound size={28} />
           </div>
           <p className="section-title text-2xl">No passkeys yet</p>
-          <p className="section-subtitle max-w-sm">Add a passkey to make future sign-ins faster and safer.</p>
+          <p className="section-subtitle max-w-sm">
+            Add a passkey to make future sign-ins faster and safer.
+          </p>
         </div>
       ) : (
         <ul className="space-y-3">
           {passkeys.map((passkey) => (
-            <li key={passkey.id} className="surface-soft flex items-center justify-between gap-4 p-4">
+            <li
+              key={passkey.id}
+              className="surface-soft flex items-center justify-between gap-4 p-4"
+            >
               <div className="min-w-0">
                 <p className="font-medium text-dark-900 dark:text-white">{passkey.name}</p>
                 <p className="text-sm text-dark-500 dark:text-dark-400">Passkey credential</p>
               </div>
-              <Button onClick={() => handleDelete(passkey.id)} variant="destructive" icon={<Trash2 size={16} />}>
+              <Button
+                onClick={() => handleDelete(passkey.id)}
+                variant="destructive"
+                icon={<Trash2 size={16} />}
+              >
                 Delete
               </Button>
             </li>

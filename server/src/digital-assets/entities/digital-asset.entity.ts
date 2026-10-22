@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum AssetType {
@@ -44,7 +51,7 @@ export class DigitalAsset {
   @Column({ nullable: true })
   blockchainContractAddress: string;
 
-  @ManyToOne(() => User, user => user.digitalAssets)
+  @ManyToOne(() => User, (user) => user.digitalAssets)
   owner: User;
 
   @Column()

@@ -1,4 +1,15 @@
-import { Controller, Get, Query, Post, Body, UseGuards, UseInterceptors, UploadedFile, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SearchService } from './search.service';
@@ -19,11 +30,12 @@ export class SearchController {
   @Get('advanced')
   async advancedSearch(
     @Query('q') query: string,
-    @Query('type') type?: 'users' | 'posts' | 'hashtags' | 'places' | 'groups' | 'events' | 'products',
+    @Query('type')
+    type?: 'users' | 'posts' | 'hashtags' | 'places' | 'groups' | 'events' | 'products',
     @Query('sort') sort?: 'relevance' | 'date' | 'popularity',
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
-    @Req() req?: any,
+    @Req() req?: any
   ) {
     return this.searchService.advancedSearch({
       query,
@@ -37,7 +49,11 @@ export class SearchController {
 
   @Post('follow-up')
   async followUpSearch(@Body() body: { previousQuery: string; followUpQuery: string }, @Req() req) {
-    return this.searchService.followUpSearch(body?.previousQuery, body?.followUpQuery, req.user.userId || req.user.id);
+    return this.searchService.followUpSearch(
+      body?.previousQuery,
+      body?.followUpQuery,
+      req.user.userId || req.user.id
+    );
   }
 
   @Get('web')
@@ -54,10 +70,7 @@ export class SearchController {
 
   @Post('image-text')
   @UseInterceptors(FileInterceptor('image'))
-  async imageTextSearch(
-    @UploadedFile() image: Express.Multer.File,
-    @Query('q') query: string,
-  ) {
+  async imageTextSearch(@UploadedFile() image: Express.Multer.File, @Query('q') query: string) {
     return this.searchService.imageTextSearch(query, image);
   }
 }

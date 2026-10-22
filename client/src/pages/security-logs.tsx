@@ -61,8 +61,18 @@ export default function SecurityLogsPage() {
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard icon={<Shield size={18} />} label="Total events" value={String(total)} />
-          <StatCard icon={<AlertTriangle size={18} />} label="High risk" value={String(logs.filter((log) => ['critical', 'high'].includes(String(log.severity))).length)} />
-          <StatCard icon={<Clock3 size={18} />} label="Latest" value={logs[0] ? formatDate(logs[0].createdAt) : 'None'} />
+          <StatCard
+            icon={<AlertTriangle size={18} />}
+            label="High risk"
+            value={String(
+              logs.filter((log) => ['critical', 'high'].includes(String(log.severity))).length
+            )}
+          />
+          <StatCard
+            icon={<Clock3 size={18} />}
+            label="Latest"
+            value={logs[0] ? formatDate(logs[0].createdAt) : 'None'}
+          />
         </div>
 
         {error ? (
@@ -75,7 +85,10 @@ export default function SecurityLogsPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-lg font-semibold text-dark-900 dark:text-white">Audit trail</p>
-              <p className="text-sm text-dark-500 dark:text-dark-400">Entries are stored in the backend security audit table and show the real account activity timeline.</p>
+              <p className="text-sm text-dark-500 dark:text-dark-400">
+                Entries are stored in the backend security audit table and show the real account
+                activity timeline.
+              </p>
             </div>
           </div>
 
@@ -90,11 +103,16 @@ export default function SecurityLogsPage() {
           ) : (
             <div className="space-y-3">
               {logs.map((log) => (
-                <div key={log.id} className="rounded-2xl border border-dark-200 bg-dark-50/70 p-4 dark:border-dark-700 dark:bg-dark-900/50">
+                <div
+                  key={log.id}
+                  className="rounded-2xl border border-dark-200 bg-dark-50/70 p-4 dark:border-dark-700 dark:bg-dark-900/50"
+                >
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] ${severityClasses[String(log.severity ?? 'info')] || severityClasses.info}`}>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.15em] ${severityClasses[String(log.severity ?? 'info')] || severityClasses.info}`}
+                        >
                           {log.severity ?? 'info'}
                         </span>
                         <span className="text-xs font-medium uppercase tracking-[0.14em] text-dark-500 dark:text-dark-400">
@@ -106,12 +124,18 @@ export default function SecurityLogsPage() {
                       </p>
                       <div className="flex flex-wrap gap-4 text-xs text-dark-500 dark:text-dark-400">
                         {log.ipAddress ? (
-                          <span className="inline-flex items-center gap-1"><Wifi size={12} /> {log.ipAddress}</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Wifi size={12} /> {log.ipAddress}
+                          </span>
                         ) : null}
                         {log.location ? (
-                          <span className="inline-flex items-center gap-1"><Globe size={12} /> {log.location}</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Globe size={12} /> {log.location}
+                          </span>
                         ) : null}
-                        <span className="inline-flex items-center gap-1"><Clock3 size={12} /> {formatDate(log.createdAt)}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock3 size={12} /> {formatDate(log.createdAt)}
+                        </span>
                       </div>
                     </div>
                     <div className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-300">

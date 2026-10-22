@@ -18,19 +18,48 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(serviceOverrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    create: jest.fn(), update: jest.fn(), publish: jest.fn(), archive: jest.fn(),
-    deleteArticle: jest.fn(), getFeed: jest.fn(), getUserDrafts: jest.fn(),
-    findBySlug: jest.fn(), findById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    publish: jest.fn(),
+    archive: jest.fn(),
+    deleteArticle: jest.fn(),
+    getFeed: jest.fn(),
+    getUserDrafts: jest.fn(),
+    findBySlug: jest.fn(),
+    findById: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [ArticlesController],
     providers: [
       { provide: ArticlesService, useValue: { ...defaultService, ...serviceOverrides } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -62,7 +91,9 @@ describe('POST /articles (create)', () => {
 
   it('returns 401 without auth', async () => {
     const { app } = await buildApp();
-    const r = await request(app.getHttpServer()).post('/articles').send({ title: 'X', content: 'Y' });
+    const r = await request(app.getHttpServer())
+      .post('/articles')
+      .send({ title: 'X', content: 'Y' });
     expect(r.status).toBe(401);
     await app.close();
   });
@@ -73,7 +104,9 @@ describe('GET /articles/feed', () => {
     const { app, service } = await buildApp();
     service.getFeed.mockResolvedValue({
       articles: [{ id: 'art-1', title: 'Article' }],
-      total: 1, page: 1, limit: 20,
+      total: 1,
+      page: 1,
+      limit: 20,
     } as any);
 
     const r = await request(app.getHttpServer()).get('/articles/feed');

@@ -8,7 +8,12 @@ export interface MatchCardProps {
   match: {
     id: string;
     createdAt: string;
-    users: { id: string; displayName?: string | null; username?: string | null; email?: string | null }[];
+    users: {
+      id: string;
+      displayName?: string | null;
+      username?: string | null;
+      email?: string | null;
+    }[];
   };
 }
 

@@ -10,41 +10,63 @@ export class AdvancedModerationService {
 
   // Spam detection patterns
   private readonly spamPatterns = [
-    /buy now/i, /limited time offer/i, /click here/i, /act now/i,
-    /free money/i, /earn \$\d+/i, /make money fast/i, /100% free/i,
-    /follow for follow/i, /f4f/i, /l4l/i, /like for like/i,
-    /dm me/i, /check my bio/i, /link in bio/i,
-    /crypto pump/i, /guaranteed returns/i, /passive income/i,
-    /buy followers/i, /buy likes/i,
+    /buy now/i,
+    /limited time offer/i,
+    /click here/i,
+    /act now/i,
+    /free money/i,
+    /earn \$\d+/i,
+    /make money fast/i,
+    /100% free/i,
+    /follow for follow/i,
+    /f4f/i,
+    /l4l/i,
+    /like for like/i,
+    /dm me/i,
+    /check my bio/i,
+    /link in bio/i,
+    /crypto pump/i,
+    /guaranteed returns/i,
+    /passive income/i,
+    /buy followers/i,
+    /buy likes/i,
   ];
 
   // Harassment detection keywords
   private readonly harassmentKeywords = [
-    'kill yourself', 'kys', 'go die', 'worthless', 'stupid idiot',
-    'ugly', 'fat', 'disgusting', 'pathetic', 'loser', 'trash',
+    'kill yourself',
+    'kys',
+    'go die',
+    'worthless',
+    'stupid idiot',
+    'ugly',
+    'fat',
+    'disgusting',
+    'pathetic',
+    'loser',
+    'trash',
   ];
 
   // Hate speech detection
-  private readonly hateSpeechPatterns = [
-    /\b(n[i1]gg?er|faggot|retard|retarded|tranny|dyke)\b/i,
-  ];
+  private readonly hateSpeechPatterns = [/\b(n[i1]gg?er|faggot|retard|retarded|tranny|dyke)\b/i];
 
   // NSFW detection
-  private readonly nsfwPatterns = [
-    /nsfw/i, /18\+/, /adult only/i, /nude/i, /naked/i,
-  ];
+  private readonly nsfwPatterns = [/nsfw/i, /18\+/, /adult only/i, /nude/i, /naked/i];
 
   constructor() {}
 
   /**
    * Analyze content for moderation flags.
    */
-  analyzeContent(content: string, context?: {
-    authorId?: string;
-    authorReputation?: number;
-    isPublic?: boolean;
-    contentType?: 'post' | 'message' | 'comment';
-  }): {
+  analyzeContent(
+    content: string,
+    context?: {
+      authorId?: string;
+      authorReputation?: number;
+      isPublic?: boolean;
+      contentType?: 'post' | 'message' | 'comment';
+    }
+  ): {
     isSafe: boolean;
     flags: string[];
     severity: 'none' | 'low' | 'medium' | 'high' | 'critical';
@@ -105,7 +127,13 @@ export class AdvancedModerationService {
     }
 
     // Determine confidence
-    const confidence = Math.max(spamScore, harassmentScore, hateSpeechScore, nsfwScore, personalAttackScore);
+    const confidence = Math.max(
+      spamScore,
+      harassmentScore,
+      hateSpeechScore,
+      nsfwScore,
+      personalAttackScore
+    );
 
     // Determine action
     let action: 'none' | 'warn' | 'flag' | 'hide' | 'block' = 'none';

@@ -8,7 +8,10 @@ import { analyzeSentimentText } from '../../lib/api';
 
 type SentimentResult = Awaited<ReturnType<typeof analyzeSentimentText>>;
 
-const EMOTION_LABELS: Array<{ key: keyof NonNullable<SentimentResult['emotions']>; label: string }> = [
+const EMOTION_LABELS: Array<{
+  key: keyof NonNullable<SentimentResult['emotions']>;
+  label: string;
+}> = [
   { key: 'joy', label: 'Joy' },
   { key: 'sadness', label: 'Sadness' },
   { key: 'anger', label: 'Anger' },
@@ -16,11 +19,21 @@ const EMOTION_LABELS: Array<{ key: keyof NonNullable<SentimentResult['emotions']
   { key: 'surprise', label: 'Surprise' },
 ];
 
-const SENTIMENT_STYLES: Record<SentimentResult['sentiment'], { label: string; className: string }> = {
-  positive: { label: 'Positive', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  neutral: { label: 'Neutral', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-  negative: { label: 'Negative', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-};
+const SENTIMENT_STYLES: Record<SentimentResult['sentiment'], { label: string; className: string }> =
+  {
+    positive: {
+      label: 'Positive',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    neutral: {
+      label: 'Neutral',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    },
+    negative: {
+      label: 'Negative',
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    },
+  };
 
 export function SentimentAnalyzer() {
   const { addToast } = useToast();

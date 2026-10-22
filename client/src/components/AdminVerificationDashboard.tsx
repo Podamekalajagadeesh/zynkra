@@ -100,10 +100,7 @@ export function AdminVerificationDashboard() {
         >
           Pending ({requests.filter((r) => r.status === 'pending').length})
         </Button>
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          onClick={() => setFilter('all')}
-        >
+        <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
           All Requests
         </Button>
       </div>

@@ -16,13 +16,15 @@ export class WebauthnService {
   constructor(
     @InjectRepository(Authenticator)
     private readonly authenticatorsRepository: Repository<Authenticator>,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   private getWebAuthnOrigin(): string {
-    return this.configService.get<string>('WEBAUTHN_ORIGIN')
-      || this.configService.get<string>('CLIENT_URL')
-      || 'http://localhost:5173';
+    return (
+      this.configService.get<string>('WEBAUTHN_ORIGIN') ||
+      this.configService.get<string>('CLIENT_URL') ||
+      'http://localhost:5173'
+    );
   }
 
   private getWebAuthnRpId(): string {
@@ -59,16 +61,12 @@ export class WebauthnService {
       excludeCredentials: existingAuthenticators.map((auth) => ({
         id: Buffer.from(auth.credentialID, 'base64'),
         type: 'public-key',
-        transports: auth.transports ? auth.transports.split(',') as any : [],
+        transports: auth.transports ? (auth.transports.split(',') as any) : [],
       })),
     });
   }
 
-  async verifyRegistration(
-    user: User,
-    body: any,
-    challenge: string,
-  ) {
+  async verifyRegistration(user: User, body: any, challenge: string) {
     const verification = await verifyRegistrationResponse({
       response: body,
       expectedChallenge: challenge,
@@ -83,7 +81,9 @@ export class WebauthnService {
     const newAuthenticator = this.authenticatorsRepository.create({
       user,
       credentialID: Buffer.from(verification.registrationInfo.credentialID).toString('base64'),
-      credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey).toString('base64'),
+      credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey).toString(
+        'base64'
+      ),
       counter: verification.registrationInfo.counter,
       transports: body.response.transports?.join(','),
     });
@@ -109,7 +109,7 @@ export class WebauthnService {
       // practice, so fall back to all credentials rather than breaking login when
       // none are labelled internal.
       const platformCredentials = credentials.filter((cred) =>
-        cred.transports.includes('internal'),
+        cred.transports.includes('internal')
       );
       if (platformCredentials.length > 0) {
         credentials = platformCredentials;
@@ -123,11 +123,7 @@ export class WebauthnService {
     return generateAuthenticationOptions({ allowCredentials: credentials });
   }
 
-  async verifyAuthentication(
-    user: User,
-    body: any,
-    challenge: string,
-  ) {
+  async verifyAuthentication(user: User, body: any, challenge: string) {
     const rawCredentialId = typeof body?.id === 'string' ? body.id : '';
     const normalizedCredentialId = this.normalizeCredentialId(rawCredentialId);
 
@@ -158,7 +154,7 @@ export class WebauthnService {
         credentialID: Buffer.from(authenticator.credentialID, 'base64'),
         credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, 'base64'),
         counter: authenticator.counter,
-        transports: authenticator.transports ? authenticator.transports.split(',') as any : [],
+        transports: authenticator.transports ? (authenticator.transports.split(',') as any) : [],
       },
     });
 
@@ -169,7 +165,10 @@ export class WebauthnService {
     return verification;
   }
 
-  async updateAuthenticatorCounter(authenticationInfo: { credentialID: Uint8Array; newCounter: number }) {
+  async updateAuthenticatorCounter(authenticationInfo: {
+    credentialID: Uint8Array;
+    newCounter: number;
+  }) {
     const authenticator = await this.authenticatorsRepository.findOne({
       where: { credentialID: Buffer.from(authenticationInfo.credentialID).toString('base64') },
     });
@@ -186,13 +185,18 @@ export class WebauthnService {
     const authenticators = await this.authenticatorsRepository.find({
       where: { user: { id: user.id } },
     });
-    return authenticators.map(auth => ({ id: auth.id, name: `Passkey created at ${auth.createdAt.toLocaleString()}` }));
+    return authenticators.map((auth) => ({
+      id: auth.id,
+      name: `Passkey created at ${auth.createdAt.toLocaleString()}`,
+    }));
   }
 
   async deletePasskey(user: User, id: string) {
     const result = await this.authenticatorsRepository.delete({ id, user: { id: user.id } });
     if (result.affected === 0) {
-      throw new UnauthorizedException('Passkey not found or you do not have permission to delete it.');
+      throw new UnauthorizedException(
+        'Passkey not found or you do not have permission to delete it.'
+      );
     }
     return { message: 'Passkey deleted successfully.' };
   }

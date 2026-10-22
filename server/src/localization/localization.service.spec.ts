@@ -19,20 +19,30 @@ describe('LocalizationService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('persists validated locale preferences', async () => {
-    await expect(service.updatePreferences('user-1', {
+    await expect(
+      service.updatePreferences('user-1', {
+        language: 'ar',
+        timezone: 'Asia/Kolkata',
+        currency: 'INR',
+      })
+    ).resolves.toMatchObject({
       language: 'ar',
       timezone: 'Asia/Kolkata',
       currency: 'INR',
-    })).resolves.toMatchObject({ language: 'ar', timezone: 'Asia/Kolkata', currency: 'INR', rtl: true });
+      rtl: true,
+    });
 
-    expect(usersRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-      accountPreferences: expect.objectContaining({ language: 'ar', timezone: 'Asia/Kolkata' }),
-    }));
+    expect(usersRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accountPreferences: expect.objectContaining({ language: 'ar', timezone: 'Asia/Kolkata' }),
+      })
+    );
   });
 
   it('rejects invalid time zones', async () => {
-    await expect(service.updatePreferences('user-1', { timezone: 'not/a-timezone' }))
-      .rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.updatePreferences('user-1', { timezone: 'not/a-timezone' })
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('delegates translation to the configured provider', async () => {

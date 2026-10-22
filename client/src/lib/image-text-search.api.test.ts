@@ -10,7 +10,7 @@ describe('image and text search and Web-Connected Search', () => {
 
   it('builds an encoded combined-search request path', () => {
     expect(buildImageTextSearchPath(' mountain lake ')).toBe(
-      '/search/image-text?q=mountain%20lake',
+      '/search/image-text?q=mountain%20lake'
     );
   });
 
@@ -18,8 +18,11 @@ describe('image and text search and Web-Connected Search', () => {
     server.use(
       http.get('*/search/web', ({ request }) => {
         expect(new URL(request.url).searchParams.get('q')).toBe('climate');
-        return HttpResponse.json({ query: 'climate', results: [{ title: 'Climate', url: 'https://example.com' }] });
-      }),
+        return HttpResponse.json({
+          query: 'climate',
+          results: [{ title: 'Climate', url: 'https://example.com' }],
+        });
+      })
     );
 
     const result = await webSearch('climate');
@@ -29,10 +32,10 @@ describe('image and text search and Web-Connected Search', () => {
   it('sends a follow-up query with its previous search context', async () => {
     server.use(
       http.post('*/search/follow-up', async ({ request }) => {
-        const body = await request.json() as { previousQuery: string; followUpQuery: string };
+        const body = (await request.json()) as { previousQuery: string; followUpQuery: string };
         expect(body).toEqual({ previousQuery: 'mountains', followUpQuery: 'near lakes' });
         return HttpResponse.json({ query: 'mountains near lakes', posts: [] });
-      }),
+      })
     );
 
     const result = await followUpSearch('mountains', 'near lakes');

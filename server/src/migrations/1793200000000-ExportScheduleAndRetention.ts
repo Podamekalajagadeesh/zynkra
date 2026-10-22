@@ -9,9 +9,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *   user-triggered ones (history display + retention decisions).
  * - `data_export.sizeBytes`: archive size shown in the history list.
  */
-export class ExportScheduleAndRetention1793200000000
-  implements MigrationInterface
-{
+export class ExportScheduleAndRetention1793200000000 implements MigrationInterface {
   name = 'ExportScheduleAndRetention1793200000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -32,14 +30,12 @@ export class ExportScheduleAndRetention1793200000000
     // FK name matches TypeORM's deterministic naming strategy so this
     // migration leaves zero entity-vs-schema drift behind.
     await queryRunner.query(
-      `ALTER TABLE "export_schedule" ADD CONSTRAINT "FK_01eb189492b55bea44a08b7cda9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "export_schedule" ADD CONSTRAINT "FK_01eb189492b55bea44a08b7cda9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "data_export" ADD COLUMN "origin" character varying(16) NOT NULL DEFAULT 'manual'`,
+      `ALTER TABLE "data_export" ADD COLUMN "origin" character varying(16) NOT NULL DEFAULT 'manual'`
     );
-    await queryRunner.query(
-      `ALTER TABLE "data_export" ADD COLUMN "sizeBytes" bigint`,
-    );
+    await queryRunner.query(`ALTER TABLE "data_export" ADD COLUMN "sizeBytes" bigint`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

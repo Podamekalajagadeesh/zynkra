@@ -64,20 +64,20 @@ export class SpatialAudioService {
   // Initialize spatial audio service
   async initialize(room: Room, config?: Partial<SpatialAudioConfig>) {
     if (this.isInitialized) return;
-    
+
     this.room = room;
     this.config = { ...this.config, ...config };
-    
+
     // Create audio context
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     this.listener = this.audioContext.listener;
-    
+
     // Set initial listener position
     this.updateListenerPosition(this.config.listenerPosition);
-    
+
     // Setup participant tracking
     this.setupParticipantTracking();
-    
+
     this.isInitialized = true;
     console.log('Spatial audio service initialized');
   }
@@ -124,12 +124,12 @@ export class SpatialAudioService {
     // Create audio panner for spatialization
     const panner = this.audioContext.createPanner();
     this.configurePanner(panner);
-    
+
     // Set panner position based on participant's 3D position
     panner.positionX.setValueAtTime(position.x, this.audioContext.currentTime);
     panner.positionY.setValueAtTime(position.y, this.audioContext.currentTime);
     panner.positionZ.setValueAtTime(position.z, this.audioContext.currentTime);
-    
+
     panner.connect(this.audioContext.destination);
     this.participantPanners.set(participant.identity, panner);
 
@@ -145,7 +145,10 @@ export class SpatialAudioService {
       }
     });
 
-    console.log(`Added spatial audio for participant: ${participant.identity} at position`, position);
+    console.log(
+      `Added spatial audio for participant: ${participant.identity} at position`,
+      position
+    );
   }
 
   // Configure panner node with spatial audio settings
@@ -163,11 +166,11 @@ export class SpatialAudioService {
   // Update listener orientation (where they're looking)
   updateListenerOrientation(forward: Vector3D, up: Vector3D) {
     if (!this.listener || !this.audioContext) return;
-    
+
     this.listener.forwardX.setValueAtTime(forward.x, this.audioContext.currentTime);
     this.listener.forwardY.setValueAtTime(forward.y, this.audioContext.currentTime);
     this.listener.forwardZ.setValueAtTime(forward.z, this.audioContext.currentTime);
-    
+
     this.listener.upX.setValueAtTime(up.x, this.audioContext.currentTime);
     this.listener.upY.setValueAtTime(up.y, this.audioContext.currentTime);
     this.listener.upZ.setValueAtTime(up.z, this.audioContext.currentTime);
@@ -193,14 +196,18 @@ export class SpatialAudioService {
   }
 
   // Move a participant to a new position with animation
-  animateParticipantToPosition(participantId: string, targetPosition: Vector3D, duration: number = 1000) {
+  animateParticipantToPosition(
+    participantId: string,
+    targetPosition: Vector3D,
+    duration: number = 1000
+  ) {
     const stored = this.participantPositions.get(participantId);
     const panner = this.participantPanners.get(participantId);
     if (!stored || !panner || !this.audioContext) return;
 
     const startPos = { ...stored.position };
     const startTime = this.audioContext.currentTime;
-    const endTime = startTime + (duration / 1000);
+    const endTime = startTime + duration / 1000;
 
     // Create smooth animation using AudioParam automation
     const animate = () => {
@@ -216,7 +223,7 @@ export class SpatialAudioService {
 
       const progress = (currentTime - startTime) / (endTime - startTime);
       const eased = this.easeInOutCubic(progress);
-      
+
       panner.positionX.setValueAtTime(
         startPos.x + (targetPosition.x - startPos.x) * eased,
         currentTime
@@ -281,36 +288,36 @@ export class SpatialAudioService {
   private removeParticipant(participantId: string) {
     const panner = this.participantPanners.get(participantId);
     const source = this.participantSources.get(participantId);
-    
+
     if (panner) {
       panner.disconnect();
       this.participantPanners.delete(participantId);
     }
-    
+
     if (source) {
       source.disconnect();
       this.participantSources.delete(participantId);
     }
-    
+
     this.participantPositions.delete(participantId);
     console.log(`Removed spatial audio for participant: ${participantId}`);
   }
 
   // Cleanup and dispose resources
   dispose() {
-    this.participantPanners.forEach(panner => panner.disconnect());
-    this.participantSources.forEach(source => source.disconnect());
-    
+    this.participantPanners.forEach((panner) => panner.disconnect());
+    this.participantSources.forEach((source) => source.disconnect());
+
     if (this.audioContext) {
       this.audioContext.close();
     }
-    
+
     this.participantPanners.clear();
     this.participantSources.clear();
     this.participantPositions.clear();
     this.room = null;
     this.isInitialized = false;
-    
+
     console.log('Spatial audio service disposed');
   }
 
@@ -342,7 +349,7 @@ export class SpatialAudioService {
     this.listeners.add(listener);
     // Send initial state
     listener(this.getState());
-    
+
     return () => {
       this.listeners.delete(listener);
     };
@@ -351,7 +358,7 @@ export class SpatialAudioService {
   // Notify all listeners of state changes
   private notifyListeners() {
     const state = this.getState();
-    this.listeners.forEach(listener => listener(state));
+    this.listeners.forEach((listener) => listener(state));
   }
 
   // Update listener position and notify subscribers
@@ -378,37 +385,40 @@ export class SpatialAudioService {
   arrangeParticipantsInCircle(radius: number = 10) {
     const participants = Array.from(this.participantPositions.keys());
     const angleStep = (Math.PI * 2) / participants.length;
-    
+
     participants.forEach((participantId, index) => {
       const angle = index * angleStep;
       const position: Vector3D = {
         x: Math.cos(angle) * radius,
         y: 1.7,
-        z: Math.sin(angle) * radius
+        z: Math.sin(angle) * radius,
       };
       this.animateParticipantToPosition(participantId, position, 1000);
     });
   }
 
   // Arrange participants in a theater layout facing a stage (at negative Z)
-  arrangeParticipantsInTheater(seatsPerRow: number = 8, rowSpacing: number = 5, startZ: number = -15) {
+  arrangeParticipantsInTheater(
+    seatsPerRow: number = 8,
+    rowSpacing: number = 5,
+    startZ: number = -15
+  ) {
     const participants = Array.from(this.participantPositions.keys());
-    
+
     participants.forEach((participantId, index) => {
       const row = Math.floor(index / seatsPerRow);
       const seatInRow = index % seatsPerRow;
       const offset = (seatInRow - (seatsPerRow - 1) / 2) * 3; // Spread seats horizontally
-      
+
       const newPosition: Vector3D = {
         x: offset,
         y: 1.7,
-        z: startZ - (row * rowSpacing) // Place rows behind each other
+        z: startZ - row * rowSpacing, // Place rows behind each other
       };
-      
+
       this.animateParticipantToPosition(participantId, newPosition, 1000);
     });
   }
-
 }
 
 export const spatialAudioService = new SpatialAudioService();

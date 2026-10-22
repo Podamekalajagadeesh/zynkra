@@ -6,10 +6,10 @@ export class GroupLockdowns1786957000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Raid detection needs a join timestamp on memberships.
     await queryRunner.query(
-      `ALTER TABLE "group_members" ADD "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()`,
+      `ALTER TABLE "group_members" ADD "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()`
     );
     await queryRunner.query(
-      `CREATE TYPE "group_lockdowns_mode_enum" AS ENUM ('approval', 'mute_new', 'full')`,
+      `CREATE TYPE "group_lockdowns_mode_enum" AS ENUM ('approval', 'mute_new', 'full')`
     );
     await queryRunner.query(`
       CREATE TABLE "group_lockdowns" (
@@ -25,10 +25,10 @@ export class GroupLockdowns1786957000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "group_lockdowns" ADD CONSTRAINT "FK_group_lockdowns_group" FOREIGN KEY ("groupId") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "group_lockdowns" ADD CONSTRAINT "FK_group_lockdowns_group" FOREIGN KEY ("groupId") REFERENCES "groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `ALTER TABLE "group_lockdowns" ADD CONSTRAINT "FK_group_lockdowns_creator" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "group_lockdowns" ADD CONSTRAINT "FK_group_lockdowns_creator" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`
     );
   }
 

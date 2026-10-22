@@ -21,7 +21,11 @@ interface ApplyToOpportunityModalProps {
   onSuccess: () => void;
 }
 
-export function ApplyToOpportunityModal({ opportunity, onClose, onSuccess }: ApplyToOpportunityModalProps) {
+export function ApplyToOpportunityModal({
+  opportunity,
+  onClose,
+  onSuccess,
+}: ApplyToOpportunityModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     pitch: '',

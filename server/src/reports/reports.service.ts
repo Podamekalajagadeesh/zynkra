@@ -9,14 +9,10 @@ import { Post } from '../posts/entities/post.entity';
 export class ReportsService {
   constructor(
     @InjectRepository(Report)
-    private readonly reportsRepository: Repository<Report>,
+    private readonly reportsRepository: Repository<Report>
   ) {}
 
-  async create(
-    reason: string,
-    reporter: User,
-    post: Post,
-  ): Promise<Report> {
+  async create(reason: string, reporter: User, post: Post): Promise<Report> {
     const report = this.reportsRepository.create({
       reason,
       reporter,

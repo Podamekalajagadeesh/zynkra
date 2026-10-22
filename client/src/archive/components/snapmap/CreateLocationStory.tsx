@@ -33,7 +33,7 @@ export function CreateLocationStory({ open, onClose, userLocation }: CreateLocat
     if (!imageFile || !userLocation || !user) return;
 
     setIsSubmitting(true);
-    
+
     // In a real app, you would upload the image to your storage first
     // For this implementation, we'll create an object URL
     const story = {
@@ -43,7 +43,7 @@ export function CreateLocationStory({ open, onClose, userLocation }: CreateLocat
       longitude: userLocation.longitude,
       imageUrl: previewUrl,
       caption: caption,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Emit to socket server
@@ -64,7 +64,7 @@ export function CreateLocationStory({ open, onClose, userLocation }: CreateLocat
         <DialogHeader>
           <DialogTitle>Create Location Story</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           {!previewUrl ? (
             <div className="border-2 border-dashed border-zinc-300 rounded-lg p-8 text-center">
@@ -80,19 +80,13 @@ export function CreateLocationStory({ open, onClose, userLocation }: CreateLocat
                   Add Photo
                 </Button>
               </label>
-              <p className="text-sm text-gray-500 mt-2">
-                Add a photo to share with your location
-              </p>
+              <p className="text-sm text-gray-500 mt-2">Add a photo to share with your location</p>
             </div>
           ) : (
             <div className="relative">
-              <img 
-                src={previewUrl} 
-                alt="Preview" 
-                className="w-full h-64 object-cover rounded-lg"
-              />
-              <Button 
-                variant="secondary" 
+              <img src={previewUrl} alt="Preview" className="w-full h-64 object-cover rounded-lg" />
+              <Button
+                variant="secondary"
                 size="sm"
                 className="absolute top-2 right-2"
                 onClick={() => {
@@ -119,11 +113,7 @@ export function CreateLocationStory({ open, onClose, userLocation }: CreateLocat
             </div>
           )}
 
-          <Button 
-            className="w-full" 
-            onClick={handleSubmit}
-            disabled={!imageFile || isSubmitting}
-          >
+          <Button className="w-full" onClick={handleSubmit} disabled={!imageFile || isSubmitting}>
             {isSubmitting ? 'Sharing...' : 'Share Location Story'}
           </Button>
         </div>

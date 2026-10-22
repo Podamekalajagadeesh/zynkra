@@ -11,10 +11,10 @@ interface ModMailInternalNoteFormProps {
   onNoteSent: () => void;
 }
 
-export function ModMailInternalNoteForm({ 
-  groupId, 
-  conversationId, 
-  onNoteSent 
+export function ModMailInternalNoteForm({
+  groupId,
+  conversationId,
+  onNoteSent,
 }: ModMailInternalNoteFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState('');
@@ -35,8 +35,8 @@ export function ModMailInternalNoteForm({
 
   if (!isOpen) {
     return (
-      <Button 
-        size="sm" 
+      <Button
+        size="sm"
         variant="ghost"
         className="flex items-center gap-1 text-amber-600 hover:text-amber-700"
         onClick={() => setIsOpen(true)}

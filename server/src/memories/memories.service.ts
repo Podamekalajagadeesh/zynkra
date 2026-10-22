@@ -1,4 +1,3 @@
-
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
@@ -22,7 +21,7 @@ export class MemoriesService {
     @InjectRepository(MemoryEditRevision)
     private readonly revisionRepository: Repository<MemoryEditRevision>,
     @InjectRepository(MemoryProject)
-    private readonly memoryProjectRepository: Repository<MemoryProject>,
+    private readonly memoryProjectRepository: Repository<MemoryProject>
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE, { name: 'memory-time-capsule-unlock' })
@@ -68,7 +67,7 @@ export class MemoriesService {
       memoryMetadata: data.memoryMetadata,
       realityContext: data.realityContext ?? RealityContext.NEURAL,
       timeCapsuleUnlockAt: unlockAt,
-      timeCapsuleUnlockedAt: isScheduled ? null : unlockAt ?? new Date(),
+      timeCapsuleUnlockedAt: isScheduled ? null : (unlockAt ?? new Date()),
       timeCapsuleRecipients: data.timeCapsuleRecipients ?? [],
       timeCapsuleMessage: data.timeCapsuleMessage,
       crossRealityPorts: [],
@@ -148,7 +147,7 @@ export class MemoriesService {
       sensoryNote?: string;
       sensoryEnhancements?: MemoryEditRevision['sensoryEnhancements'];
       contextNote?: string;
-    },
+    }
   ) {
     const memory = await this.postRepository.findOne({
       where: { id: memoryId, isMemory: true },
@@ -219,7 +218,16 @@ export class MemoriesService {
     return memory.crossRealityPorts ?? [];
   }
 
-  async createMemoryProject(user: User, payload: { title: string; topic?: string; description?: string; memoryIds?: string[]; contributorNames?: string[] }) {
+  async createMemoryProject(
+    user: User,
+    payload: {
+      title: string;
+      topic?: string;
+      description?: string;
+      memoryIds?: string[];
+      contributorNames?: string[];
+    }
+  ) {
     const summary = buildMemoryProjectSummary({
       title: payload.title,
       topic: payload.topic ?? 'shared memories',
@@ -253,9 +261,19 @@ export class MemoriesService {
     });
   }
 
-  async createDocumentary(user: User, payload: { eventName: string; title?: string; memoryIds?: string[]; participantNames?: string[] }) {
+  async createDocumentary(
+    user: User,
+    payload: {
+      eventName: string;
+      title?: string;
+      memoryIds?: string[];
+      participantNames?: string[];
+    }
+  ) {
     const memories = await this.postRepository.find({
-      where: payload.memoryIds?.length ? { id: payload.memoryIds as any, isMemory: true } : { isMemory: true },
+      where: payload.memoryIds?.length
+        ? { id: payload.memoryIds as any, isMemory: true }
+        : { isMemory: true },
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });

@@ -27,7 +27,7 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly visibilityService: VisibilityService,
+    private readonly visibilityService: VisibilityService
   ) {}
 
   async handleConnection(client: Socket) {
@@ -48,12 +48,13 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Activity client disconnected: ${client.id}`);
-    
+
     // Find user who disconnected
-    const userEntry = Array.from(this.activeUsers.entries())
-      .find(([, socketIds]) => socketIds.has(client.id));
+    const userEntry = Array.from(this.activeUsers.entries()).find(([, socketIds]) =>
+      socketIds.has(client.id)
+    );
     const userId = userEntry?.[0];
-    
+
     if (userId) {
       const socketIds = userEntry[1];
       socketIds.delete(client.id);
@@ -61,14 +62,14 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
       // A user remains online while at least one device is connected.
       if (socketIds.size > 0) return;
       this.activeUsers.delete(userId);
-      
+
       // Update user's last seen and set offline
       const user = await this.usersRepository.findOne({ where: { id: userId } });
       if (user) {
         user.isOnline = false;
         user.lastSeenAt = new Date();
         await this.usersRepository.save(user);
-        
+
         // Broadcast that user went offline
         this.broadcastUserStatus(userId, user);
       }
@@ -82,13 +83,13 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
     const socketIds = this.activeUsers.get(userId) ?? new Set<string>();
     socketIds.add(client.id);
     this.activeUsers.set(userId, socketIds);
-    
+
     // Update user's online status
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (user) {
       user.isOnline = true;
       await this.usersRepository.save(user);
-      
+
       // Broadcast that user came online
       this.broadcastUserStatus(userId, user);
     }
@@ -98,7 +99,7 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
   async handleUpdateLastSeen(client: Socket) {
     const userId = client.data.userId as string | undefined;
     if (!userId) return;
-    
+
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (user && user.isOnline) {
       user.lastSeenAt = new Date();
@@ -109,12 +110,16 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('update-activity-settings')
   async handleUpdateActivitySettings(
     client: Socket,
-    payload: { showOnlineStatus?: boolean; showLastSeenTimestamp?: boolean; activityVisibility?: 'public' | 'friends' | 'private' }
+    payload: {
+      showOnlineStatus?: boolean;
+      showLastSeenTimestamp?: boolean;
+      activityVisibility?: 'public' | 'friends' | 'private';
+    }
   ) {
     const userId = client.data.userId as string | undefined;
     if (!userId) return;
     const { showOnlineStatus, showLastSeenTimestamp, activityVisibility } = payload;
-    
+
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (user) {
       if (showOnlineStatus !== undefined) {
@@ -127,7 +132,7 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
         user.activityVisibility = activityVisibility;
       }
       await this.usersRepository.save(user);
-      
+
       // Broadcast updated status
       this.broadcastUserStatus(userId, user);
     }
@@ -135,17 +140,18 @@ export class ActivityGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   private async broadcastUserStatus(userId: string, user: User) {
     const sockets = await this.server.fetchSockets();
-    await Promise.all(sockets.map(async (socket) => {
-      const viewerId = socket.data.userId as string | undefined;
-      if (!(await this.visibilityService.canViewActivity(viewerId ?? null, user))) return;
-      socket.emit('user-status-updated', {
-        userId,
-        isOnline: user.showOnlineStatus ? user.isOnline : undefined,
-        lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
-        showOnlineStatus: user.showOnlineStatus,
-        showLastSeenTimestamp: user.showLastSeenTimestamp,
-      });
-    }));
+    await Promise.all(
+      sockets.map(async (socket) => {
+        const viewerId = socket.data.userId as string | undefined;
+        if (!(await this.visibilityService.canViewActivity(viewerId ?? null, user))) return;
+        socket.emit('user-status-updated', {
+          userId,
+          isOnline: user.showOnlineStatus ? user.isOnline : undefined,
+          lastSeenAt: user.showLastSeenTimestamp ? user.lastSeenAt : undefined,
+          showOnlineStatus: user.showOnlineStatus,
+          showLastSeenTimestamp: user.showLastSeenTimestamp,
+        });
+      })
+    );
   }
-
 }

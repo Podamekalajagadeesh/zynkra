@@ -86,7 +86,7 @@ describe('GroupsService (raid protection)', () => {
       });
 
       await expect(
-        service.enableLockdown('group-1', 'user-1', LockdownMode.APPROVAL),
+        service.enableLockdown('group-1', 'user-1', LockdownMode.APPROVAL)
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -106,12 +106,12 @@ describe('GroupsService (raid protection)', () => {
         'admin-1',
         LockdownMode.MUTE_NEW,
         12,
-        48,
+        48
       );
 
       expect(result.mode).toBe(LockdownMode.MUTE_NEW);
       expect(lockdownsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ newMemberMuteHours: 48 }),
+        expect.objectContaining({ newMemberMuteHours: 48 })
       );
     });
   });

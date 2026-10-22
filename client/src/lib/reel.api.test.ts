@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import { getReelById, shareReel, trackReelView, getReelInsights, getReelEffects, getReelSuggestions } from './api';
+import {
+  getReelById,
+  shareReel,
+  trackReelView,
+  getReelInsights,
+  getReelEffects,
+  getReelSuggestions,
+} from './api';
 
 describe('getReelById API helper', () => {
   beforeAll(() => server.listen());
@@ -26,9 +33,7 @@ describe('shareReel API helper', () => {
   afterAll(() => server.close());
 
   it('sends POST to /reels/:id/share', async () => {
-    server.use(
-      http.post('*/reels/post-1/share', () => HttpResponse.json({}))
-    );
+    server.use(http.post('*/reels/post-1/share', () => HttpResponse.json({})));
 
     await shareReel('post-1');
   });
@@ -40,9 +45,7 @@ describe('trackReelView API helper', () => {
   afterAll(() => server.close());
 
   it('sends POST to /reels/:id/view', async () => {
-    server.use(
-      http.post('*/reels/post-1/view', () => HttpResponse.json({}))
-    );
+    server.use(http.post('*/reels/post-1/view', () => HttpResponse.json({})));
 
     await trackReelView('post-1');
   });

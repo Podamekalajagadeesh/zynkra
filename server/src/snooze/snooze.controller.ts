@@ -22,10 +22,7 @@ export class SnoozeController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async snooze(
-    @Request() req,
-    @Body() createSnoozeDto: CreateSnoozeDto,
-  ): Promise<SnoozeDto> {
+  async snooze(@Request() req, @Body() createSnoozeDto: CreateSnoozeDto): Promise<SnoozeDto> {
     const snooze = await this.snoozeService.snooze(req.user, createSnoozeDto);
     return {
       id: snooze.id,

@@ -31,7 +31,7 @@ const billTypeIcons: Record<string, React.ReactNode> = {
   internet: <Wifi className="text-green-500" size={24} />,
   cable: <Tv className="text-purple-500" size={24} />,
   mobile: <Phone className="text-orange-500" size={24} />,
-  gas: <Car className="text-red-500" size={24} />
+  gas: <Car className="text-red-500" size={24} />,
 };
 
 const billTypeNames: Record<string, string> = {
@@ -40,7 +40,7 @@ const billTypeNames: Record<string, string> = {
   internet: 'Internet',
   cable: 'Cable TV',
   mobile: 'Mobile Phone',
-  gas: 'Gas'
+  gas: 'Gas',
 };
 
 export function UtilityBillPayments() {
@@ -51,33 +51,45 @@ export function UtilityBillPayments() {
       type: 'electricity',
       provider: 'National Grid',
       accountNumber: 'NG-789456123',
-      amount: 85.50,
+      amount: 85.5,
       dueDate: new Date(Date.now() + 86400000 * 5), // 5 days from now
-      isPaid: false
+      isPaid: false,
     },
     {
       id: '2',
       type: 'internet',
       provider: 'Comcast',
       accountNumber: 'CC-123456789',
-      amount: 65.00,
+      amount: 65.0,
       dueDate: new Date(Date.now() + 86400000 * 10),
-      isPaid: false
+      isPaid: false,
     },
     {
       id: '3',
       type: 'mobile',
       provider: 'Verizon',
       accountNumber: 'VZ-987654321',
-      amount: 45.00,
+      amount: 45.0,
       dueDate: new Date(Date.now() - 86400000 * 2), // 2 days ago
-      isPaid: true
-    }
+      isPaid: true,
+    },
   ]);
 
   const [savedBills] = useState<SavedBill[]>([
-    { id: '1', type: 'electricity', provider: 'National Grid', accountNumber: 'NG-789456123', nickname: 'Home Electricity' },
-    { id: '2', type: 'internet', provider: 'Comcast', accountNumber: 'CC-123456789', nickname: 'Home Internet' }
+    {
+      id: '1',
+      type: 'electricity',
+      provider: 'National Grid',
+      accountNumber: 'NG-789456123',
+      nickname: 'Home Electricity',
+    },
+    {
+      id: '2',
+      type: 'internet',
+      provider: 'Comcast',
+      accountNumber: 'CC-123456789',
+      nickname: 'Home Internet',
+    },
   ]);
 
   const [newBill, setNewBill] = useState({
@@ -85,22 +97,20 @@ export function UtilityBillPayments() {
     provider: '',
     accountNumber: '',
     nickname: '',
-    amount: ''
+    amount: '',
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddBill, setShowAddBill] = useState(false);
 
   const handlePayBill = async (billId: string) => {
-    const bill = bills.find(b => b.id === billId);
+    const bill = bills.find((b) => b.id === billId);
     if (!bill) return;
 
     setIsProcessing(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setBills(bills.map(b => 
-      b.id === billId ? { ...b, isPaid: true } : b
-    ));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    setBills(bills.map((b) => (b.id === billId ? { ...b, isPaid: true } : b)));
     setIsProcessing(false);
     addToast(`Successfully paid $${bill.amount} for ${bill.provider}`, 'success');
   };
@@ -124,8 +134,8 @@ export function UtilityBillPayments() {
     return diffDays;
   };
 
-  const upcomingBills = bills.filter(b => !b.isPaid);
-  const paidBills = bills.filter(b => b.isPaid);
+  const upcomingBills = bills.filter((b) => !b.isPaid);
+  const paidBills = bills.filter((b) => b.isPaid);
 
   return (
     <div className="space-y-6">
@@ -164,7 +174,10 @@ export function UtilityBillPayments() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Bill Type</label>
-                <Select value={newBill.type} onValueChange={(v) => setNewBill({...newBill, type: v})}>
+                <Select
+                  value={newBill.type}
+                  onValueChange={(v) => setNewBill({ ...newBill, type: v })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -183,7 +196,7 @@ export function UtilityBillPayments() {
                 <Input
                   placeholder="e.g., National Grid"
                   value={newBill.provider}
-                  onChange={(e) => setNewBill({...newBill, provider: e.target.value})}
+                  onChange={(e) => setNewBill({ ...newBill, provider: e.target.value })}
                 />
               </div>
               <div>
@@ -191,7 +204,7 @@ export function UtilityBillPayments() {
                 <Input
                   placeholder="Account number"
                   value={newBill.accountNumber}
-                  onChange={(e) => setNewBill({...newBill, accountNumber: e.target.value})}
+                  onChange={(e) => setNewBill({ ...newBill, accountNumber: e.target.value })}
                 />
               </div>
               <div>
@@ -199,10 +212,12 @@ export function UtilityBillPayments() {
                 <Input
                   placeholder="e.g., Home Electricity"
                   value={newBill.nickname}
-                  onChange={(e) => setNewBill({...newBill, nickname: e.target.value})}
+                  onChange={(e) => setNewBill({ ...newBill, nickname: e.target.value })}
                 />
               </div>
-              <Button onClick={handleAddNewBill} className="w-full">Add Bill</Button>
+              <Button onClick={handleAddNewBill} className="w-full">
+                Add Bill
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -212,16 +227,21 @@ export function UtilityBillPayments() {
         <h3 className="text-lg font-semibold mb-4">Upcoming Bills</h3>
         {upcomingBills.length > 0 ? (
           <div className="space-y-4">
-            {upcomingBills.map(bill => {
+            {upcomingBills.map((bill) => {
               const daysUntilDue = getDaysUntilDue(bill.dueDate);
               return (
-                <div key={bill.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div
+                  key={bill.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg"
+                >
                   <div className="flex items-center gap-4">
                     {billTypeIcons[bill.type]}
                     <div>
                       <p className="font-medium">{bill.provider}</p>
                       <p className="text-xs text-gray-500">{bill.accountNumber}</p>
-                      <p className={`text-xs ${daysUntilDue < 3 ? 'text-red-500' : 'text-gray-500'}`}>
+                      <p
+                        className={`text-xs ${daysUntilDue < 3 ? 'text-red-500' : 'text-gray-500'}`}
+                      >
                         Due in {daysUntilDue} days
                       </p>
                     </div>
@@ -251,7 +271,7 @@ export function UtilityBillPayments() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Saved Billers</h3>
           <div className="grid grid-cols-2 gap-4">
-            {savedBills.map(bill => (
+            {savedBills.map((bill) => (
               <div key={bill.id} className="flex items-center gap-3 p-3 border rounded-lg">
                 {billTypeIcons[bill.type]}
                 <div>

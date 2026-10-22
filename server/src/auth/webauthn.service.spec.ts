@@ -63,7 +63,9 @@ describe('WebauthnService', () => {
     }).compile();
 
     service = module.get<WebauthnService>(WebauthnService);
-    authenticatorsRepo = module.get(getRepositoryToken(Authenticator)) as jest.Mocked<Repository<Authenticator>>;
+    authenticatorsRepo = module.get(getRepositoryToken(Authenticator)) as jest.Mocked<
+      Repository<Authenticator>
+    >;
   });
 
   describe('getAuthenticationOptions', () => {
@@ -114,9 +116,14 @@ describe('WebauthnService', () => {
     } as any;
 
     const configuredService = new WebauthnService(repo, config);
-    await configuredService.getRegistrationOptions({ id: 'user-1', email: 'test@example.com' } as any);
+    await configuredService.getRegistrationOptions({
+      id: 'user-1',
+      email: 'test@example.com',
+    } as any);
 
-    const registrationArgs = (require('@simplewebauthn/server').generateRegistrationOptions as jest.Mock).mock.calls.at(-1)?.[0];
+    const registrationArgs = (
+      require('@simplewebauthn/server').generateRegistrationOptions as jest.Mock
+    ).mock.calls.at(-1)?.[0];
     expect(registrationArgs.rpID).toBe('app.zynkra.com');
     expect(registrationArgs.userName).toBe('test@example.com');
   });
@@ -137,18 +144,25 @@ describe('WebauthnService', () => {
     authenticatorsRepo.findOne.mockResolvedValue(storedAuthenticator);
     authenticatorsRepo.find.mockResolvedValue([storedAuthenticator]);
 
-    const verification = jest.spyOn(require('@simplewebauthn/server'), 'verifyAuthenticationResponse').mockResolvedValue({
-      verified: true,
-      authenticationInfo: { credentialID: credentialBytes, newCounter: 2 },
-    } as any);
+    const verification = jest
+      .spyOn(require('@simplewebauthn/server'), 'verifyAuthenticationResponse')
+      .mockResolvedValue({
+        verified: true,
+        authenticationInfo: { credentialID: credentialBytes, newCounter: 2 },
+      } as any);
 
-    await expect(service.verifyAuthentication(user, { id: browserCredentialId }, 'challenge-123')).resolves.toEqual({
+    await expect(
+      service.verifyAuthentication(user, { id: browserCredentialId }, 'challenge-123')
+    ).resolves.toEqual({
       verified: true,
       authenticationInfo: { credentialID: credentialBytes, newCounter: 2 },
     });
 
     expect(authenticatorsRepo.findOne).toHaveBeenCalledWith({
-      where: { user: { id: user.id }, credentialID: service['normalizeCredentialId'](browserCredentialId) },
+      where: {
+        user: { id: user.id },
+        credentialID: service['normalizeCredentialId'](browserCredentialId),
+      },
     });
 
     verification.mockRestore();

@@ -16,13 +16,21 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
     });
   }
 
-  async validate(req: any, idToken: string, refreshToken: string, profile: any, verified: VerifyCallback): Promise<any> {
+  async validate(
+    req: any,
+    idToken: string,
+    refreshToken: string,
+    profile: any,
+    verified: VerifyCallback
+  ): Promise<any> {
     const { id, name, email } = profile;
 
     const user = {
       provider: 'apple',
       providerId: id,
-      displayName: name?.firstName ? `${name.firstName} ${name.lastName || ''}`.trim() : 'Apple User',
+      displayName: name?.firstName
+        ? `${name.firstName} ${name.lastName || ''}`.trim()
+        : 'Apple User',
       email,
       accessToken: idToken,
       refreshToken,

@@ -11,9 +11,7 @@ import { Post, PostAuthor, Message } from '../../lib/types';
 import { NotesBar } from '../notes/NotesBar';
 
 export const DmsPage = () => {
-  const [selectedConversation, setSelectedConversation] = useState<
-    Conversation | null
-  >(null);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [users, setUsers] = useState<PostAuthor[]>([]);
@@ -24,11 +22,9 @@ export const DmsPage = () => {
     // In a real app, you'd probably have a dedicated user search endpoint.
     getPosts().then((posts: Post[]) => {
       const users = posts.map((p) => p.user);
-      const uniqueUsers = Array.from(new Set(users.map((u) => u.id))).map(
-        (id) => {
-          return users.find((u) => u.id === id);
-        },
-      );
+      const uniqueUsers = Array.from(new Set(users.map((u) => u.id))).map((id) => {
+        return users.find((u) => u.id === id);
+      });
       getProfile().then((me) => {
         setUsers(uniqueUsers.filter((u): u is PostAuthor => !!u && u.id !== me.id));
       });
@@ -51,7 +47,7 @@ export const DmsPage = () => {
     getProfile().then(setMe);
   }, []);
 
-  const recipient = selectedConversation?.participants.find(p => p.id !== me?.id);
+  const recipient = selectedConversation?.participants.find((p) => p.id !== me?.id);
 
   return (
     <PageShell
@@ -69,12 +65,7 @@ export const DmsPage = () => {
             >
               {showCreateGroup ? 'Cancel' : 'Create Group DM'}
             </button>
-            {showCreateGroup && (
-              <CreateGroupDm
-                users={users}
-                onGroupCreated={handleGroupCreated}
-              />
-            )}
+            {showCreateGroup && <CreateGroupDm users={users} onGroupCreated={handleGroupCreated} />}
           </div>
           <NotesBar />
           <ConversationList
@@ -105,9 +96,7 @@ export const DmsPage = () => {
               <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary-50 text-primary-600 dark:bg-primary-950/30 dark:text-primary-300">
                 <MessageSquare size={36} />
               </div>
-              <h2 className="section-title mb-3 text-3xl">
-                Select a conversation
-              </h2>
+              <h2 className="section-title mb-3 text-3xl">Select a conversation</h2>
               <p className="section-subtitle max-w-sm">
                 Choose a conversation from the list to start messaging.
               </p>

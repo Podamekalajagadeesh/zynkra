@@ -39,17 +39,22 @@ describe('Search integration (FTS)', () => {
       }),
       query: jest.fn().mockResolvedValue([]),
     };
-    service = new SearchService(
-      repo, repo, repo, repo, repo, repo, repo,
-      { filterVisiblePostsForViewer: jest.fn(async (_v: any, posts: any) => posts) } as any,
-    );
+    service = new SearchService(repo, repo, repo, repo, repo, repo, repo, {
+      filterVisiblePostsForViewer: jest.fn(async (_v: any, posts: any) => posts),
+    } as any);
   });
 
   it('searches all entity types with FTS + ILIKE fallback', async () => {
     const result = await service.search('zynkra test', 'viewer-1');
 
     expect(result).toEqual({
-      users: [], posts: [], hashtags: [], places: [], groups: [], events: [], products: [],
+      users: [],
+      posts: [],
+      hashtags: [],
+      places: [],
+      groups: [],
+      events: [],
+      products: [],
     });
     // One query builder per entity type (7 total).
     expect(qbs.length).toBe(7);
@@ -60,10 +65,9 @@ describe('Search integration (FTS)', () => {
       expect(qb.orderBy).toHaveBeenCalledWith(expect.stringContaining('ts_rank'), 'DESC');
     }
     // Users query applies searchVisibility gate.
-    expect(qbs[0].andWhere).toHaveBeenCalledWith(
-      expect.stringContaining('searchVisibility'),
-      { viewerId: 'viewer-1' },
-    );
+    expect(qbs[0].andWhere).toHaveBeenCalledWith(expect.stringContaining('searchVisibility'), {
+      viewerId: 'viewer-1',
+    });
     // Posts pass through visibility filter.
     const visibility = (service as any).visibilityService;
     expect(visibility.filterVisiblePostsForViewer).toHaveBeenCalledWith('viewer-1', []);
@@ -99,7 +103,9 @@ describe('Search integration (FTS)', () => {
   it('reverse image search joins media table (posts have no imageUrls column)', async () => {
     await service.reverseImageSearch();
     expect(qbs[0].innerJoin).toHaveBeenCalledWith('post.media', 'media');
-    expect(qbs[0].where).toHaveBeenCalledWith('post.visibility = :visibility', { visibility: 'public' });
+    expect(qbs[0].where).toHaveBeenCalledWith('post.visibility = :visibility', {
+      visibility: 'public',
+    });
     // Must not reference the nonexistent posts.imageUrls column.
     const whereArgs = qbs[0].where.mock.calls[0];
     expect(whereArgs[0]).not.toContain('imageUrls');
@@ -107,6 +113,8 @@ describe('Search integration (FTS)', () => {
 
   it('empty query throws BadRequest', async () => {
     await expect(service.search('')).rejects.toThrow('Search query is required');
-    await expect(service.advancedSearch({ query: '  ' })).rejects.toThrow('Search query is required');
+    await expect(service.advancedSearch({ query: '  ' })).rejects.toThrow(
+      'Search query is required'
+    );
   });
 });

@@ -27,7 +27,10 @@ export function evaluateOfflineSmokeChecks(rootDir = path.resolve(__dirname, '..
     const moduleContent = readIfExists(modulePath);
     checks.push({
       name: 'offline queue exposes sync and retry hooks',
-      passed: moduleContent.includes('enqueueOfflineOperation') && moduleContent.includes('syncPendingOfflineOperations') && moduleContent.includes('initializeOfflineSync'),
+      passed:
+        moduleContent.includes('enqueueOfflineOperation') &&
+        moduleContent.includes('syncPendingOfflineOperations') &&
+        moduleContent.includes('initializeOfflineSync'),
       details: 'offlineSync.ts includes queueing, syncing, and initialization hooks',
     });
   } else {
@@ -42,7 +45,9 @@ export function evaluateOfflineSmokeChecks(rootDir = path.resolve(__dirname, '..
     const serviceWorkerContent = readIfExists(serviceWorkerPath);
     checks.push({
       name: 'service worker handles offline sync events',
-      passed: serviceWorkerContent.includes('zynkra-offline-sync') && serviceWorkerContent.includes('sync'),
+      passed:
+        serviceWorkerContent.includes('zynkra-offline-sync') &&
+        serviceWorkerContent.includes('sync'),
       details: 'service worker contains the offline sync tag and sync handling',
     });
   } else {

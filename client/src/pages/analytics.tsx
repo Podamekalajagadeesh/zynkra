@@ -2,7 +2,18 @@ import { useEffect, useState } from 'react';
 import { PageShell } from '../components/PageShell';
 import { getAnalytics } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { CompetitorAnalytics } from '../components/analytics/CompetitorAnalytics';
 
 type PostPerformance = {
@@ -89,10 +100,10 @@ const EMPTY_ANALYTICS: AnalyticsData = {
     totalReach: 0,
     impressions: 0,
     totalImpressions: 0,
-    engagementRate: "0.00",
+    engagementRate: '0.00',
     followerCount: 0,
     followerGrowth: 0,
-    followerGrowthRate: "0.00",
+    followerGrowthRate: '0.00',
   },
   audienceInsights: {
     locationData: {},
@@ -176,7 +187,9 @@ export const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold">{stats.profileAnalytics.reach}</p>
-                  <p className="text-sm text-gray-500">Total: {stats.profileAnalytics.totalReach}</p>
+                  <p className="text-sm text-gray-500">
+                    Total: {stats.profileAnalytics.totalReach}
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -185,7 +198,9 @@ export const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold">{stats.profileAnalytics.impressions}</p>
-                  <p className="text-sm text-gray-500">Total: {stats.profileAnalytics.totalImpressions}</p>
+                  <p className="text-sm text-gray-500">
+                    Total: {stats.profileAnalytics.totalImpressions}
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -201,8 +216,13 @@ export const AnalyticsPage = () => {
                   <CardTitle>Follower Growth</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{stats.profileAnalytics.followerGrowth > 0 ? '+' : ''}{stats.profileAnalytics.followerGrowth}</p>
-                  <p className="text-sm text-gray-500">{stats.profileAnalytics.followerGrowthRate}% growth</p>
+                  <p className="text-3xl font-bold">
+                    {stats.profileAnalytics.followerGrowth > 0 ? '+' : ''}
+                    {stats.profileAnalytics.followerGrowth}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {stats.profileAnalytics.followerGrowthRate}% growth
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -280,13 +300,15 @@ export const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>
-                    <BarChart 
-                      data={stats.postEngagement.topPerformingPosts.slice(0, 10).map(post => ({
-                        name: post.postContent.substring(0, 20) + (post.postContent.length > 20 ? '...' : ''),
+                    <BarChart
+                      data={stats.postEngagement.topPerformingPosts.slice(0, 10).map((post) => ({
+                        name:
+                          post.postContent.substring(0, 20) +
+                          (post.postContent.length > 20 ? '...' : ''),
                         likes: post.likes,
                         comments: post.comments,
                         shares: post.shares,
-                        saves: post.saves
+                        saves: post.saves,
                       }))}
                       margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                     >
@@ -307,39 +329,89 @@ export const AnalyticsPage = () => {
             {/* Post Performance Table - Complete List */}
             {stats.postEngagement.topPerformingPosts.length > 0 && (
               <div>
-                <h3 className="text-xl font-semibold mb-4">All Post Performance (sorted by engagement)</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  All Post Performance (sorted by engagement)
+                </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
                     <thead>
                       <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Post</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Type</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Created</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Impressions</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Reach</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Likes</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Comments</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Shares</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Saves</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Engagement Rate</th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Post
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Type
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Created
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Impressions
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Reach
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Likes
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Comments
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Shares
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Saves
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Engagement Rate
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {stats.postEngagement.topPerformingPosts.map((post) => (
                         <tr key={post.postId} className="hover:bg-gray-50 dark:hover:bg-gray-900">
-                          <td className="border border-gray-300 dark:border-gray-700 p-3 max-w-xs truncate" title={post.postContent}>
-                            {post.mediaUrl && <img src={post.mediaUrl} alt="" className="w-10 h-10 object-cover inline-block mr-2 rounded" />}
-                            {post.postContent.substring(0, 50)}{post.postContent.length > 50 ? '...' : ''}
+                          <td
+                            className="border border-gray-300 dark:border-gray-700 p-3 max-w-xs truncate"
+                            title={post.postContent}
+                          >
+                            {post.mediaUrl && (
+                              <img
+                                src={post.mediaUrl}
+                                alt=""
+                                className="w-10 h-10 object-cover inline-block mr-2 rounded"
+                              />
+                            )}
+                            {post.postContent.substring(0, 50)}
+                            {post.postContent.length > 50 ? '...' : ''}
                           </td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3 capitalize">{post.postType}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{new Date(post.createdAt).toLocaleDateString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.impressions.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.reach.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.likes.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.comments.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.shares.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{post.saves.toLocaleString()}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3 font-semibold">{post.engagementRate.toFixed(2)}%</td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3 capitalize">
+                            {post.postType}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.impressions.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.reach.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.likes.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.comments.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.shares.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {post.saves.toLocaleString()}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3 font-semibold">
+                            {post.engagementRate.toFixed(2)}%
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -360,7 +432,11 @@ export const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={Object.entries(stats.audienceInsights.activeTimes).map(([hour, count]) => ({ hour: `${hour}:00`, count }))}>
+                    <BarChart
+                      data={Object.entries(stats.audienceInsights.activeTimes).map(
+                        ([hour, count]) => ({ hour: `${hour}:00`, count })
+                      )}
+                    >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="hour" />
                       <YAxis />
@@ -370,7 +446,7 @@ export const AnalyticsPage = () => {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              
+
               {/* Location Distribution Chart */}
               <Card>
                 <CardHeader>
@@ -380,16 +456,25 @@ export const AnalyticsPage = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={Object.entries(stats.audienceInsights.locationData).map(([location, value]) => ({ name: location, value }))}
+                        data={Object.entries(stats.audienceInsights.locationData).map(
+                          ([location, value]) => ({ name: location, value })
+                        )}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                        label={({ name, percent }) =>
+                          `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                        }
                         outerRadius={80}
                         fill="#82ca9d"
                       >
                         {Object.entries(stats.audienceInsights.locationData).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#8884d8', '#82ca9d', '#ffc658', '#0088fe', '#00C49F'][index % 5]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              ['#8884d8', '#82ca9d', '#ffc658', '#0088fe', '#00C49F'][index % 5]
+                            }
+                          />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -412,7 +497,11 @@ export const AnalyticsPage = () => {
                 <CardContent>
                   {Object.keys(stats.audienceDemographics.ageGroups).length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={Object.entries(stats.audienceDemographics.ageGroups).map(([group, count]) => ({ name: group, count }))}>
+                      <BarChart
+                        data={Object.entries(stats.audienceDemographics.ageGroups).map(
+                          ([group, count]) => ({ name: group, count })
+                        )}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -438,17 +527,26 @@ export const AnalyticsPage = () => {
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
                         <Pie
-                          data={Object.entries(stats.audienceDemographics.genderDistribution).map(([gender, value]) => ({ name: gender, value }))}
+                          data={Object.entries(stats.audienceDemographics.genderDistribution).map(
+                            ([gender, value]) => ({ name: gender, value })
+                          )}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+                          label={({ name, percent }) =>
+                            `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                          }
                           outerRadius={80}
                           fill="#82ca9d"
                         >
-                          {Object.entries(stats.audienceDemographics.genderDistribution).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={['#8884d8', '#ffc658', '#0088fe', '#00C49F'][index % 4]} />
-                          ))}
+                          {Object.entries(stats.audienceDemographics.genderDistribution).map(
+                            (entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={['#8884d8', '#ffc658', '#0088fe', '#00C49F'][index % 4]}
+                              />
+                            )
+                          )}
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -469,7 +567,7 @@ export const AnalyticsPage = () => {
                 <CardContent>
                   {Object.keys(stats.audienceDemographics.topInterests).length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart 
+                      <BarChart
                         data={Object.entries(stats.audienceDemographics.topInterests)
                           .sort((a, b) => b[1] - a[1])
                           .slice(0, 5)
@@ -510,7 +608,9 @@ export const AnalyticsPage = () => {
                   <CardTitle>Subscription Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(stats.revenue.totalSubscriptions)}</p>
+                  <p className="text-3xl font-bold">
+                    {formatCurrency(stats.revenue.totalSubscriptions)}
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -518,7 +618,9 @@ export const AnalyticsPage = () => {
                   <CardTitle>Social Commerce Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(stats.revenue.socialCommerceRevenue)}</p>
+                  <p className="text-3xl font-bold">
+                    {formatCurrency(stats.revenue.socialCommerceRevenue)}
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -526,7 +628,9 @@ export const AnalyticsPage = () => {
                   <CardTitle>Monthly Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(stats.revenue.monthlyRevenue)}</p>
+                  <p className="text-3xl font-bold">
+                    {formatCurrency(stats.revenue.monthlyRevenue)}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -573,7 +677,9 @@ export const AnalyticsPage = () => {
                   <CardTitle>Average Order Value</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{formatCurrency(stats.socialCommerce.averageOrderValue)}</p>
+                  <p className="text-3xl font-bold">
+                    {formatCurrency(stats.socialCommerce.averageOrderValue)}
+                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -581,7 +687,9 @@ export const AnalyticsPage = () => {
                   <CardTitle>Conversion Rate</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-bold">{stats.socialCommerce.conversionRate.toFixed(2)}%</p>
+                  <p className="text-3xl font-bold">
+                    {stats.socialCommerce.conversionRate.toFixed(2)}%
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -594,17 +702,32 @@ export const AnalyticsPage = () => {
                   <table className="w-full border-collapse border border-gray-300 dark:border-gray-700">
                     <thead>
                       <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Product Name</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Units Sold</th>
-                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">Revenue</th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Product Name
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Units Sold
+                        </th>
+                        <th className="border border-gray-300 dark:border-gray-700 p-3 text-left">
+                          Revenue
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {stats.socialCommerce.productPerformance.map((product) => (
-                        <tr key={product.productId} className="hover:bg-gray-50 dark:hover:bg-gray-900">
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{product.productName}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{product.unitsSold}</td>
-                          <td className="border border-gray-300 dark:border-gray-700 p-3">{formatCurrency(product.revenue)}</td>
+                        <tr
+                          key={product.productId}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-900"
+                        >
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {product.productName}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {product.unitsSold}
+                          </td>
+                          <td className="border border-gray-300 dark:border-gray-700 p-3">
+                            {formatCurrency(product.revenue)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

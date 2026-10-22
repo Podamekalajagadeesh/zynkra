@@ -8,11 +8,7 @@ export class ReactionsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  addReaction(
-    @Request() req,
-    @Param('id') postId: string,
-    @Body('reaction') reaction: string,
-  ) {
+  addReaction(@Request() req, @Param('id') postId: string, @Body('reaction') reaction: string) {
     return this.reactionsService.addReaction(req.user.userId, postId, reaction);
   }
 }

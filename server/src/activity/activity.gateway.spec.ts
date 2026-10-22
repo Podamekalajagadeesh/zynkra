@@ -41,10 +41,12 @@ describe('ActivityGateway', () => {
 
     await gateway.handleDisconnect(secondClient);
 
-    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'user-1',
-      isOnline: false,
-    }));
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'user-1',
+        isOnline: false,
+      })
+    );
     expect((gateway as any).activeUsers.has('user-1')).toBe(false);
   });
 });

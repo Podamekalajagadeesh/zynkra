@@ -21,7 +21,11 @@ function makeSocket(overrides: { auth?: any; headers?: any; query?: any } = {}):
 }
 
 describe('WsAuthService', () => {
-  const liveSession = { id: 'sess-1', revokedAt: null, user: { id: 'u1', email: 'a@b.c', role: 'user' } };
+  const liveSession = {
+    id: 'sess-1',
+    revokedAt: null,
+    user: { id: 'u1', email: 'a@b.c', role: 'user' },
+  };
 
   let jwtService: { verify: jest.Mock };
   let sessionsRepo: { findOne: jest.Mock };
@@ -32,8 +36,10 @@ describe('WsAuthService', () => {
     sessionsRepo = { findOne: jest.fn().mockResolvedValue(liveSession) };
     service = new WsAuthService(
       jwtService as unknown as JwtService,
-      { get: (key: string, fallback?: string) => (key === 'JWT_AUDIENCE' ? AUDIENCE : fallback) } as unknown as ConfigService,
-      sessionsRepo as unknown as Repository<any>,
+      {
+        get: (key: string, fallback?: string) => (key === 'JWT_AUDIENCE' ? AUDIENCE : fallback),
+      } as unknown as ConfigService,
+      sessionsRepo as unknown as Repository<any>
     );
   });
 
@@ -77,41 +83,55 @@ describe('WsAuthService', () => {
       jwtService.verify.mockImplementation(() => {
         throw new Error('invalid signature');
       });
-      await expect(service.authenticate(makeSocket({ auth: { token: 'forged' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'forged' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a token with no sub', async () => {
       jwtService.verify.mockReturnValue(validPayload({ sub: undefined }));
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a token with no sid', async () => {
       // This is the SIWE bug: a token signed without `sid` is unusable, and
       // without this check the socket would open with no revocable session.
       jwtService.verify.mockReturnValue(validPayload({ sid: undefined }));
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a refresh token', async () => {
       jwtService.verify.mockReturnValue(validPayload({ typ: 'refresh' }));
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a token for a different audience', async () => {
       jwtService.verify.mockReturnValue(validPayload({ aud: 'some-other-api' }));
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
   });
 
   describe('session liveness', () => {
     it('rejects a revoked session (sign-out closes socket identity)', async () => {
       sessionsRepo.findOne.mockResolvedValue({ ...liveSession, revokedAt: new Date() });
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects when the session row is gone', async () => {
       sessionsRepo.findOne.mockResolvedValue(null);
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a banned user', async () => {
@@ -119,7 +139,9 @@ describe('WsAuthService', () => {
         ...liveSession,
         user: { ...liveSession.user, banned: true },
       });
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('rejects a deactivated user', async () => {
@@ -127,7 +149,9 @@ describe('WsAuthService', () => {
         ...liveSession,
         user: { ...liveSession.user, status: 'deactivated' },
       });
-      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(false);
+      await expect(service.authenticate(makeSocket({ auth: { token: 'jwt' } }))).resolves.toBe(
+        false
+      );
     });
 
     it('scopes the session lookup to the token subject', async () => {
@@ -149,7 +173,11 @@ describe('WsAuthService', () => {
       });
       const socket = makeSocket({ auth: { token: 'jwt' } });
       await service.authenticate(socket);
-      expect(socket.data.principal).toMatchObject({ userId: 'u1', role: 'admin', sessionId: 'sess-1' });
+      expect(socket.data.principal).toMatchObject({
+        userId: 'u1',
+        role: 'admin',
+        sessionId: 'sess-1',
+      });
     });
   });
 });

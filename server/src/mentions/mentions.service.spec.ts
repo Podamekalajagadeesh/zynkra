@@ -82,23 +82,30 @@ describe('MentionsService tag controls', () => {
     ['followers', false, false],
     ['followers', true, true],
     ['everyone', false, true],
-  ] as const)('enforces mention controls for %s', async (privacy, followsMentionedUser, allowed) => {
-    const taggedUser = Object.assign(new User(), {
-      id: 'tagged',
-      username: 'tagged',
-      mentions: privacy,
-      following: [],
-    });
-    author.following = followsMentionedUser ? [taggedUser] : [];
-    usersRepository.findOne.mockResolvedValue(taggedUser);
+  ] as const)(
+    'enforces mention controls for %s',
+    async (privacy, followsMentionedUser, allowed) => {
+      const taggedUser = Object.assign(new User(), {
+        id: 'tagged',
+        username: 'tagged',
+        mentions: privacy,
+        following: [],
+      });
+      author.following = followsMentionedUser ? [taggedUser] : [];
+      usersRepository.findOne.mockResolvedValue(taggedUser);
 
-    if (!allowed) {
-      await expect(service.createMentions('@tagged', null, null, author)).rejects.toThrow(UnauthorizedException);
-      expect(mentionsRepository.save).not.toHaveBeenCalled();
-      return;
+      if (!allowed) {
+        await expect(service.createMentions('@tagged', null, null, author)).rejects.toThrow(
+          UnauthorizedException
+        );
+        expect(mentionsRepository.save).not.toHaveBeenCalled();
+        return;
+      }
+
+      await expect(service.createMentions('@tagged', null, null, author)).resolves.toEqual([
+        taggedUser,
+      ]);
+      expect(mentionsRepository.save).toHaveBeenCalledTimes(1);
     }
-
-    await expect(service.createMentions('@tagged', null, null, author)).resolves.toEqual([taggedUser]);
-    expect(mentionsRepository.save).toHaveBeenCalledTimes(1);
-  });
+  );
 });

@@ -48,7 +48,11 @@ export class VerificationAppeal {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   links: string[];
 
-  @Column({ type: 'enum', enum: VerificationAppealStatus, default: VerificationAppealStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: VerificationAppealStatus,
+    default: VerificationAppealStatus.PENDING,
+  })
   status: VerificationAppealStatus;
 
   @Column({ type: 'timestamp', nullable: true })

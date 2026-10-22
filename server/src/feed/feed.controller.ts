@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  Request,
-  Query,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Query, UnauthorizedException } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { UsersService } from '../users/users.service';
@@ -15,13 +8,13 @@ import { User } from '../users/entities/user.entity';
 export class FeedController {
   constructor(
     private readonly feedService: FeedService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   private async withViewer<T>(
     req: any,
     handler: (user: User | null) => T | Promise<T>,
-    relations: string[] = [],
+    relations: string[] = []
   ): Promise<T> {
     const userId = req.user?.userId ?? req.user?.id;
     if (!userId) {
@@ -52,9 +45,7 @@ export class FeedController {
   @Get('recommended')
   @UseGuards(OptionalJwtAuthGuard)
   getRecommendedFeed(@Request() req, @Query('limit') limit?: number) {
-    return this.withViewer(req, (user) =>
-      this.feedService.getRecommendedFeed(user, limit || 20),
-    );
+    return this.withViewer(req, (user) => this.feedService.getRecommendedFeed(user, limit || 20));
   }
 
   @Get()
@@ -63,7 +54,7 @@ export class FeedController {
     return this.withViewer(
       req,
       (user) => this.feedService.getFeed(user, { view, limit: limit || 20 }),
-      view === 'subscriptions' ? ['subscriptions', 'subscriptions.creator'] : [],
+      view === 'subscriptions' ? ['subscriptions', 'subscriptions.creator'] : []
     );
   }
 
@@ -94,19 +85,16 @@ export class FeedController {
   @Get('subscriptions')
   @UseGuards(OptionalJwtAuthGuard)
   getSubscriptionsFeed(@Request() req) {
-    return this.withViewer(
-      req,
-      (user) => this.feedService.getSubscriptionsFeed(user),
-      ['subscriptions', 'subscriptions.creator'],
-    );
+    return this.withViewer(req, (user) => this.feedService.getSubscriptionsFeed(user), [
+      'subscriptions',
+      'subscriptions.creator',
+    ]);
   }
 
   @Get('trending')
   @UseGuards(OptionalJwtAuthGuard)
   getTrendingFeed(@Request() req, @Query('limit') limit?: number) {
-    return this.withViewer(req, (user) =>
-      this.feedService.getTrendingFeed(user, limit || 20),
-    );
+    return this.withViewer(req, (user) => this.feedService.getTrendingFeed(user, limit || 20));
   }
 
   @Get('explore')
@@ -126,10 +114,10 @@ export class FeedController {
   getVisualDiscoveryFeed(
     @Request() req,
     @Query('category') category?: string,
-    @Query('skip') skip?: number,
+    @Query('skip') skip?: number
   ) {
     return this.withViewer(req, (user) =>
-      this.feedService.getVisualDiscoveryFeed(user, category, skip || 0),
+      this.feedService.getVisualDiscoveryFeed(user, category, skip || 0)
     );
   }
 

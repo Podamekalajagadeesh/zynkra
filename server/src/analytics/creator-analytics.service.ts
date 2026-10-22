@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { Post } from '../posts/entities/post.entity';
 import { Article } from '../articles/article.entity';
-import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from '../newsletters/newsletter.entity';
+import {
+  Newsletter,
+  NewsletterSubscriber,
+  NewsletterSubscription,
+} from '../newsletters/newsletter.entity';
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
 import { User } from '../users/entities/user.entity';
@@ -19,14 +23,16 @@ export class CreatorAnalyticsService {
     @InjectRepository(Post) private readonly postsRepo: Repository<Post>,
     @InjectRepository(Article) private readonly articlesRepo: Repository<Article>,
     @InjectRepository(Newsletter) private readonly newslettersRepo: Repository<Newsletter>,
-    @InjectRepository(NewsletterSubscription) private readonly subsRepo: Repository<NewsletterSubscription>,
+    @InjectRepository(NewsletterSubscription)
+    private readonly subsRepo: Repository<NewsletterSubscription>,
     @InjectRepository(Podcast) private readonly podcastsRepo: Repository<Podcast>,
     @InjectRepository(Course) private readonly coursesRepo: Repository<Course>,
-    @InjectRepository(CourseEnrollment) private readonly enrollmentsRepo: Repository<CourseEnrollment>,
+    @InjectRepository(CourseEnrollment)
+    private readonly enrollmentsRepo: Repository<CourseEnrollment>,
     @InjectRepository(CourseLesson) private readonly lessonsRepo: Repository<CourseLesson>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(LedgerEntry) private readonly ledgerRepo: Repository<LedgerEntry>,
-    private readonly dataPermissions: DataPermissionsService,
+    private readonly dataPermissions: DataPermissionsService
   ) {}
 
   /**
@@ -48,24 +54,26 @@ export class CreatorAnalyticsService {
     // Aggregated stats
     const totalPosts = posts.length;
     const totalArticles = articles.length;
-    const totalViews = posts.reduce((sum, p) => sum + (p.viewCount || 0), 0)
-      + articles.reduce((sum, a) => sum + a.viewCount, 0);
+    const totalViews =
+      posts.reduce((sum, p) => sum + (p.viewCount || 0), 0) +
+      articles.reduce((sum, a) => sum + a.viewCount, 0);
 
     // Newsletter stats
     const totalSubscribers = await this.subsRepo.count({ where: { authorId: userId } });
-    const newslettersSent = newsletters.filter(n => n.status === 'sent').length;
+    const newslettersSent = newsletters.filter((n) => n.status === 'sent').length;
 
     // Podcast stats
     const totalPlays = podcasts.reduce((sum, p) => sum + p.playCount, 0);
 
     // Course stats
-    const courseIds = courses.map(c => c.id);
-    const totalEnrollments = courseIds.length > 0
-      ? await this.enrollmentsRepo
-          .createQueryBuilder('enrollment')
-          .where('enrollment.courseId IN (:...ids)', { ids: courseIds })
-          .getCount()
-      : 0;
+    const courseIds = courses.map((c) => c.id);
+    const totalEnrollments =
+      courseIds.length > 0
+        ? await this.enrollmentsRepo
+            .createQueryBuilder('enrollment')
+            .where('enrollment.courseId IN (:...ids)', { ids: courseIds })
+            .getCount()
+        : 0;
 
     return {
       overview: {
@@ -84,8 +92,16 @@ export class CreatorAnalyticsService {
         podcasts: podcasts.sort((a, b) => b.playCount - a.playCount).slice(0, 5),
       },
       recentActivity: {
-        posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
-        articles: articles.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime()).slice(0, 5),
+        posts: posts
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5),
+        articles: articles
+          .sort(
+            (a, b) =>
+              new Date(b.publishedAt || b.createdAt).getTime() -
+              new Date(a.publishedAt || a.createdAt).getTime()
+          )
+          .slice(0, 5),
       },
     };
   }
@@ -96,20 +112,21 @@ export class CreatorAnalyticsService {
   async getNewsletterAnalytics(userId: string) {
     await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const newsletters = await this.newslettersRepo.find({ where: { authorId: userId } });
-    const sent = newsletters.filter(n => n.status === 'sent');
+    const sent = newsletters.filter((n) => n.status === 'sent');
 
     const totalSent = sent.length;
     const totalSubscribers = await this.subsRepo.count({ where: { authorId: userId } });
 
-    const avgOpenRate = sent.length > 0
-      ? sent.reduce((sum, n) => sum + (n.openCount || 0), 0) / sent.length
-      : 0;
+    const avgOpenRate =
+      sent.length > 0 ? sent.reduce((sum, n) => sum + (n.openCount || 0), 0) / sent.length : 0;
 
     return {
       totalSent,
       totalSubscribers,
       avgOpenRate: Math.round(avgOpenRate),
-      recentNewsletters: newsletters.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10),
+      recentNewsletters: newsletters
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10),
     };
   }
 
@@ -127,8 +144,9 @@ export class CreatorAnalyticsService {
     for (const course of courses) {
       const enrollments = await this.enrollmentsRepo.find({ where: { courseId: course.id } });
       totalEnrollments += enrollments.length;
-      totalCompleted += enrollments.filter(e => e.isCompleted).length;
-      avgProgress += enrollments.reduce((sum, e) => sum + e.progress, 0) / Math.max(enrollments.length, 1);
+      totalCompleted += enrollments.filter((e) => e.isCompleted).length;
+      avgProgress +=
+        enrollments.reduce((sum, e) => sum + e.progress, 0) / Math.max(enrollments.length, 1);
     }
 
     const overallAvgProgress = courses.length > 0 ? Math.round(avgProgress / courses.length) : 0;
@@ -138,7 +156,7 @@ export class CreatorAnalyticsService {
       totalEnrollments,
       totalCompleted,
       avgProgress: overallAvgProgress,
-      courses: courses.map(c => ({
+      courses: courses.map((c) => ({
         id: c.id,
         title: c.title,
         slug: c.slug,
@@ -155,7 +173,7 @@ export class CreatorAnalyticsService {
   async getPodcastAnalytics(userId: string) {
     await this.dataPermissions.require(userId, DataPermission.ANALYTICS);
     const podcasts = await this.podcastsRepo.find({ where: { authorId: userId } });
-    const published = podcasts.filter(p => p.status === 'published');
+    const published = podcasts.filter((p) => p.status === 'published');
     const totalPlays = podcasts.reduce((sum, p) => sum + p.playCount, 0);
 
     return {
@@ -163,7 +181,9 @@ export class CreatorAnalyticsService {
       publishedEpisodes: published.length,
       totalPlays,
       avgPlaysPerEpisode: published.length > 0 ? Math.round(totalPlays / published.length) : 0,
-      recentEpisodes: podcasts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10),
+      recentEpisodes: podcasts
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10),
     };
   }
 
@@ -231,9 +251,7 @@ export class CreatorAnalyticsService {
       ssTot += (p.y - meanY) ** 2;
     }
     const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
-    const confidence = Math.round(
-      Math.max(0, Math.min(100, r2 * 100 * Math.min(1, n / 14))),
-    );
+    const confidence = Math.round(Math.max(0, Math.min(100, r2 * 100 * Math.min(1, n / 14))));
 
     return {
       projected30d: Math.round(projected30d * 100) / 100,
@@ -242,8 +260,7 @@ export class CreatorAnalyticsService {
         observedDays: n,
         avgDailyRevenue: Math.round(meanY * 100) / 100,
         trendPerDay: Math.round(slope * 100) / 100,
-        last30dRevenue:
-          Math.round(points.reduce((s, p) => s + p.y, 0) * 100) / 100,
+        last30dRevenue: Math.round(points.reduce((s, p) => s + p.y, 0) * 100) / 100,
       },
     };
   }

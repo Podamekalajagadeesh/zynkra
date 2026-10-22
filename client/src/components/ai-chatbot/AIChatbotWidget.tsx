@@ -1,6 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, HelpCircle, Shield, MessageCircle, Settings } from 'lucide-react';
+import {
+  MessageSquare,
+  X,
+  Send,
+  Bot,
+  User,
+  Loader2,
+  Sparkles,
+  HelpCircle,
+  Shield,
+  MessageCircle,
+  Settings,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card } from '../ui/card';
@@ -24,41 +36,47 @@ interface FAQItem {
 
 const faqDatabase: FAQItem[] = [
   {
-    question: "How do I report inappropriate content?",
-    answer: "You can report any content by clicking the three-dot menu on a post or comment and selecting 'Report'. Our moderation team will review it within 24 hours.",
-    category: 'moderation'
+    question: 'How do I report inappropriate content?',
+    answer:
+      "You can report any content by clicking the three-dot menu on a post or comment and selecting 'Report'. Our moderation team will review it within 24 hours.",
+    category: 'moderation',
   },
   {
-    question: "How do I create a community?",
-    answer: "To create a community, go to the communities page, click 'Create Community', and follow the setup wizard. You'll need to choose a name, description, and set your community rules.",
-    category: 'community'
+    question: 'How do I create a community?',
+    answer:
+      "To create a community, go to the communities page, click 'Create Community', and follow the setup wizard. You'll need to choose a name, description, and set your community rules.",
+    category: 'community',
   },
   {
-    question: "Why was my post removed?",
-    answer: "Posts are removed if they violate our community guidelines. Common reasons include hate speech, harassment, copyright violations, or sharing personal information. You can appeal the decision through your moderation queue.",
-    category: 'moderation'
+    question: 'Why was my post removed?',
+    answer:
+      'Posts are removed if they violate our community guidelines. Common reasons include hate speech, harassment, copyright violations, or sharing personal information. You can appeal the decision through your moderation queue.',
+    category: 'moderation',
   },
   {
-    question: "How do I add moderators to my community?",
-    answer: "As a community owner, go to your community settings, select 'Members', and assign moderator roles to trusted members. Moderators can help manage posts, ban users, and enforce community rules.",
-    category: 'community'
+    question: 'How do I add moderators to my community?',
+    answer:
+      "As a community owner, go to your community settings, select 'Members', and assign moderator roles to trusted members. Moderators can help manage posts, ban users, and enforce community rules.",
+    category: 'community',
   },
   {
     question: "I'm having trouble logging in",
-    answer: "Try resetting your password first. If that doesn't work, ensure your email is verified. You can also check if you have 2FA enabled and have access to your authentication device.",
-    category: 'technical'
+    answer:
+      "Try resetting your password first. If that doesn't work, ensure your email is verified. You can also check if you have 2FA enabled and have access to your authentication device.",
+    category: 'technical',
   },
   {
-    question: "How do I monetize my content?",
-    answer: "You can monetize through creator subscriptions, tip jars, affiliate marketing, and brand collaborations. Check out our creator dashboard for all available monetization options.",
-    category: 'general'
-  }
+    question: 'How do I monetize my content?',
+    answer:
+      'You can monetize through creator subscriptions, tip jars, affiliate marketing, and brand collaborations. Check out our creator dashboard for all available monetization options.',
+    category: 'general',
+  },
 ];
 
 // AI chatbot responses for common queries
 const generateAIResponse = (userMessage: string): string => {
   const lowerMessage = userMessage.toLowerCase();
-  
+
   // Check for common keywords and return appropriate responses
   if (lowerMessage.includes('report') || lowerMessage.includes('inappropriate')) {
     return faqDatabase[0].answer;
@@ -72,19 +90,31 @@ const generateAIResponse = (userMessage: string): string => {
   if (lowerMessage.includes('add moderator') || lowerMessage.includes('make someone admin')) {
     return faqDatabase[3].answer;
   }
-  if (lowerMessage.includes('login') || lowerMessage.includes('sign in') || lowerMessage.includes('cannot access')) {
+  if (
+    lowerMessage.includes('login') ||
+    lowerMessage.includes('sign in') ||
+    lowerMessage.includes('cannot access')
+  ) {
     return faqDatabase[4].answer;
   }
-  if (lowerMessage.includes('monetize') || lowerMessage.includes('make money') || lowerMessage.includes('earn')) {
+  if (
+    lowerMessage.includes('monetize') ||
+    lowerMessage.includes('make money') ||
+    lowerMessage.includes('earn')
+  ) {
     return faqDatabase[5].answer;
   }
-  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+  if (
+    lowerMessage.includes('hello') ||
+    lowerMessage.includes('hi') ||
+    lowerMessage.includes('hey')
+  ) {
     return "Hello! 👋 I'm your AI assistant. I can help with customer service questions, community management, and technical issues. What can I assist you with today?";
   }
   if (lowerMessage.includes('thank')) {
     return "You're welcome! Is there anything else I can help you with?";
   }
-  
+
   // Default response for unrecognized queries
   return "I understand you have a question. I'm here to help with common issues related to account management, community guidelines, content moderation, and technical support. Could you please provide more details about your specific question, or would you like to connect with a human agent for further assistance?";
 };
@@ -96,9 +126,10 @@ export default function AIChatbotWidget() {
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! 👋 I'm your AI assistant. I can help with customer service questions, community management, and technical issues. What can I assist you with today?",
-      timestamp: new Date()
-    }
+      content:
+        "Hello! 👋 I'm your AI assistant. I can help with customer service questions, community management, and technical issues. What can I assist you with today?",
+      timestamp: new Date(),
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -120,10 +151,10 @@ export default function AIChatbotWidget() {
       id: Date.now().toString(),
       role: 'user',
       content: inputValue,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
@@ -152,10 +183,10 @@ export default function AIChatbotWidget() {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
       content: responseText,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, aiResponse]);
+    setMessages((prev) => [...prev, aiResponse]);
     setIsTyping(false);
   };
 
@@ -235,9 +266,7 @@ export default function AIChatbotWidget() {
                     >
                       <div
                         className={`max-w-[80%] flex items-start gap-2 ${
-                          message.role === 'user'
-                            ? 'flex-row-reverse'
-                            : 'flex-row'
+                          message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                         }`}
                       >
                         <div
@@ -299,14 +328,14 @@ export default function AIChatbotWidget() {
                   <Sparkles className="w-5 h-5 text-purple-600" />
                   Frequently Asked Questions
                 </h4>
-                {Array.from(new Set(faqDatabase.map(faq => faq.category))).map(category => (
+                {Array.from(new Set(faqDatabase.map((faq) => faq.category))).map((category) => (
                   <div key={category} className="space-y-2">
                     <h5 className="font-medium text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 flex items-center gap-2">
                       {getCategoryIcon(category)}
                       {category}
                     </h5>
                     {faqDatabase
-                      .filter(faq => faq.category === category)
+                      .filter((faq) => faq.category === category)
                       .map((faq, index) => (
                         <Card key={index} className="p-3 hover:shadow-md transition-shadow">
                           <button

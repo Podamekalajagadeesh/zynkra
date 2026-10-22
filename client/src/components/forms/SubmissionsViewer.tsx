@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -26,7 +25,11 @@ const fetchSubmissions = async (id: string | undefined): Promise<FormSubmission[
 export const SubmissionsViewer = () => {
   const { id } = useParams();
 
-  const { data: submissions, isLoading, error } = useQuery({
+  const {
+    data: submissions,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['submissions', id],
     queryFn: () => fetchSubmissions(id),
   });

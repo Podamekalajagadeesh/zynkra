@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { X, Mic, MicOff, Video, VideoOff, Monitor, Square, Film, Sparkles, PictureInPicture } from 'lucide-react';
+import {
+  X,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Monitor,
+  Square,
+  Film,
+  Sparkles,
+  PictureInPicture,
+} from 'lucide-react';
 import { Button } from '../../ui/button';
 
 interface CallModalProps {
@@ -93,7 +104,9 @@ export function CallModal({
       <div className="bg-gray-900 rounded-xl shadow-2xl p-6 w-full max-w-6xl relative">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">
-            {participants.length > 0 ? `Group Call (${participants.length + 1} participants)` : 'Voice/Video Call'}
+            {participants.length > 0
+              ? `Group Call (${participants.length + 1} participants)`
+              : 'Voice/Video Call'}
           </h2>
           <Button
             variant="ghost"
@@ -104,30 +117,30 @@ export function CallModal({
             <X size={24} />
           </Button>
         </div>
-        
+
         {/* Video grid - dynamically sized based on number of participants */}
         <div className={`grid ${getGridCols()} gap-4 mb-6`}>
           {/* Local video */}
           <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-            <video 
-              ref={localVideoRef} 
-              autoPlay 
-              playsInline 
-              muted 
+            <video
+              ref={localVideoRef}
+              autoPlay
+              playsInline
+              muted
               className="w-full h-full object-cover"
             />
             <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-xs text-white">
               You {isBackgroundBlurEnabled && '(blur enabled)'}
             </div>
           </div>
-          
+
           {/* Remote video for 1:1 calls */}
           {participants.length === 0 && (
             <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-              <video 
-                ref={remoteVideoRef} 
-                autoPlay 
-                playsInline 
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-xs text-white">
@@ -135,19 +148,22 @@ export function CallModal({
               </div>
             </div>
           )}
-          
+
           {/* Additional participants for group calls */}
           {participants.map((participantId, index) => (
-            <div key={participantId} className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-              <video 
+            <div
+              key={participantId}
+              className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden"
+            >
+              <video
                 ref={(el) => {
                   // This would be populated by LiveKit to handle all remote participants
                   if (el) {
                     // In a full implementation, we'd assign each remote video element to its participant's stream
                   }
                 }}
-                autoPlay 
-                playsInline 
+                autoPlay
+                playsInline
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-xs text-white">
@@ -160,48 +176,48 @@ export function CallModal({
         {/* Call controls */}
         <div className="flex flex-wrap justify-center gap-3">
           {/* Mute toggle */}
-          <Button 
-            onClick={onToggleMute} 
+          <Button
+            onClick={onToggleMute}
             variant={isMuted ? 'destructive' : 'secondary'}
             className="flex items-center gap-2"
           >
             {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
             {isMuted ? 'Unmute' : 'Mute'}
           </Button>
-          
+
           {/* Video toggle */}
-          <Button 
-            onClick={onToggleVideo} 
+          <Button
+            onClick={onToggleVideo}
             variant={isVideoEnabled ? 'secondary' : 'destructive'}
             className="flex items-center gap-2"
           >
             {isVideoEnabled ? <Video size={18} /> : <VideoOff size={18} />}
             {isVideoEnabled ? 'Stop Video' : 'Start Video'}
           </Button>
-          
+
           {/* Background blur toggle */}
-          <Button 
-            onClick={onToggleBackgroundBlur} 
+          <Button
+            onClick={onToggleBackgroundBlur}
             variant={isBackgroundBlurEnabled ? 'primary' : 'secondary'}
             className="flex items-center gap-2"
           >
             <Sparkles size={18} />
             {isBackgroundBlurEnabled ? 'Disable Blur' : 'Enable Blur'}
           </Button>
-          
+
           {/* Screen share toggle */}
-          <Button 
-            onClick={handleScreenShareToggle} 
+          <Button
+            onClick={handleScreenShareToggle}
             variant={isScreenSharing ? 'destructive' : 'secondary'}
             className="flex items-center gap-2"
           >
             <Monitor size={18} />
             {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
           </Button>
-          
+
           {/* Recording toggle */}
-          <Button 
-            onClick={handleRecordingToggle} 
+          <Button
+            onClick={handleRecordingToggle}
             variant={isRecording ? 'destructive' : 'secondary'}
             className="flex items-center gap-2"
           >
@@ -218,7 +234,7 @@ export function CallModal({
             <PictureInPicture size={18} />
             Picture-in-Picture
           </Button>
-          
+
           {/* End call */}
           <Button onClick={onClose} variant="destructive" className="flex items-center gap-2">
             <X size={18} />

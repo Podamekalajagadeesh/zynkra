@@ -8,8 +8,7 @@ import { OAuthApp } from './entities/oauth-app.entity';
 import { OAuthAuthorization } from './entities/oauth-authorization.entity';
 import { UsersService } from '../users/users.service';
 
-const sha256 = (input: string) =>
-  createHash('sha256').update(input).digest('base64url');
+const sha256 = (input: string) => createHash('sha256').update(input).digest('base64url');
 
 describe('OAuthService', () => {
   let service: OAuthService;
@@ -37,7 +36,13 @@ describe('OAuthService', () => {
         OAuthService,
         {
           provide: getRepositoryToken(OAuthApp),
-          useValue: { findOne: jest.fn(), find: jest.fn(), create: jest.fn(), save: jest.fn(), remove: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
         },
         {
           provide: getRepositoryToken(OAuthAuthorization),
@@ -73,16 +78,16 @@ describe('OAuthService', () => {
       expect(authRepo.remove).toHaveBeenCalledWith(auth); // single-use
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({ aud: 'oauth', clientId: 'client-1' }),
-        expect.anything(),
+        expect.anything()
       );
     });
 
     it('rejects a PKCE verifier mismatch', async () => {
       authRepo.findOne.mockResolvedValue(auth);
 
-      await expect(
-        service.exchangeToken('code', 'wrong-verifier', 'client-1'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.exchangeToken('code', 'wrong-verifier', 'client-1')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
 
     it('rejects an expired code', async () => {
@@ -91,17 +96,17 @@ describe('OAuthService', () => {
         codeExpiresAt: new Date(Date.now() - 10_000),
       });
 
-      await expect(
-        service.exchangeToken('code', verifier, 'client-1'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.exchangeToken('code', verifier, 'client-1')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
 
     it('rejects a code used with the wrong client', async () => {
       authRepo.findOne.mockResolvedValue(auth);
 
-      await expect(
-        service.exchangeToken('code', verifier, 'client-other'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.exchangeToken('code', verifier, 'client-other')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 

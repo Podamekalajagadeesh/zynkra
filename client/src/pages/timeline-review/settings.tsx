@@ -11,7 +11,8 @@ const TimelineReviewSettingsPage = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: (timelineReviewEnabled: boolean) => api.patch('/users/me/settings', { timelineReviewEnabled }),
+    mutationFn: (timelineReviewEnabled: boolean) =>
+      api.patch('/users/me/settings', { timelineReviewEnabled }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
     },
@@ -19,19 +20,28 @@ const TimelineReviewSettingsPage = () => {
 
   if (isLoading) {
     return (
-      <PageShell title="Timeline Review Settings" description="Manage your timeline review experience.">
+      <PageShell
+        title="Timeline Review Settings"
+        description="Manage your timeline review experience."
+      >
         Loading...
       </PageShell>
     );
   }
 
   return (
-    <PageShell title="Timeline Review Settings" description="Manage your timeline review experience.">
+    <PageShell
+      title="Timeline Review Settings"
+      description="Manage your timeline review experience."
+    >
       <h1 className="text-2xl font-bold">Timeline Review Settings</h1>
       <div className="mt-6 flex items-center justify-between rounded-md border p-4">
         <div>
           <h2 className="text-lg font-semibold">Enable Timeline Review</h2>
-          <p className="text-sm text-dark-500">When enabled, you'll be able to review posts you're tagged in before they appear on your timeline.</p>
+          <p className="text-sm text-dark-500">
+            When enabled, you'll be able to review posts you're tagged in before they appear on your
+            timeline.
+          </p>
         </div>
         <Switch
           checked={user.timelineReviewEnabled}

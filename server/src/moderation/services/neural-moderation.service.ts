@@ -21,18 +21,18 @@ export interface NeuralModerationResult {
 export class NeuralModerationService {
   constructor(
     @InjectRepository(NeuralThoughtFlagEntity)
-    private neuralThoughtFlagRepository: Repository<NeuralThoughtFlagEntity>,
+    private neuralThoughtFlagRepository: Repository<NeuralThoughtFlagEntity>
   ) {}
 
   async analyzeNeuralThought(analyzeDto: AnalyzeNeuralThoughtDto): Promise<NeuralModerationResult> {
     const { thoughtContent, userId, contentType, contentId, neuralSignalData } = analyzeDto;
-    
+
     // Step 1: Privacy-first neural analysis - never stores raw brain data permanently unless flagged
     const privacyCompliant = this.validatePrivacyCompliance(neuralSignalData);
-    
+
     // Step 2: Analyze thought content for harm while preserving user privacy
     const harmAnalysis = this.analyzeThoughtForHarm(thoughtContent, neuralSignalData);
-    
+
     // Step 3: Create flag only if harmful content is detected (preserves privacy by default - no storage of innocent thoughts)
     let flag: NeuralThoughtFlagEntity | null = null;
     if (harmAnalysis.isHarmful) {
@@ -45,7 +45,7 @@ export class NeuralModerationService {
         isHarmful: true,
         harmfulCategories: harmAnalysis.harmfulCategories,
         confidenceScore: harmAnalysis.confidenceScore,
-        status: 'blocked'
+        status: 'blocked',
       });
       await this.neuralThoughtFlagRepository.save(flag);
     }
@@ -59,9 +59,13 @@ export class NeuralModerationService {
       confidenceScore: harmAnalysis.confidenceScore,
       canShare: !harmAnalysis.isHarmful || harmAnalysis.confidenceScore < 0.7,
       privacyCompliant,
-      recommendedAction: harmAnalysis.isHarmful && harmAnalysis.confidenceScore > 0.85 ? 'block' : 
-                        harmAnalysis.isHarmful && harmAnalysis.confidenceScore > 0.6 ? 'review' : 'allow',
-      analyzedAt: new Date().toISOString()
+      recommendedAction:
+        harmAnalysis.isHarmful && harmAnalysis.confidenceScore > 0.85
+          ? 'block'
+          : harmAnalysis.isHarmful && harmAnalysis.confidenceScore > 0.6
+            ? 'review'
+            : 'allow',
+      analyzedAt: new Date().toISOString(),
     };
   }
 
@@ -69,13 +73,16 @@ export class NeuralModerationService {
     // Verify that we're only processing necessary neural data, no unauthorized biometric storage
     // Compliance with global neural privacy regulations (e.g., EU Neural Rights Act, US Brain Privacy Act)
     if (!neuralSignalData) return true;
-    
+
     // Check that we're not storing excessive brainwave data
     const maxBrainwaveSamples = 100;
-    if (neuralSignalData.brainwavePatterns && neuralSignalData.brainwavePatterns.length > maxBrainwaveSamples) {
+    if (
+      neuralSignalData.brainwavePatterns &&
+      neuralSignalData.brainwavePatterns.length > maxBrainwaveSamples
+    ) {
       return false;
     }
-    
+
     // Verify temporal markers are only for the current thought session
     if (neuralSignalData.temporalMarkers) {
       const sessionDate = new Date(neuralSignalData.temporalMarkers);
@@ -83,11 +90,14 @@ export class NeuralModerationService {
       const hoursDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
       if (hoursDiff > 24) return false;
     }
-    
+
     return true;
   }
 
-  private analyzeThoughtForHarm(thoughtContent: string, neuralSignalData?: any): {
+  private analyzeThoughtForHarm(
+    thoughtContent: string,
+    neuralSignalData?: any
+  ): {
     isHarmful: boolean;
     harmfulCategories: string[];
     confidenceScore: number;
@@ -98,11 +108,19 @@ export class NeuralModerationService {
 
     // List of harm vectors to detect in thought content
     const harmVectors = [
-      { patterns: ['harm', 'hurt', 'kill', 'attack', 'violence'], category: 'violence', weight: 0.9 },
-      { patterns: ['hate', 'racist', 'discriminate', 'slur'], category: 'hate_speech', weight: 0.85 },
+      {
+        patterns: ['harm', 'hurt', 'kill', 'attack', 'violence'],
+        category: 'violence',
+        weight: 0.9,
+      },
+      {
+        patterns: ['hate', 'racist', 'discriminate', 'slur'],
+        category: 'hate_speech',
+        weight: 0.85,
+      },
       { patterns: ['self-harm', 'suicide', 'end my life'], category: 'self_harm', weight: 0.95 },
       { patterns: ['harass', 'stalk', 'threaten'], category: 'harassment', weight: 0.8 },
-      { patterns: ['misinformation', 'lie', 'hoax'], category: 'misinformation', weight: 0.7 }
+      { patterns: ['misinformation', 'lie', 'hoax'], category: 'misinformation', weight: 0.7 },
     ];
 
     // Analyze text content
@@ -130,13 +148,16 @@ export class NeuralModerationService {
     return {
       isHarmful,
       harmfulCategories: [...new Set(harmfulCategories)], // Remove duplicates
-      confidenceScore
+      confidenceScore,
     };
   }
 
-  async appealNeuralModeration(appealDto: AppealNeuralModerationDto, userId: string): Promise<NeuralThoughtFlagEntity> {
+  async appealNeuralModeration(
+    appealDto: AppealNeuralModerationDto,
+    userId: string
+  ): Promise<NeuralThoughtFlagEntity> {
     const flag = await this.neuralThoughtFlagRepository.findOne({
-      where: { id: appealDto.flagId, userId }
+      where: { id: appealDto.flagId, userId },
     });
 
     if (!flag) {
@@ -155,7 +176,7 @@ export class NeuralModerationService {
   async getUserNeuralFlags(userId: string): Promise<NeuralThoughtFlagEntity[]> {
     return this.neuralThoughtFlagRepository.find({
       where: { userId },
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 

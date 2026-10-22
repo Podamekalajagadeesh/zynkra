@@ -14,7 +14,11 @@ import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { PageView } from './entities/page-view.entity';
 import { Follow } from '../users/entities/follow.entity';
 import { Article } from '../articles/article.entity';
-import { Newsletter, NewsletterSubscriber, NewsletterSubscription } from '../newsletters/newsletter.entity';
+import {
+  Newsletter,
+  NewsletterSubscriber,
+  NewsletterSubscription,
+} from '../newsletters/newsletter.entity';
 import { Podcast } from '../podcasts/podcast.entity';
 import { Course, CourseEnrollment, CourseLesson } from '../courses/course.entity';
 import { LedgerEntry } from '../wallet/entities/ledger-entry.entity';
@@ -24,10 +28,25 @@ import { DataPermissionsModule } from '../common/data-permissions/data-permissio
   imports: [
     DataPermissionsModule,
     TypeOrmModule.forFeature([
-      Post, User, Tip, Order, OrderItem, Product, Subscription, PageView, Follow,
-      Article, Newsletter, NewsletterSubscriber, NewsletterSubscription,
-      Podcast, Course, CourseEnrollment, CourseLesson, LedgerEntry,
-    ])
+      Post,
+      User,
+      Tip,
+      Order,
+      OrderItem,
+      Product,
+      Subscription,
+      PageView,
+      Follow,
+      Article,
+      Newsletter,
+      NewsletterSubscriber,
+      NewsletterSubscription,
+      Podcast,
+      Course,
+      CourseEnrollment,
+      CourseLesson,
+      LedgerEntry,
+    ]),
   ],
   controllers: [AnalyticsController, CreatorAnalyticsController],
   providers: [AnalyticsService, CreatorAnalyticsService],

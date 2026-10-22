@@ -3,7 +3,8 @@ import { AccountManagementService } from './account-management.service';
 describe('AccountManagementService', () => {
   it('persists account permissions and preserves an intentionally empty set', async () => {
     const userRepository = {
-      findOne: jest.fn()
+      findOne: jest
+        .fn()
         .mockResolvedValueOnce({ id: 'user-42', accountPermissions: null })
         .mockResolvedValueOnce({ id: 'user-42', accountPermissions: [] }),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -11,11 +12,18 @@ describe('AccountManagementService', () => {
     const service = new AccountManagementService(undefined, userRepository as any);
 
     const defaults = await service.getPermissions('user-42');
-    expect(defaults.permissions).toEqual(['profile:read', 'profile:write', 'posts:read', 'posts:write']);
+    expect(defaults.permissions).toEqual([
+      'profile:read',
+      'profile:write',
+      'posts:read',
+      'posts:write',
+    ]);
 
     const updated = await service.updatePermissions('user-42', ['posts:write', 'posts:write']);
     expect(updated.permissions).toEqual(['posts:write']);
-    expect(userRepository.update).toHaveBeenCalledWith('user-42', { accountPermissions: ['posts:write'] });
+    expect(userRepository.update).toHaveBeenCalledWith('user-42', {
+      accountPermissions: ['posts:write'],
+    });
 
     const empty = await service.updatePermissions('user-42', []);
     expect(empty.permissions).toEqual([]);
@@ -24,7 +32,8 @@ describe('AccountManagementService', () => {
 
   it('persists and reloads data permissions independently from account capabilities', async () => {
     const userRepository = {
-      findOne: jest.fn()
+      findOne: jest
+        .fn()
         .mockResolvedValueOnce({ id: 'user-44', accountDataPermissions: null })
         .mockResolvedValueOnce({ id: 'user-44', accountDataPermissions: ['profile', 'analytics'] }),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -34,7 +43,11 @@ describe('AccountManagementService', () => {
     const defaults = await service.getDataPermissions('user-44');
     expect(defaults.dataPermissions).toEqual(['profile', 'posts', 'settings', 'personalization']);
 
-    const updated = await service.updateDataPermissions('user-44', ['profile', 'analytics', 'profile']);
+    const updated = await service.updateDataPermissions('user-44', [
+      'profile',
+      'analytics',
+      'profile',
+    ]);
     expect(updated.dataPermissions).toEqual(['profile', 'analytics']);
     expect(userRepository.update).toHaveBeenCalledWith('user-44', {
       accountDataPermissions: ['profile', 'analytics'],
@@ -43,7 +56,9 @@ describe('AccountManagementService', () => {
     const reloaded = await service.getDataPermissions('user-44');
     expect(reloaded.dataPermissions).toEqual(['profile', 'analytics']);
 
-    await expect(service.updateDataPermissions('user-44', ['unknown'])).rejects.toThrow('Invalid data permission category');
+    await expect(service.updateDataPermissions('user-44', ['unknown'])).rejects.toThrow(
+      'Invalid data permission category'
+    );
   });
 
   it('persists account security controls and reloads them from the user record', async () => {
@@ -131,7 +146,7 @@ describe('AccountManagementService', () => {
       userRepository as any,
       linkedAccountRepository as any,
       securityAlertRepository as any,
-      undefined,
+      undefined
     );
 
     const dashboard = await service.getAccountDashboard('user-42');
@@ -231,12 +246,15 @@ describe('AccountManagementService', () => {
       notifyMentions: false,
     });
 
-    expect(usersService.updateNotificationSettings).toHaveBeenCalledWith('user-2', expect.objectContaining({
-      emailNotifications: false,
-      emailDigest: false,
-      pushAlerts: false,
-      notifyMentions: false,
-    }));
+    expect(usersService.updateNotificationSettings).toHaveBeenCalledWith(
+      'user-2',
+      expect.objectContaining({
+        emailNotifications: false,
+        emailDigest: false,
+        pushAlerts: false,
+        notifyMentions: false,
+      })
+    );
     expect(saved).toMatchObject({
       emailDigest: false,
       pushAlerts: false,
@@ -247,19 +265,23 @@ describe('AccountManagementService', () => {
   it('tracks trusted devices and exposes them in the security center', async () => {
     const service = new AccountManagementService();
 
-    const device = await service.registerTrustedDevice('user-1', 'Surface Laptop', 'device-123', { platform: 'windows' });
+    const device = await service.registerTrustedDevice('user-1', 'Surface Laptop', 'device-123', {
+      platform: 'windows',
+    });
     expect(device.deviceName).toBe('Surface Laptop');
 
     const center = await service.getSecurityCenter('user-1');
-    expect(center.trustedDevices).toEqual(expect.arrayContaining([
-      expect.objectContaining({ deviceName: 'Surface Laptop' })
-    ]));
+    expect(center.trustedDevices).toEqual(
+      expect.arrayContaining([expect.objectContaining({ deviceName: 'Surface Laptop' })])
+    );
   });
 
   it('links accounts, captures account history, and exposes recovery status', async () => {
     const service = new AccountManagementService();
 
-    const linked = await service.linkAccount('user-1', 'google', 'ext-123', { displayName: 'Jane Doe' });
+    const linked = await service.linkAccount('user-1', 'google', 'ext-123', {
+      displayName: 'Jane Doe',
+    });
     expect(linked.provider).toBe('google');
     expect(service.getLinkedAccounts('user-1')).toHaveLength(1);
 
@@ -272,7 +294,9 @@ describe('AccountManagementService', () => {
   it('supports verification appeals, privacy controls, and security exports', async () => {
     const service = new AccountManagementService();
 
-    const appeal = await service.submitVerificationAppeal('user-1', 'Business ID mismatch', ['https://example.com/docs']);
+    const appeal = await service.submitVerificationAppeal('user-1', 'Business ID mismatch', [
+      'https://example.com/docs',
+    ]);
     expect(appeal.status).toBe('pending');
 
     const privacy = await service.updatePrivacySettings('user-1', {
@@ -295,10 +319,16 @@ describe('AccountManagementService', () => {
   it('creates suspicious login alerts and supports login approval review', async () => {
     const service = new AccountManagementService();
 
-    const alert = await service.recordSecurityAlert('user-1', 'suspicious_login', 'New sign-in from an unrecognized device', 'high', {
-      ipAddress: '198.51.100.10',
-      userAgent: 'Chrome Mobile',
-    });
+    const alert = await service.recordSecurityAlert(
+      'user-1',
+      'suspicious_login',
+      'New sign-in from an unrecognized device',
+      'high',
+      {
+        ipAddress: '198.51.100.10',
+        userAgent: 'Chrome Mobile',
+      }
+    );
     expect(alert.type).toBe('suspicious_login');
     expect(alert.severity).toBe('high');
 
@@ -310,7 +340,12 @@ describe('AccountManagementService', () => {
     });
     expect(approval.status).toBe('pending');
 
-    const approved = await service.reviewLoginApproval('user-1', approval.id, true, 'Verified by user');
+    const approved = await service.reviewLoginApproval(
+      'user-1',
+      approval.id,
+      true,
+      'Verified by user'
+    );
     expect(approved.status).toBe('approved');
 
     const center = await service.getSecurityCenter('user-1');
@@ -321,14 +356,22 @@ describe('AccountManagementService', () => {
   it('supports multi-account profiles, export payloads, and verification requests', async () => {
     const service = new AccountManagementService();
 
-    const primary = await service.createAccountProfile('user-1', { label: 'Primary', accountType: 'personal' });
-    const work = await service.createAccountProfile('user-2', { label: 'Work', accountType: 'business' });
+    const primary = await service.createAccountProfile('user-1', {
+      label: 'Primary',
+      accountType: 'personal',
+    });
+    const work = await service.createAccountProfile('user-2', {
+      label: 'Work',
+      accountType: 'business',
+    });
 
     expect(primary.label).toBe('Primary');
     expect(work.accountType).toBe('business');
-    expect(await service.listAccountProfiles('user-1')).toEqual(expect.arrayContaining([
-      expect.objectContaining({ accountId: 'user-1', label: 'Primary', isPrimary: true }),
-    ]));
+    expect(await service.listAccountProfiles('user-1')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ accountId: 'user-1', label: 'Primary', isPrimary: true }),
+      ])
+    );
 
     const exportPayload = await service.exportAccountData('user-1', {
       includeSecurityLog: true,
@@ -338,7 +381,11 @@ describe('AccountManagementService', () => {
     expect(exportPayload.status).toBe('ready');
     expect(exportPayload.fileUrl).toContain('account');
 
-    const verification = await service.requestIdentityVerification('user-1', 'Uploaded passport scan and selfie', ['https://example.com/verification/passport']);
+    const verification = await service.requestIdentityVerification(
+      'user-1',
+      'Uploaded passport scan and selfie',
+      ['https://example.com/verification/passport']
+    );
     expect(verification.status).toBe('pending');
     expect(verification.reason).toContain('passport');
   });
@@ -346,8 +393,14 @@ describe('AccountManagementService', () => {
   it('switches between account profiles without leaving the active profile in an invalid state', async () => {
     const service = new AccountManagementService();
 
-    const personal = await service.createAccountProfile('user-1', { label: 'Personal', accountType: 'personal' });
-    const creator = await service.createAccountProfile('user-1', { label: 'Creator', accountType: 'creator' });
+    const personal = await service.createAccountProfile('user-1', {
+      label: 'Personal',
+      accountType: 'personal',
+    });
+    const creator = await service.createAccountProfile('user-1', {
+      label: 'Creator',
+      accountType: 'creator',
+    });
 
     const switched = await service.switchAccountProfile('user-1', creator.id);
     expect(switched).toMatchObject({
@@ -357,14 +410,18 @@ describe('AccountManagementService', () => {
       message: 'Account profile switched successfully.',
     });
     const profiles = await service.listAccountProfiles('user-1');
-    expect(profiles.find((profile) => profile.id === creator.id)).toEqual(expect.objectContaining({
-      isCurrent: true,
-      isPrimary: false,
-    }));
-    expect(profiles.find((profile) => profile.id === personal.id)).toEqual(expect.objectContaining({
-      isCurrent: false,
-      isPrimary: true,
-    }));
+    expect(profiles.find((profile) => profile.id === creator.id)).toEqual(
+      expect.objectContaining({
+        isCurrent: true,
+        isPrimary: false,
+      })
+    );
+    expect(profiles.find((profile) => profile.id === personal.id)).toEqual(
+      expect.objectContaining({
+        isCurrent: false,
+        isPrimary: true,
+      })
+    );
   });
 
   it('persists the selected account profile independently of the primary profile', async () => {
@@ -374,12 +431,22 @@ describe('AccountManagementService', () => {
     const service = new AccountManagementService(undefined, userRepository as any);
 
     const personal = await service.createAccountProfile('user-2', { label: 'Personal' });
-    const creator = await service.createAccountProfile('user-2', { label: 'Creator', accountType: 'creator' });
+    const creator = await service.createAccountProfile('user-2', {
+      label: 'Creator',
+      accountType: 'creator',
+    });
     await service.switchAccountProfile('user-2', creator.id);
 
-    expect(userRepository.update).toHaveBeenLastCalledWith('user-2', { activeAccountProfileId: creator.id });
-    expect(await service.getActiveAccountProfile('user-2')).toEqual(expect.objectContaining({ id: creator.id }));
-    expect((await service.listAccountProfiles('user-2')).find((profile) => profile.id === personal.id)?.isPrimary).toBe(true);
+    expect(userRepository.update).toHaveBeenLastCalledWith('user-2', {
+      activeAccountProfileId: creator.id,
+    });
+    expect(await service.getActiveAccountProfile('user-2')).toEqual(
+      expect.objectContaining({ id: creator.id })
+    );
+    expect(
+      (await service.listAccountProfiles('user-2')).find((profile) => profile.id === personal.id)
+        ?.isPrimary
+    ).toBe(true);
   });
 
   it('tracks account sessions and supports data-download and deletion requests', async () => {
@@ -395,7 +462,11 @@ describe('AccountManagementService', () => {
     expect(download.status).toBe('ready');
     expect(download.fileUrl).toContain('download');
 
-    const deletion = await service.requestDataDeletion('user-9', ['posts', 'messages'], 'Privacy cleanup');
+    const deletion = await service.requestDataDeletion(
+      'user-9',
+      ['posts', 'messages'],
+      'Privacy cleanup'
+    );
     expect(deletion.status).toBe('queued');
     expect(deletion.reason).toBe('Privacy cleanup');
   });
@@ -427,7 +498,7 @@ describe('AccountManagementService', () => {
       undefined,
       undefined,
       loginSessionsRepository as any,
-      undefined,
+      undefined
     );
 
     const result = await service.revokeAccountSession('user-10', 'jwt-session-1');
@@ -506,7 +577,9 @@ describe('AccountManagementService', () => {
 
     const summary = await service.getPrivacySummary('user-14');
     expect(summary.protectionLevel).toBe('strong');
-    expect(summary.blockedDefaults).toEqual(expect.arrayContaining(['contact discovery', 'ad personalization']));
+    expect(summary.blockedDefaults).toEqual(
+      expect.arrayContaining(['contact discovery', 'ad personalization'])
+    );
 
     const updated = await service.updateAccountSecuritySettings('user-14', {
       twoFactorAuthentication: true,
@@ -523,8 +596,14 @@ describe('AccountManagementService', () => {
   it('builds a verification summary with trust score, badges, and review status', async () => {
     const service = new AccountManagementService();
 
-    await service.requestCreatorVerification('user-11', 'Brand partnership proof', ['https://example.com/brand']);
-    await service.updateTrustIndicators('user-11', { verified: true, badges: ['creator'], trustScore: 88 });
+    await service.requestCreatorVerification('user-11', 'Brand partnership proof', [
+      'https://example.com/brand',
+    ]);
+    await service.updateTrustIndicators('user-11', {
+      verified: true,
+      badges: ['creator'],
+      trustScore: 88,
+    });
 
     const summary = await service.getVerificationSummary('user-11');
     expect(summary.status).toBe('pending');
@@ -536,7 +615,9 @@ describe('AccountManagementService', () => {
   it('computes a real trust snapshot from verification and security signals', async () => {
     const service = new AccountManagementService();
 
-    await service.submitVerificationAppeal('user-22', 'Identity verification evidence', ['https://example.com/id']);
+    await service.submitVerificationAppeal('user-22', 'Identity verification evidence', [
+      'https://example.com/id',
+    ]);
     await service.updateIdentitySettings('user-22', {
       displayName: 'Jane Verified',
       bio: 'Verified creator with a complete profile',
@@ -564,12 +645,14 @@ describe('AccountManagementService', () => {
 
     expect(trust.trustScore).toBeGreaterThanOrEqual(80);
     expect(trust.verified).toBe(true);
-    expect(trust.badges).toEqual(expect.arrayContaining([
-      'identity_verified',
-      'profile_complete',
-      'two_factor_enabled',
-      'passkey_ready',
-    ]));
+    expect(trust.badges).toEqual(
+      expect.arrayContaining([
+        'identity_verified',
+        'profile_complete',
+        'two_factor_enabled',
+        'passkey_ready',
+      ])
+    );
   });
 
   it('summarizes privacy controls and returns a usable protection profile', async () => {
@@ -590,6 +673,8 @@ describe('AccountManagementService', () => {
     const summary = await service.getPrivacySummary('user-12');
     expect(summary.storyVisibility).toBe('followers');
     expect(summary.protectionLevel).toMatch(/strong|balanced|limited/);
-    expect(summary.blockedDefaults).toEqual(expect.arrayContaining(['contact discovery', 'ad personalization']));
+    expect(summary.blockedDefaults).toEqual(
+      expect.arrayContaining(['contact discovery', 'ad personalization'])
+    );
   });
 });

@@ -7,17 +7,17 @@ export function FaceRecognitionSettings() {
   const [faceRecognitionEnabled, setFaceRecognitionEnabled] = useState(false);
 
   const handleFaceRecognitionToggle = async () => {
-            try {
-              await api.patch('/users/me/face-recognition', {
-                isFaceRecognitionEnabled: !faceRecognitionEnabled,
-              });
-              setFaceRecognitionEnabled(!faceRecognitionEnabled);
-              toast.success('Face recognition setting updated.');
-            } catch (error) {
-              console.error('Failed to update face recognition setting', error);
-              toast.error('Failed to update face recognition setting.');
-            }
-          };
+    try {
+      await api.patch('/users/me/face-recognition', {
+        isFaceRecognitionEnabled: !faceRecognitionEnabled,
+      });
+      setFaceRecognitionEnabled(!faceRecognitionEnabled);
+      toast.success('Face recognition setting updated.');
+    } catch (error) {
+      console.error('Failed to update face recognition setting', error);
+      toast.error('Failed to update face recognition setting.');
+    }
+  };
 
   return (
     <div className="surface-soft rounded-lg p-5">
@@ -28,10 +28,7 @@ export function FaceRecognitionSettings() {
             Allow us to use face recognition to identify you in photos and videos.
           </p>
         </div>
-        <Switch
-          checked={faceRecognitionEnabled}
-          onCheckedChange={handleFaceRecognitionToggle}
-        />
+        <Switch checked={faceRecognitionEnabled} onCheckedChange={handleFaceRecognitionToggle} />
       </div>
     </div>
   );

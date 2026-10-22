@@ -26,9 +26,6 @@ export class PageMessage {
   @ManyToOne(() => User)
   sender: User;
 
-  @ManyToOne(
-    () => PageConversation,
-    (conversation) => conversation.messages,
-  )
+  @ManyToOne(() => PageConversation, (conversation) => conversation.messages)
   conversation: PageConversation;
 }

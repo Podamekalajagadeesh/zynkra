@@ -76,7 +76,10 @@ function createModule() {
       },
       {
         provide: getRepositoryToken(LoginSession),
-        useValue: { findOne: jest.fn(async () => ({ id: 's1', revokedAt: null, lastSeenAt: null })), update: jest.fn() },
+        useValue: {
+          findOne: jest.fn(async () => ({ id: 's1', revokedAt: null, lastSeenAt: null })),
+          update: jest.fn(),
+        },
       },
       {
         provide: getRepositoryToken(User),
@@ -156,9 +159,7 @@ describe('Groups (HTTP integration)', () => {
         { id: 'g-open', privacy: GroupPrivacy.PUBLIC },
       ]);
 
-      const r = await request(app.getHttpServer())
-        .get('/groups/discover')
-        .set(auth(tokenU1));
+      const r = await request(app.getHttpServer()).get('/groups/discover').set(auth(tokenU1));
       expect(r.status).toBe(200);
       expect(r.body.map((g: any) => g.id)).toEqual(['g-open']);
     });
@@ -170,9 +171,7 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
       lockdownsRepo.findOne.mockResolvedValue(null);
 
-      const r = await request(app.getHttpServer())
-        .post('/groups/g1/join')
-        .set(auth(tokenU2));
+      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
       expect(r.status).toBe(201);
       expect(r.body).toMatchObject({ role: 'member' });
       expect(groupMembersRepo.save).toHaveBeenCalled();
@@ -182,20 +181,19 @@ describe('Groups (HTTP integration)', () => {
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET });
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      const r = await request(app.getHttpServer())
-        .post('/groups/g1/join')
-        .set(auth(tokenU2));
+      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
       expect(r.status).toBe(404);
     });
 
     it('403s during an active lockdown', async () => {
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
       groupMembersRepo.findOne.mockResolvedValue(null);
-      lockdownsRepo.findOne.mockResolvedValue({ id: 'l1', activeUntil: new Date(Date.now() + 60_000) });
+      lockdownsRepo.findOne.mockResolvedValue({
+        id: 'l1',
+        activeUntil: new Date(Date.now() + 60_000),
+      });
 
-      const r = await request(app.getHttpServer())
-        .post('/groups/g1/join')
-        .set(auth(tokenU2));
+      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
       expect(r.status).toBe(403);
       expect(groupMembersRepo.save).not.toHaveBeenCalled();
     });
@@ -204,9 +202,7 @@ describe('Groups (HTTP integration)', () => {
   describe('POST /groups/:groupId/leave', () => {
     it('404s for non-members', async () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
-      const r = await request(app.getHttpServer())
-        .post('/groups/g1/leave')
-        .set(auth(tokenU2));
+      const r = await request(app.getHttpServer()).post('/groups/g1/leave').set(auth(tokenU2));
       expect(r.status).toBe(404);
     });
 
@@ -214,9 +210,7 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'admin' });
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', owner: { id: 'u1' } });
 
-      const r = await request(app.getHttpServer())
-        .post('/groups/g1/leave')
-        .set(auth(tokenU1));
+      const r = await request(app.getHttpServer()).post('/groups/g1/leave').set(auth(tokenU1));
       expect(r.status).toBe(403);
       expect(groupMembersRepo.remove).not.toHaveBeenCalled();
     });
@@ -300,7 +294,7 @@ describe('Groups (HTTP integration)', () => {
       expect(r.status).toBe(201);
       expect(r.body).toMatchObject({ content: 'hello' });
       expect(channelMembersRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ role: 'member' }),
+        expect.objectContaining({ role: 'member' })
       );
     });
 

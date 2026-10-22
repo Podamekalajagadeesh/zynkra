@@ -34,7 +34,7 @@ function makeFile(overrides: Partial<Express.Multer.File> = {}): Express.Multer.
     // A real 1x1 PNG: sharp validates image payloads before reading metadata.
     buffer: Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-      'base64',
+      'base64'
     ),
     destination: '',
     filename: '',
@@ -102,7 +102,7 @@ describe('MediaService', () => {
           type: 'image',
           userId: 'user-1',
           altText: 'photo.jpg',
-        }),
+        })
       );
       expect(mediaRepo.save).toHaveBeenCalled();
     });
@@ -110,15 +110,13 @@ describe('MediaService', () => {
     it('rejects unsupported mimetypes', async () => {
       const file = makeFile({ mimetype: 'application/pdf', originalname: 'a.pdf' });
       await expect(service.uploadFile(file, { userId: 'user-1' })).rejects.toThrow(
-        BadRequestException,
+        BadRequestException
       );
     });
 
     it('rejects files over the image size limit', async () => {
       const file = makeFile({ size: 11 * 1024 * 1024 });
-      await expect(service.uploadFile(file, { userId: 'user-1' })).rejects.toThrow(
-        /too large/i,
-      );
+      await expect(service.uploadFile(file, { userId: 'user-1' })).rejects.toThrow(/too large/i);
     });
 
     it('prefixes absolute URLs with CDN_BASE_URL when configured', async () => {
@@ -155,7 +153,7 @@ describe('MediaService', () => {
       expect(existsSync(storedPath)).toBe(true);
 
       mediaRepo.findOne.mockResolvedValueOnce(
-        makeMedia({ id: uploadResult.id, url: uploadResult.url, userId: 'user-1' }),
+        makeMedia({ id: uploadResult.id, url: uploadResult.url, userId: 'user-1' })
       );
 
       await service.deleteMedia(uploadResult.id, 'user-1');
@@ -165,41 +163,31 @@ describe('MediaService', () => {
     });
 
     it('rejects when the caller does not own the media', async () => {
-      mediaRepo.findOne.mockResolvedValueOnce(
-        makeMedia({ userId: 'owner-user' }),
-      );
+      mediaRepo.findOne.mockResolvedValueOnce(makeMedia({ userId: 'owner-user' }));
 
-      await expect(service.deleteMedia('media-1', 'intruder')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.deleteMedia('media-1', 'intruder')).rejects.toThrow(ForbiddenException);
       expect(mediaRepo.remove).not.toHaveBeenCalled();
     });
 
     it('rejects unauthenticated delete of owned media', async () => {
-      mediaRepo.findOne.mockResolvedValueOnce(
-        makeMedia({ userId: 'owner-user' }),
-      );
+      mediaRepo.findOne.mockResolvedValueOnce(makeMedia({ userId: 'owner-user' }));
 
       await expect(service.deleteMedia('media-1')).rejects.toThrow(ForbiddenException);
     });
 
     it('throws NotFound for missing media', async () => {
       mediaRepo.findOne.mockResolvedValueOnce(null);
-      await expect(service.deleteMedia('missing', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteMedia('missing', 'user-1')).rejects.toThrow(NotFoundException);
     });
 
     it('refuses to unlink paths outside the upload root', async () => {
       mediaRepo.findOne.mockResolvedValueOnce(
-        makeMedia({ url: '/uploads/../../etc/passwd', userId: 'user-1' }),
+        makeMedia({ url: '/uploads/../../etc/passwd', userId: 'user-1' })
       );
 
       // Path resolution throws BadRequest; row must not be left half-deleted
       // with a successful unlink of an external file.
-      await expect(service.deleteMedia('media-1', 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.deleteMedia('media-1', 'user-1')).rejects.toThrow(BadRequestException);
       expect(mediaRepo.remove).not.toHaveBeenCalled();
     });
   });

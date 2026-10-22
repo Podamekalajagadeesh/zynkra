@@ -1,5 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bot, User, Settings, X, MessageCircle, Share2, Calendar, Users, Heart, Save, RefreshCw, Shield, Brain, Activity, Globe, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  Bot,
+  User,
+  Settings,
+  X,
+  MessageCircle,
+  Share2,
+  Calendar,
+  Users,
+  Heart,
+  Save,
+  RefreshCw,
+  Shield,
+  Brain,
+  Activity,
+  Globe,
+  Clock,
+  CheckCircle2,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
@@ -106,7 +124,9 @@ interface ValueAlignmentConfig {
 }
 
 // Simple form component for adding family consent
-const AddFamilyConsentForm: React.FC<{ onAdd: (member: { name: string; email: string; relation: string }) => void }> = ({ onAdd }) => {
+const AddFamilyConsentForm: React.FC<{
+  onAdd: (member: { name: string; email: string; relation: string }) => void;
+}> = ({ onAdd }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [relation, setRelation] = useState('');
@@ -125,15 +145,15 @@ const AddFamilyConsentForm: React.FC<{ onAdd: (member: { name: string; email: st
     <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-background">
       <h5 className="font-medium">Add Family Member</h5>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input 
-          placeholder="Full name" 
+        <Input
+          placeholder="Full name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
-        <Input 
-          type="email" 
-          placeholder="Email address" 
+        <Input
+          type="email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -152,7 +172,9 @@ const AddFamilyConsentForm: React.FC<{ onAdd: (member: { name: string; email: st
           </SelectContent>
         </Select>
       </div>
-      <Button type="submit" className="w-full md:w-auto">Send Consent Request</Button>
+      <Button type="submit" className="w-full md:w-auto">
+        Send Consent Request
+      </Button>
     </form>
   );
 };
@@ -161,18 +183,18 @@ const defaultValuesConfig: ValueAlignmentConfig[] = [
   {
     category: 'Communication',
     values: ['Honest', 'Respectful', 'Direct', 'Empathetic', 'Diplomatic'],
-    selected: ['Honest', 'Respectful', 'Empathetic']
+    selected: ['Honest', 'Respectful', 'Empathetic'],
   },
   {
     category: 'Social',
     values: ['Inclusive', 'Collaborative', 'Independent', 'Extroverted', 'Introverted'],
-    selected: ['Inclusive', 'Collaborative']
+    selected: ['Inclusive', 'Collaborative'],
   },
   {
     category: 'Content',
     values: ['Creative', 'Analytical', 'Educational', 'Entertaining', 'Professional'],
-    selected: ['Creative', 'Analytical']
-  }
+    selected: ['Creative', 'Analytical'],
+  },
 ];
 
 const defaultDigitalTwin: DigitalTwinProfile = {
@@ -190,7 +212,7 @@ const defaultDigitalTwin: DigitalTwinProfile = {
     conversationsHandled: 32,
     connectionsMade: 8,
     uptimeHours: 124,
-    legacyInteractions: 0
+    legacyInteractions: 0,
   },
   capabilities: {
     autoRespond: true,
@@ -199,7 +221,7 @@ const defaultDigitalTwin: DigitalTwinProfile = {
     networkConnections: true,
     representInMeetings: true,
     contentCreation: true,
-    legacyPreservation: false
+    legacyPreservation: false,
   },
   legacySettings: {
     enabled: false,
@@ -209,7 +231,7 @@ const defaultDigitalTwin: DigitalTwinProfile = {
     legacyMessage: 'This digital legacy continues to honor the memory of its creator.',
     memorialized: false,
     familyConsents: [],
-    contentRetentionPeriod: 120 // 10 years
+    contentRetentionPeriod: 120, // 10 years
   },
   preferences: {
     activeHoursStart: '09:00',
@@ -217,7 +239,7 @@ const defaultDigitalTwin: DigitalTwinProfile = {
     maxDailyInteractions: 50,
     approvalRequired: true,
     privacyLevel: 'balanced',
-    contentTone: 'casual'
+    contentTone: 'casual',
   },
   neuralPatternsLearned: 156,
   interactionHistory: [
@@ -228,24 +250,25 @@ const defaultDigitalTwin: DigitalTwinProfile = {
       timestamp: new Date(Date.now() - 3600000),
       recipient: 'Sarah Chen',
       approved: true,
-      userFeedback: 'positive'
+      userFeedback: 'positive',
     },
     {
       id: 'int-2',
       type: 'message',
-      content: 'Thanks for reaching out! I\'d be happy to connect and discuss potential collaboration.',
+      content:
+        "Thanks for reaching out! I'd be happy to connect and discuss potential collaboration.",
       timestamp: new Date(Date.now() - 7200000),
       recipient: 'Alex Rivera',
       approved: true,
-      userFeedback: 'neutral'
+      userFeedback: 'neutral',
     },
     {
       id: 'int-3',
       type: 'event',
       content: 'Attended the Web3 Developer Summit networking session',
       timestamp: new Date(Date.now() - 86400000),
-      approved: true
-    }
+      approved: true,
+    },
   ],
   scheduledActivities: [
     {
@@ -256,7 +279,7 @@ const defaultDigitalTwin: DigitalTwinProfile = {
       startTime: new Date(Date.now() + 86400000),
       endTime: new Date(Date.now() + 90000000),
       location: 'Virtual Office - Main Conference Room',
-      status: 'scheduled'
+      status: 'scheduled',
     },
     {
       id: 'act-2',
@@ -266,9 +289,9 @@ const defaultDigitalTwin: DigitalTwinProfile = {
       startTime: new Date(Date.now() + 172800000),
       endTime: new Date(Date.now() + 259200000),
       location: 'Metaverse Convention Center',
-      status: 'scheduled'
-    }
-  ]
+      status: 'scheduled',
+    },
+  ],
 };
 
 export const DigitalTwinPersona: React.FC = () => {
@@ -282,22 +305,25 @@ export const DigitalTwinPersona: React.FC = () => {
   const isCurrentlyActive = () => {
     const now = new Date();
     const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    return currentTime >= twin.preferences.activeHoursStart && currentTime <= twin.preferences.activeHoursEnd;
+    return (
+      currentTime >= twin.preferences.activeHoursStart &&
+      currentTime <= twin.preferences.activeHoursEnd
+    );
   };
 
   // Update twin capabilities
   // Update legacy settings
   const updateLegacySetting = <K extends keyof DigitalTwinProfile['legacySettings']>(
-    key: K, 
+    key: K,
     value: DigitalTwinProfile['legacySettings'][K]
   ) => {
-    setTwin(prev => ({
+    setTwin((prev) => ({
       ...prev,
       legacySettings: {
         ...prev.legacySettings,
-        [key]: value
+        [key]: value,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
   };
 
@@ -309,157 +335,163 @@ export const DigitalTwinPersona: React.FC = () => {
       familyMemberEmail: familyMember.email,
       familyMemberRelation: familyMember.relation,
       consentStatus: 'pending',
-      verified: false
+      verified: false,
     };
-    
-    setTwin(prev => ({
+
+    setTwin((prev) => ({
       ...prev,
       legacySettings: {
         ...prev.legacySettings,
-        familyConsents: [...prev.legacySettings.familyConsents, newConsent]
+        familyConsents: [...prev.legacySettings.familyConsents, newConsent],
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
-    
+
     toast({
       title: 'Family Member Added',
-      description: 'Consent request has been sent to the family member.'
+      description: 'Consent request has been sent to the family member.',
     });
   };
 
   // Verify family consent (simulated)
   const verifyFamilyConsent = (consentId: string) => {
-    setTwin(prev => ({
+    setTwin((prev) => ({
       ...prev,
       legacySettings: {
         ...prev.legacySettings,
-        familyConsents: prev.legacySettings.familyConsents.map(c => 
-          c.id === consentId ? { 
-            ...c, 
-            consentStatus: 'approved' as const,
-            consentGivenAt: new Date(),
-            verified: true 
-          } : c
-        )
+        familyConsents: prev.legacySettings.familyConsents.map((c) =>
+          c.id === consentId
+            ? {
+                ...c,
+                consentStatus: 'approved' as const,
+                consentGivenAt: new Date(),
+                verified: true,
+              }
+            : c
+        ),
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
-    
+
     toast({
       title: 'Consent Verified',
-      description: 'Family member has approved the legacy preservation.'
+      description: 'Family member has approved the legacy preservation.',
     });
   };
 
   // Memorialize the profile (activate legacy mode)
   const memorializeProfile = () => {
-    const hasAllConsents = twin.legacySettings.familyConsents.length > 0 && 
-      twin.legacySettings.familyConsents.every(c => c.consentStatus === 'approved');
-    
+    const hasAllConsents =
+      twin.legacySettings.familyConsents.length > 0 &&
+      twin.legacySettings.familyConsents.every((c) => c.consentStatus === 'approved');
+
     if (!hasAllConsents) {
       toast({
         title: 'Cannot Memorialize',
         description: 'All family members must provide consent first.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
-    
-    setTwin(prev => ({
+
+    setTwin((prev) => ({
       ...prev,
       legacySettings: {
         ...prev.legacySettings,
         memorialized: true,
-        deathDate: new Date()
+        deathDate: new Date(),
       },
       capabilities: {
         ...prev.capabilities,
-        legacyPreservation: true
+        legacyPreservation: true,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
-    
+
     toast({
       title: 'Legacy Activated',
-      description: 'Your digital twin will now maintain your legacy indefinitely.'
+      description: 'Your digital twin will now maintain your legacy indefinitely.',
     });
   };
 
-  const updateCapability = (capability: keyof DigitalTwinProfile['capabilities'], value: boolean) => {
-    setTwin(prev => ({
+  const updateCapability = (
+    capability: keyof DigitalTwinProfile['capabilities'],
+    value: boolean
+  ) => {
+    setTwin((prev) => ({
       ...prev,
       capabilities: {
         ...prev.capabilities,
-        [capability]: value
+        [capability]: value,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
   };
 
   // Update twin preferences
   const updatePreference = <K extends keyof DigitalTwinProfile['preferences']>(
-    key: K, 
+    key: K,
     value: DigitalTwinProfile['preferences'][K]
   ) => {
-    setTwin(prev => ({
+    setTwin((prev) => ({
       ...prev,
       preferences: {
         ...prev.preferences,
-        [key]: value
+        [key]: value,
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
   };
 
   // Train the twin (simulate learning)
   const trainTwin = () => {
-    setTwin(prev => ({
+    setTwin((prev) => ({
       ...prev,
       accuracyScore: Math.min(100, prev.accuracyScore + 5),
       neuralPatternsLearned: prev.neuralPatternsLearned + 10,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
     toast({
       title: 'Digital Twin Trained',
-      description: 'Your twin has learned from additional interactions. Accuracy improved!'
+      description: 'Your twin has learned from additional interactions. Accuracy improved!',
     });
   };
 
   // Approve a pending interaction
   const approveInteraction = (id: string) => {
-    setTwin(prev => ({
+    setTwin((prev) => ({
       ...prev,
-      interactionHistory: prev.interactionHistory.map(int => 
+      interactionHistory: prev.interactionHistory.map((int) =>
         int.id === id ? { ...int, approved: true } : int
       ),
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
     toast({
       title: 'Interaction Approved',
-      description: 'Your digital twin\'s interaction has been approved.'
+      description: "Your digital twin's interaction has been approved.",
     });
   };
 
   // Toggle value selection
   const toggleValue = (categoryIndex: number, value: string) => {
-    setValuesConfig(prev => {
+    setValuesConfig((prev) => {
       const newConfig = [...prev];
       const category = { ...newConfig[categoryIndex] };
       if (category.selected.includes(value)) {
-        category.selected = category.selected.filter(v => v !== value);
+        category.selected = category.selected.filter((v) => v !== value);
       } else {
         category.selected = [...category.selected, value];
       }
       newConfig[categoryIndex] = category;
-      
+
       // Update twin's core values
-      const allSelected = newConfig.flatMap(c => c.selected);
-      setTwin(prevTwin => ({
+      const allSelected = newConfig.flatMap((c) => c.selected);
+      setTwin((prevTwin) => ({
         ...prevTwin,
         coreValues: allSelected,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       }));
-      
+
       return newConfig;
     });
   };
@@ -472,8 +504,8 @@ export const DigitalTwinPersona: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Avatar 
-              src={twin.avatar} 
+            <Avatar
+              src={twin.avatar}
               name={twin.name}
               size={80}
               className={activeStatus ? 'ring-4 ring-green-500 ring-opacity-50' : ''}
@@ -509,7 +541,7 @@ export const DigitalTwinPersona: React.FC = () => {
               <DialogHeader>
                 <DialogTitle>Configure Your Digital Twin</DialogTitle>
               </DialogHeader>
-              
+
               <Tabs defaultValue="capabilities">
                 <TabsList className="grid grid-cols-5">
                   <TabsTrigger value="capabilities">Capabilities</TabsTrigger>
@@ -518,53 +550,66 @@ export const DigitalTwinPersona: React.FC = () => {
                   <TabsTrigger value="legacy">Legacy Preservation</TabsTrigger>
                   <TabsTrigger value="training">Training</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="capabilities" className="space-y-4 py-4">
                   <h3 className="text-lg font-semibold">Enable/Disable Twin Capabilities</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {(Object.keys(twin.capabilities) as Array<keyof typeof twin.capabilities>).map((key) => (
-                      <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <p className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                          <p className="text-sm text-muted-foreground">Allow your twin to {key.replace(/([A-Z])/g, ' $1').toLowerCase()}</p>
+                    {(Object.keys(twin.capabilities) as Array<keyof typeof twin.capabilities>).map(
+                      (key) => (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between p-4 border rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Allow your twin to {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                            </p>
+                          </div>
+                          <Switch
+                            checked={twin.capabilities[key]}
+                            onCheckedChange={(checked) => updateCapability(key, checked)}
+                          />
                         </div>
-                        <Switch 
-                          checked={twin.capabilities[key]}
-                          onCheckedChange={(checked) => updateCapability(key, checked)}
-                        />
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="preferences" className="space-y-4 py-4">
                   <h3 className="text-lg font-semibold">Twin Behavior Preferences</h3>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium">Active Hours Start</label>
-                        <Input 
-                          type="time" 
+                        <Input
+                          type="time"
                           value={twin.preferences.activeHoursStart}
                           onChange={(e) => updatePreference('activeHoursStart', e.target.value)}
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium">Active Hours End</label>
-                        <Input 
-                          type="time" 
+                        <Input
+                          type="time"
                           value={twin.preferences.activeHoursEnd}
                           onChange={(e) => updatePreference('activeHoursEnd', e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Max Daily Interactions: {twin.preferences.maxDailyInteractions}</label>
-                        <Slider 
+                        <label className="text-sm font-medium">
+                          Max Daily Interactions: {twin.preferences.maxDailyInteractions}
+                        </label>
+                        <Slider
                           value={[twin.preferences.maxDailyInteractions]}
                           min={10}
                           max={200}
                           step={10}
-                          onValueChange={([value]) => updatePreference('maxDailyInteractions', value)}
+                          onValueChange={([value]) =>
+                            updatePreference('maxDailyInteractions', value)
+                          }
                         />
                       </div>
                     </div>
@@ -572,27 +617,33 @@ export const DigitalTwinPersona: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">Require Approval</p>
-                          <p className="text-sm text-muted-foreground">Twin must get your approval before acting</p>
+                          <p className="text-sm text-muted-foreground">
+                            Twin must get your approval before acting
+                          </p>
                         </div>
-                        <Switch 
+                        <Switch
                           checked={twin.preferences.approvalRequired}
-                          onCheckedChange={(checked) => updatePreference('approvalRequired', checked)}
+                          onCheckedChange={(checked) =>
+                            updatePreference('approvalRequired', checked)
+                          }
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium">Privacy Level</label>
-                        <Select 
+                        <Select
                           value={twin.preferences.privacyLevel}
                           onValueChange={(value: any) => updatePreference('privacyLevel', value)}
                         >
-                          <SelectItem value="conservative">Conservative - Minimal sharing</SelectItem>
+                          <SelectItem value="conservative">
+                            Conservative - Minimal sharing
+                          </SelectItem>
                           <SelectItem value="balanced">Balanced - Standard privacy</SelectItem>
                           <SelectItem value="liberal">Liberal - Extensive engagement</SelectItem>
                         </Select>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Content Tone</label>
-                        <Select 
+                        <Select
                           value={twin.preferences.contentTone}
                           onValueChange={(value: any) => updatePreference('contentTone', value)}
                         >
@@ -605,16 +656,19 @@ export const DigitalTwinPersona: React.FC = () => {
                     </div>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="values" className="space-y-4 py-4">
                   <h3 className="text-lg font-semibold">Value Alignment Configuration</h3>
-                  <p className="text-muted-foreground">Select the values that define you - your twin will align its behavior with these.</p>
+                  <p className="text-muted-foreground">
+                    Select the values that define you - your twin will align its behavior with
+                    these.
+                  </p>
                   {valuesConfig.map((category, idx) => (
                     <div key={category.category} className="border rounded-lg p-4">
                       <h4 className="font-medium mb-3">{category.category} Values</h4>
                       <div className="flex flex-wrap gap-2">
-                        {category.values.map(value => (
-                          <Badge 
+                        {category.values.map((value) => (
+                          <Badge
                             key={value}
                             variant={category.selected.includes(value) ? 'default' : 'outline'}
                             className="cursor-pointer"
@@ -627,22 +681,29 @@ export const DigitalTwinPersona: React.FC = () => {
                     </div>
                   ))}
                 </TabsContent>
-                
+
                 <TabsContent value="legacy" className="space-y-6 py-4">
                   <div className="border-l-4 border-amber-500 pl-4 py-2 bg-amber-50 dark:bg-amber-950/20 rounded-r-lg">
-                    <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200">AI Legacy Preservation</h3>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">Set up your digital twin to maintain your legacy after your physical death. Requires family consent to activate.</p>
+                    <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200">
+                      AI Legacy Preservation
+                    </h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      Set up your digital twin to maintain your legacy after your physical death.
+                      Requires family consent to activate.
+                    </p>
                   </div>
-                  
+
                   <div className="space-y-6">
                     {/* Legacy Main Toggle */}
                     <Card className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-semibold text-lg">Enable Legacy Preservation</h4>
-                          <p className="text-sm text-muted-foreground">Allow your digital twin to continue operating after your passing</p>
+                          <p className="text-sm text-muted-foreground">
+                            Allow your digital twin to continue operating after your passing
+                          </p>
                         </div>
-                        <Switch 
+                        <Switch
                           checked={twin.legacySettings.enabled}
                           onCheckedChange={(checked) => updateLegacySetting('enabled', checked)}
                         />
@@ -657,24 +718,32 @@ export const DigitalTwinPersona: React.FC = () => {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="font-medium">Auto-continue after death</p>
-                                <p className="text-sm text-muted-foreground">Automatically activate legacy mode when account is inactive</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Automatically activate legacy mode when account is inactive
+                                </p>
                               </div>
-                              <Switch 
+                              <Switch
                                 checked={twin.legacySettings.autoContinueAfterDeath}
-                                onCheckedChange={(checked) => updateLegacySetting('autoContinueAfterDeath', checked)}
+                                onCheckedChange={(checked) =>
+                                  updateLegacySetting('autoContinueAfterDeath', checked)
+                                }
                               />
                             </div>
                           </Card>
-                          
+
                           <Card className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="font-medium">Limited interactions only</p>
-                                <p className="text-sm text-muted-foreground">Restrict twin to only respond to direct questions</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Restrict twin to only respond to direct questions
+                                </p>
                               </div>
-                              <Switch 
+                              <Switch
                                 checked={twin.legacySettings.limitedInteraction}
-                                onCheckedChange={(checked) => updateLegacySetting('limitedInteraction', checked)}
+                                onCheckedChange={(checked) =>
+                                  updateLegacySetting('limitedInteraction', checked)
+                                }
                               />
                             </div>
                           </Card>
@@ -683,23 +752,35 @@ export const DigitalTwinPersona: React.FC = () => {
                         {/* Interaction Permissions */}
                         <Card className="p-4">
                           <div className="mb-4">
-                            <label className="text-sm font-medium">Who can interact with your legacy twin?</label>
-                            <Select 
+                            <label className="text-sm font-medium">
+                              Who can interact with your legacy twin?
+                            </label>
+                            <Select
                               value={twin.legacySettings.whoCanInteract}
-                              onValueChange={(value: any) => updateLegacySetting('whoCanInteract', value)}
+                              onValueChange={(value: any) =>
+                                updateLegacySetting('whoCanInteract', value)
+                              }
                             >
                               <SelectItem value="everyone">Everyone - Public access</SelectItem>
-                              <SelectItem value="only_followers">Only Followers - Verified connections</SelectItem>
-                              <SelectItem value="only_family">Only Family - Approved family members</SelectItem>
-                              <SelectItem value="verified_contacts">Verified Contacts - Trusted people only</SelectItem>
+                              <SelectItem value="only_followers">
+                                Only Followers - Verified connections
+                              </SelectItem>
+                              <SelectItem value="only_family">
+                                Only Family - Approved family members
+                              </SelectItem>
+                              <SelectItem value="verified_contacts">
+                                Verified Contacts - Trusted people only
+                              </SelectItem>
                             </Select>
                           </div>
                         </Card>
 
                         {/* Legacy Message */}
                         <Card className="p-4">
-                          <label className="text-sm font-medium">Legacy Message (displayed on your memorial profile)</label>
-                          <Textarea 
+                          <label className="text-sm font-medium">
+                            Legacy Message (displayed on your memorial profile)
+                          </label>
+                          <Textarea
                             value={twin.legacySettings.legacyMessage}
                             onChange={(e) => updateLegacySetting('legacyMessage', e.target.value)}
                             className="mt-2 min-h-[100px]"
@@ -710,13 +791,19 @@ export const DigitalTwinPersona: React.FC = () => {
                         {/* Content Retention */}
                         <Card className="p-4">
                           <div className="mb-4">
-                            <label className="text-sm font-medium">Content retention period: {twin.legacySettings.contentRetentionPeriod} months ({Math.round(twin.legacySettings.contentRetentionPeriod/12)} years)</label>
-                            <Slider 
+                            <label className="text-sm font-medium">
+                              Content retention period: {twin.legacySettings.contentRetentionPeriod}{' '}
+                              months ({Math.round(twin.legacySettings.contentRetentionPeriod / 12)}{' '}
+                              years)
+                            </label>
+                            <Slider
                               value={[twin.legacySettings.contentRetentionPeriod]}
                               min={12}
                               max={240}
                               step={12}
-                              onValueChange={([value]) => updateLegacySetting('contentRetentionPeriod', value)}
+                              onValueChange={([value]) =>
+                                updateLegacySetting('contentRetentionPeriod', value)
+                              }
                               className="mt-4"
                             />
                           </div>
@@ -725,23 +812,44 @@ export const DigitalTwinPersona: React.FC = () => {
                         {/* Family Consent Management */}
                         <Card className="p-6">
                           <h4 className="font-semibold mb-4">Family Member Consent Requirements</h4>
-                          <p className="text-sm text-muted-foreground mb-4">Add family members who must approve legacy activation. All listed members must provide consent before memorialization.</p>
-                          
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Add family members who must approve legacy activation. All listed
+                            members must provide consent before memorialization.
+                          </p>
+
                           {/* List existing consents */}
                           {twin.legacySettings.familyConsents.length > 0 && (
                             <div className="space-y-3 mb-6">
-                              {twin.legacySettings.familyConsents.map(consent => (
-                                <div key={consent.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                              {twin.legacySettings.familyConsents.map((consent) => (
+                                <div
+                                  key={consent.id}
+                                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                                >
                                   <div>
-                                    <p className="font-medium">{consent.familyMemberName} ({consent.familyMemberRelation})</p>
-                                    <p className="text-sm text-muted-foreground">{consent.familyMemberEmail}</p>
+                                    <p className="font-medium">
+                                      {consent.familyMemberName} ({consent.familyMemberRelation})
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {consent.familyMemberEmail}
+                                    </p>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Badge variant={consent.consentStatus === 'approved' ? 'default' : consent.consentStatus === 'pending' ? 'secondary' : 'destructive'}>
+                                    <Badge
+                                      variant={
+                                        consent.consentStatus === 'approved'
+                                          ? 'default'
+                                          : consent.consentStatus === 'pending'
+                                            ? 'secondary'
+                                            : 'destructive'
+                                      }
+                                    >
                                       {consent.consentStatus}
                                     </Badge>
                                     {consent.consentStatus === 'pending' && (
-                                      <Button size="sm" onClick={() => verifyFamilyConsent(consent.id)}>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => verifyFamilyConsent(consent.id)}
+                                      >
                                         <CheckCircle2 className="h-4 w-4 mr-1" />
                                         Verify
                                       </Button>
@@ -751,32 +859,43 @@ export const DigitalTwinPersona: React.FC = () => {
                               ))}
                             </div>
                           )}
-                          
+
                           {/* Add new family member form - simplified */}
                           <AddFamilyConsentForm onAdd={addFamilyConsent} />
                         </Card>
 
                         {/* Memorialization Status */}
-                        <Card className={`p-6 ${twin.legacySettings.memorialized ? 'bg-green-50 dark:bg-green-950/20 border-green-200' : 'bg-gray-50 dark:bg-gray-900/50'}`}>
+                        <Card
+                          className={`p-6 ${twin.legacySettings.memorialized ? 'bg-green-50 dark:bg-green-950/20 border-green-200' : 'bg-gray-50 dark:bg-gray-900/50'}`}
+                        >
                           <div className="flex items-center justify-between">
                             <div>
                               <h4 className="font-semibold text-lg">
-                                {twin.legacySettings.memorialized ? 'Legacy Active' : 'Activate Memorial Mode'}
+                                {twin.legacySettings.memorialized
+                                  ? 'Legacy Active'
+                                  : 'Activate Memorial Mode'}
                               </h4>
                               <p className="text-sm text-muted-foreground">
-                                {twin.legacySettings.memorialized 
+                                {twin.legacySettings.memorialized
                                   ? `Your digital twin has been maintaining your legacy since ${twin.legacySettings.deathDate?.toLocaleDateString()}`
-                                  : 'Once all family members have approved, you can activate memorial mode to test your legacy twin.'
-                                }
+                                  : 'Once all family members have approved, you can activate memorial mode to test your legacy twin.'}
                               </p>
                               {twin.legacySettings.memorialized && (
                                 <p className="text-sm text-green-700 dark:text-green-300 mt-2">
-                                  Legacy interactions so far: {twin.activityStats.legacyInteractions}
+                                  Legacy interactions so far:{' '}
+                                  {twin.activityStats.legacyInteractions}
                                 </p>
                               )}
                             </div>
                             {!twin.legacySettings.memorialized && (
-                              <Button onClick={memorializeProfile} disabled={!twin.legacySettings.familyConsents.some(c => c.consentStatus === 'approved')}>
+                              <Button
+                                onClick={memorializeProfile}
+                                disabled={
+                                  !twin.legacySettings.familyConsents.some(
+                                    (c) => c.consentStatus === 'approved'
+                                  )
+                                }
+                              >
                                 <Shield className="mr-2 h-4 w-4" />
                                 Activate Legacy
                               </Button>
@@ -895,15 +1014,17 @@ export const DigitalTwinPersona: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium mb-2">Core Values</p>
                   <div className="flex flex-wrap gap-2">
-                    {twin.coreValues.map(value => (
-                      <Badge key={value} variant="secondary">{value}</Badge>
+                    {twin.coreValues.map((value) => (
+                      <Badge key={value} variant="secondary">
+                        {value}
+                      </Badge>
                     ))}
                   </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-2">Personality Traits</p>
                   <div className="flex flex-wrap gap-2">
-                    {twin.personalityTraits.map(trait => (
+                    {twin.personalityTraits.map((trait) => (
                       <Badge key={trait}>{trait}</Badge>
                     ))}
                   </div>
@@ -914,7 +1035,9 @@ export const DigitalTwinPersona: React.FC = () => {
             <Card className="p-6">
               <h3 className="text-xl font-semibold mb-4">Active Capabilities</h3>
               <div className="space-y-3">
-                {(Object.entries(twin.capabilities) as [keyof typeof twin.capabilities, boolean][]).map(([key, enabled]) => (
+                {(
+                  Object.entries(twin.capabilities) as [keyof typeof twin.capabilities, boolean][]
+                ).map(([key, enabled]) => (
                   <div key={key} className="flex items-center justify-between">
                     <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                     {enabled ? (
@@ -932,8 +1055,11 @@ export const DigitalTwinPersona: React.FC = () => {
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Upcoming Scheduled Activities</h3>
             <div className="space-y-4">
-              {twin.scheduledActivities.slice(0, 3).map(activity => (
-                <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
+              {twin.scheduledActivities.slice(0, 3).map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
                   <div className="flex items-center gap-4">
                     <Globe className="h-8 w-8 text-primary" />
                     <div>
@@ -957,13 +1083,15 @@ export const DigitalTwinPersona: React.FC = () => {
             <h3 className="text-xl font-semibold mb-4">Recent Interactions</h3>
             <ScrollArea className="h-[500px]">
               <div className="space-y-4">
-                {twin.interactionHistory.map(interaction => (
+                {twin.interactionHistory.map((interaction) => (
                   <div key={interaction.id} className="p-4 border rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge>{interaction.type}</Badge>
                         {interaction.recipient && (
-                          <span className="text-sm text-muted-foreground">To: {interaction.recipient}</span>
+                          <span className="text-sm text-muted-foreground">
+                            To: {interaction.recipient}
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -980,7 +1108,11 @@ export const DigitalTwinPersona: React.FC = () => {
                     <p className="text-sm">{interaction.content}</p>
                     {interaction.userFeedback && (
                       <div className="mt-2">
-                        <Badge variant={interaction.userFeedback === 'positive' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            interaction.userFeedback === 'positive' ? 'default' : 'secondary'
+                          }
+                        >
                           Your feedback: {interaction.userFeedback}
                         </Badge>
                       </div>
@@ -997,7 +1129,7 @@ export const DigitalTwinPersona: React.FC = () => {
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Scheduled Activities</h3>
             <div className="space-y-4">
-              {twin.scheduledActivities.map(activity => (
+              {twin.scheduledActivities.map((activity) => (
                 <div key={activity.id} className="p-6 border rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
@@ -1013,9 +1145,12 @@ export const DigitalTwinPersona: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">{new Date(activity.startTime).toLocaleDateString()}</p>
+                      <p className="font-medium">
+                        {new Date(activity.startTime).toLocaleDateString()}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(activity.startTime).toLocaleTimeString()} - {new Date(activity.endTime).toLocaleTimeString()}
+                        {new Date(activity.startTime).toLocaleTimeString()} -{' '}
+                        {new Date(activity.endTime).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -1039,8 +1174,9 @@ export const DigitalTwinPersona: React.FC = () => {
                   <Progress value={twin.accuracyScore} className="h-4" />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Your digital twin's accuracy improves as it learns from your interactions and feedback. 
-                  Continue to provide feedback on its interactions to help it better represent you.
+                  Your digital twin's accuracy improves as it learns from your interactions and
+                  feedback. Continue to provide feedback on its interactions to help it better
+                  represent you.
                 </p>
               </div>
             </Card>

@@ -8,11 +8,7 @@ import { VisibilityModule } from '../common/visibility/visibility.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    VisibilityModule,
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User]), VisibilityModule, AuthModule],
   controllers: [ActivityController],
   providers: [ActivityGateway, ActivityService],
   exports: [ActivityGateway, ActivityService],

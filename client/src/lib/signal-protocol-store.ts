@@ -9,7 +9,8 @@
 
 // Local type aliases referencing the ambient module declaration.
 type KeyPairType = import('@privacyresearch/libsignal-protocol-typescript').KeyPairType;
-type SignalProtocolStore = import('@privacyresearch/libsignal-protocol-typescript').SignalProtocolStore;
+type SignalProtocolStore =
+  import('@privacyresearch/libsignal-protocol-typescript').SignalProtocolStore;
 
 const DB_NAME = 'zynkra-e2ee';
 const DB_VERSION = 1;
@@ -153,29 +154,20 @@ export function createSignalProtocolStore(userId: string): SignalProtocolStore {
   } = {
     _userId: userId,
 
-    async _initialize(
-      identityKeyPair: KeyPairType,
-      registrationId: number,
-    ): Promise<void> {
+    async _initialize(identityKeyPair: KeyPairType, registrationId: number): Promise<void> {
       await storePut<IdentityKeyPairRecord>('identityKeyPair', {
         ...identityKeyPair,
       } as IdentityKeyPairRecord);
-      await storePut<{ userId: string; registrationId: number }>(
-        'identityKeyPair',
-        { userId: this._userId, registrationId } as never,
-      );
+      await storePut<{ userId: string; registrationId: number }>('identityKeyPair', {
+        userId: this._userId,
+        registrationId,
+      } as never);
       // Store registration ID separately
-      localStorage.setItem(
-        `signal_regid_${userId}`,
-        JSON.stringify(registrationId),
-      );
+      localStorage.setItem(`signal_regid_${userId}`, JSON.stringify(registrationId));
     },
 
     async getIdentityKeyPair(): Promise<KeyPairType | undefined> {
-      const record = await storeGet<IdentityKeyPairRecord>(
-        'identityKeyPair',
-        this._userId,
-      );
+      const record = await storeGet<IdentityKeyPairRecord>('identityKeyPair', this._userId);
       if (!record) {
         // Fallback: check without userId key
         const all = await openDb().then((db) => {
@@ -205,26 +197,20 @@ export function createSignalProtocolStore(userId: string): SignalProtocolStore {
       if (val) return JSON.parse(val);
       // Fallback: generate one
       const id = Math.floor(Math.random() * 16384) + 1;
-      localStorage.setItem(
-        `signal_regid_${this._userId}`,
-        JSON.stringify(id),
-      );
+      localStorage.setItem(`signal_regid_${this._userId}`, JSON.stringify(id));
       return id;
     },
 
     async isTrustedIdentity(
       _identifier: string,
       _identityKey: ArrayBuffer,
-      _direction: number,
+      _direction: number
     ): Promise<boolean> {
       // Trust on first use (TOFU) — in production, add out-of-band verification
       return true;
     },
 
-    async saveIdentity(
-      identifier: string,
-      identityKey: ArrayBuffer,
-    ): Promise<boolean> {
+    async saveIdentity(identifier: string, identityKey: ArrayBuffer): Promise<boolean> {
       const existing = await storeGet<IdentityRecord>('identityKeys', identifier);
       await storePut<IdentityRecord>('identityKeys', { identifier, publicKey: identityKey });
       return !existing;
@@ -305,7 +291,7 @@ export function createSignalProtocolStore(userId: string): SignalProtocolStore {
  */
 export async function saveIdentityKeyPair(
   userId: string,
-  keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer },
+  keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer }
 ): Promise<void> {
   await storePut<IdentityKeyPairRecord>('identityKeyPair', {
     userId,
@@ -328,7 +314,7 @@ function readAllRecords<T>(storeName: string): Promise<T[]> {
           db.close();
           reject(req.error);
         };
-      }),
+      })
   );
 }
 
@@ -354,13 +340,8 @@ export interface E2eeStoreSnapshot {
  * peer identities, and the private pre-key material needed to process
  * in-flight PreKeyWhisperMessages.
  */
-export async function collectE2eeStoreData(
-  userId: string,
-): Promise<E2eeStoreSnapshot> {
-  const identity = await storeGet<IdentityKeyPairRecord>(
-    'identityKeyPair',
-    userId,
-  );
+export async function collectE2eeStoreData(userId: string): Promise<E2eeStoreSnapshot> {
+  const identity = await storeGet<IdentityKeyPairRecord>('identityKeyPair', userId);
   let registrationId: number | null = null;
   try {
     const raw = localStorage.getItem(`signal_regid_${userId}`);
@@ -370,17 +351,13 @@ export async function collectE2eeStoreData(
   }
 
   return {
-    identityKeyPair: identity
-      ? { privKey: identity.privKey, pubKey: identity.pubKey }
-      : null,
+    identityKeyPair: identity ? { privKey: identity.privKey, pubKey: identity.pubKey } : null,
     registrationId,
     peerIdentities: await readAllRecords<{
       identifier: string;
       publicKey: ArrayBuffer;
     }>('identityKeys'),
-    sessions: await readAllRecords<{ identifier: string; record: string }>(
-      'sessions',
-    ),
+    sessions: await readAllRecords<{ identifier: string; record: string }>('sessions'),
     signedPreKeys: await readAllRecords<{
       keyId: number;
       keyPair: { privKey: ArrayBuffer; pubKey: ArrayBuffer };
@@ -402,7 +379,7 @@ export async function collectE2eeStoreData(
  */
 export async function restoreE2eeStoreData(
   userId: string,
-  snapshot: E2eeStoreSnapshot,
+  snapshot: E2eeStoreSnapshot
 ): Promise<void> {
   if (!snapshot.identityKeyPair) {
     throw new Error('Backup is missing the identity key');
@@ -414,10 +391,7 @@ export async function restoreE2eeStoreData(
 
   await saveIdentityKeyPair(userId, snapshot.identityKeyPair);
   if (snapshot.registrationId != null) {
-    localStorage.setItem(
-      `signal_regid_${userId}`,
-      JSON.stringify(snapshot.registrationId),
-    );
+    localStorage.setItem(`signal_regid_${userId}`, JSON.stringify(snapshot.registrationId));
   }
 
   for (const row of snapshot.peerIdentities) {
@@ -442,9 +416,7 @@ export async function restoreE2eeStoreData(
  *
  * `identifier` is the SignalProtocolAddress string form: `${userId}.${deviceId}`.
  */
-export async function getPeerIdentityKey(
-  identifier: string,
-): Promise<ArrayBuffer | null> {
+export async function getPeerIdentityKey(identifier: string): Promise<ArrayBuffer | null> {
   const record = await storeGet<IdentityRecord>('identityKeys', identifier);
   return record?.publicKey ?? null;
 }

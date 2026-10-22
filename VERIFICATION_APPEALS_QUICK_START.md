@@ -3,26 +3,29 @@
 ## Components
 
 ### VerificationAppealForm
+
 **Purpose**: User-facing appeal submission form for rejected verification requests
 
 **Location**: `/client/src/components/VerificationAppealForm.tsx`
 
 **Props**:
+
 ```typescript
 interface VerificationAppealFormProps {
-  requestId: string;           // ID of the rejected verification request
-  rejectionReason?: string;    // Original rejection reason to display
-  onSuccess?: () => void;      // Callback when appeal submitted
+  requestId: string; // ID of the rejected verification request
+  rejectionReason?: string; // Original rejection reason to display
+  onSuccess?: () => void; // Callback when appeal submitted
 }
 ```
 
 **Usage**:
+
 ```tsx
 import { VerificationAppealForm } from '../components/VerificationAppealForm';
 
 export function RequestVerificationPage() {
   const [existing, setExisting] = useState<VerificationRequest | null>(null);
-  
+
   return (
     <>
       {existing?.status === 'rejected' && (
@@ -31,7 +34,7 @@ export function RequestVerificationPage() {
           rejectionReason={existing.rejectionReason}
           onSuccess={() => {
             // Refresh verification status
-            api.get('/verification/me').then(res => setExisting(res.data));
+            api.get('/verification/me').then((res) => setExisting(res.data));
           }}
         />
       )}
@@ -41,6 +44,7 @@ export function RequestVerificationPage() {
 ```
 
 **Features**:
+
 - Shows rejection reason
 - Form toggles on demand
 - Appeal history display
@@ -52,6 +56,7 @@ export function RequestVerificationPage() {
 ---
 
 ### AdminAppealDashboard
+
 **Purpose**: Admin interface for reviewing and managing appeals
 
 **Location**: `/client/src/components/AdminAppealDashboard.tsx`
@@ -59,6 +64,7 @@ export function RequestVerificationPage() {
 **Props**: None (uses authenticated user context)
 
 **Usage**:
+
 ```tsx
 import { AdminAppealDashboard } from '../components/AdminAppealDashboard';
 
@@ -72,6 +78,7 @@ export function AdminPage() {
 ```
 
 **Features**:
+
 - Filter appeals by status (all, pending, under_review, approved, rejected)
 - View full appeal context (user, evidence, links)
 - Quick approve/reject with modal
@@ -131,17 +138,17 @@ markAppealUnderReview(appealId: string): Promise<VerificationAppeal>
 
 ```typescript
 interface VerificationAppeal {
-  id: string;                    // UUID
-  userId: string;                // Appeal submitter
-  requestId: string;             // Original verification request
-  reason: string;                // Appeal explanation
+  id: string; // UUID
+  userId: string; // Appeal submitter
+  requestId: string; // Original verification request
+  reason: string; // Appeal explanation
   status: 'pending' | 'under_review' | 'approved' | 'rejected';
-  documentUrls?: string[];       // Supporting documents
-  links?: string[];              // Supporting links
-  submittedAt: string;          // ISO date
-  reviewedAt?: string;          // ISO date
-  reviewedBy?: string;          // Admin ID
-  reviewNotes?: string;         // Admin feedback
+  documentUrls?: string[]; // Supporting documents
+  links?: string[]; // Supporting links
+  submittedAt: string; // ISO date
+  reviewedAt?: string; // ISO date
+  reviewedBy?: string; // Admin ID
+  reviewNotes?: string; // Admin feedback
 }
 ```
 
@@ -182,15 +189,15 @@ export default function RequestVerificationPage() {
             rejectionReason={existing.rejectionReason}
             onSuccess={() => {
               // Refresh status
-              api.get('/verification/me').then(res => setExisting(res.data));
+              api.get('/verification/me').then((res) => setExisting(res.data));
             }}
           />
 
           {/* Helpful tip */}
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-800">
-              <strong>Tip:</strong> Provide additional evidence or context that
-              addresses the reason for rejection.
+              <strong>Tip:</strong> Provide additional evidence or context that addresses the reason
+              for rejection.
             </p>
           </div>
         </div>
@@ -223,12 +230,14 @@ export function AdminPage() {
 ## Validation Rules
 
 ### Client-Side
+
 - Appeal reason: 20-3000 characters
 - Supporting links: Max 5, one per line
 - Document URLs: Max 5, one per line
 - Form submission blocked until validation passes
 
 ### Server-Side (Already Implemented)
+
 - Only rejected requests can be appealed
 - Max 3 appeals per request
 - 7-day cooldown after first rejection
@@ -241,6 +250,7 @@ export function AdminPage() {
 ## Styling
 
 Components use:
+
 - **Tailwind CSS** for styling
 - **Lucide React** for icons
 - **Dark mode support** via `dark:` prefix
@@ -258,10 +268,7 @@ try {
   addToast('Appeal submitted!', 'success');
 } catch (error: any) {
   const message = error.response?.data?.message;
-  addToast(
-    Array.isArray(message) ? message[0] : message || 'Failed to submit',
-    'error',
-  );
+  addToast(Array.isArray(message) ? message[0] : message || 'Failed to submit', 'error');
 }
 ```
 
@@ -308,6 +315,7 @@ try {
 ## Dark Mode
 
 Components automatically support dark mode via Tailwind:
+
 - Background: `dark:bg-dark-900`
 - Text: `dark:text-white`, `dark:text-dark-300`
 - Border: `dark:border-dark-700`
@@ -328,6 +336,7 @@ Components automatically support dark mode via Tailwind:
 ## Debugging
 
 ### Enable console logs:
+
 ```typescript
 // In components
 console.log('Appeal submitted:', response);
@@ -335,11 +344,13 @@ console.log('Admin appeals:', appeals);
 ```
 
 ### Check network requests:
+
 - Open DevTools > Network tab
 - Look for `/verification/appeals` requests
 - Check request/response payloads
 
 ### Check validation:
+
 - Form shows character count
 - Error messages display clearly
 - Toast notifications for feedback
@@ -349,20 +360,24 @@ console.log('Admin appeals:', appeals);
 ## Common Issues
 
 ### Appeal form not showing
+
 ✓ Check that `existing?.status === 'rejected'`
 ✓ Verify `requestId` is passed correctly
 
 ### Admin dashboard not loading
+
 ✓ Verify user has admin role
 ✓ Check that API endpoint is accessible
 ✓ Look for console errors
 
 ### Approval not working
+
 ✓ Verify review notes are provided
 ✓ Check admin permissions
 ✓ See server logs for errors
 
 ### Cooldown not enforced
+
 ✓ Server handles cooldown automatically
 ✓ User sees cooldown message in UI
 ✓ API rejects early submissions

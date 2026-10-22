@@ -17,7 +17,11 @@ function gqlContext(req: any) {
   } as unknown as ExecutionContext;
 }
 
-const liveSession = { id: 'sess-1', revokedAt: null, user: { id: 'u1', email: 'a@b.c', role: 'user' } };
+const liveSession = {
+  id: 'sess-1',
+  revokedAt: null,
+  user: { id: 'u1', email: 'a@b.c', role: 'user' },
+};
 
 describe('GqlAuthGuard', () => {
   let jwtService: { verify: jest.Mock };
@@ -29,8 +33,10 @@ describe('GqlAuthGuard', () => {
     sessionsRepo = { findOne: jest.fn().mockResolvedValue(liveSession) };
     guard = new GqlAuthGuard(
       jwtService as unknown as JwtService,
-      { get: (k: string, f?: string) => (k === 'JWT_AUDIENCE' ? AUDIENCE : f) } as unknown as ConfigService,
-      sessionsRepo as unknown as Repository<any>,
+      {
+        get: (k: string, f?: string) => (k === 'JWT_AUDIENCE' ? AUDIENCE : f),
+      } as unknown as ConfigService,
+      sessionsRepo as unknown as Repository<any>
     );
   });
 
@@ -58,39 +64,42 @@ describe('GqlAuthGuard', () => {
     jwtService.verify.mockImplementation(() => {
       throw new Error('bad signature');
     });
-    await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
-      /Invalid or expired token/i,
-    );
+    await expect(
+      guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))
+    ).rejects.toThrow(/Invalid or expired token/i);
   });
 
   it('rejects a token with no sid', async () => {
     jwtService.verify.mockReturnValue(payload({ sid: undefined }));
-    await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
-      /Invalid or expired token/i,
-    );
+    await expect(
+      guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))
+    ).rejects.toThrow(/Invalid or expired token/i);
   });
 
   it('rejects a refresh token', async () => {
     jwtService.verify.mockReturnValue(payload({ typ: 'refresh' }));
-    await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
-      /Invalid or expired token/i,
-    );
+    await expect(
+      guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))
+    ).rejects.toThrow(/Invalid or expired token/i);
   });
 
   it('rejects a revoked session', async () => {
     jwtService.verify.mockReturnValue(payload());
     sessionsRepo.findOne.mockResolvedValue({ ...liveSession, revokedAt: new Date() });
-    await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
-      /Session is missing or expired/i,
-    );
+    await expect(
+      guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))
+    ).rejects.toThrow(/Session is missing or expired/i);
   });
 
   it('rejects a banned user', async () => {
     jwtService.verify.mockReturnValue(payload());
-    sessionsRepo.findOne.mockResolvedValue({ ...liveSession, user: { ...liveSession.user, banned: true } });
-    await expect(guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))).rejects.toThrow(
-      /Account is inactive/i,
-    );
+    sessionsRepo.findOne.mockResolvedValue({
+      ...liveSession,
+      user: { ...liveSession.user, banned: true },
+    });
+    await expect(
+      guard.canActivate(gqlContext({ headers: { authorization: 'Bearer jwt' } }))
+    ).rejects.toThrow(/Account is inactive/i);
   });
 
   it('scopes the session lookup to the token subject', async () => {

@@ -41,7 +41,9 @@ export function useVoiceRecorder() {
       recorder.start(250);
       recorderRef.current = recorder;
 
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = new AudioCtx();
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();

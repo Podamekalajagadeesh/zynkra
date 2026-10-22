@@ -16,14 +16,14 @@ export const ApplyToJobForm = ({ jobId, onSubmit }: ApplyToJobFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // In a real app, this would send the application to the server
     console.log('Submitted application for job:', jobId, { coverLetter, resumeUrl });
-    
+
     showToast({
       title: 'Application submitted!',
       description: 'Your application has been sent to the hiring team.',
-      type: 'success'
+      type: 'success',
     });
 
     onSubmit();
@@ -51,7 +51,9 @@ export const ApplyToJobForm = ({ jobId, onSubmit }: ApplyToJobFormProps) => {
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="secondary" onClick={onSubmit}>Cancel</Button>
+        <Button type="button" variant="secondary" onClick={onSubmit}>
+          Cancel
+        </Button>
         <Button type="submit">Submit Application</Button>
       </div>
     </form>

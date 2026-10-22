@@ -11,9 +11,7 @@ describe('getStories API helper', () => {
   it('fetches stories list', async () => {
     server.use(
       http.get('*/stories', () => {
-        return HttpResponse.json([
-          { id: 'story-1', mediaUrl: '/img.jpg', user: { id: 'u1' } },
-        ]);
+        return HttpResponse.json([{ id: 'story-1', mediaUrl: '/img.jpg', user: { id: 'u1' } }]);
       })
     );
 

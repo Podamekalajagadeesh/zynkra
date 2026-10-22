@@ -12,7 +12,7 @@ export class SyncService {
   constructor(
     @InjectRepository(Post) private readonly postsRepo: Repository<Post>,
     @InjectRepository(Message) private readonly messagesRepo: Repository<Message>,
-    @InjectRepository(User) private readonly usersRepo: Repository<User>,
+    @InjectRepository(User) private readonly usersRepo: Repository<User>
   ) {}
 
   async getInitialSync(userId: string, since?: Date) {
@@ -37,19 +37,21 @@ export class SyncService {
       .getMany();
 
     return {
-      user: user ? {
-        id: user.id,
-        username: user.username,
-        displayName: user.displayName || user.username,
-        avatar: user.avatar,
-        bio: user.bio,
-      } : null,
-      posts: posts.map(p => ({
+      user: user
+        ? {
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName || user.username,
+            avatar: user.avatar,
+            bio: user.bio,
+          }
+        : null,
+      posts: posts.map((p) => ({
         id: p.id,
         content: p.content,
         createdAt: p.createdAt?.toISOString() || new Date().toISOString(),
       })),
-      messages: messages.map(m => ({
+      messages: messages.map((m) => ({
         id: m.id,
         conversationId: (m as any).conversation?.id,
         senderId: (m as any).sender?.id,
@@ -64,27 +66,30 @@ export class SyncService {
     };
   }
 
-  async pushChanges(userId: string, changes: {
-    posts?: Array<{
-      id: string;
-      content: string;
-      action: 'create' | 'update' | 'delete';
-      createdAt: string;
-      updatedAt: string;
-    }>;
-    messages?: Array<{
-      id: string;
-      conversationId: string;
-      content: string;
-      action: 'create' | 'update' | 'delete';
-      createdAt: string;
-    }>;
-    reactions?: Array<{
-      postId: string;
-      reaction: string;
-      action: 'add' | 'remove';
-    }>;
-  }) {
+  async pushChanges(
+    userId: string,
+    changes: {
+      posts?: Array<{
+        id: string;
+        content: string;
+        action: 'create' | 'update' | 'delete';
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      messages?: Array<{
+        id: string;
+        conversationId: string;
+        content: string;
+        action: 'create' | 'update' | 'delete';
+        createdAt: string;
+      }>;
+      reactions?: Array<{
+        postId: string;
+        reaction: string;
+        action: 'add' | 'remove';
+      }>;
+    }
+  ) {
     const results = {
       postsProcessed: 0,
       messagesProcessed: 0,
@@ -139,13 +144,13 @@ export class SyncService {
       .getMany();
 
     return {
-      posts: posts.map(p => ({
+      posts: posts.map((p) => ({
         id: p.id,
         content: p.content,
         action: 'update' as const,
         createdAt: p.createdAt?.toISOString() || new Date().toISOString(),
       })),
-      messages: messages.map(m => ({
+      messages: messages.map((m) => ({
         id: m.id,
         content: m.content,
         action: 'create' as const,
@@ -163,12 +168,15 @@ export class SyncService {
     };
   }
 
-  async resolveConflict(userId: string, resolution: {
-    entityType: 'post' | 'message';
-    entityId: string;
-    resolution: 'local' | 'remote';
-    remoteData?: any;
-  }) {
+  async resolveConflict(
+    userId: string,
+    resolution: {
+      entityType: 'post' | 'message';
+      entityId: string;
+      resolution: 'local' | 'remote';
+      remoteData?: any;
+    }
+  ) {
     return { resolved: true, entityType: resolution.entityType, entityId: resolution.entityId };
   }
 }

@@ -50,7 +50,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly pagesService: PagesService,
     private readonly accountManagementService: AccountManagementService,
-    private readonly visibilityService: VisibilityService,
+    private readonly visibilityService: VisibilityService
   ) {}
 
   private mapPublicUsers(users: User[] | null | undefined) {
@@ -61,11 +61,11 @@ export class UsersController {
   @Patch('me/face-recognition')
   async updateFaceRecognition(
     @Request() req,
-    @Body() updateFaceRecognitionDto: UpdateFaceRecognitionDto,
+    @Body() updateFaceRecognitionDto: UpdateFaceRecognitionDto
   ) {
     const user = await this.usersService.updateFaceRecognition(
       req.user.userId,
-      updateFaceRecognitionDto,
+      updateFaceRecognitionDto
     );
     return toSelfUserResponse(user);
   }
@@ -82,7 +82,7 @@ export class UsersController {
           cb(new BadRequestException('Avatar must be an image'), false);
         }
       },
-    }),
+    })
   )
   async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
     const user = await this.usersService.updateAvatar(req.user.userId, file);
@@ -101,12 +101,12 @@ export class UsersController {
           cb(new BadRequestException('Avatar must be an image'), false);
         }
       },
-    }),
+    })
   )
   async updateProfile(
     @Request() req,
     @Body() updateUserDto: UpdateUserDto,
-    @UploadedFile() avatar: Express.Multer.File,
+    @UploadedFile() avatar: Express.Multer.File
   ) {
     const user = await this.usersService.updateProfile(req.user.userId, updateUserDto, avatar);
     return toSelfUserResponse(user);
@@ -115,10 +115,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getCurrentUser(@Request() req) {
-    const user = await this.usersService.findOneById(req.user.userId, [
-      'following',
-      'followers',
-    ]);
+    const user = await this.usersService.findOneById(req.user.userId, ['following', 'followers']);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -127,10 +124,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
-  async update(
-    @Request() req,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
+  async update(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     const user = await this.usersService.update(req.user.userId, updateUserDto);
     return toSelfUserResponse(user);
   }
@@ -162,7 +156,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('deactivate')
-  async deactivate(@Request() req, @Body() body?: { reason?: string }): Promise<{ userId: string; status: string; message: string }> {
+  async deactivate(
+    @Request() req,
+    @Body() body?: { reason?: string }
+  ): Promise<{ userId: string; status: string; message: string }> {
     const user = await this.usersService.deactivate(req.user.userId, body?.reason);
     return {
       userId: user.id,
@@ -184,7 +181,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/account-switch')
-  async switchCurrentAccount(@Request() req, @Body() body: { accountId?: string; profileId?: string }) {
+  async switchCurrentAccount(
+    @Request() req,
+    @Body() body: { accountId?: string; profileId?: string }
+  ) {
     if (body?.profileId) {
       return this.accountManagementService.switchAccountProfile(req.user.userId, body.profileId);
     }
@@ -206,17 +206,17 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/account-profiles')
-  async createAccountProfile(
-    @Request() req,
-    @Body() body: CreateAccountProfileDto,
-  ) {
+  async createAccountProfile(@Request() req, @Body() body: CreateAccountProfileDto) {
     return this.accountManagementService.createAccountProfile(req.user.userId, body ?? {});
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/account-profiles/:profileId/primary')
   async setPrimaryAccountProfile(@Request() req, @Param('profileId') profileId: string) {
-    const profile = await this.accountManagementService.setPrimaryAccountProfile(req.user.userId, profileId);
+    const profile = await this.accountManagementService.setPrimaryAccountProfile(
+      req.user.userId,
+      profileId
+    );
     if (!profile) {
       throw new NotFoundException('Account profile not found');
     }
@@ -305,7 +305,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete('block/content-types/:contentType')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async unblockContentType(@Request() req, @Param('contentType') contentType: string): Promise<void> {
+  async unblockContentType(
+    @Request() req,
+    @Param('contentType') contentType: string
+  ): Promise<void> {
     return this.usersService.unblockContentType(req.user.userId, contentType);
   }
 
@@ -318,20 +321,17 @@ export class UsersController {
   // Must be declared before the ':username' catch-all route below.
   @UseGuards(JwtAuthGuard)
   @Get('suggestions')
-  async getFollowSuggestions(@Request() req): Promise<{ users: Record<string, any>[]; pages: Page[] }> {
+  async getFollowSuggestions(
+    @Request() req
+  ): Promise<{ users: Record<string, any>[]; pages: Page[] }> {
     const users = await this.usersService.findFollowSuggestions(req.user.userId);
     const pages = await this.pagesService.findPageSuggestions(req.user.userId);
     return { users: this.mapPublicUsers(users) as Record<string, any>[], pages };
   }
 
-
-
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':username')
-  async findByUsername(
-    @Request() req,
-    @Param('username') username: string,
-  ) {
+  async findByUsername(@Request() req, @Param('username') username: string) {
     const requestingUserId = req.user ? req.user.userId : undefined;
     const user = await this.usersService.findByUsername(username, [], requestingUserId);
     const visibleUser = await this.filterActivityFields(user, requestingUserId);
@@ -428,14 +428,14 @@ export class UsersController {
     @Request() req,
     @Param('id') id: string,
     @Query('take') take?: string,
-    @Query('skip') skip?: string,
+    @Query('skip') skip?: string
   ) {
     const currentUserId = req.user?.userId;
     const user = await this.usersService.findOneWithPosts(
       id,
       currentUserId,
       take ? +take : 10,
-      skip ? +skip : 0,
+      skip ? +skip : 0
     );
     if (!user) {
       throw new NotFoundException('User not found');
@@ -446,7 +446,7 @@ export class UsersController {
 
   private async filterActivityFields<T extends User | null | undefined>(
     user: T,
-    viewerId?: string,
+    viewerId?: string
   ): Promise<T> {
     if (!user || (await this.visibilityService.canViewActivity(viewerId ?? null, user))) {
       return user;
@@ -468,19 +468,13 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/contact-discovery')
-  async discoverContacts(
-    @Request() req,
-    @Body() contactDiscoveryDto: ContactDiscoveryDto,
-  ) {
+  async discoverContacts(@Request() req, @Body() contactDiscoveryDto: ContactDiscoveryDto) {
     return this.usersService.discoverContacts(req.user.userId, contactDiscoveryDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/mutual')
-  async getMutualFollows(
-    @Request() req,
-    @Param('id') id: string,
-  ) {
+  async getMutualFollows(@Request() req, @Param('id') id: string) {
     return this.mapPublicUsers(await this.usersService.findMutualFollows(req.user.userId, id));
   }
 
@@ -508,7 +502,7 @@ export class UsersController {
   @Put('me/close-friends')
   async updateCloseFriends(
     @Request() req,
-    @Body() { closeFriendIds }: { closeFriendIds: string[] },
+    @Body() { closeFriendIds }: { closeFriendIds: string[] }
   ) {
     const user = await this.usersService.updateCloseFriends(req.user.userId, closeFriendIds);
     return toSelfUserResponse(user);
@@ -528,19 +522,13 @@ export class UsersController {
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':id/followers')
-  async getUserFollowers(
-    @Request() req,
-    @Param('id') id: string,
-  ) {
+  async getUserFollowers(@Request() req, @Param('id') id: string) {
     return this.mapPublicUsers(await this.usersService.getUserFollowers(id, req.user?.userId));
   }
 
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':id/following')
-  async getUserFollowing(
-    @Request() req,
-    @Param('id') id: string,
-  ) {
+  async getUserFollowing(@Request() req, @Param('id') id: string) {
     return this.mapPublicUsers(await this.usersService.getUserFollowing(id, req.user?.userId));
   }
 
@@ -560,16 +548,16 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Delete('follow-requests/user/:targetUserId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async cancelFollowRequestByUser(@Request() req, @Param('targetUserId') targetUserId: string): Promise<void> {
+  async cancelFollowRequestByUser(
+    @Request() req,
+    @Param('targetUserId') targetUserId: string
+  ): Promise<void> {
     return this.usersService.cancelFollowRequestByUser(req.user.userId, targetUserId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/notification-settings')
-  async updateNotificationSettings(
-    @Request() req,
-    @Body() settings: NotificationSettingsDto,
-  ) {
+  async updateNotificationSettings(@Request() req, @Body() settings: NotificationSettingsDto) {
     const user = await this.usersService.updateNotificationSettings(req.user.userId, settings);
     return toSelfUserResponse(user);
   }
@@ -582,19 +570,13 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/life-events')
-  async addLifeEvent(
-    @Request() req,
-    @Body() createLifeEventDto: CreateLifeEventDto,
-  ) {
+  async addLifeEvent(@Request() req, @Body() createLifeEventDto: CreateLifeEventDto) {
     return this.usersService.addLifeEvent(req.user.userId, createLifeEventDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/life-events/:id')
-  async updateLifeEvent(
-    @Param('id') id: string,
-    @Body() updateLifeEventDto: UpdateLifeEventDto,
-  ) {
+  async updateLifeEvent(@Param('id') id: string, @Body() updateLifeEventDto: UpdateLifeEventDto) {
     return this.usersService.updateLifeEvent(id, updateLifeEventDto);
   }
 
@@ -607,10 +589,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/privacy')
-  async updatePrivacy(
-    @Request() req,
-    @Body() updatePrivacyDto: UpdatePrivacyDto,
-  ): Promise<User> {
+  async updatePrivacy(@Request() req, @Body() updatePrivacyDto: UpdatePrivacyDto): Promise<User> {
     return this.usersService.updatePrivacy(req.user.userId, updatePrivacyDto);
   }
 
@@ -652,8 +631,16 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/linked-accounts')
-  async linkAccount(@Request() req, @Body() body: { provider: string; externalUserId: string; metadata?: Record<string, any> }) {
-    return this.accountManagementService.linkAccount(req.user.userId, body.provider, body.externalUserId, body.metadata ?? {});
+  async linkAccount(
+    @Request() req,
+    @Body() body: { provider: string; externalUserId: string; metadata?: Record<string, any> }
+  ) {
+    return this.accountManagementService.linkAccount(
+      req.user.userId,
+      body.provider,
+      body.externalUserId,
+      body.metadata ?? {}
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -665,42 +652,82 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/account-recovery')
-  async startAccountRecovery(@Request() req, @Body() body: { method?: 'email' | 'trusted_contact' | 'passkey' }) {
-    return this.accountManagementService.startAccountRecovery(req.user.userId, body?.method ?? 'email');
+  async startAccountRecovery(
+    @Request() req,
+    @Body() body: { method?: 'email' | 'trusted_contact' | 'passkey' }
+  ) {
+    return this.accountManagementService.startAccountRecovery(
+      req.user.userId,
+      body?.method ?? 'email'
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/account-recovery/complete')
   async completeAccountRecovery(@Request() req, @Body() body: { approved?: boolean }) {
-    return this.accountManagementService.completeAccountRecovery(req.user.userId, body?.approved ?? true);
+    return this.accountManagementService.completeAccountRecovery(
+      req.user.userId,
+      body?.approved ?? true
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/verification-appeal')
-  async submitVerificationAppeal(@Request() req, @Body() body: { reason: string; links?: string[] }) {
-    return this.accountManagementService.submitVerificationAppeal(req.user.userId, body.reason, body.links ?? []);
+  async submitVerificationAppeal(
+    @Request() req,
+    @Body() body: { reason: string; links?: string[] }
+  ) {
+    return this.accountManagementService.submitVerificationAppeal(
+      req.user.userId,
+      body.reason,
+      body.links ?? []
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/verification-request')
-  async requestVerification(@Request() req, @Body() body: { type?: 'identity' | 'creator' | 'business' | 'organization'; reason: string; links?: string[] }) {
+  async requestVerification(
+    @Request() req,
+    @Body()
+    body: {
+      type?: 'identity' | 'creator' | 'business' | 'organization';
+      reason: string;
+      links?: string[];
+    }
+  ) {
     const type = body.type ?? 'identity';
     const reason = body.reason ?? 'Verification requested';
     const links = body.links ?? [];
 
     if (type === 'creator') {
-      return this.accountManagementService.requestCreatorVerification(req.user.userId, reason, links);
+      return this.accountManagementService.requestCreatorVerification(
+        req.user.userId,
+        reason,
+        links
+      );
     }
 
     if (type === 'business') {
-      return this.accountManagementService.requestBusinessVerification(req.user.userId, reason, links);
+      return this.accountManagementService.requestBusinessVerification(
+        req.user.userId,
+        reason,
+        links
+      );
     }
 
     if (type === 'organization') {
-      return this.accountManagementService.requestOrganizationVerification(req.user.userId, reason, links);
+      return this.accountManagementService.requestOrganizationVerification(
+        req.user.userId,
+        reason,
+        links
+      );
     }
 
-    return this.accountManagementService.requestIdentityVerification(req.user.userId, reason, links);
+    return this.accountManagementService.requestIdentityVerification(
+      req.user.userId,
+      reason,
+      links
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -741,20 +768,38 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('me/security-alerts/:id/resolve')
-  async resolveSecurityAlert(@Request() req, @Param('id') alertId: string, @Body() body: { resolved?: boolean }) {
-    return this.accountManagementService.resolveSecurityAlert(req.user.userId, alertId, body?.resolved ?? true);
+  async resolveSecurityAlert(
+    @Request() req,
+    @Param('id') alertId: string,
+    @Body() body: { resolved?: boolean }
+  ) {
+    return this.accountManagementService.resolveSecurityAlert(
+      req.user.userId,
+      alertId,
+      body?.resolved ?? true
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me/login-approvals')
   async getLoginApprovals(@Request() req) {
-    return (await this.accountManagementService.getSecurityCenter(req.user.userId)).pendingApprovals;
+    return (await this.accountManagementService.getSecurityCenter(req.user.userId))
+      .pendingApprovals;
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/login-approvals/:id/review')
-  async reviewLoginApproval(@Request() req, @Param('id') approvalId: string, @Body() body: { approved?: boolean; note?: string }) {
-    return this.accountManagementService.reviewLoginApproval(req.user.userId, approvalId, body?.approved ?? true, body?.note);
+  async reviewLoginApproval(
+    @Request() req,
+    @Param('id') approvalId: string,
+    @Body() body: { approved?: boolean; note?: string }
+  ) {
+    return this.accountManagementService.reviewLoginApproval(
+      req.user.userId,
+      approvalId,
+      body?.approved ?? true,
+      body?.note
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -785,7 +830,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Post('me/submit-verification')
   @UseInterceptors(FileInterceptor('idDocument'))
-  async submitVerification(@Request() req, @UploadedFile() file: Express.Multer.File): Promise<User> {
+  async submitVerification(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<User> {
     return this.usersService.submitVerification(req.user.userId, file);
   }
 

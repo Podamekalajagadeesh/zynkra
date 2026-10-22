@@ -4,9 +4,7 @@ export class TaxDocuments1786955000000 implements MigrationInterface {
   name = 'TaxDocuments1786955000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `CREATE TYPE "tax_documents_status_enum" AS ENUM ('available')`,
-    );
+    await queryRunner.query(`CREATE TYPE "tax_documents_status_enum" AS ENUM ('available')`);
     await queryRunner.query(`
       CREATE TABLE "tax_documents" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -21,10 +19,10 @@ export class TaxDocuments1786955000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "tax_documents" ADD CONSTRAINT "FK_tax_documents_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "tax_documents" ADD CONSTRAINT "FK_tax_documents_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "UQ_tax_document_user_year_form" ON "tax_documents" ("userId", "taxYear", "formType")`,
+      `CREATE UNIQUE INDEX "UQ_tax_document_user_year_form" ON "tax_documents" ("userId", "taxYear", "formType")`
     );
   }
 

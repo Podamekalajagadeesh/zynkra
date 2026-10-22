@@ -14,7 +14,7 @@ export class ScheduledPostsService {
   constructor(
     @InjectRepository(ScheduledPost)
     private readonly scheduledPostsRepository: Repository<ScheduledPost>,
-    private readonly postsService: PostsService,
+    private readonly postsService: PostsService
   ) {}
 
   async create(userId: string, dto: CreateScheduledPostDto): Promise<ScheduledPost> {
@@ -86,12 +86,14 @@ export class ScheduledPostsService {
             ...(scheduled.mediaUrl
               ? { media: [{ url: scheduled.mediaUrl, type: inferMediaType(scheduled.mediaUrl) }] }
               : {}),
-          },
+          }
         );
         scheduled.status = 'published';
         scheduled.publishedAt = new Date();
       } catch (error) {
-        this.logger.error(`Failed to publish scheduled post ${scheduled.id}: ${(error as Error).message}`);
+        this.logger.error(
+          `Failed to publish scheduled post ${scheduled.id}: ${(error as Error).message}`
+        );
         scheduled.status = 'failed';
       }
       await this.scheduledPostsRepository.save(scheduled);

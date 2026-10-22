@@ -30,7 +30,7 @@ export class FundraisersController {
   createDonation(
     @Param('id') id: string,
     @Body() createDonationDto: CreateDonationDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.fundraisersService.createDonation(id, createDonationDto, user);
   }

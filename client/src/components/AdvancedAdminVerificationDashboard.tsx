@@ -32,7 +32,9 @@ export function AdvancedAdminVerificationDashboard({ userId, role }: Props) {
   const loadDocuments = async () => {
     try {
       setLoading(true);
-      const result = await api.get<{ documents: DocumentRecord[] }>('/verification/documents/admin/pending');
+      const result = await api.get<{ documents: DocumentRecord[] }>(
+        '/verification/documents/admin/pending'
+      );
       setDocuments(result.data.documents ?? []);
     } catch {
       addToast('Failed to load documents', 'error');
@@ -68,7 +70,9 @@ export function AdvancedAdminVerificationDashboard({ userId, role }: Props) {
 
   const download = async (record: DocumentRecord) => {
     try {
-      const result = await api.get(`/verification/documents/${record.id}/download`, { responseType: 'blob' });
+      const result = await api.get(`/verification/documents/${record.id}/download`, {
+        responseType: 'blob',
+      });
       const url = URL.createObjectURL(result.data);
       const link = document.createElement('a');
       link.href = url;
@@ -86,20 +90,43 @@ export function AdvancedAdminVerificationDashboard({ userId, role }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-dark-900 dark:text-white">Document review queue</h2>
-        <Button variant="outline" onClick={() => void loadDocuments()}>Refresh</Button>
+        <h2 className="text-xl font-semibold text-dark-900 dark:text-white">
+          Document review queue
+        </h2>
+        <Button variant="outline" onClick={() => void loadDocuments()}>
+          Refresh
+        </Button>
       </div>
-      {documents.length === 0 ? <p className="text-sm text-dark-600">No documents are awaiting review.</p> : (
+      {documents.length === 0 ? (
+        <p className="text-sm text-dark-600">No documents are awaiting review.</p>
+      ) : (
         <div className="divide-y rounded-lg border border-dark-200 dark:divide-dark-700 dark:border-dark-700">
           {documents.map((document) => (
             <div key={document.id} className="flex items-center justify-between gap-4 p-4">
               <div>
-                <p className="font-medium text-dark-900 dark:text-white">{document.documentType} | {document.accountId}</p>
-                <p className="text-sm text-dark-500">{document.status} | score {document.qualityScore ?? 'n/a'} | {new Date(document.submittedAt).toLocaleString()}</p>
+                <p className="font-medium text-dark-900 dark:text-white">
+                  {document.documentType} | {document.accountId}
+                </p>
+                <p className="text-sm text-dark-500">
+                  {document.status} | score {document.qualityScore ?? 'n/a'} |{' '}
+                  {new Date(document.submittedAt).toLocaleString()}
+                </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setSelected(document)} aria-label="Review document"><Eye className="h-4 w-4" /></Button>
-                <Button variant="ghost" onClick={() => void download(document)} aria-label="Download document"><Download className="h-4 w-4" /></Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelected(document)}
+                  aria-label="Review document"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => void download(document)}
+                  aria-label="Download document"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           ))}
@@ -107,13 +134,33 @@ export function AdvancedAdminVerificationDashboard({ userId, role }: Props) {
       )}
       {selected && (
         <div className="rounded-lg border border-dark-200 p-4 dark:border-dark-700">
-          <h3 className="font-semibold text-dark-900 dark:text-white">Review {selected.documentType}</h3>
-          <textarea className="mt-3 min-h-24 w-full rounded border p-2" placeholder="Review notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
-          <textarea className="mt-3 min-h-20 w-full rounded border p-2" placeholder="Rejection reason, if applicable" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} />
+          <h3 className="font-semibold text-dark-900 dark:text-white">
+            Review {selected.documentType}
+          </h3>
+          <textarea
+            className="mt-3 min-h-24 w-full rounded border p-2"
+            placeholder="Review notes"
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+          />
+          <textarea
+            className="mt-3 min-h-20 w-full rounded border p-2"
+            placeholder="Rejection reason, if applicable"
+            value={rejectionReason}
+            onChange={(event) => setRejectionReason(event.target.value)}
+          />
           <div className="mt-3 flex gap-2">
-            <Button onClick={() => void review('approve')}><CheckCircle className="mr-2 h-4 w-4" />Approve</Button>
-            <Button variant="destructive" onClick={() => void review('reject')}><XCircle className="mr-2 h-4 w-4" />Reject</Button>
-            <Button variant="outline" onClick={() => setSelected(null)}>Cancel</Button>
+            <Button onClick={() => void review('approve')}>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Approve
+            </Button>
+            <Button variant="destructive" onClick={() => void review('reject')}>
+              <XCircle className="mr-2 h-4 w-4" />
+              Reject
+            </Button>
+            <Button variant="outline" onClick={() => setSelected(null)}>
+              Cancel
+            </Button>
           </div>
         </div>
       )}

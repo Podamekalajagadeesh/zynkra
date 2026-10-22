@@ -56,10 +56,7 @@ describe('Core Loop Integration', () => {
     });
 
     it('token expires correctly', () => {
-      const shortLived = jwtService.sign(
-        { sub: 'user-1' },
-        { expiresIn: '0s' },
-      );
+      const shortLived = jwtService.sign({ sub: 'user-1' }, { expiresIn: '0s' });
       // 0s expiry means the token is already expired when checked
       expect(() => jwtService.verify(shortLived)).toThrow();
     });

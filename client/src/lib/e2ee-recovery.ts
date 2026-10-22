@@ -102,19 +102,15 @@ function utf8Bytes(text: string): Uint8Array<ArrayBuffer> {
 async function deriveKey(
   passphrase: string,
   salt: Uint8Array,
-  iterations: number,
+  iterations: number
 ): Promise<Uint8Array> {
   const subtle = globalThis.crypto?.subtle;
   if (!subtle) {
     throw new Error('WebCrypto is unavailable — cannot open recovery backup');
   }
-  const material = await subtle.importKey(
-    'raw',
-    utf8Bytes(passphrase),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-  );
+  const material = await subtle.importKey('raw', utf8Bytes(passphrase), 'PBKDF2', false, [
+    'deriveBits',
+  ]);
   const bits = await subtle.deriveBits(
     {
       name: 'PBKDF2',
@@ -123,7 +119,7 @@ async function deriveKey(
       hash: 'SHA-256',
     },
     material,
-    256,
+    256
   );
   return new Uint8Array(bits);
 }
@@ -131,7 +127,10 @@ async function deriveKey(
 /**
  * Snapshot → JSON-safe form (pure — unit-testable without IndexedDB).
  */
-export function serializeSnapshot(userId: string, snapshot: E2eeStoreSnapshot): SerializedRecoveryPackage {
+export function serializeSnapshot(
+  userId: string,
+  snapshot: E2eeStoreSnapshot
+): SerializedRecoveryPackage {
   if (!snapshot.identityKeyPair) {
     throw new Error('Nothing to export — this device has no E2EE identity key yet');
   }
@@ -200,8 +199,12 @@ export function deserializeSnapshot(pkg: SerializedRecoveryPackage): E2eeStoreSn
   if (!snap.identityKeyPair || typeof snap.identityKeyPair.privKey !== 'string') {
     throw new Error('Backup is missing the identity key');
   }
-  if (!Array.isArray(snap.sessions) || !Array.isArray(snap.peerIdentities) ||
-      !Array.isArray(snap.signedPreKeys) || !Array.isArray(snap.preKeys)) {
+  if (
+    !Array.isArray(snap.sessions) ||
+    !Array.isArray(snap.peerIdentities) ||
+    !Array.isArray(snap.signedPreKeys) ||
+    !Array.isArray(snap.preKeys)
+  ) {
     throw invalid();
   }
 
@@ -240,7 +243,7 @@ export function deserializeSnapshot(pkg: SerializedRecoveryPackage): E2eeStoreSn
 export async function encryptRecoveryPackage(
   userId: string,
   snapshot: E2eeStoreSnapshot,
-  passphrase: string,
+  passphrase: string
 ): Promise<string> {
   const s = await getSodium();
   if (!passphrase || passphrase.length < 8) {
@@ -258,7 +261,7 @@ export async function encryptRecoveryPackage(
     null,
     null,
     nonce,
-    key,
+    key
   );
 
   const envelope: RecoveryEnvelope = {
@@ -278,7 +281,7 @@ export async function encryptRecoveryPackage(
  */
 export async function decryptRecoveryPackage(
   envelopeJson: string,
-  passphrase: string,
+  passphrase: string
 ): Promise<DecryptedRecoveryPackage> {
   const s = await getSodium();
   const invalid = () => new Error('Incorrect passphrase or corrupted backup');
@@ -322,7 +325,7 @@ export async function decryptRecoveryPackage(
       ciphertext,
       null,
       nonce,
-      key,
+      key
     );
     const pkg = JSON.parse(s.to_string(plaintext)) as SerializedRecoveryPackage;
     const snapshot = deserializeSnapshot(pkg);

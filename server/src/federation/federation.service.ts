@@ -97,17 +97,23 @@ export class FederationService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly postsService: PostsService,
-    private readonly httpSignaturesService: HttpSignaturesService,
+    private readonly httpSignaturesService: HttpSignaturesService
   ) {
     this.instanceDomain = this.configService.get<string>('INSTANCE_DOMAIN', 'zynkra.local');
-    this.instanceBaseUrl = this.configService.get<string>('INSTANCE_BASE_URL', 'http://localhost:3001');
-    this.federationEnabled = this.configService.get<string>('FEDERATION_ENABLED', 'false') === 'true';
+    this.instanceBaseUrl = this.configService.get<string>(
+      'INSTANCE_BASE_URL',
+      'http://localhost:3001'
+    );
+    this.federationEnabled =
+      this.configService.get<string>('FEDERATION_ENABLED', 'false') === 'true';
   }
 
   async onModuleInit(): Promise<void> {
     await this.httpSignaturesService.initialize();
     if (this.federationEnabled) {
-      this.logger.log('Outbound federation is ENABLED — HTTP Signatures active (draft-cavage-http-signatures-10)');
+      this.logger.log(
+        'Outbound federation is ENABLED — HTTP Signatures active (draft-cavage-http-signatures-10)'
+      );
       // Inbound verification is on by default whenever federation is on. Saying
       // so explicitly matters: a peer that does not sign correctly will now get
       // 401 rather than being silently accepted, and an operator reading the
@@ -115,10 +121,12 @@ export class FederationService implements OnModuleInit {
       this.logger.log(
         this.httpSignaturesService.isInboundVerificationRequired()
           ? 'Inbound activity verification is ENABLED — unsigned or forged activities will be rejected with 401'
-          : 'Inbound activity verification is DISABLED (FEDERATION_VERIFY_INBOUND=false) — the inbox will accept unsigned activities',
+          : 'Inbound activity verification is DISABLED (FEDERATION_VERIFY_INBOUND=false) — the inbox will accept unsigned activities'
       );
     } else {
-      this.logger.warn('Outbound federation is DISABLED — set FEDERATION_ENABLED=true to enable. Disabled by default — this is expected for new instances.');
+      this.logger.warn(
+        'Outbound federation is DISABLED — set FEDERATION_ENABLED=true to enable. Disabled by default — this is expected for new instances.'
+      );
     }
   }
 
@@ -127,7 +135,7 @@ export class FederationService implements OnModuleInit {
     if (!this.federationEnabled) {
       throw new HttpException(
         'Outbound federation is disabled. Set FEDERATION_ENABLED=true and restart.',
-        HttpStatus.SERVICE_UNAVAILABLE,
+        HttpStatus.SERVICE_UNAVAILABLE
       );
     }
   }
@@ -148,7 +156,7 @@ export class FederationService implements OnModuleInit {
       const nodeInfoResponse = await axios.get(wellKnownUrl, { timeout: 5000 });
 
       let nodeInfoUrl = nodeInfoResponse.data.links?.find(
-        (link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0',
+        (link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0'
       )?.href;
 
       if (!nodeInfoUrl) {
@@ -158,9 +166,14 @@ export class FederationService implements OnModuleInit {
       const nodeInfo = await axios.get(nodeInfoUrl, { timeout: 5000 });
 
       try {
-        await axios.get(`${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`, { timeout: 5000 });
+        await axios.get(
+          `${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`,
+          { timeout: 5000 }
+        );
       } catch {
-        this.logger.warn(`Webfinger probe for ${normalizedDomain} did not return a usable response`);
+        this.logger.warn(
+          `Webfinger probe for ${normalizedDomain} did not return a usable response`
+        );
       }
 
       return {
@@ -176,7 +189,7 @@ export class FederationService implements OnModuleInit {
       this.logger.error(`Failed to discover instance ${domain}:`, error);
       throw new HttpException(
         `Could not discover instance at ${domain}. Verify it is a valid ActivityPub compatible server.`,
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
     }
   }
@@ -246,7 +259,7 @@ export class FederationService implements OnModuleInit {
       if (this.federationEnabled) {
         const signedHeaders = this.httpSignaturesService.getSignedGetHeaders(
           `${this.instanceBaseUrl}/federation/users/local`,
-          actorId,
+          actorId
         );
         actor = await this.fetchRemoteJson<any>(actorId, signedHeaders);
       } else {
@@ -300,7 +313,7 @@ export class FederationService implements OnModuleInit {
       if (this.federationEnabled) {
         const signedHeaders = this.httpSignaturesService.getSignedGetHeaders(
           `${this.instanceBaseUrl}/federation/users/local`,
-          activityId,
+          activityId
         );
         activity = await this.fetchRemoteJson<any>(activityId, signedHeaders);
       } else {
@@ -314,14 +327,19 @@ export class FederationService implements OnModuleInit {
         author = await this.fetchRemoteUser(activity.actor);
         instance = author?.instance || null;
       } catch (error) {
-        this.logger.warn(`Unable to resolve remote author for ${activityId}; continuing with minimal persistence`, error);
+        this.logger.warn(
+          `Unable to resolve remote author for ${activityId}; continuing with minimal persistence`,
+          error
+        );
       }
 
       const domain = new URL(activityId).hostname;
       instance = instance || (await this.instanceRepository.findOne({ where: { domain } }));
 
       if (!instance) {
-        const discoveredInstance = await this.getOrCreateInstanceFromActor(activity.actor || activityId);
+        const discoveredInstance = await this.getOrCreateInstanceFromActor(
+          activity.actor || activityId
+        );
         instance = discoveredInstance || null;
       }
 
@@ -363,7 +381,7 @@ export class FederationService implements OnModuleInit {
   async federatePost(
     localUserId: string,
     federateDto: FederatePostDto,
-    targetInstances: string[],
+    targetInstances: string[]
   ): Promise<FederationReport> {
     this.assertFederationEnabled();
 
@@ -384,7 +402,7 @@ export class FederationService implements OnModuleInit {
         to: federateDto.to || ['https://www.w3.org/ns/activitystreams#Public'],
         cc: federateDto.cc || [],
       },
-      { to: federateDto.to, cc: federateDto.cc },
+      { to: federateDto.to, cc: federateDto.cc }
     );
 
     const report = await this.fanOut(localUserId, activity, targetInstances);
@@ -418,7 +436,7 @@ export class FederationService implements OnModuleInit {
   async federateDelete(
     localUserId: string,
     postId: string,
-    targetInstances: string[],
+    targetInstances: string[]
   ): Promise<FederationReport> {
     this.assertFederationEnabled();
 
@@ -469,7 +487,7 @@ export class FederationService implements OnModuleInit {
     localUserId: string,
     postId: string,
     content: string,
-    targetInstances: string[] = [],
+    targetInstances: string[] = []
   ): Promise<FederationReport> {
     this.assertFederationEnabled();
 
@@ -547,12 +565,12 @@ export class FederationService implements OnModuleInit {
           activityType: params.activityType,
           localUser: { id: params.localUserId } as any,
           deliveredTo: params.deliveredTo,
-        }),
+        })
       );
     } catch (error) {
       this.logger.warn(
         `Delivered ${params.activityType} ${params.activityId} but could not record it; it cannot be retracted or revised federated`,
-        error,
+        error
       );
     }
   }
@@ -560,7 +578,7 @@ export class FederationService implements OnModuleInit {
   /** The most recent activity of `activityType` we sent about `objectId`. */
   private async findOutboundActivity(
     objectId: string,
-    activityType: string,
+    activityType: string
   ): Promise<FederationOutbox | null> {
     try {
       const found = await this.outboxRepository.findOne({
@@ -569,10 +587,7 @@ export class FederationService implements OnModuleInit {
       });
       return found ?? null;
     } catch (error) {
-      this.logger.warn(
-        `Unable to resolve outbound ${activityType} for ${objectId}`,
-        error,
-      );
+      this.logger.warn(`Unable to resolve outbound ${activityType} for ${objectId}`, error);
       return null;
     }
   }
@@ -589,7 +604,7 @@ export class FederationService implements OnModuleInit {
   private async fanOut(
     localUserId: string,
     activity: any,
-    targetInstances: string[],
+    targetInstances: string[]
   ): Promise<FederationReport> {
     const results: DeliveryResult[] = [];
     const actorUsername = (await this.getLocalActorUsername(localUserId)) ?? undefined;
@@ -618,7 +633,7 @@ export class FederationService implements OnModuleInit {
           await this.markDeliveryDelivered(activity.id, instanceDomain);
         } else {
           this.logger.warn(
-            `${activity.type} to ${instanceDomain} not delivered: ${outcome.reason ?? 'unknown'}`,
+            `${activity.type} to ${instanceDomain} not delivered: ${outcome.reason ?? 'unknown'}`
           );
           await this.enqueueFailedDelivery(activity, {
             instanceDomain,
@@ -671,10 +686,7 @@ export class FederationService implements OnModuleInit {
    * know their post was boosted — so unlike `Create` it does not go to the
    * local user's follower instances.
    */
-  async federateAnnounce(
-    localUserId: string,
-    remoteActivityId: string,
-  ): Promise<FederationReport> {
+  async federateAnnounce(localUserId: string, remoteActivityId: string): Promise<FederationReport> {
     this.assertFederationEnabled();
 
     const target = await this.resolveRemoteObject(remoteActivityId);
@@ -708,7 +720,7 @@ export class FederationService implements OnModuleInit {
    */
   async federateUndoAnnounce(
     localUserId: string,
-    remoteActivityId: string,
+    remoteActivityId: string
   ): Promise<FederationReport> {
     this.assertFederationEnabled();
 
@@ -726,7 +738,7 @@ export class FederationService implements OnModuleInit {
       'Undo',
       localUserId,
       { id: sent.activityId, type: 'Announce', object: remoteActivityId },
-      { to: [target.actorActorId] },
+      { to: [target.actorActorId] }
     );
 
     return this.deliverToObjectOwner(localUserId, activity, target);
@@ -740,10 +752,7 @@ export class FederationService implements OnModuleInit {
    * `Create` uses — would tell every peer the local user liked something, which
    * is both noise and a privacy leak.
    */
-  async federateLike(
-    localUserId: string,
-    remoteActivityId: string,
-  ): Promise<FederationReport> {
+  async federateLike(localUserId: string, remoteActivityId: string): Promise<FederationReport> {
     this.assertFederationEnabled();
 
     const target = await this.resolveRemoteObject(remoteActivityId);
@@ -773,7 +782,7 @@ export class FederationService implements OnModuleInit {
       // `cc: []` is explicit, not a default. `buildActivity` falls back to the
       // actor's followers collection for `cc`, and a Like has no audience
       // beyond the author of the object.
-      { to: [target.actorActorId], cc: [] },
+      { to: [target.actorActorId], cc: [] }
     );
 
     const report = await this.deliverToObjectOwner(localUserId, activity, target);
@@ -796,10 +805,7 @@ export class FederationService implements OnModuleInit {
    * there is no way to take it back, which is exactly the guarantee federation
    * must not break.
    */
-  async federateUndoLike(
-    localUserId: string,
-    remoteActivityId: string,
-  ): Promise<FederationReport> {
+  async federateUndoLike(localUserId: string, remoteActivityId: string): Promise<FederationReport> {
     this.assertFederationEnabled();
 
     const sent = await this.findOutboundActivity(remoteActivityId, 'Like');
@@ -816,7 +822,7 @@ export class FederationService implements OnModuleInit {
       'Undo',
       localUserId,
       { id: sent.activityId, type: 'Like', object: remoteActivityId },
-      { to: [target.actorActorId] },
+      { to: [target.actorActorId] }
     );
 
     return this.deliverToObjectOwner(localUserId, activity, target);
@@ -831,7 +837,7 @@ export class FederationService implements OnModuleInit {
    * had it persisted here.
    */
   private async resolveRemoteObject(
-    activityId: string,
+    activityId: string
   ): Promise<{ actorActorId: string; inboxUrl?: string; instanceDomain?: string } | null> {
     let post: RemotePost | null = null;
     try {
@@ -863,7 +869,7 @@ export class FederationService implements OnModuleInit {
   private async deliverToObjectOwner(
     localUserId: string,
     activity: any,
-    target: { actorActorId: string; inboxUrl?: string; instanceDomain?: string },
+    target: { actorActorId: string; inboxUrl?: string; instanceDomain?: string }
   ): Promise<FederationReport> {
     const actorUsername = (await this.getLocalActorUsername(localUserId)) ?? undefined;
 
@@ -913,11 +919,10 @@ export class FederationService implements OnModuleInit {
         // deriving `${baseUrl}/inbox` and overwriting it.
         {},
         activity,
-        { actorUsername, inboxUrl: target.inboxUrl },
+        { actorUsername, inboxUrl: target.inboxUrl }
       );
 
-      const deliveryDomain =
-        target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown';
+      const deliveryDomain = target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown';
       if (outcome.delivered) {
         await this.markDeliveryDelivered(activity.id, deliveryDomain);
       } else {
@@ -942,8 +947,7 @@ export class FederationService implements OnModuleInit {
       this.logger.error(`Failed to deliver ${activity.type} to ${target.actorActorId}:`, error);
       if (target.inboxUrl) {
         await this.enqueueFailedDelivery(activity, {
-          instanceDomain:
-            target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown',
+          instanceDomain: target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown',
           inboxUrl: target.inboxUrl,
           actorUsername,
           status: null,
@@ -985,7 +989,10 @@ export class FederationService implements OnModuleInit {
 
     const targetUser = await this.fetchRemoteUser(followDto.objectId);
     if (!targetUser?.inboxUrl) {
-      throw new HttpException('Cannot follow this user: no inbox URL found', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Cannot follow this user: no inbox URL found',
+        HttpStatus.BAD_REQUEST
+      );
     }
 
     const followActivity = await this.buildActivity('Follow', localUserId, {
@@ -1002,16 +1009,16 @@ export class FederationService implements OnModuleInit {
     const outcome = await this.deliverToInbox(
       { baseUrl: new URL(targetUser.inboxUrl).origin },
       followActivity,
-      { actorUsername, inboxUrl: targetUser.inboxUrl },
+      { actorUsername, inboxUrl: targetUser.inboxUrl }
     );
 
     if (!outcome.delivered) {
       this.logger.error(
-        `Follow to ${targetUser.username} not delivered: ${outcome.reason ?? 'unknown'}`,
+        `Follow to ${targetUser.username} not delivered: ${outcome.reason ?? 'unknown'}`
       );
       throw new HttpException(
         `Failed to follow remote user: ${outcome.reason ?? 'delivery failed'}`,
-        HttpStatus.BAD_GATEWAY,
+        HttpStatus.BAD_GATEWAY
       );
     }
 
@@ -1027,7 +1034,7 @@ export class FederationService implements OnModuleInit {
     type: string,
     localUserId: string,
     object: any,
-    overrides: { to?: string[]; cc?: string[] } = {},
+    overrides: { to?: string[]; cc?: string[] } = {}
   ) {
     const user = await this.userService.findOneById(localUserId);
     const actorUsername = user?.username || localUserId;
@@ -1042,9 +1049,7 @@ export class FederationService implements OnModuleInit {
       type,
       actor: `${this.instanceBaseUrl}/federation/users/${actorUsername}`,
       to: overrides.to ?? ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: overrides.cc ?? [
-        `${this.instanceBaseUrl}/federation/users/${actorUsername}/followers`,
-      ],
+      cc: overrides.cc ?? [`${this.instanceBaseUrl}/federation/users/${actorUsername}/followers`],
       object,
       published: new Date().toISOString(),
     };
@@ -1064,11 +1069,15 @@ export class FederationService implements OnModuleInit {
       actorUsername?: string;
       /** Target a specific actor's inbox rather than the instance shared inbox. */
       inboxUrl?: string;
-    } = {},
+    } = {}
   ) {
     const inboxUrl = options.inboxUrl || (instance?.baseUrl ? `${instance.baseUrl}/inbox` : '');
     if (!inboxUrl) {
-      return { delivered: false, skipped: true, reason: 'instance has no baseUrl' } as DeliveryResult;
+      return {
+        delivered: false,
+        skipped: true,
+        reason: 'instance has no baseUrl',
+      } as DeliveryResult;
     }
 
     const maxAttempts = options.maxAttempts ?? this.defaultDeliveryRetries;
@@ -1087,7 +1096,7 @@ export class FederationService implements OnModuleInit {
         const signedHeaders = this.httpSignaturesService.getSignedPostHeaders(
           actorUrl,
           body,
-          inboxUrl,
+          inboxUrl
         );
 
         await axios.post(inboxUrl, body, {
@@ -1105,7 +1114,7 @@ export class FederationService implements OnModuleInit {
           // bytes three times just triples the load on a peer that will refuse
           // every attempt, so stop immediately.
           this.logger.warn(
-            `HTTP Signature rejected by ${inboxUrl} (${status}) — not retrying; check actor keyId alignment`,
+            `HTTP Signature rejected by ${inboxUrl} (${status}) — not retrying; check actor keyId alignment`
           );
           return {
             delivered: false,
@@ -1119,9 +1128,7 @@ export class FederationService implements OnModuleInit {
         // 4xx other than 408/429 means the request itself is bad, so it will
         // stay bad. Retrying it cannot succeed.
         if (typeof status === 'number' && status >= 400 && status < 500 && status !== 429) {
-          this.logger.warn(
-            `Delivery to ${inboxUrl} rejected with ${status} — not retrying`,
-          );
+          this.logger.warn(`Delivery to ${inboxUrl} rejected with ${status} — not retrying`);
           return {
             delivered: false,
             attempts: attempt,
@@ -1178,7 +1185,7 @@ export class FederationService implements OnModuleInit {
       status: number | null;
       reason: string;
       retryable: boolean;
-    },
+    }
   ): Promise<void> {
     if (!activity?.id || !info.inboxUrl) return;
     try {
@@ -1210,9 +1217,7 @@ export class FederationService implements OnModuleInit {
         lastReason: info.reason,
         retryable: info.retryable,
         dead: !info.retryable,
-        nextRetryAt: info.retryable
-          ? new Date(Date.now() + this.dlqBaseDelayMs)
-          : null,
+        nextRetryAt: info.retryable ? new Date(Date.now() + this.dlqBaseDelayMs) : null,
         completedAt: null,
       });
       await this.deliveryAttemptRepository.save(row);
@@ -1231,7 +1236,7 @@ export class FederationService implements OnModuleInit {
           completedAt: IsNull(),
           dead: false,
         },
-        { completedAt: new Date(), nextRetryAt: null },
+        { completedAt: new Date(), nextRetryAt: null }
       );
     } catch (error) {
       this.logger.error('Failed to mark federation delivery as delivered', error);
@@ -1308,7 +1313,7 @@ export class FederationService implements OnModuleInit {
           lastReason: null,
         });
         this.logger.log(
-          `Redrove ${attempt.activityType} to ${attempt.instanceDomain} after ${attempt.attempts} prior attempt(s)`,
+          `Redrove ${attempt.activityType} to ${attempt.instanceDomain} after ${attempt.attempts} prior attempt(s)`
         );
         return;
       }
@@ -1316,7 +1321,7 @@ export class FederationService implements OnModuleInit {
         attempt,
         outcome.status ?? null,
         outcome.reason ?? 'not delivered',
-        outcome.retryable ?? false,
+        outcome.retryable ?? false
       );
     } catch (error) {
       await this.failRedrive(attempt, null, (error as Error).message, true);
@@ -1327,7 +1332,7 @@ export class FederationService implements OnModuleInit {
     attempt: FederationDeliveryAttempt,
     status: number | null,
     reason: string,
-    retryable: boolean,
+    retryable: boolean
   ): Promise<void> {
     const attempts = attempt.attempts + 1;
     if (!retryable || attempts >= this.dlqMaxAttempts) {
@@ -1340,10 +1345,7 @@ export class FederationService implements OnModuleInit {
       });
       return;
     }
-    const delay = Math.min(
-      this.dlqBaseDelayMs * 2 ** (attempts - 1),
-      this.dlqMaxDelayMs,
-    );
+    const delay = Math.min(this.dlqBaseDelayMs * 2 ** (attempts - 1), this.dlqMaxDelayMs);
     await this.deliveryAttemptRepository.update(attempt.id, {
       attempts,
       lastStatus: status,
@@ -1354,7 +1356,7 @@ export class FederationService implements OnModuleInit {
 
   /** Operator view of the queue: `pending`, `dead`, `delivered`, or latest. */
   async listDeliveryAttempts(
-    status?: 'pending' | 'dead' | 'delivered',
+    status?: 'pending' | 'dead' | 'delivered'
   ): Promise<FederationDeliveryAttempt[]> {
     const take = 50;
     if (status === 'dead') {
@@ -1385,7 +1387,9 @@ export class FederationService implements OnModuleInit {
   }
 
   /** Manual redrive (operator). Works on dead rows too — after a config fix. */
-  async manuallyRedriveDelivery(id: string): Promise<{ redriven: boolean; delivered: boolean; reason?: string }> {
+  async manuallyRedriveDelivery(
+    id: string
+  ): Promise<{ redriven: boolean; delivered: boolean; reason?: string }> {
     const attempt = await this.deliveryAttemptRepository.findOne({ where: { id } });
     if (!attempt) {
       throw new HttpException('Delivery attempt not found', HttpStatus.NOT_FOUND);
@@ -1416,11 +1420,14 @@ export class FederationService implements OnModuleInit {
     };
 
     try {
-      const nodeInfoResponse = await axios.get(`${baseUrl}/.well-known/nodeinfo`, { timeout: 5000 });
+      const nodeInfoResponse = await axios.get(`${baseUrl}/.well-known/nodeinfo`, {
+        timeout: 5000,
+      });
       const nodeInfoLinks = nodeInfoResponse.data?.links || [];
       const nodeInfoUrl =
-        nodeInfoLinks.find((link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0')?.href ||
-        `${baseUrl}/nodeinfo/2.0`;
+        nodeInfoLinks.find(
+          (link: any) => link.rel === 'http://nodeinfo.diaspora.software/ns/schema/2.0'
+        )?.href || `${baseUrl}/nodeinfo/2.0`;
 
       const nodeInfoResponseData = await axios.get(nodeInfoUrl, { timeout: 5000 });
       result.software = nodeInfoResponseData.data?.software?.name || null;
@@ -1428,7 +1435,10 @@ export class FederationService implements OnModuleInit {
       result.capabilities = ['inbox', 'outbox', 'nodeinfo'];
 
       try {
-        await axios.get(`${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`, { timeout: 5000 });
+        await axios.get(
+          `${baseUrl}/.well-known/webfinger?resource=acct:local@${normalizedDomain}`,
+          { timeout: 5000 }
+        );
         result.capabilities.push('webfinger');
       } catch {
         result.errors.push('webfinger-unavailable');
@@ -1458,7 +1468,7 @@ export class FederationService implements OnModuleInit {
 
   private async getModerationRow(
     localUserId: string,
-    remoteUserId: string,
+    remoteUserId: string
   ): Promise<FederationModeration> {
     const remoteUser = await this.remoteUserRepository.findOne({
       where: { id: remoteUserId },
@@ -1532,7 +1542,7 @@ export class FederationService implements OnModuleInit {
   private async recordInboundFollow(
     remoteUser: RemoteUser,
     localUser: User,
-    activity: any,
+    activity: any
   ): Promise<void> {
     try {
       const existing = await this.followRepository.findOne({
@@ -1552,20 +1562,20 @@ export class FederationService implements OnModuleInit {
           localUser: { id: localUser.id } as any,
           remoteUser: { id: remoteUser.id } as any,
           followActivityId: activity.id ?? null,
-        }),
+        })
       );
     } catch (error) {
       // Never fail the inbox on a bookkeeping write — the Accept still goes out.
       this.logger.error(
         `Failed to record inbound follow ${remoteUser.actorId} -> ${localUser.username}`,
-        error,
+        error
       );
     }
   }
 
   private async removeInboundFollow(
     actorUrl: string | undefined,
-    targetActorUrl: string | undefined,
+    targetActorUrl: string | undefined
   ): Promise<boolean> {
     if (!actorUrl || !targetActorUrl) return false;
 
@@ -1607,7 +1617,7 @@ export class FederationService implements OnModuleInit {
    */
   async getLocalPostForFederation(
     postId: string,
-    authorId: string,
+    authorId: string
   ): Promise<{ id: string; content: string; createdAt?: Date } | null> {
     const post = await this.postsService
       .findPostsByUserId(authorId)
@@ -1641,10 +1651,7 @@ export class FederationService implements OnModuleInit {
       }
       return [...domains];
     } catch (error) {
-      this.logger.warn(
-        `Unable to resolve follower instance domains for ${localUserId}`,
-        error,
-      );
+      this.logger.warn(`Unable to resolve follower instance domains for ${localUserId}`, error);
       return [];
     }
   }
@@ -1668,7 +1675,7 @@ export class FederationService implements OnModuleInit {
    */
   async getFederatedTimeline(
     viewerId: string | null,
-    options: { limit?: number; offset?: number; includeMuted?: boolean } = {},
+    options: { limit?: number; offset?: number; includeMuted?: boolean } = {}
   ): Promise<{
     items: FederatedTimelineItem[];
     total: number;
@@ -1695,7 +1702,11 @@ export class FederationService implements OnModuleInit {
 
     const [posts, total] = await query.getManyAndCount();
 
-    const allowed = await this.filterVisibleRemotePosts(viewerId, posts, options.includeMuted ?? false);
+    const allowed = await this.filterVisibleRemotePosts(
+      viewerId,
+      posts,
+      options.includeMuted ?? false
+    );
 
     return {
       items: allowed.map((post) => this.toTimelineItem(post)),
@@ -1720,7 +1731,7 @@ export class FederationService implements OnModuleInit {
   private async filterVisibleRemotePosts(
     viewerId: string | null,
     posts: RemotePost[],
-    includeMuted: boolean,
+    includeMuted: boolean
   ): Promise<RemotePost[]> {
     if (!viewerId) return posts;
 
@@ -1733,14 +1744,12 @@ export class FederationService implements OnModuleInit {
       ]);
 
       const blockedUserIds = new Set(
-        moderations.filter((m) => m.isBlocked).map((m) => m.remoteUser?.id),
+        moderations.filter((m) => m.isBlocked).map((m) => m.remoteUser?.id)
       );
       const mutedUserIds = new Set(
-        moderations.filter((m) => m.isMuted).map((m) => m.remoteUser?.id),
+        moderations.filter((m) => m.isMuted).map((m) => m.remoteUser?.id)
       );
-      const blockedDomains = new Set(
-        blockedInstances.map((instance) => instance.domain),
-      );
+      const blockedDomains = new Set(blockedInstances.map((instance) => instance.domain));
 
       return posts.filter((post) => {
         if (post.author && blockedUserIds.has(post.author.id)) return false;
@@ -1753,7 +1762,7 @@ export class FederationService implements OnModuleInit {
       // here would show a user content from accounts and instances they blocked.
       this.logger.error(
         `Unable to apply federated moderation filters for viewer ${viewerId}; returning no remote posts`,
-        error,
+        error
       );
       return [];
     }
@@ -1833,10 +1842,7 @@ export class FederationService implements OnModuleInit {
     }
 
     return {
-      '@context': [
-        'https://www.w3.org/ns/activitystreams',
-        'https://w3id.org/security/v1',
-      ],
+      '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
       id: `${this.instanceBaseUrl}/federation/users/${username}`,
       type: 'Person',
       preferredUsername: username,
@@ -1997,11 +2003,12 @@ export class FederationService implements OnModuleInit {
         await this.recordInboundFollow(remoteActor, localUser, activity);
       } else if (!localUser) {
         this.logger.warn(
-          `Follow for unknown local actor ${targetActorUrl} — accepted but not recorded`,
+          `Follow for unknown local actor ${targetActorUrl} — accepted but not recorded`
         );
       }
 
-      const inboxUrl = remoteActor?.inboxUrl || (actorUrl ? `${new URL(actorUrl).origin}/inbox` : null);
+      const inboxUrl =
+        remoteActor?.inboxUrl || (actorUrl ? `${new URL(actorUrl).origin}/inbox` : null);
 
       const acceptActivity = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -2018,7 +2025,7 @@ export class FederationService implements OnModuleInit {
           const signedHeaders = this.httpSignaturesService.getSignedPostHeaders(
             `${this.instanceBaseUrl}/federation/users/local`,
             body,
-            inboxUrl,
+            inboxUrl
           );
           await axios.post(inboxUrl, body, { headers: signedHeaders });
         } catch (error) {
@@ -2041,7 +2048,9 @@ export class FederationService implements OnModuleInit {
       const object = activity.object || {};
       const targetId = typeof object === 'string' ? object : object.id;
       if (targetId) {
-        const existingPost = await this.remotePostRepository.findOne({ where: { activityId: targetId } as any });
+        const existingPost = await this.remotePostRepository.findOne({
+          where: { activityId: targetId } as any,
+        });
         if (existingPost) {
           existingPost.likeCount = (existingPost.likeCount || 0) + 1;
           await this.remotePostRepository.save(existingPost);
@@ -2054,7 +2063,9 @@ export class FederationService implements OnModuleInit {
       const object = activity.object || {};
       const targetId = typeof object === 'string' ? object : object.id;
       if (targetId) {
-        const existingPost = await this.remotePostRepository.findOne({ where: { activityId: targetId } as any });
+        const existingPost = await this.remotePostRepository.findOne({
+          where: { activityId: targetId } as any,
+        });
         if (existingPost) {
           existingPost.shareCount = (existingPost.shareCount || 0) + 1;
           await this.remotePostRepository.save(existingPost);
@@ -2067,7 +2078,9 @@ export class FederationService implements OnModuleInit {
       const object = activity.object || {};
       const targetId = typeof object === 'string' ? object : object.id;
       if (targetId) {
-        const existingPost = await this.remotePostRepository.findOne({ where: { activityId: targetId } as any });
+        const existingPost = await this.remotePostRepository.findOne({
+          where: { activityId: targetId } as any,
+        });
         if (existingPost) {
           await this.remotePostRepository.remove(existingPost);
         }
@@ -2079,7 +2092,9 @@ export class FederationService implements OnModuleInit {
       const object = activity.object || {};
       const targetId = typeof object === 'string' ? object : object.id;
       if (targetId) {
-        const existingPost = await this.remotePostRepository.findOne({ where: { activityId: targetId } as any });
+        const existingPost = await this.remotePostRepository.findOne({
+          where: { activityId: targetId } as any,
+        });
         if (existingPost) {
           existingPost.content = object.content || object.summary || existingPost.content;
           await this.remotePostRepository.save(existingPost);
@@ -2095,7 +2110,7 @@ export class FederationService implements OnModuleInit {
         // database, so a remote user who unfollowed stayed a follower forever.
         const removed = await this.removeInboundFollow(
           object.actor || activity.actor,
-          object.object,
+          object.object
         );
         return {
           success: true,
@@ -2121,7 +2136,10 @@ export class FederationService implements OnModuleInit {
         author = await this.fetchRemoteUser(actorUrl);
         instance = author?.instance;
       } catch (error) {
-        this.logger.warn(`Unable to fetch remote author ${actorUrl}; continuing with minimal persistence`, error);
+        this.logger.warn(
+          `Unable to fetch remote author ${actorUrl}; continuing with minimal persistence`,
+          error
+        );
       }
     }
 
@@ -2138,13 +2156,20 @@ export class FederationService implements OnModuleInit {
         author,
         instance,
         mediaUrls: object.attachment?.map((attachment: any) => attachment.url),
-        mentions: object.tag?.filter((tag: any) => tag.type === 'Mention').map((tag: any) => tag.href),
+        mentions: object.tag
+          ?.filter((tag: any) => tag.type === 'Mention')
+          .map((tag: any) => tag.href),
         tags: object.tag?.filter((tag: any) => tag.type === 'Hashtag').map((tag: any) => tag.name),
         publishedAt: object.published ? new Date(object.published) : new Date(),
-      }),
+      })
     );
 
-    return { success: true, received: true, type: activity.type, persistedPostId: persistedPost.id };
+    return {
+      success: true,
+      received: true,
+      type: activity.type,
+      persistedPostId: persistedPost.id,
+    };
   }
 
   async processUserInbox(username: string, activity: any) {
@@ -2155,7 +2180,9 @@ export class FederationService implements OnModuleInit {
   private async getOrCreateInstanceFromActor(actorUrl: string): Promise<RemoteInstance | null> {
     try {
       const actorDomain = new URL(actorUrl).hostname;
-      const existingInstance = await this.instanceRepository.findOne({ where: { domain: actorDomain } });
+      const existingInstance = await this.instanceRepository.findOne({
+        where: { domain: actorDomain },
+      });
       if (existingInstance) {
         return existingInstance;
       }

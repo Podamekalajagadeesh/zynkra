@@ -1,10 +1,4 @@
-import {
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Column,
-} from 'typeorm';
+import { CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
 
@@ -17,21 +11,21 @@ export enum ReviewStatus {
 @Entity('timeline_review')
 export class TimelineReview {
   @PrimaryGeneratedColumn('uuid')
-id: string;
+  id: string;
 
   @ManyToOne(() => User)
-user: User;
+  user: User;
 
   @ManyToOne(() => Post)
-post: Post;
+  post: Post;
 
   @Column({
     type: 'enum',
     enum: ReviewStatus,
     default: ReviewStatus.PENDING,
   })
-status: ReviewStatus;
+  status: ReviewStatus;
 
   @CreateDateColumn()
-createdAt: Date;
+  createdAt: Date;
 }

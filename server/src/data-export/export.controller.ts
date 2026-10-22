@@ -1,4 +1,18 @@
-import { BadRequestException, Body, Controller, Get, Post, Delete, UseGuards, Req, Res, HttpCode, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  UseGuards,
+  Req,
+  Res,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ExportService, ExportData } from './export.service';
@@ -27,10 +41,7 @@ export class ExportController {
     if (!file || !file.buffer || file.buffer.length === 0) {
       throw new BadRequestException('Zip archive required (multipart field "file").');
     }
-    return this.exportService.importFromZip(
-      req.user.userId || req.user.id,
-      file.buffer,
-    );
+    return this.exportService.importFromZip(req.user.userId || req.user.id, file.buffer);
   }
 
   @Get('download')
@@ -38,7 +49,10 @@ export class ExportController {
   async downloadData(@Req() req, @Res() res: Response) {
     const data = await this.exportService.exportAsJson(req.user.userId || req.user.id);
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="zynkra-export-${new Date().toISOString().split('T')[0]}.json"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="zynkra-export-${new Date().toISOString().split('T')[0]}.json"`
+    );
     res.send(data);
   }
 

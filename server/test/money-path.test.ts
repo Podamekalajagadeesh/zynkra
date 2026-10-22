@@ -26,9 +26,7 @@ function createHarness() {
   let whereId: string | undefined;
 
   const usersRepository = {
-    findOne: jest.fn(async ({ where }: any) =>
-      users.find((user) => user.id === where?.id) ?? null,
-    ),
+    findOne: jest.fn(async ({ where }: any) => users.find((user) => user.id === where?.id) ?? null),
   };
 
   const ledgerRepository = {

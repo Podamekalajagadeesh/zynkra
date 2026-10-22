@@ -63,10 +63,7 @@ export function CreateListingPage() {
           required
         />
         {/* Basic image URL input for now, can be replaced with a file uploader */}
-        <Input
-          placeholder="Image URL"
-          onChange={(e) => setImageUrls([e.target.value])}
-        />
+        <Input placeholder="Image URL" onChange={(e) => setImageUrls([e.target.value])} />
         <Button type="submit">Create Listing</Button>
       </form>
     </PageShell>

@@ -10,10 +10,9 @@ process.env.MOBILE_DEMO_ENDPOINTS_ENABLED = 'true';
 
 describe('Week 1 readiness checks', () => {
   it('returns a mobile feed and creates mobile posts with a real backend payload', async () => {
-    const controller = new AppController(
-      new ConfigService(),
-      { verifyEmail: jest.fn() } as unknown as AuthService,
-    );
+    const controller = new AppController(new ConfigService(), {
+      verifyEmail: jest.fn(),
+    } as unknown as AuthService);
 
     const feed = controller.getMobileFeed();
     expect(Array.isArray(feed)).toBe(true);
@@ -61,7 +60,7 @@ describe('Week 1 readiness checks', () => {
     };
 
     await expect(
-      service.create({ userId: 'user-1' }, { content: 'secret', isEncrypted: true }),
+      service.create({ userId: 'user-1' }, { content: 'secret', isEncrypted: true })
     ).rejects.toThrow('Encrypted posts require encryptedContent');
   });
 
@@ -73,7 +72,12 @@ describe('Week 1 readiness checks', () => {
       if (url.includes('/.well-known/nodeinfo')) {
         return {
           data: {
-            links: [{ rel: 'http://nodeinfo.diaspora.software/ns/schema/2.0', href: 'https://social.example/nodeinfo/2.0' }],
+            links: [
+              {
+                rel: 'http://nodeinfo.diaspora.software/ns/schema/2.0',
+                href: 'https://social.example/nodeinfo/2.0',
+              },
+            ],
           },
         };
       }
@@ -89,7 +93,15 @@ describe('Week 1 readiness checks', () => {
 
       if (url.includes('/.well-known/webfinger')) {
         return {
-          data: { links: [{ rel: 'self', type: 'application/activity+json', href: 'https://social.example/users/alice' }] },
+          data: {
+            links: [
+              {
+                rel: 'self',
+                type: 'application/activity+json',
+                href: 'https://social.example/users/alice',
+              },
+            ],
+          },
         };
       }
 
@@ -97,17 +109,50 @@ describe('Week 1 readiness checks', () => {
     });
 
     const service = new FederationService(
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
-      { find: jest.fn(async () => []), findOne: jest.fn(async () => null), create: jest.fn((row: any) => row), save: jest.fn(async (row: any) => row), update: jest.fn(async () => ({ affected: 0 })) } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        findOne: jest.fn(async () => null),
+        create: jest.fn((item) => item),
+        save: jest.fn(async (item) => item),
+      } as any,
+      {
+        find: jest.fn(async () => []),
+        findOne: jest.fn(async () => null),
+        create: jest.fn((row: any) => row),
+        save: jest.fn(async (row: any) => row),
+        update: jest.fn(async () => ({ affected: 0 })),
+      } as any,
       { get: jest.fn((key: string, fallback?: string) => fallback ?? null) } as any,
-      { findOneById: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })), findByUsername: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })) } as any,
+      {
+        findOneById: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })),
+        findByUsername: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })),
+      } as any,
       { findPostsByUserId: jest.fn(async () => []) } as any,
-      { initialize: jest.fn(async () => undefined) } as any,
+      { initialize: jest.fn(async () => undefined) } as any
     );
 
     try {

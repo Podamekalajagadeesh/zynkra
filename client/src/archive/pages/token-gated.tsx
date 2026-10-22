@@ -44,11 +44,38 @@ interface TokenGatedItem {
   members?: Array<{ id: string }>;
 }
 
-const TIER_CONFIG: Record<TierLevel, { label: string; minBalance: number; icon: typeof Shield; color: string; bg: string }> = {
-  basic: { label: 'Basic', minBalance: 1, icon: Shield, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-  premium: { label: 'Premium', minBalance: 10, icon: Crown, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-  vip: { label: 'VIP', minBalance: 100, icon: Gem, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-  whale: { label: 'Whale', minBalance: 1000, icon: Wallet, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+const TIER_CONFIG: Record<
+  TierLevel,
+  { label: string; minBalance: number; icon: typeof Shield; color: string; bg: string }
+> = {
+  basic: {
+    label: 'Basic',
+    minBalance: 1,
+    icon: Shield,
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10 border-blue-500/20',
+  },
+  premium: {
+    label: 'Premium',
+    minBalance: 10,
+    icon: Crown,
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10 border-purple-500/20',
+  },
+  vip: {
+    label: 'VIP',
+    minBalance: 100,
+    icon: Gem,
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10 border-amber-500/20',
+  },
+  whale: {
+    label: 'Whale',
+    minBalance: 1000,
+    icon: Wallet,
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-500/10 border-cyan-500/20',
+  },
 };
 
 function getTierForBalance(balance: number): TierLevel {
@@ -101,14 +128,14 @@ export function TokenGatedPage() {
           createName,
           createDescription,
           createTokenAddress,
-          parseFloat(createMinBalance),
+          parseFloat(createMinBalance)
         );
       } else {
         await createTokenGatedGroup(
           createName,
           createDescription,
           createTokenAddress,
-          parseFloat(createMinBalance),
+          parseFloat(createMinBalance)
         );
       }
       addToast(`Token-gated ${createType} created successfully`, 'success');
@@ -145,7 +172,9 @@ export function TokenGatedPage() {
     const config = TIER_CONFIG[tier];
     const Icon = config.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${config.bg}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${config.bg}`}
+      >
         <Icon size={12} className={config.color} />
         <span className={config.color}>{config.label}</span>
       </span>
@@ -178,7 +207,9 @@ export function TokenGatedPage() {
         )}
 
         <div className="flex items-start gap-4">
-          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${TIER_CONFIG[tier].bg}`}>
+          <div
+            className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${TIER_CONFIG[tier].bg}`}
+          >
             <TierIcon size={24} className={TIER_CONFIG[tier].color} />
           </div>
           <div className="flex-1 min-w-0">
@@ -201,9 +232,7 @@ export function TokenGatedPage() {
                   {item.tokenAddress.slice(0, 6)}...{item.tokenAddress.slice(-4)}
                 </span>
               )}
-              {item.type === 'group' && item.members && (
-                <span>{item.members.length} members</span>
-              )}
+              {item.type === 'group' && item.members && <span>{item.members.length} members</span>}
             </div>
           </div>
         </div>
@@ -325,7 +354,9 @@ export function TokenGatedPage() {
             ) : contentItems.length === 0 ? (
               <div className="text-center py-12 rounded-2xl border border-dashed border-dark-200 dark:border-dark-700">
                 <EyeOff size={32} className="mx-auto text-dark-300 dark:text-dark-600 mb-3" />
-                <p className="text-dark-500 dark:text-dark-400">No token-gated content available yet</p>
+                <p className="text-dark-500 dark:text-dark-400">
+                  No token-gated content available yet
+                </p>
                 <p className="text-xs text-dark-400 dark:text-dark-500 mt-1">
                   Create the first token-gated content to get started
                 </p>
@@ -333,7 +364,11 @@ export function TokenGatedPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {contentItems
-                  .filter((item) => !selectedTier || (item.tier || getTierForBalance(item.minTokenBalance)) === selectedTier)
+                  .filter(
+                    (item) =>
+                      !selectedTier ||
+                      (item.tier || getTierForBalance(item.minTokenBalance)) === selectedTier
+                  )
                   .map(renderContentCard)}
               </div>
             )}
@@ -352,7 +387,11 @@ export function TokenGatedPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {groupItems
-                  .filter((item) => !selectedTier || (item.tier || getTierForBalance(item.minTokenBalance)) === selectedTier)
+                  .filter(
+                    (item) =>
+                      !selectedTier ||
+                      (item.tier || getTierForBalance(item.minTokenBalance)) === selectedTier
+                  )
                   .map(renderContentCard)}
               </div>
             )}
@@ -436,7 +475,9 @@ export function TokenGatedPage() {
                     >
                       <div className="flex items-center gap-2">
                         <Icon size={16} className={config.color} />
-                        <span className={`text-sm font-medium ${createTier === tier ? config.color : 'text-dark-700 dark:text-dark-300'}`}>
+                        <span
+                          className={`text-sm font-medium ${createTier === tier ? config.color : 'text-dark-700 dark:text-dark-300'}`}
+                        >
                           {config.label}
                         </span>
                       </div>
@@ -479,12 +520,7 @@ export function TokenGatedPage() {
             </div>
 
             {/* Submit */}
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              disabled={creating}
-            >
+            <Button type="submit" variant="primary" className="w-full" disabled={creating}>
               {creating ? (
                 <>
                   <Loader2 size={16} className="mr-2 animate-spin" />

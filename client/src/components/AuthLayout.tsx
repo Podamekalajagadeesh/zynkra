@@ -11,7 +11,12 @@ interface AuthLayoutProps {
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle, className }) => {
   return (
-    <div className={twMerge('relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8', className)}>
+    <div
+      className={twMerge(
+        'relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8',
+        className
+      )}
+    >
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(39,192,255,0.16),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(124,58,237,0.14),_transparent_28%),linear-gradient(180deg,_#f8fcff_0%,_#eef6fb_100%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(39,192,255,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(124,58,237,0.16),_transparent_28%),linear-gradient(180deg,_#0b1220_0%,_#111827_100%)]" />
       <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="surface relative hidden overflow-hidden p-8 text-white lg:flex lg:flex-col lg:justify-between">
@@ -30,7 +35,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                 {title}
               </h1>
               <p className="max-w-xl text-sm leading-7 text-white/72 sm:text-base">
-                {subtitle || 'Fast sign in, passkeys, wallets, and a social experience built to feel deliberate on every screen.'}
+                {subtitle ||
+                  'Fast sign in, passkeys, wallets, and a social experience built to feel deliberate on every screen.'}
               </p>
             </div>
           </div>
@@ -58,9 +64,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               {subtitle || 'A premium identity and social experience.'}
             </p>
           </div>
-          <div className="mx-auto w-full max-w-md">
-            {children}
-          </div>
+          <div className="mx-auto w-full max-w-md">{children}</div>
         </div>
       </div>
     </div>

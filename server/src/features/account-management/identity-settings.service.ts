@@ -13,17 +13,22 @@ export class IdentitySettingsService {
     @InjectRepository(IdentitySettings)
     private identitySettingsRepository: Repository<IdentitySettings>,
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private usersRepository: Repository<User>
   ) {}
 
-  async createIdentitySettings(userId: string, createDto: CreateIdentitySettingsDto): Promise<IdentitySettings> {
+  async createIdentitySettings(
+    userId: string,
+    createDto: CreateIdentitySettingsDto
+  ): Promise<IdentitySettings> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     // Check if identity settings already exist
-    const existing = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
+    const existing = await this.identitySettingsRepository.findOne({
+      where: { user: { id: userId } },
+    });
     if (existing) {
       return this.updateIdentitySettings(userId, createDto);
     }
@@ -56,7 +61,9 @@ export class IdentitySettingsService {
   }
 
   async getIdentitySettings(userId: string): Promise<IdentitySettings> {
-    const settings = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
+    const settings = await this.identitySettingsRepository.findOne({
+      where: { user: { id: userId } },
+    });
 
     if (!settings) {
       // Create default identity settings
@@ -66,8 +73,13 @@ export class IdentitySettingsService {
     return settings;
   }
 
-  async updateIdentitySettings(userId: string, updateDto: UpdateIdentitySettingsDto): Promise<IdentitySettings> {
-    const settings = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
+  async updateIdentitySettings(
+    userId: string,
+    updateDto: UpdateIdentitySettingsDto
+  ): Promise<IdentitySettings> {
+    const settings = await this.identitySettingsRepository.findOne({
+      where: { user: { id: userId } },
+    });
 
     if (!settings) {
       return this.createIdentitySettings(userId, updateDto);
@@ -80,9 +92,11 @@ export class IdentitySettingsService {
     if (updateDto.creatorMode !== undefined) settings.creatorMode = updateDto.creatorMode;
     if (updateDto.businessMode !== undefined) settings.businessMode = updateDto.businessMode;
     if (updateDto.businessName) settings.businessName = updateDto.businessName;
-    if (updateDto.businessRegistrationNumber) settings.businessRegistrationNumber = updateDto.businessRegistrationNumber;
+    if (updateDto.businessRegistrationNumber)
+      settings.businessRegistrationNumber = updateDto.businessRegistrationNumber;
     if (updateDto.organizationName) settings.organizationName = updateDto.organizationName;
-    if (updateDto.organizationRegistrationNumber) settings.organizationRegistrationNumber = updateDto.organizationRegistrationNumber;
+    if (updateDto.organizationRegistrationNumber)
+      settings.organizationRegistrationNumber = updateDto.organizationRegistrationNumber;
     if (updateDto.organizationWebsite) settings.organizationWebsite = updateDto.organizationWebsite;
     if (updateDto.customFields) settings.customFields = updateDto.customFields;
 
@@ -143,7 +157,9 @@ export class IdentitySettingsService {
   }
 
   async deleteIdentitySettings(userId: string): Promise<void> {
-    const settings = await this.identitySettingsRepository.findOne({ where: { user: { id: userId } } });
+    const settings = await this.identitySettingsRepository.findOne({
+      where: { user: { id: userId } },
+    });
 
     if (settings) {
       await this.identitySettingsRepository.remove(settings);

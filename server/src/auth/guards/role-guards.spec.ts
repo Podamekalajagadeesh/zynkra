@@ -53,8 +53,12 @@ describe('RolesGuard', () => {
     // Regression: the guard used `user.role?.includes(role)`, which on a string
     // is String.prototype.includes — 'superadmin'.includes('admin') === true.
     const guard = guardFor([Role.ADMIN]);
-    expect(guard.canActivate(makeContext({ user: { role: 'superadmin' } }, handler, cls))).toBe(false);
-    expect(guard.canActivate(makeContext({ user: { role: 'not_admin' } }, handler, cls))).toBe(false);
+    expect(guard.canActivate(makeContext({ user: { role: 'superadmin' } }, handler, cls))).toBe(
+      false
+    );
+    expect(guard.canActivate(makeContext({ user: { role: 'not_admin' } }, handler, cls))).toBe(
+      false
+    );
     expect(guard.canActivate(makeContext({ user: { role: 'admin' } }, handler, cls))).toBe(true);
   });
 });
@@ -75,7 +79,9 @@ describe('AdminGuard', () => {
 
   it('denies a principal with no role (regression: strategy now sets it)', () => {
     const guard = new AdminGuard();
-    expect(guard.canActivate(makeContext({ user: { userId: 'u1', email: 'a@b.c' } }, handler, cls))).toBe(false);
+    expect(
+      guard.canActivate(makeContext({ user: { userId: 'u1', email: 'a@b.c' } }, handler, cls))
+    ).toBe(false);
   });
 
   it('denies an unauthenticated request', () => {

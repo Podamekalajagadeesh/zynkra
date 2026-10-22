@@ -25,7 +25,7 @@ export class BackupService {
     await this.createArchive(archivePath);
     await writeFile(
       manifestPath,
-      JSON.stringify({ label, createdAt: new Date().toISOString(), archivePath, checksum }, null, 2),
+      JSON.stringify({ label, createdAt: new Date().toISOString(), archivePath, checksum }, null, 2)
     );
 
     return {
@@ -38,7 +38,10 @@ export class BackupService {
 
   private async createArchive(archivePath: string): Promise<void> {
     const manifestPath = join(this.options.workspaceRoot, 'backups', 'latest-backup-manifest.json');
-    await writeFile(manifestPath, JSON.stringify({ createdAt: new Date().toISOString(), archivePath }, null, 2));
+    await writeFile(
+      manifestPath,
+      JSON.stringify({ createdAt: new Date().toISOString(), archivePath }, null, 2)
+    );
     await copyFile(manifestPath, archivePath);
   }
 }

@@ -16,7 +16,9 @@ interface UseE2EEReturn {
   establishSession: (userId: string) => Promise<void>;
   hasSession: (userId: string) => Promise<boolean>;
   getIdentityKey: () => Promise<string | null>;
-  getRotationEvents: (since?: string) => Promise<
+  getRotationEvents: (
+    since?: string
+  ) => Promise<
     Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
   >;
   exportRecovery: (passphrase: string) => Promise<string>;
@@ -66,7 +68,7 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
 
       return service.encryptMessage(recipientId, plaintext);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
   const decryptMessage = useCallback(
@@ -79,7 +81,7 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
 
       return service.decryptMessage(senderId, ciphertextJson);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
   const establishSession = useCallback(
@@ -92,16 +94,13 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
 
       await service.establishSession(recipientId);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
-  const hasSession = useCallback(
-    async (userIdToCheck: string): Promise<boolean> => {
-      const service = getE2EEService();
-      return service.hasSession(userIdToCheck);
-    },
-    [],
-  );
+  const hasSession = useCallback(async (userIdToCheck: string): Promise<boolean> => {
+    const service = getE2EEService();
+    return service.hasSession(userIdToCheck);
+  }, []);
 
   const getIdentityKey = useCallback(async (): Promise<string | null> => {
     const service = getE2EEService();
@@ -116,7 +115,7 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
       }
       return service.getRotationEvents(since);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
   const exportRecovery = useCallback(
@@ -127,7 +126,7 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
       }
       return service.exportRecovery(passphrase);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
   const importRecovery = useCallback(
@@ -138,7 +137,7 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
       }
       await service.importRecovery(envelope, passphrase);
     },
-    [initializeE2EE],
+    [initializeE2EE]
   );
 
   return {

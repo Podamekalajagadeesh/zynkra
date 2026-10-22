@@ -3,16 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Clock, RotateCcw, Trash2 } from 'lucide-react';
 import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api, deactivateAccount, reactivateAccount, requestAccountDeletion, confirmAccountDeletion } from '../lib/api';
+import {
+  api,
+  deactivateAccount,
+  reactivateAccount,
+  requestAccountDeletion,
+  confirmAccountDeletion,
+} from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
 export default function AccountStatusPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const { logout } = useAuth();
-  const [accountStatus, setAccountStatus] = useState<{ status: string; deactivatedAt?: string; deleted?: boolean } | null>(null);
+  const [accountStatus, setAccountStatus] = useState<{
+    status: string;
+    deactivatedAt?: string;
+    deleted?: boolean;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
@@ -106,7 +123,9 @@ export default function AccountStatusPage() {
   }
 
   const isDeactivated = accountStatus?.status === 'deactivated';
-  const deactivatedDate = accountStatus?.deactivatedAt ? new Date(accountStatus.deactivatedAt) : null;
+  const deactivatedDate = accountStatus?.deactivatedAt
+    ? new Date(accountStatus.deactivatedAt)
+    : null;
 
   return (
     <PageShell
@@ -120,11 +139,13 @@ export default function AccountStatusPage() {
     >
       <div className="space-y-6 max-w-2xl">
         {/* Account Status Summary */}
-        <div className={`rounded-2xl border-2 p-6 ${
-          isDeactivated 
-            ? 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30' 
-            : 'border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-950/30'
-        }`}>
+        <div
+          className={`rounded-2xl border-2 p-6 ${
+            isDeactivated
+              ? 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30'
+              : 'border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-950/30'
+          }`}
+        >
           <div className="flex items-start gap-4">
             {isDeactivated ? (
               <AlertCircle className="h-6 w-6 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-1" />
@@ -132,18 +153,22 @@ export default function AccountStatusPage() {
               <CheckCircle className="h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400 mt-1" />
             )}
             <div className="flex-1">
-              <h2 className={`text-lg font-semibold ${
-                isDeactivated 
-                  ? 'text-amber-900 dark:text-amber-100' 
-                  : 'text-green-900 dark:text-green-100'
-              }`}>
+              <h2
+                className={`text-lg font-semibold ${
+                  isDeactivated
+                    ? 'text-amber-900 dark:text-amber-100'
+                    : 'text-green-900 dark:text-green-100'
+                }`}
+              >
                 {isDeactivated ? 'Account Deactivated' : 'Account Active'}
               </h2>
-              <p className={`mt-1 text-sm ${
-                isDeactivated 
-                  ? 'text-amber-800 dark:text-amber-200' 
-                  : 'text-green-800 dark:text-green-200'
-              }`}>
+              <p
+                className={`mt-1 text-sm ${
+                  isDeactivated
+                    ? 'text-amber-800 dark:text-amber-200'
+                    : 'text-green-800 dark:text-green-200'
+                }`}
+              >
                 {isDeactivated && deactivatedDate
                   ? `Deactivated on ${deactivatedDate.toLocaleDateString()}. You can reactivate your account at any time.`
                   : 'Your account is active and in good standing.'}
@@ -156,9 +181,12 @@ export default function AccountStatusPage() {
         {!isDeactivated && (
           <div className="rounded-2xl border border-dark-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900/70">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Deactivate Account</h3>
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                Deactivate Account
+              </h3>
               <p className="mt-1 text-sm text-dark-600 dark:text-dark-400">
-                Deactivate your account temporarily. Your profile, posts, and comments will be hidden, but you can reactivate anytime within 90 days.
+                Deactivate your account temporarily. Your profile, posts, and comments will be
+                hidden, but you can reactivate anytime within 90 days.
               </p>
             </div>
             <ul className="space-y-2 mb-6 text-sm text-dark-600 dark:text-dark-400">
@@ -194,7 +222,9 @@ export default function AccountStatusPage() {
         {isDeactivated && (
           <div className="rounded-2xl border border-green-200 bg-green-50 p-6 dark:border-green-900/50 dark:bg-green-950/30">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">Reactivate Account</h3>
+              <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
+                Reactivate Account
+              </h3>
               <p className="mt-1 text-sm text-green-800 dark:text-green-200">
                 Bring your account back to life. All your data will be restored and visible again.
               </p>
@@ -213,7 +243,9 @@ export default function AccountStatusPage() {
         {/* Permanent Deletion Section */}
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-950/30">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">Permanently Delete Account</h3>
+            <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
+              Permanently Delete Account
+            </h3>
             <p className="mt-1 text-sm text-red-800 dark:text-red-200">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
@@ -232,11 +264,7 @@ export default function AccountStatusPage() {
               This action is final and cannot be reversed
             </li>
           </ul>
-          <Button
-            variant="destructive"
-            onClick={() => setDeleteDialogOpen(true)}
-            className="gap-2"
-          >
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
             <Trash2 size={16} />
             Delete Account Permanently
           </Button>
@@ -249,7 +277,8 @@ export default function AccountStatusPage() {
           <DialogHeader>
             <DialogTitle>Deactivate Your Account</DialogTitle>
             <DialogDescription>
-              Are you sure you want to deactivate your account? You can reactivate it anytime within 90 days.
+              Are you sure you want to deactivate your account? You can reactivate it anytime within
+              90 days.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -271,11 +300,7 @@ export default function AccountStatusPage() {
             >
               Cancel
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleDeactivate}
-              disabled={deactivatingAccount}
-            >
+            <Button variant="secondary" onClick={handleDeactivate} disabled={deactivatingAccount}>
               {deactivatingAccount ? 'Deactivating...' : 'Deactivate Account'}
             </Button>
           </DialogFooter>
@@ -292,7 +317,11 @@ export default function AccountStatusPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setReactivateDialogOpen(false)} disabled={reactivatingAccount}>
+            <Button
+              variant="secondary"
+              onClick={() => setReactivateDialogOpen(false)}
+              disabled={reactivatingAccount}
+            >
               Cancel
             </Button>
             <Button onClick={handleReactivate} disabled={reactivatingAccount}>
@@ -308,11 +337,13 @@ export default function AccountStatusPage() {
           <DialogHeader>
             <DialogTitle>Permanently Delete Account</DialogTitle>
             <DialogDescription>
-              This will permanently delete your account and all associated data. This action cannot be undone.
+              This will permanently delete your account and all associated data. This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-dark-600 dark:text-dark-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg">
-            <strong>Warning:</strong> All your posts, comments, messages, and profile information will be permanently erased.
+            <strong>Warning:</strong> All your posts, comments, messages, and profile information
+            will be permanently erased.
           </p>
           <input
             value={deleteConfirmation}
@@ -323,10 +354,21 @@ export default function AccountStatusPage() {
             disabled={deletingAccount}
           />
           <DialogFooter>
-            <Button variant="secondary" onClick={() => { setDeleteDialogOpen(false); setDeleteConfirmation(''); }} disabled={deletingAccount}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteConfirmation('');
+              }}
+              disabled={deletingAccount}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeletePermanently} disabled={deletingAccount || deleteConfirmation.trim().toUpperCase() !== 'DELETE'}>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePermanently}
+              disabled={deletingAccount || deleteConfirmation.trim().toUpperCase() !== 'DELETE'}
+            >
               {deletingAccount ? 'Deleting...' : 'Delete Permanently'}
             </Button>
           </DialogFooter>

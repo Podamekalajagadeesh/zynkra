@@ -47,11 +47,12 @@ export class PostgresSessionStore extends Store implements OnModuleDestroy {
     // Expired rows are never read, so prune them periodically. Sessions live
     // at most a day here (WebAuthn challenges resolve in seconds), so a
     // generous TTL is safe.
-    this.cleanupTimer = setInterval(() => {
-      void this.prune().catch((err) =>
-        this.logger.warn(`Session prune failed: ${err.message}`),
-      );
-    }, 60 * 60 * 1000);
+    this.cleanupTimer = setInterval(
+      () => {
+        void this.prune().catch((err) => this.logger.warn(`Session prune failed: ${err.message}`));
+      },
+      60 * 60 * 1000
+    );
     this.cleanupTimer.unref?.();
   }
 
@@ -67,10 +68,7 @@ export class PostgresSessionStore extends Store implements OnModuleDestroy {
 
   override get(sid: string, callback: SessionCallback): void {
     this.pool
-      .query<StoredRow>(
-        `SELECT sess FROM sessions WHERE sid = $1 AND expires_at > now()`,
-        [sid],
-      )
+      .query<StoredRow>(`SELECT sess FROM sessions WHERE sid = $1 AND expires_at > now()`, [sid])
       .then((result) => {
         const row = result.rows[0];
         if (!row) {
@@ -99,7 +97,7 @@ export class PostgresSessionStore extends Store implements OnModuleDestroy {
          VALUES ($1, $2::json, $3)
          ON CONFLICT (sid) DO UPDATE
            SET sess = EXCLUDED.sess, expires_at = EXCLUDED.expires_at`,
-        [sid, JSON.stringify(session), expiresAt.toISOString()],
+        [sid, JSON.stringify(session), expiresAt.toISOString()]
       )
       .then(() => callback?.(null))
       .catch((err) => callback?.(err as Error));
@@ -125,7 +123,7 @@ export class PostgresSessionStore extends Store implements OnModuleDestroy {
   override length(callback: (err: any, length: number) => void): void {
     this.pool
       .query<{ count: string }>(
-        `SELECT count(*)::text AS count FROM sessions WHERE expires_at > now()`,
+        `SELECT count(*)::text AS count FROM sessions WHERE expires_at > now()`
       )
       .then((result) => callback(null, Number(result.rows[0]?.count ?? 0)))
       .catch((err) => callback(err, 0));

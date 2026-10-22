@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AffiliateClick } from './affiliate-click.entity';
 import { AffiliateConversion } from './affiliate-conversion.entity';
@@ -17,16 +25,16 @@ export class AffiliateLink {
   @Column({ unique: true })
   slug: string;
 
-  @ManyToOne(() => User, user => user.affiliateLinks)
+  @ManyToOne(() => User, (user) => user.affiliateLinks)
   user: User;
 
   @Column()
   userId: string;
 
-  @OneToMany(() => AffiliateClick, click => click.affiliateLink)
+  @OneToMany(() => AffiliateClick, (click) => click.affiliateLink)
   clicks: AffiliateClick[];
 
-  @OneToMany(() => AffiliateConversion, conversion => conversion.affiliateLink)
+  @OneToMany(() => AffiliateConversion, (conversion) => conversion.affiliateLink)
   conversions: AffiliateConversion[];
 
   @Column({ default: 0 })

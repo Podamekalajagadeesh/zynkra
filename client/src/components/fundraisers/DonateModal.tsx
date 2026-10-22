@@ -37,11 +37,22 @@ export const DonateModal = ({ isOpen, onClose, fundraiserId }: DonateModalProps)
       <div className="bg-white p-4 rounded-lg">
         <h2 className="text-lg font-bold">Make a Donation</h2>
         <div className="space-y-4 my-4">
-          <Input placeholder="Amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-          <Textarea placeholder="Message (optional)" value={message} onChange={(e) => setMessage(e.target.value)} />
+          <Input
+            placeholder="Amount"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <Textarea
+            placeholder="Message (optional)"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={handleDonate}>Donate</Button>
         </div>
       </div>

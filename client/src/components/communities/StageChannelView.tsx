@@ -10,19 +10,15 @@ interface StageChannelViewProps {
   onLeave: () => void;
 }
 
-export const StageChannelView = ({
-  channelName,
-  participants,
-  onLeave,
-}: StageChannelViewProps) => {
+export const StageChannelView = ({ channelName, participants, onLeave }: StageChannelViewProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [hasRaisedHand, setHasRaisedHand] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [isSpeaker, setIsSpeaker] = useState(false);
 
   // Separate speakers from audience
-  const speakers = participants.filter(p => p.isSpeaker);
-  const audience = participants.filter(p => !p.isSpeaker);
+  const speakers = participants.filter((p) => p.isSpeaker);
+  const audience = participants.filter((p) => !p.isSpeaker);
 
   const handleRaiseHand = () => {
     setHasRaisedHand(!hasRaisedHand);
@@ -53,13 +49,18 @@ export const StageChannelView = ({
         <h4 className="text-sm font-semibold mb-3 text-dark-600 dark:text-dark-400">Stage</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {speakers.map((participant, index) => (
-            <div key={participant.userId} className="aspect-square bg-dark-200 dark:bg-dark-800 rounded-lg flex flex-col items-center justify-center relative">
+            <div
+              key={participant.userId}
+              className="aspect-square bg-dark-200 dark:bg-dark-800 rounded-lg flex flex-col items-center justify-center relative"
+            >
               <Avatar className="w-20 h-20 mb-2" />
               <span className="text-sm">Speaker {index + 1}</span>
-              {participant.isMuted && <MicOff className="absolute top-2 right-2 text-red-500" size={18} />}
+              {participant.isMuted && (
+                <MicOff className="absolute top-2 right-2 text-red-500" size={18} />
+              )}
             </div>
           ))}
-          
+
           {/* If user is a speaker, add their video */}
           {isSpeaker && (
             <div className="aspect-square bg-dark-200 dark:bg-dark-800 rounded-lg flex flex-col items-center justify-center relative">
@@ -81,7 +82,10 @@ export const StageChannelView = ({
             </div>
           )}
           {audience.slice(0, 15).map((participant, index) => (
-            <div key={participant.userId} className="aspect-square bg-dark-200 dark:bg-dark-800 rounded-lg flex items-center justify-center">
+            <div
+              key={participant.userId}
+              className="aspect-square bg-dark-200 dark:bg-dark-800 rounded-lg flex items-center justify-center"
+            >
               <Avatar className="w-10 h-10" />
             </div>
           ))}
@@ -92,7 +96,7 @@ export const StageChannelView = ({
       {showParticipants && (
         <div className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-dark-950 border-l border-dark-200 dark:border-dark-800 p-4 overflow-y-auto">
           <h4 className="font-semibold mb-4">All Participants ({participants.length + 1})</h4>
-          
+
           <div className="mb-4">
             <h5 className="text-xs font-semibold uppercase text-dark-500 mb-2">Speakers</h5>
             <div className="space-y-2">
@@ -105,7 +109,9 @@ export const StageChannelView = ({
               {speakers.map((p, i) => (
                 <div key={p.userId} className="flex items-center gap-2">
                   <Avatar className="w-8 h-8" />
-                  <span className="text-sm">Speaker {i + 1} {p.isMuted && '(muted)'}</span>
+                  <span className="text-sm">
+                    Speaker {i + 1} {p.isMuted && '(muted)'}
+                  </span>
                 </div>
               ))}
             </div>
@@ -145,11 +151,7 @@ export const StageChannelView = ({
               >
                 {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSpeaker(false)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setIsSpeaker(false)}>
                 <Volume2 size={20} />
               </Button>
             </>
@@ -164,7 +166,7 @@ export const StageChannelView = ({
               {hasRaisedHand ? 'Hand Raised' : 'Raise Hand'}
             </Button>
           )}
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -172,11 +174,11 @@ export const StageChannelView = ({
           >
             <Users size={20} />
           </Button>
-          
+
           <Button variant="ghost" size="icon">
             <Settings size={20} />
           </Button>
-          
+
           <Button
             variant="destructive"
             size="icon"

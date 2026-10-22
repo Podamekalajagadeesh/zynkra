@@ -8,9 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { Product } from '../marketplace/entities/product.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([LiveShoppingEvent, User, Product]),
-  ],
+  imports: [TypeOrmModule.forFeature([LiveShoppingEvent, User, Product])],
   controllers: [LiveshoppingController],
   providers: [LiveshoppingService, LiveshoppingGateway],
   exports: [LiveshoppingService],

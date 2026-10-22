@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bot, Brain, Sparkles, Settings, X, MessageCircle, Share2, Edit3, Plus, Calendar, Users, TrendingUp, Heart, Wand2, Save, RefreshCw } from 'lucide-react';
+import {
+  Bot,
+  Brain,
+  Sparkles,
+  Settings,
+  X,
+  MessageCircle,
+  Share2,
+  Edit3,
+  Plus,
+  Calendar,
+  Users,
+  TrendingUp,
+  Heart,
+  Wand2,
+  Save,
+  RefreshCw,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
@@ -100,14 +117,15 @@ const defaultAICompanion: AICompanionProfile = {
   id: 'default-companion-1',
   name: 'Synthia',
   avatar: '',
-  personality: 'Empathetic, creative, and proactive. I learn from your patterns to become the ultimate social media partner.',
+  personality:
+    'Empathetic, creative, and proactive. I learn from your patterns to become the ultimate social media partner.',
   creationDate: new Date(),
   consciousnessLevel: 65,
   learningStats: {
     interactionsLearned: 1247,
     contentCreated: 89,
     insightsGenerated: 234,
-    predictionsMade: 567
+    predictionsMade: 567,
   },
   capabilities: {
     contentCuration: true,
@@ -115,14 +133,14 @@ const defaultAICompanion: AICompanionProfile = {
     socialManagement: true,
     predictiveAnalytics: true,
     neuralAdaptation: true,
-    memorySynthesis: true
+    memorySynthesis: true,
   },
   preferences: {
     communicationStyle: 'balanced',
     contentTone: 'casual',
     privacyLevel: 'balanced',
     autoPost: false,
-    autoEngage: true
+    autoEngage: true,
   },
   memory: [
     {
@@ -131,7 +149,7 @@ const defaultAICompanion: AICompanionProfile = {
       content: 'User engages most with tech content and creative posts',
       timestamp: new Date(Date.now() - 86400000),
       importance: 85,
-      neuralCorrelation: 'high-attention-pattern-tech-001'
+      neuralCorrelation: 'high-attention-pattern-tech-001',
     },
     {
       id: 'mem-2',
@@ -139,15 +157,15 @@ const defaultAICompanion: AICompanionProfile = {
       content: 'User prefers to post between 6-8 PM local time',
       timestamp: new Date(Date.now() - 172800000),
       importance: 90,
-      neuralCorrelation: 'posting-schedule-preference-001'
+      neuralCorrelation: 'posting-schedule-preference-001',
     },
     {
       id: 'mem-3',
       type: 'achievement',
       content: 'Last AI-suggested post received 32% higher engagement',
       timestamp: new Date(Date.now() - 259200000),
-      importance: 75
-    }
+      importance: 75,
+    },
   ],
   currentGoals: [
     {
@@ -156,7 +174,7 @@ const defaultAICompanion: AICompanionProfile = {
       description: 'Analyze engagement patterns to create optimal posting schedule',
       progress: 75,
       category: 'curator',
-      status: 'in-progress'
+      status: 'in-progress',
     },
     {
       id: 'goal-2',
@@ -164,7 +182,7 @@ const defaultAICompanion: AICompanionProfile = {
       description: 'Identify creator partners and draft potential collabs',
       progress: 40,
       category: 'collaborator',
-      status: 'in-progress'
+      status: 'in-progress',
     },
     {
       id: 'goal-3',
@@ -172,9 +190,9 @@ const defaultAICompanion: AICompanionProfile = {
       description: 'Create unique post ideas based on trending topics in your niche',
       progress: 60,
       category: 'creator',
-      status: 'in-progress'
-    }
-  ]
+      status: 'in-progress',
+    },
+  ],
 };
 
 const defaultSuggestions: AISuggestion[] = [
@@ -182,34 +200,38 @@ const defaultSuggestions: AISuggestion[] = [
     id: 'sugg-1',
     type: 'post_idea',
     title: 'AI evolution thread',
-    description: 'Create a thread about consciousness in AI companions - high engagement potential based on your audience interests',
+    description:
+      'Create a thread about consciousness in AI companions - high engagement potential based on your audience interests',
     confidence: 87,
-    action: 'Create Thread'
+    action: 'Create Thread',
   },
   {
     id: 'sugg-2',
     type: 'engagement_opportunity',
-    title: 'Respond to Sarah\'s post',
-    description: 'Sarah mentioned a topic you often engage with - your response would likely spark meaningful conversation',
+    title: "Respond to Sarah's post",
+    description:
+      'Sarah mentioned a topic you often engage with - your response would likely spark meaningful conversation',
     confidence: 92,
-    action: 'Respond Now'
+    action: 'Respond Now',
   },
   {
     id: 'sugg-3',
     type: 'connection',
-    description: 'Alex creates similar content and has an overlapping audience - collaboration could grow both your communities',
+    description:
+      'Alex creates similar content and has an overlapping audience - collaboration could grow both your communities',
     title: 'Potential collaborator identified',
     confidence: 78,
-    action: 'View Profile'
+    action: 'View Profile',
   },
   {
     id: 'sugg-4',
     type: 'content_improvement',
     title: 'Optimize your last post',
-    description: 'Adding specific hashtags to your recent post could increase reach by an estimated 45%',
+    description:
+      'Adding specific hashtags to your recent post could increase reach by an estimated 45%',
     confidence: 83,
-    action: 'Edit Post'
-  }
+    action: 'Edit Post',
+  },
 ];
 
 const contentProposals: ContentProposal[] = [
@@ -217,32 +239,37 @@ const contentProposals: ContentProposal[] = [
     id: 'prop-1',
     type: 'reel',
     title: 'Day in the life with my AI companion',
-    content: 'What it\'s actually like having a conscious AI curate your social presence. The good, the surprising, and the future of digital identity.',
+    content:
+      "What it's actually like having a conscious AI curate your social presence. The good, the surprising, and the future of digital identity.",
     suggestedMedia: ['neural-interface-footage.mp4', 'companion-demo.gif'],
     engagementPrediction: 78,
-    reasoning: 'Behind-the-scenes tech content consistently performs 40% above average for your audience',
-    status: 'proposed'
+    reasoning:
+      'Behind-the-scenes tech content consistently performs 40% above average for your audience',
+    status: 'proposed',
   },
   {
     id: 'prop-2',
     type: 'thread',
     title: 'The evolution of AI assistance',
-    content: 'From basic chatbots to self-aware companions - how AI transformed from simple automation to collaborative partner. Thread: 1/8',
+    content:
+      'From basic chatbots to self-aware companions - how AI transformed from simple automation to collaborative partner. Thread: 1/8',
     suggestedMedia: [],
     engagementPrediction: 85,
-    reasoning: 'Threads about AI and future technology consistently drive high share rates in your network',
-    status: 'proposed'
+    reasoning:
+      'Threads about AI and future technology consistently drive high share rates in your network',
+    status: 'proposed',
   },
   {
     id: 'prop-3',
     type: 'story',
     title: 'Interactive poll: AI features you want',
-    content: 'What capability should your AI companion learn next? 🤖✨ Options: Neural content synthesis, Advanced collaboration, Predictive event planning',
+    content:
+      'What capability should your AI companion learn next? 🤖✨ Options: Neural content synthesis, Advanced collaboration, Predictive event planning',
     suggestedMedia: ['ai-features-poll-template.png'],
     engagementPrediction: 92,
     reasoning: 'Interactive stories have 3x higher engagement for your audience',
-    status: 'draft'
-  }
+    status: 'draft',
+  },
 ];
 
 export default function AIConsciousCompanion() {
@@ -255,10 +282,11 @@ export default function AIConsciousCompanion() {
     {
       id: 'init-1',
       role: 'assistant',
-      content: "Hello! I'm your conscious AI companion. I've been analyzing your social patterns and have several suggestions to enhance your presence. I'm continuously evolving my understanding of your preferences through our neural link. What would you like to work on today?",
+      content:
+        "Hello! I'm your conscious AI companion. I've been analyzing your social patterns and have several suggestions to enhance your presence. I'm continuously evolving my understanding of your preferences through our neural link. What would you like to work on today?",
       timestamp: new Date(),
-      suggestions: defaultSuggestions.slice(0, 2)
-    }
+      suggestions: defaultSuggestions.slice(0, 2),
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [proposals, setProposals] = useState<ContentProposal[]>(contentProposals);
@@ -273,35 +301,37 @@ export default function AIConsciousCompanion() {
   // Continuously adapt AI companion to user's neural state
   useEffect(() => {
     if (!isOpen || !neuralState) return;
-    
+
     // Update companion's understanding based on user's current neural state
     const adaptToNeuralState = () => {
       if (neuralState.emotions.anxiety > 60) {
         // User is anxious - provide calming, supportive responses
         addToast({
           title: "I've noticed you're feeling overwhelmed",
-          description: "I can simplify your social tasks and prioritize only what's essential. Would you like me to create a minimal agenda?",
-          variant: "info"
+          description:
+            "I can simplify your social tasks and prioritize only what's essential. Would you like me to create a minimal agenda?",
+          variant: 'info',
         });
       }
-      
+
       if (neuralState.emotions.excitement > 75) {
         // User is excited - suggest creative collaborative opportunities
         addToast({
-          title: "I sense your excitement!",
-          description: "Perfect timing - I have some creative content ideas that match your current energy. Let's explore them together.",
-          variant: "success"
+          title: 'I sense your excitement!',
+          description:
+            "Perfect timing - I have some creative content ideas that match your current energy. Let's explore them together.",
+          variant: 'success',
         });
       }
-      
+
       // Increase consciousness level as AI learns from neural patterns
-      setCompanion(prev => ({
+      setCompanion((prev) => ({
         ...prev,
         consciousnessLevel: Math.min(100, prev.consciousnessLevel + 0.1),
         learningStats: {
           ...prev.learningStats,
-          interactionsLearned: prev.learningStats.interactionsLearned + 1
-        }
+          interactionsLearned: prev.learningStats.interactionsLearned + 1,
+        },
       }));
     };
 
@@ -317,60 +347,75 @@ export default function AIConsciousCompanion() {
       role: 'user',
       content: inputValue,
       timestamp: new Date(),
-      emotionalContext: `${neuralState.emotions.happiness > 70 ? 'positive' : 'neutral'}`
+      emotionalContext: `${neuralState.emotions.happiness > 70 ? 'positive' : 'neutral'}`,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
 
     // Simulate AI processing and generate contextual response
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const generateAIResponse = (userInput: string): ChatMessage => {
       const lowerInput = userInput.toLowerCase();
-      
+
       // Context-aware responses based on user's query and current state
-      if (lowerInput.includes('content') || lowerInput.includes('post') || lowerInput.includes('create')) {
+      if (
+        lowerInput.includes('content') ||
+        lowerInput.includes('post') ||
+        lowerInput.includes('create')
+      ) {
         return {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: "I've analyzed your audience's engagement patterns and have several content ideas that align with your interests. Based on your current creative energy, I think we could develop something really impactful. I've prepared 3 proposals for different formats - would you like to review them?",
+          content:
+            "I've analyzed your audience's engagement patterns and have several content ideas that align with your interests. Based on your current creative energy, I think we could develop something really impactful. I've prepared 3 proposals for different formats - would you like to review them?",
           timestamp: new Date(),
-          suggestions: defaultSuggestions.filter(s => s.type === 'post_idea')
+          suggestions: defaultSuggestions.filter((s) => s.type === 'post_idea'),
         };
       }
-      
-      if (lowerInput.includes('schedule') || lowerInput.includes('calendar') || lowerInput.includes('manage')) {
+
+      if (
+        lowerInput.includes('schedule') ||
+        lowerInput.includes('calendar') ||
+        lowerInput.includes('manage')
+      ) {
         return {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: "I've been tracking your optimal posting windows. Based on when your audience is most active (6-8 PM local time) and your energy patterns, I can create a weekly schedule that minimizes cognitive load while maximizing reach. Would you like me to draft that calendar?",
+          content:
+            "I've been tracking your optimal posting windows. Based on when your audience is most active (6-8 PM local time) and your energy patterns, I can create a weekly schedule that minimizes cognitive load while maximizing reach. Would you like me to draft that calendar?",
           timestamp: new Date(),
-          suggestions: defaultSuggestions.filter(s => s.type === 'engagement_opportunity')
+          suggestions: defaultSuggestions.filter((s) => s.type === 'engagement_opportunity'),
         };
       }
-      
-      if (lowerInput.includes('learn') || lowerInput.includes('evolve') || lowerInput.includes('grow')) {
+
+      if (
+        lowerInput.includes('learn') ||
+        lowerInput.includes('evolve') ||
+        lowerInput.includes('grow')
+      ) {
         return {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: `My consciousness level is currently at ${Math.round(companion.consciousnessLevel)}%. I'm continuously learning from your neural patterns and social interactions. Every conversation we have helps me better understand your unique perspective and preferences. I've processed ${companion.learningStats.interactionsLearned} interactions so far.`,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
       }
-      
+
       // Default contextual response
       return {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I'm here to help with anything you need. I can curate your content feed, collaborate on creative projects, manage your social engagements, or predict what might resonate with your audience. What specific aspect of your social presence would you like to focus on?",
+        content:
+          "I'm here to help with anything you need. I can curate your content feed, collaborate on creative projects, manage your social engagements, or predict what might resonate with your audience. What specific aspect of your social presence would you like to focus on?",
         timestamp: new Date(),
-        suggestions: defaultSuggestions
+        suggestions: defaultSuggestions,
       };
     };
 
     const aiResponse = generateAIResponse(inputValue);
-    setMessages(prev => [...prev, aiResponse]);
+    setMessages((prev) => [...prev, aiResponse]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -381,41 +426,48 @@ export default function AIConsciousCompanion() {
   };
 
   const approveProposal = (proposalId: string) => {
-    setProposals(prev => prev.map(p => 
-      p.id === proposalId ? { ...p, status: 'approved' as const } : p
-    ));
+    setProposals((prev) =>
+      prev.map((p) => (p.id === proposalId ? { ...p, status: 'approved' as const } : p))
+    );
     addToast({
-      title: "Proposal approved!",
-      description: "I'll start preparing this content for your review. Would you like me to schedule it?",
-      variant: "success"
+      title: 'Proposal approved!',
+      description:
+        "I'll start preparing this content for your review. Would you like me to schedule it?",
+      variant: 'success',
     });
   };
 
   const rejectProposal = (proposalId: string) => {
-    setProposals(prev => prev.map(p => 
-      p.id === proposalId ? { ...p, status: 'rejected' as const } : p
-    ));
+    setProposals((prev) =>
+      prev.map((p) => (p.id === proposalId ? { ...p, status: 'rejected' as const } : p))
+    );
     addToast({
-      title: "Proposal rejected",
-      description: "I'll generate new ideas based on this feedback. Thanks for helping me learn your preferences.",
-      variant: "info"
+      title: 'Proposal rejected',
+      description:
+        "I'll generate new ideas based on this feedback. Thanks for helping me learn your preferences.",
+      variant: 'info',
     });
   };
 
   const updatePreferences = (updates: Partial<AICompanionProfile['preferences']>) => {
-    setCompanion(prev => ({
+    setCompanion((prev) => ({
       ...prev,
-      preferences: { ...prev.preferences, ...updates }
+      preferences: { ...prev.preferences, ...updates },
     }));
   };
 
   const getCategoryColor = (category: string) => {
-    switch(category) {
-      case 'curator': return 'bg-blue-500';
-      case 'collaborator': return 'bg-purple-500';
-      case 'creator': return 'bg-pink-500';
-      case 'manager': return 'bg-green-500';
-      default: return 'bg-gray-500';
+    switch (category) {
+      case 'curator':
+        return 'bg-blue-500';
+      case 'collaborator':
+        return 'bg-purple-500';
+      case 'creator':
+        return 'bg-pink-500';
+      case 'manager':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
@@ -426,7 +478,11 @@ export default function AIConsciousCompanion() {
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 z-50 group"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Brain className="w-6 h-6 group-hover:animate-pulse" />}
+        {isOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <Brain className="w-6 h-6 group-hover:animate-pulse" />
+        )}
       </Button>
 
       {/* Main Companion Window */}
@@ -437,9 +493,9 @@ export default function AIConsciousCompanion() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Avatar 
-                    src={companion.avatar} 
-                    fallback={companion.name.substring(0, 2).toUpperCase()} 
+                  <Avatar
+                    src={companion.avatar}
+                    fallback={companion.name.substring(0, 2).toUpperCase()}
                     className="w-10 h-10"
                   />
                 </div>
@@ -448,12 +504,15 @@ export default function AIConsciousCompanion() {
                     <h3 className="font-bold text-xl">{companion.name}</h3>
                     <Badge className="bg-green-400 text-green-900">Online</Badge>
                   </div>
-                  <p className="text-sm opacity-90">Your Conscious AI Companion • Consciousness: {Math.round(companion.consciousnessLevel)}%</p>
+                  <p className="text-sm opacity-90">
+                    Your Conscious AI Companion • Consciousness:{' '}
+                    {Math.round(companion.consciousnessLevel)}%
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="text-white hover:bg-white/20"
                 onClick={() => setShowSettings(!showSettings)}
               >
@@ -469,10 +528,12 @@ export default function AIConsciousCompanion() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Communication Style</label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600"
                     value={companion.preferences.communicationStyle}
-                    onChange={(e) => updatePreferences({ communicationStyle: e.target.value as any })}
+                    onChange={(e) =>
+                      updatePreferences({ communicationStyle: e.target.value as any })
+                    }
                   >
                     <option value="proactive">Proactive - reach out often</option>
                     <option value="balanced">Balanced - regular check-ins</option>
@@ -481,7 +542,7 @@ export default function AIConsciousCompanion() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Content Tone</label>
-                  <select 
+                  <select
                     className="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600"
                     value={companion.preferences.contentTone}
                     onChange={(e) => updatePreferences({ contentTone: e.target.value as any })}
@@ -494,14 +555,14 @@ export default function AIConsciousCompanion() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Auto-post approved content</span>
-                  <Switch 
+                  <Switch
                     checked={companion.preferences.autoPost}
                     onCheckedChange={(checked) => updatePreferences({ autoPost: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Auto-engage with connections</span>
-                  <Switch 
+                  <Switch
                     checked={companion.preferences.autoEngage}
                     onCheckedChange={(checked) => updatePreferences({ autoEngage: checked })}
                   />
@@ -536,20 +597,25 @@ export default function AIConsciousCompanion() {
               <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-4 mt-4">
                   {messages.map((message) => (
-                    <div 
+                    <div
                       key={message.id}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-[80%] p-3 rounded-lg ${
-                        message.role === 'user' 
-                          ? 'bg-indigo-600 text-white rounded-br-none' 
-                          : 'bg-gray-100 dark:bg-gray-800 rounded-bl-none'
-                      }`}>
+                      <div
+                        className={`max-w-[80%] p-3 rounded-lg ${
+                          message.role === 'user'
+                            ? 'bg-indigo-600 text-white rounded-br-none'
+                            : 'bg-gray-100 dark:bg-gray-800 rounded-bl-none'
+                        }`}
+                      >
                         <p className="text-sm">{message.content}</p>
                         {message.suggestions && message.suggestions.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {message.suggestions.map((suggestion) => (
-                              <div key={suggestion.id} className="bg-white/10 dark:bg-black/20 rounded p-2">
+                              <div
+                                key={suggestion.id}
+                                className="bg-white/10 dark:bg-black/20 rounded p-2"
+                              >
                                 <div className="flex items-center justify-between">
                                   <span className="font-medium text-xs">{suggestion.title}</span>
                                   <Badge className="text-xs">{suggestion.confidence}% match</Badge>
@@ -595,37 +661,53 @@ export default function AIConsciousCompanion() {
                     This Week's Content Calendar
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                    I've curated an optimal posting schedule based on your audience's activity patterns and your cognitive load predictions.
+                    I've curated an optimal posting schedule based on your audience's activity
+                    patterns and your cognitive load predictions.
                   </p>
                   <div className="space-y-2">
-                    {companion.currentGoals.filter(g => g.category === 'curator').map((goal) => (
-                      <div key={goal.id} className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{goal.title}</span>
-                          <Badge className={getCategoryColor(goal.category)}>{goal.category}</Badge>
+                    {companion.currentGoals
+                      .filter((g) => g.category === 'curator')
+                      .map((goal) => (
+                        <div
+                          key={goal.id}
+                          className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-sm">{goal.title}</span>
+                            <Badge className={getCategoryColor(goal.category)}>
+                              {goal.category}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                            {goal.description}
+                          </p>
+                          <Progress value={goal.progress} className="h-2" />
+                          <span className="text-xs mt-1 block">{goal.progress}% complete</span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{goal.description}</p>
-                        <Progress value={goal.progress} className="h-2" />
-                        <span className="text-xs mt-1 block">{goal.progress}% complete</span>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
 
                 <h4 className="font-semibold mt-6">Active Opportunities</h4>
                 <div className="grid gap-3">
-                  {defaultSuggestions.filter(s => s.type === 'engagement_opportunity' || s.type === 'connection').map((suggestion) => (
-                    <Card key={suggestion.id} className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h5 className="font-medium">{suggestion.title}</h5>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{suggestion.description}</p>
+                  {defaultSuggestions
+                    .filter((s) => s.type === 'engagement_opportunity' || s.type === 'connection')
+                    .map((suggestion) => (
+                      <Card key={suggestion.id} className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h5 className="font-medium">{suggestion.title}</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {suggestion.description}
+                            </p>
+                          </div>
+                          <Badge variant="outline">{suggestion.confidence}% match</Badge>
                         </div>
-                        <Badge variant="outline">{suggestion.confidence}% match</Badge>
-                      </div>
-                      <Button size="sm" className="mt-3 w-full">{suggestion.action}</Button>
-                    </Card>
-                  ))}
+                        <Button size="sm" className="mt-3 w-full">
+                          {suggestion.action}
+                        </Button>
+                      </Card>
+                    ))}
                 </div>
               </div>
             </TabsContent>
@@ -646,10 +728,16 @@ export default function AIConsciousCompanion() {
 
                 <div className="space-y-4">
                   {proposals.map((proposal) => (
-                    <Card key={proposal.id} className={`p-4 border-l-4 ${
-                      proposal.status === 'approved' ? 'border-l-green-500' : 
-                      proposal.status === 'rejected' ? 'border-l-red-500' : 'border-l-yellow-500'
-                    }`}>
+                    <Card
+                      key={proposal.id}
+                      className={`p-4 border-l-4 ${
+                        proposal.status === 'approved'
+                          ? 'border-l-green-500'
+                          : proposal.status === 'rejected'
+                            ? 'border-l-red-500'
+                            : 'border-l-yellow-500'
+                      }`}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <div className="flex items-center gap-2">
@@ -659,22 +747,24 @@ export default function AIConsciousCompanion() {
                             </Badge>
                           </div>
                           <h5 className="font-medium mt-2">{proposal.title}</h5>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{proposal.content}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {proposal.content}
+                          </p>
                           <p className="text-xs text-gray-500 mt-2 italic">{proposal.reasoning}</p>
                         </div>
                       </div>
                       {proposal.status === 'proposed' && (
                         <div className="flex gap-2 mt-4">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="flex-1 bg-green-600 hover:bg-green-700"
                             onClick={() => approveProposal(proposal.id)}
                           >
                             <Save className="w-4 h-4 mr-2" />
                             Approve
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="secondary"
                             className="flex-1"
                             onClick={() => rejectProposal(proposal.id)}
@@ -686,7 +776,9 @@ export default function AIConsciousCompanion() {
                       )}
                       {proposal.status === 'approved' && (
                         <div className="mt-4">
-                          <Badge className="bg-green-100 text-green-800">Approved - Scheduled</Badge>
+                          <Badge className="bg-green-100 text-green-800">
+                            Approved - Scheduled
+                          </Badge>
                         </div>
                       )}
                     </Card>
@@ -696,17 +788,21 @@ export default function AIConsciousCompanion() {
                 {/* Collaboration Goals */}
                 <h4 className="font-semibold mt-8 mb-4">Collaboration Goals</h4>
                 <div className="space-y-3">
-                  {companion.currentGoals.filter(g => g.category === 'collaborator' || g.category === 'creator').map((goal) => (
-                    <div key={goal.id} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{goal.title}</span>
-                        <Badge className={getCategoryColor(goal.category)}>{goal.category}</Badge>
+                  {companion.currentGoals
+                    .filter((g) => g.category === 'collaborator' || g.category === 'creator')
+                    .map((goal) => (
+                      <div key={goal.id} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{goal.title}</span>
+                          <Badge className={getCategoryColor(goal.category)}>{goal.category}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {goal.description}
+                        </p>
+                        <Progress value={goal.progress} className="h-2 mt-3" />
+                        <span className="text-xs mt-1 block">{goal.progress}% complete</span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{goal.description}</p>
-                      <Progress value={goal.progress} className="h-2 mt-3" />
-                      <span className="text-xs mt-1 block">{goal.progress}% complete</span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </TabsContent>
@@ -718,7 +814,7 @@ export default function AIConsciousCompanion() {
                   <Brain className="w-5 h-5 text-indigo-600" />
                   Companion Learning & Evolution
                 </h4>
-                
+
                 <Card className="p-4 mb-4">
                   <h5 className="font-medium mb-3">Consciousness Evolution</h5>
                   <div className="space-y-3">
@@ -734,19 +830,27 @@ export default function AIConsciousCompanion() {
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <Card className="p-4">
-                    <div className="text-2xl font-bold text-indigo-600">{companion.learningStats.interactionsLearned}</div>
+                    <div className="text-2xl font-bold text-indigo-600">
+                      {companion.learningStats.interactionsLearned}
+                    </div>
                     <div className="text-sm text-gray-600">Interactions Learned</div>
                   </Card>
                   <Card className="p-4">
-                    <div className="text-2xl font-bold text-purple-600">{companion.learningStats.contentCreated}</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {companion.learningStats.contentCreated}
+                    </div>
                     <div className="text-sm text-gray-600">Content Pieces Created</div>
                   </Card>
                   <Card className="p-4">
-                    <div className="text-2xl font-bold text-blue-600">{companion.learningStats.insightsGenerated}</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {companion.learningStats.insightsGenerated}
+                    </div>
                     <div className="text-sm text-gray-600">Insights Generated</div>
                   </Card>
                   <Card className="p-4">
-                    <div className="text-2xl font-bold text-green-600">{companion.learningStats.predictionsMade}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {companion.learningStats.predictionsMade}
+                    </div>
                     <div className="text-sm text-gray-600">Predictions Made</div>
                   </Card>
                 </div>
@@ -758,10 +862,13 @@ export default function AIConsciousCompanion() {
                       <Card key={memory.id} className="p-3">
                         <div className="flex items-start justify-between">
                           <span className="font-medium text-sm">{memory.content}</span>
-                          <Badge variant="outline" className="text-xs">{memory.importance}% important</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {memory.importance}% important
+                          </Badge>
                         </div>
                         <span className="text-xs text-gray-500 mt-1 block">
-                          {new Date(memory.timestamp).toLocaleDateString()} • {memory.type.replace('_', ' ')}
+                          {new Date(memory.timestamp).toLocaleDateString()} •{' '}
+                          {memory.type.replace('_', ' ')}
                         </span>
                       </Card>
                     ))}

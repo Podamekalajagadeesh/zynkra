@@ -4,7 +4,20 @@ import { PageShell } from '../components/PageShell';
 import { PostList } from '../components/post-list';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { Skeleton } from '../components/ui/skeleton';
-import { Compass, TrendingUp, Map, Users, Sparkles, Image, Film, Music, Code, Heart, Briefcase, TreePine } from 'lucide-react';
+import {
+  Compass,
+  TrendingUp,
+  Map,
+  Users,
+  Sparkles,
+  Image,
+  Film,
+  Music,
+  Code,
+  Heart,
+  Briefcase,
+  TreePine,
+} from 'lucide-react';
 import { getTrendingFeed, getExploreFeed, getExploreCategories } from '../lib/api';
 import { LiveTrending } from '../components/LiveTrending';
 import type { Post } from '../lib/types';
@@ -17,16 +30,66 @@ interface Category {
 }
 
 const defaultCategories: Category[] = [
-  { id: 'trending', name: 'Trending', icon: <TrendingUp className="h-4 w-4" />, description: 'Popular posts across the platform' },
-  { id: 'trending-heatmap', name: 'Trending Heatmap', icon: <Map className="h-4 w-4" />, description: 'Explore popular local content tracked by geographic region' },
-  { id: 'new-creators', name: 'New Creators', icon: <Users className="h-4 w-4" />, description: 'Discover emerging creators' },
-  { id: 'art', name: 'Art & Design', icon: <Image className="h-4 w-4" />, description: 'Creative artwork and designs' },
-  { id: 'film', name: 'Film & Video', icon: <Film className="h-4 w-4" />, description: 'Video content and filmmaking' },
-  { id: 'music', name: 'Music', icon: <Music className="h-4 w-4" />, description: 'Music production and artists' },
-  { id: 'tech', name: 'Technology', icon: <Code className="h-4 w-4" />, description: 'Tech innovations and discussions' },
-  { id: 'lifestyle', name: 'Lifestyle', icon: <Heart className="h-4 w-4" />, description: 'Daily life and wellness' },
-  { id: 'business', name: 'Business', icon: <Briefcase className="h-4 w-4" />, description: 'Entrepreneurship and careers' },
-  { id: 'nature', name: 'Nature', icon: <TreePine className="h-4 w-4" />, description: 'Outdoors and environment' },
+  {
+    id: 'trending',
+    name: 'Trending',
+    icon: <TrendingUp className="h-4 w-4" />,
+    description: 'Popular posts across the platform',
+  },
+  {
+    id: 'trending-heatmap',
+    name: 'Trending Heatmap',
+    icon: <Map className="h-4 w-4" />,
+    description: 'Explore popular local content tracked by geographic region',
+  },
+  {
+    id: 'new-creators',
+    name: 'New Creators',
+    icon: <Users className="h-4 w-4" />,
+    description: 'Discover emerging creators',
+  },
+  {
+    id: 'art',
+    name: 'Art & Design',
+    icon: <Image className="h-4 w-4" />,
+    description: 'Creative artwork and designs',
+  },
+  {
+    id: 'film',
+    name: 'Film & Video',
+    icon: <Film className="h-4 w-4" />,
+    description: 'Video content and filmmaking',
+  },
+  {
+    id: 'music',
+    name: 'Music',
+    icon: <Music className="h-4 w-4" />,
+    description: 'Music production and artists',
+  },
+  {
+    id: 'tech',
+    name: 'Technology',
+    icon: <Code className="h-4 w-4" />,
+    description: 'Tech innovations and discussions',
+  },
+  {
+    id: 'lifestyle',
+    name: 'Lifestyle',
+    icon: <Heart className="h-4 w-4" />,
+    description: 'Daily life and wellness',
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    icon: <Briefcase className="h-4 w-4" />,
+    description: 'Entrepreneurship and careers',
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    icon: <TreePine className="h-4 w-4" />,
+    description: 'Outdoors and environment',
+  },
 ];
 
 export default function ExplorePage() {
@@ -45,7 +108,7 @@ export default function ExplorePage() {
         if (response.categories && response.categories.length > 0) {
           // Map API categories with icons
           const apiCategories = response.categories.map((cat: any) => {
-            const defaultCat = defaultCategories.find(c => c.id === cat.id);
+            const defaultCat = defaultCategories.find((c) => c.id === cat.id);
             return defaultCat ? { ...defaultCat, ...cat } : cat;
           });
           setCategories(apiCategories);
@@ -66,10 +129,10 @@ export default function ExplorePage() {
   useEffect(() => {
     if (activeCategory === 'trending-heatmap' && !HeatmapComponent) {
       import('../components/trending-heatmap/TrendingHeatmapPage')
-        .then(module => {
+        .then((module) => {
           setHeatmapComponent(() => module.default);
         })
-        .catch(err => console.error('Failed to load heatmap component:', err));
+        .catch((err) => console.error('Failed to load heatmap component:', err));
     }
   }, [activeCategory, HeatmapComponent]);
 
@@ -83,9 +146,10 @@ export default function ExplorePage() {
     const fetchExplorePosts = async () => {
       setLoading(true);
       try {
-        const response = activeCategory === 'trending'
-          ? await getTrendingFeed(20)
-          : await getExploreFeed(activeCategory);
+        const response =
+          activeCategory === 'trending'
+            ? await getTrendingFeed(20)
+            : await getExploreFeed(activeCategory);
 
         const nextPosts = Array.isArray(response) ? response : response.posts || [];
         setPosts(nextPosts);
@@ -103,14 +167,15 @@ export default function ExplorePage() {
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
-    
+
     setLoadingMore(true);
     try {
-      const response = activeCategory === 'trending'
-      ? await getTrendingFeed(20)
-      : await getExploreFeed(activeCategory);
-    const nextPosts = Array.isArray(response) ? response : response.posts || [];
-      setPosts(prev => [...prev, ...nextPosts]);
+      const response =
+        activeCategory === 'trending'
+          ? await getTrendingFeed(20)
+          : await getExploreFeed(activeCategory);
+      const nextPosts = Array.isArray(response) ? response : response.posts || [];
+      setPosts((prev) => [...prev, ...nextPosts]);
       setHasMore(!Array.isArray(response) ? response.hasMore || false : false);
     } catch (error) {
       console.error('Failed to load more explore posts:', error);
@@ -120,9 +185,9 @@ export default function ExplorePage() {
   };
 
   return (
-    <PageShell 
-      eyebrow="Discover" 
-      title="Explore" 
+    <PageShell
+      eyebrow="Discover"
+      title="Explore"
       description="Curated content for new topics and creators to help you discover what's next"
     >
       <div className="space-y-6">
@@ -135,7 +200,7 @@ export default function ExplorePage() {
           <div>
             <h1 className="text-2xl font-bold text-dark-900 dark:text-white">Explore</h1>
             <p className="text-sm text-dark-600 dark:text-dark-400">
-              {categories.find(c => c.id === activeCategory)?.description}
+              {categories.find((c) => c.id === activeCategory)?.description}
             </p>
           </div>
         </div>
@@ -166,31 +231,39 @@ export default function ExplorePage() {
               Featured New Creators
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {posts.slice(0, 4).map((post) => (
-                post.author && (
-                  <div key={post.author.id} className="p-4 rounded-xl bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-700 text-center">
-                    <img 
-                      src={post.author.avatarUrl || '/default-avatar.png'} 
-                      alt={post.author.username}
-                      className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
-                    />
-                    <h3 className="font-semibold text-dark-900 dark:text-white truncate">{post.author.username}</h3>
-                    <p className="text-xs text-dark-500 dark:text-dark-400 mb-3">
-                      {post.author.followerCount?.toLocaleString() || 0} followers
-                    </p>
-                    <button className="px-3 py-1 text-sm bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
-                      Follow
-                    </button>
-                  </div>
-                )
-              ))}
+              {posts.slice(0, 4).map(
+                (post) =>
+                  post.author && (
+                    <div
+                      key={post.author.id}
+                      className="p-4 rounded-xl bg-white dark:bg-dark-800 border border-dark-200 dark:border-dark-700 text-center"
+                    >
+                      <img
+                        src={post.author.avatarUrl || '/default-avatar.png'}
+                        alt={post.author.username}
+                        className="w-16 h-16 rounded-full mx-auto mb-3 object-cover"
+                      />
+                      <h3 className="font-semibold text-dark-900 dark:text-white truncate">
+                        {post.author.username}
+                      </h3>
+                      <p className="text-xs text-dark-500 dark:text-dark-400 mb-3">
+                        {post.author.followerCount?.toLocaleString() || 0} followers
+                      </p>
+                      <button className="px-3 py-1 text-sm bg-primary-600 text-white rounded-full hover:bg-primary-700 transition-colors">
+                        Follow
+                      </button>
+                    </div>
+                  )
+              )}
             </div>
           </div>
         )}
 
         {/* Render heatmap component if selected, otherwise render regular posts */}
         {activeCategory === 'trending-heatmap' ? (
-          HeatmapComponent ? <HeatmapComponent /> : (
+          HeatmapComponent ? (
+            <HeatmapComponent />
+          ) : (
             <div className="text-center py-16">
               <Skeleton className="h-96 w-full rounded-2xl" />
             </div>
@@ -202,8 +275,8 @@ export default function ExplorePage() {
             <Skeleton className="h-64 w-full rounded-2xl" />
           </div>
         ) : posts.length > 0 ? (
-          <PostList 
-            posts={posts} 
+          <PostList
+            posts={posts}
             onLoadMore={loadMore}
             hasMore={hasMore}
             loadingMore={loadingMore}
@@ -211,8 +284,12 @@ export default function ExplorePage() {
         ) : (
           <div className="text-center py-16">
             <Compass className="h-12 w-12 mx-auto text-dark-400 dark:text-dark-500 mb-4" />
-            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">No posts found</h3>
-            <p className="text-dark-600 dark:text-dark-400">Check back later for new content in this category</p>
+            <h3 className="text-lg font-semibold text-dark-900 dark:text-white mb-2">
+              No posts found
+            </h3>
+            <p className="text-dark-600 dark:text-dark-400">
+              Check back later for new content in this category
+            </p>
           </div>
         )}
       </div>

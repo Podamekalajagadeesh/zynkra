@@ -88,18 +88,20 @@ describe('DataPrivacyPage', () => {
     });
     mockSetBirthDate.mockResolvedValue({ ok: true });
     mockUpdatePrivacy.mockResolvedValue({ ok: true });
-    mockResetPersonalizationControls.mockResolvedValue({ personalizationControls: {
-      feedPersonalization: true,
-      searchPersonalization: true,
-      recommendations: true,
-      notificationPersonalization: true,
-      creatorPersonalization: true,
-      communityPersonalization: true,
-      shoppingPersonalization: true,
-      eventPersonalization: true,
-      locationPersonalization: true,
-      activityPersonalization: true,
-    } });
+    mockResetPersonalizationControls.mockResolvedValue({
+      personalizationControls: {
+        feedPersonalization: true,
+        searchPersonalization: true,
+        recommendations: true,
+        notificationPersonalization: true,
+        creatorPersonalization: true,
+        communityPersonalization: true,
+        shoppingPersonalization: true,
+        eventPersonalization: true,
+        locationPersonalization: true,
+        activityPersonalization: true,
+      },
+    });
     mockDiscoverContacts.mockResolvedValue([
       { id: 'friend-id', username: 'friend', displayName: 'Friend', avatar: null },
     ]);
@@ -113,7 +115,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     await waitFor(() => {
@@ -135,7 +137,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const storyPrivacy = await screen.findByLabelText(/story privacy/i);
@@ -143,7 +145,9 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
 
     await waitFor(() => {
-      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ storyVisibility: 'only_me' }));
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(
+        expect.objectContaining({ storyVisibility: 'only_me' })
+      );
     });
   });
 
@@ -155,7 +159,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const searchVisibility = await screen.findByLabelText(/search visibility/i);
@@ -163,7 +167,9 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
 
     await waitFor(() => {
-      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ searchVisibility: 'no_one' }));
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(
+        expect.objectContaining({ searchVisibility: 'no_one' })
+      );
     });
   });
 
@@ -175,7 +181,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const feedControl = await screen.findByLabelText(/feed personalization/i);
@@ -183,9 +189,11 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
 
     await waitFor(() => {
-      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({
-        personalizationControls: expect.objectContaining({ feedPersonalization: false }),
-      }));
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          personalizationControls: expect.objectContaining({ feedPersonalization: false }),
+        })
+      );
     });
   });
 
@@ -197,7 +205,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const mentionControls = await screen.findByLabelText(/mention controls/i);
@@ -205,7 +213,9 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
 
     await waitFor(() => {
-      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ mentions: 'followers' }));
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(
+        expect.objectContaining({ mentions: 'followers' })
+      );
     });
   });
 
@@ -217,7 +227,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const tagControls = await screen.findByLabelText(/tag controls/i);
@@ -225,7 +235,9 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /save privacy settings/i }));
 
     await waitFor(() => {
-      expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ tagPrivacy: 'friends_of_friends' }));
+      expect(mockUpdatePrivacy).toHaveBeenCalledWith(
+        expect.objectContaining({ tagPrivacy: 'friends_of_friends' })
+      );
     });
   });
 
@@ -237,7 +249,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const toggle = await screen.findByLabelText(/automatic backups/i);
@@ -259,7 +271,7 @@ describe('DataPrivacyPage', () => {
         <MemoryRouter>
           <DataPrivacyPage />
         </MemoryRouter>
-      </ToastProvider>,
+      </ToastProvider>
     );
 
     const input = await screen.findByLabelText(/contact email addresses or phone numbers/i);
@@ -267,10 +279,7 @@ describe('DataPrivacyPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /find contacts/i }));
 
     await waitFor(() => {
-      expect(mockDiscoverContacts).toHaveBeenCalledWith([
-        'friend@example.com',
-        '+14155552671',
-      ]);
+      expect(mockDiscoverContacts).toHaveBeenCalledWith(['friend@example.com', '+14155552671']);
       expect(screen.getByText('Friend')).toBeInTheDocument();
     });
   });

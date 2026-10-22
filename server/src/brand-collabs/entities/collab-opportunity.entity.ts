@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Brand } from './brand.entity';
 import { CollabApplication } from './collab-application.entity';
@@ -44,13 +52,13 @@ export class CollabOpportunity {
   @Column({ default: 'open' })
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
 
-  @ManyToOne(() => Brand, brand => brand.opportunities)
+  @ManyToOne(() => Brand, (brand) => brand.opportunities)
   brand: Brand;
 
   @Column()
   brandId: string;
 
-  @OneToMany(() => CollabApplication, application => application.opportunity)
+  @OneToMany(() => CollabApplication, (application) => application.opportunity)
   applications: CollabApplication[];
 
   @CreateDateColumn()

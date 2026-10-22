@@ -70,7 +70,10 @@ export function EventsPage() {
         virtualLink: isVirtual ? virtualLink : undefined,
         ticketPrice: ticketPrice ? parseFloat(ticketPrice) : undefined,
         maxAttendees: maxAttendees ? parseInt(maxAttendees) : undefined,
-        coHostIds: coHostIds.split(',').map((id) => id.trim()).filter(Boolean),
+        coHostIds: coHostIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean),
       });
       setEvents([newEvent, ...events]);
       addToast('Event created successfully', 'success');
@@ -227,7 +230,12 @@ export function EventsPage() {
                       <p>
                         {event.isVirtual ? '🌐 Virtual Event' : '📍 ' + event.location}
                         {event.isVirtual && event.virtualLink && (
-                          <a href={event.virtualLink} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-500 hover:underline">
+                          <a
+                            href={event.virtualLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-2 text-blue-500 hover:underline"
+                          >
                             Join Link
                           </a>
                         )}
@@ -236,9 +244,14 @@ export function EventsPage() {
                       <p>
                         👥 Attendees: {event.attendees.length}
                         {event.maxAttendees ? ` / ${event.maxAttendees}` : ''}
-                        {event.ticketPrice ? ` | $${event.ticketPrice.toFixed(2)} per ticket` : ' | Free Event'}
+                        {event.ticketPrice
+                          ? ` | $${event.ticketPrice.toFixed(2)} per ticket`
+                          : ' | Free Event'}
                       </p>
-                      <p>✅ Checked in: {event.attendees.filter(a => a.checkedIn).length} / {event.attendees.length}</p>
+                      <p>
+                        ✅ Checked in: {event.attendees.filter((a) => a.checkedIn).length} /{' '}
+                        {event.attendees.length}
+                      </p>
                     </div>
                   </div>
                   <div className="text-xs text-gray-400">
@@ -246,18 +259,10 @@ export function EventsPage() {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleAttend(event.id)}
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => handleAttend(event.id)}>
                     RSVP
                   </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleUnattend(event.id)}
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => handleUnattend(event.id)}>
                     Cancel RSVP
                   </Button>
                   <Button

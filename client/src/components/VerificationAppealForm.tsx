@@ -103,10 +103,7 @@ export function VerificationAppealForm({
       }, 3000);
     } catch (error: any) {
       const message = error.response?.data?.message;
-      addToast(
-        Array.isArray(message) ? message[0] : message || 'Failed to submit appeal',
-        'error',
-      );
+      addToast(Array.isArray(message) ? message[0] : message || 'Failed to submit appeal', 'error');
       setSubmitted(false);
     } finally {
       setSubmitting(false);
@@ -243,7 +240,9 @@ export function VerificationAppealForm({
 
       {rejectionReason && (
         <div className="rounded-lg bg-white/50 dark:bg-dark-900/50 p-3 border border-amber-300 dark:border-amber-900">
-          <p className="text-sm font-medium text-dark-900 dark:text-white mb-1">Rejection reason:</p>
+          <p className="text-sm font-medium text-dark-900 dark:text-white mb-1">
+            Rejection reason:
+          </p>
           <p className="text-sm text-dark-700 dark:text-dark-300">{rejectionReason}</p>
         </div>
       )}
@@ -265,9 +264,7 @@ export function VerificationAppealForm({
             placeholder="Explain why you believe the decision was incorrect and provide any additional context (min 20 characters, max 3000)."
             className="w-full rounded-xl border border-dark-200 bg-white px-4 py-3 text-sm dark:border-dark-700 dark:bg-dark-900"
           />
-          <p className="mt-1 text-xs text-dark-500">
-            {appealReason.length}/3000 characters
-          </p>
+          <p className="mt-1 text-xs text-dark-500">{appealReason.length}/3000 characters</p>
         </div>
 
         <div>
@@ -328,8 +325,8 @@ export function VerificationAppealForm({
         </div>
 
         <p className="text-xs text-dark-500">
-          Note: You can submit a maximum of 3 appeals per request. After rejection, you must wait
-          30 days before submitting another appeal.
+          Note: You can submit a maximum of 3 appeals per request. After rejection, you must wait 30
+          days before submitting another appeal.
         </p>
       </form>
     </div>

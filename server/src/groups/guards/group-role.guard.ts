@@ -7,14 +7,14 @@ import { GroupsService } from '../groups.service';
 export class GroupRoleGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private groupsService: GroupsService,
+    private groupsService: GroupsService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<GroupRole[]>(
-      'roles',
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredRoles = this.reflector.getAllAndOverride<GroupRole[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (!requiredRoles) {
       return true;
     }

@@ -21,11 +21,11 @@ export interface LocationPrivacy {
   expireAfter: '1hour' | '4hours' | '24hours' | 'until_turned_off';
 }
 
-export function LocationPrivacySettings({ 
-  open, 
-  onClose, 
+export function LocationPrivacySettings({
+  open,
+  onClose,
   currentSettings,
-  onSettingsChange 
+  onSettingsChange,
 }: LocationPrivacySettingsProps) {
   const { user } = useUser();
   const { socket } = useSocket();
@@ -36,14 +36,14 @@ export function LocationPrivacySettings({
     if (socket && user) {
       socket.emit('update-location-privacy', {
         userId: user.user.id,
-        privacy: settings
+        privacy: settings,
       });
     }
     onClose();
   };
 
   const updateSettings = (key: keyof LocationPrivacy, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -69,17 +69,31 @@ export function LocationPrivacySettings({
           {/* Share with */}
           <div className="space-y-3">
             <Label className="text-base font-semibold">Share my location with</Label>
-            
+
             <div className="space-y-2">
               {[
-                { value: 'all_friends', label: 'All friends', description: 'Everyone you follow can see your location' },
-                { value: 'selected_friends', label: 'Selected friends only', description: 'Only specific friends can see your location' },
-                { value: 'no_one', label: 'No one', description: 'Hide your location from everyone except you' }
-              ].map(option => (
-                <label 
+                {
+                  value: 'all_friends',
+                  label: 'All friends',
+                  description: 'Everyone you follow can see your location',
+                },
+                {
+                  value: 'selected_friends',
+                  label: 'Selected friends only',
+                  description: 'Only specific friends can see your location',
+                },
+                {
+                  value: 'no_one',
+                  label: 'No one',
+                  description: 'Hide your location from everyone except you',
+                },
+              ].map((option) => (
+                <label
                   key={option.value}
                   className={`flex items-start p-3 rounded-lg border cursor-pointer ${
-                    settings.shareWith === option.value ? 'border-blue-500 bg-blue-50' : 'border-zinc-200'
+                    settings.shareWith === option.value
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-zinc-200'
                   }`}
                 >
                   <input

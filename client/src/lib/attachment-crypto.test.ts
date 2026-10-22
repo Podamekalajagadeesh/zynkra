@@ -56,7 +56,7 @@ describe('attachment-crypto', () => {
     const other = await encryptAttachment(original);
 
     await expect(
-      decryptAttachment(encrypted.blob, { key: other.key, nonce: encrypted.nonce }),
+      decryptAttachment(encrypted.blob, { key: other.key, nonce: encrypted.nonce })
     ).rejects.toThrow();
   });
 
@@ -65,13 +65,18 @@ describe('attachment-crypto', () => {
     const encrypted = await encryptAttachment(original);
 
     await expect(
-      decryptAttachment(encrypted.blob, { key: 'not-base64-key!!!', nonce: encrypted.nonce }),
+      decryptAttachment(encrypted.blob, { key: 'not-base64-key!!!', nonce: encrypted.nonce })
     ).rejects.toThrow();
   });
 
   it('identifies structured E2EE payloads and rejects other shapes', () => {
     expect(isE2eeMessagePayload({ v: 1, text: 'hi', attachments: [] })).toBe(true);
-    expect(isE2eeMessagePayload({ v: 1, attachments: [{ url: '/u', type: 'image', key: 'k', nonce: 'n' }] })).toBe(true);
+    expect(
+      isE2eeMessagePayload({
+        v: 1,
+        attachments: [{ url: '/u', type: 'image', key: 'k', nonce: 'n' }],
+      })
+    ).toBe(true);
     expect(isE2eeMessagePayload('plain text')).toBe(false);
     expect(isE2eeMessagePayload({ v: 2, attachments: [] })).toBe(false);
     expect(isE2eeMessagePayload({ v: 1 })).toBe(false);

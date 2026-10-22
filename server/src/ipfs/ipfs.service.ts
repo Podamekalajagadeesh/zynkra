@@ -20,10 +20,10 @@ export class IpfsService {
 
     const result = await response.json();
     this.logger.log(`File uploaded to IPFS with CID: ${result.Hash}`);
-    
+
     // Pin the file to ensure it's not garbage collected
     await this.pinFile(result.Hash);
-    
+
     return result.Hash;
   }
 
@@ -49,7 +49,9 @@ export class IpfsService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to retrieve file ${cid} from IPFS: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to retrieve file ${cid} from IPFS: ${response.status} ${response.statusText}`
+      );
     }
 
     const arrayBuffer = await response.arrayBuffer();

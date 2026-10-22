@@ -53,7 +53,7 @@ export class CreatorMonetizationService {
   constructor(
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(LedgerEntry) private readonly ledgerRepo: Repository<LedgerEntry>,
-    private readonly walletService: WalletService,
+    private readonly walletService: WalletService
   ) {}
 
   /**
@@ -107,7 +107,12 @@ export class CreatorMonetizationService {
         name: 'VIP',
         price: 24.99,
         interval: 'monthly',
-        features: ['Everything in Premium', '1-on-1 monthly call', 'Personal shoutout', 'Signed merchandise'],
+        features: [
+          'Everything in Premium',
+          '1-on-1 monthly call',
+          'Personal shoutout',
+          'Signed merchandise',
+        ],
         isActive: true,
       },
       {
@@ -115,7 +120,13 @@ export class CreatorMonetizationService {
         name: 'Whale',
         price: 99.99,
         interval: 'monthly',
-        features: ['Everything in VIP', 'Custom video message', 'Priority support', 'Name in credits', 'Exclusive Discord'],
+        features: [
+          'Everything in VIP',
+          'Custom video message',
+          'Priority support',
+          'Name in credits',
+          'Exclusive Discord',
+        ],
         isActive: true,
       },
     ];
@@ -128,7 +139,7 @@ export class CreatorMonetizationService {
     fanId: string,
     creatorId: string,
     amount: number,
-    message?: string,
+    message?: string
   ): Promise<{
     success: boolean;
     tipId: string;
@@ -185,7 +196,7 @@ export class CreatorMonetizationService {
   async processSubscription(
     fanId: string,
     creatorId: string,
-    tierId: string,
+    tierId: string
   ): Promise<{
     success: boolean;
     subscriptionId: string;
@@ -194,7 +205,7 @@ export class CreatorMonetizationService {
     nextBillingDate: Date;
   }> {
     const tiers = this.getDefaultTiers();
-    const tier = tiers.find(t => t.id === tierId);
+    const tier = tiers.find((t) => t.id === tierId);
     if (!tier) throw new BadRequestException('Invalid subscription tier');
 
     if (fanId === creatorId) throw new BadRequestException('Cannot subscribe to yourself');
@@ -252,7 +263,7 @@ export class CreatorMonetizationService {
     creatorId: string,
     contentId: string,
     contentType: 'article' | 'podcast' | 'course' | 'post',
-    price: number,
+    price: number
   ): Promise<{
     success: boolean;
     purchaseId: string;

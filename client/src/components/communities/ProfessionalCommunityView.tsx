@@ -19,13 +19,17 @@ interface ProfessionalCommunityViewProps {
   currentUserId: string;
 }
 
-export const ProfessionalCommunityView = ({ community, currentUserId }: ProfessionalCommunityViewProps) => {
+export const ProfessionalCommunityView = ({
+  community,
+  currentUserId,
+}: ProfessionalCommunityViewProps) => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedProfile, setSelectedProfile] = useState<ProfessionalProfile | null>(null);
 
   const jobListings = community.jobListings || [];
   const professionalProfiles = community.professionalProfiles || [];
-  const isAdmin = community.members.find(m => m.id === currentUserId && m.role === 'owner') !== undefined;
+  const isAdmin =
+    community.members.find((m) => m.id === currentUserId && m.role === 'owner') !== undefined;
 
   return (
     <div className="space-y-6">
@@ -50,8 +54,10 @@ export const ProfessionalCommunityView = ({ community, currentUserId }: Professi
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 mt-4">
-                {community.industryTags?.map(tag => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                {community.industryTags?.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -88,7 +94,9 @@ export const ProfessionalCommunityView = ({ community, currentUserId }: Professi
           <Card>
             <CardHeader>
               <CardTitle>Community Updates</CardTitle>
-              <CardDescription>Latest discussions and professional news from {community.name}</CardDescription>
+              <CardDescription>
+                Latest discussions and professional news from {community.name}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -106,18 +114,15 @@ export const ProfessionalCommunityView = ({ community, currentUserId }: Professi
         </TabsContent>
 
         <TabsContent value="members" className="mt-6">
-          <MembersPanel 
-            profiles={professionalProfiles} 
-            onSelectProfile={setSelectedProfile} 
+          <MembersPanel
+            profiles={professionalProfiles}
+            onSelectProfile={setSelectedProfile}
             currentUserId={currentUserId}
           />
         </TabsContent>
 
         <TabsContent value="profile" className="mt-6">
-          <ProfessionalProfileView 
-            communityId={community.id}
-            currentUserId={currentUserId}
-          />
+          <ProfessionalProfileView communityId={community.id} currentUserId={currentUserId} />
         </TabsContent>
       </Tabs>
 
@@ -125,7 +130,7 @@ export const ProfessionalCommunityView = ({ community, currentUserId }: Professi
       {selectedProfile && (
         <Dialog open={!!selectedProfile} onOpenChange={() => setSelectedProfile(null)}>
           <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
-            <ProfessionalProfileView 
+            <ProfessionalProfileView
               communityId={community.id}
               profile={selectedProfile}
               isOwnProfile={selectedProfile.userId === currentUserId}

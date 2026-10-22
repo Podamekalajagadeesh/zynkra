@@ -57,7 +57,7 @@ export function CustomAudiencesSettings() {
         name: newAudienceName.trim(),
         userIds: [],
       };
-      
+
       await api.post('/users/me/custom-audiences', { name: newAudience.name });
       setCustomAudiences([...customAudiences, newAudience]);
       setNewAudienceName('');
@@ -71,7 +71,7 @@ export function CustomAudiencesSettings() {
     const originalAudiences = [...customAudiences];
     try {
       await api.delete(`/users/me/custom-audiences/${audienceId}`);
-      setCustomAudiences(customAudiences.filter(a => a.id !== audienceId));
+      setCustomAudiences(customAudiences.filter((a) => a.id !== audienceId));
       addToast('Custom audience deleted', 'success');
     } catch (error) {
       setCustomAudiences(originalAudiences);
@@ -84,25 +84,25 @@ export function CustomAudiencesSettings() {
 
     const isInAudience = editingAudience.userIds.includes(userId);
     const updatedUserIds = isInAudience
-      ? editingAudience.userIds.filter(id => id !== userId)
+      ? editingAudience.userIds.filter((id) => id !== userId)
       : [...editingAudience.userIds, userId];
-    
+
     const updatedAudience = { ...editingAudience, userIds: updatedUserIds };
     setEditingAudience(updatedAudience);
   };
 
   const handleSaveAudience = async () => {
     if (!editingAudience) return;
-    
+
     const originalAudiences = [...customAudiences];
     try {
-      await api.put(`/users/me/custom-audiences/${editingAudience.id}`, { 
+      await api.put(`/users/me/custom-audiences/${editingAudience.id}`, {
         name: editingAudience.name,
-        userIds: editingAudience.userIds 
+        userIds: editingAudience.userIds,
       });
-      setCustomAudiences(customAudiences.map(a => 
-        a.id === editingAudience.id ? editingAudience : a
-      ));
+      setCustomAudiences(
+        customAudiences.map((a) => (a.id === editingAudience.id ? editingAudience : a))
+      );
       setEditingAudience(null);
       addToast('Custom audience updated successfully', 'success');
     } catch (error) {
@@ -137,7 +137,7 @@ export function CustomAudiencesSettings() {
             <X size={24} />
           </button>
         </div>
-        
+
         <Input
           value={editingAudience.name}
           onChange={(e) => setEditingAudience({ ...editingAudience, name: e.target.value })}
@@ -148,7 +148,11 @@ export function CustomAudiencesSettings() {
           {followers.map((user) => (
             <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center gap-4">
-                <img src={user.avatar ?? undefined} alt={user.username} className="w-10 h-10 rounded-full" />
+                <img
+                  src={user.avatar ?? undefined}
+                  alt={user.username}
+                  className="w-10 h-10 rounded-full"
+                />
                 <div>
                   <p className="font-semibold">{user.username}</p>
                   <p className="text-sm text-dark-500 dark:text-dark-400">{user.displayName}</p>
@@ -193,7 +197,10 @@ export function CustomAudiencesSettings() {
       {/* List of existing audiences */}
       <div className="space-y-4">
         {customAudiences.map((audience) => (
-          <div key={audience.id} className="flex items-center justify-between p-4 border rounded-lg">
+          <div
+            key={audience.id}
+            className="flex items-center justify-between p-4 border rounded-lg"
+          >
             <div>
               <p className="font-semibold">{audience.name}</p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
@@ -213,7 +220,9 @@ export function CustomAudiencesSettings() {
 
         {customAudiences.length === 0 && (
           <div className="p-6 border rounded-lg bg-gray-50 dark:bg-dark-700 text-center">
-            <p className="text-dark-500 dark:text-dark-400">No custom audiences yet. Create your first one above!</p>
+            <p className="text-dark-500 dark:text-dark-400">
+              No custom audiences yet. Create your first one above!
+            </p>
           </div>
         )}
       </div>

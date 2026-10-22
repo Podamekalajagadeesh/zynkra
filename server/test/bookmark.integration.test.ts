@@ -19,19 +19,47 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(bookmarkOverrides: Record<string, jest.Mock> = {}) {
   const defaultBookmarkService: Record<string, jest.Mock> = {
-    create: jest.fn(), findAll: jest.fn(), remove: jest.fn(),
-    createCollection: jest.fn(), findAllCollections: jest.fn(),
-    findOneCollection: jest.fn(), updateCollection: jest.fn(), removeCollection: jest.fn(),
+    create: jest.fn(),
+    findAll: jest.fn(),
+    remove: jest.fn(),
+    createCollection: jest.fn(),
+    findAllCollections: jest.fn(),
+    findOneCollection: jest.fn(),
+    updateCollection: jest.fn(),
+    removeCollection: jest.fn(),
   };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [BookmarksController, CollectionsController],
     providers: [
       { provide: BookmarksService, useValue: { ...defaultBookmarkService, ...bookmarkOverrides } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -76,7 +104,9 @@ describe('GET /bookmarks', () => {
     const { app, service, token } = await buildApp();
     service.findAll.mockResolvedValue([{ id: 'bm-1', post: { id: 'post-1' } }] as any);
 
-    const r = await request(app.getHttpServer()).get('/bookmarks').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/bookmarks')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     await app.close();
@@ -88,7 +118,9 @@ describe('DELETE /bookmarks/:postId', () => {
     const { app, service, token } = await buildApp();
     service.remove.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).delete('/bookmarks/post-1').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/bookmarks/post-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(service.remove).toHaveBeenCalled();
     await app.close();
@@ -118,7 +150,9 @@ describe('GET /collections', () => {
     const { app, service, token } = await buildApp();
     service.findAllCollections.mockResolvedValue([{ id: 'col-1', name: 'Favorites' }] as any);
 
-    const r = await request(app.getHttpServer()).get('/collections').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/collections')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     await app.close();
@@ -146,7 +180,9 @@ describe('DELETE /collections/:id', () => {
     const { app, service, token } = await buildApp();
     service.removeCollection.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).delete('/collections/col-1').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/collections/col-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(service.removeCollection).toHaveBeenCalled();
     await app.close();

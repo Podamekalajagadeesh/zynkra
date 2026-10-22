@@ -37,7 +37,10 @@ export class ModerationController {
     @Body() appealNeuralModerationDto: AppealNeuralModerationDto,
     @CurrentUser() user: any
   ) {
-    return this.neuralModerationService.appealNeuralModeration(appealNeuralModerationDto, user.userId);
+    return this.neuralModerationService.appealNeuralModeration(
+      appealNeuralModerationDto,
+      user.userId
+    );
   }
 
   @Get('neural/user')
@@ -77,7 +80,10 @@ export class ModerationController {
   @Post('bias/analyze')
   @UseGuards(JwtAuthGuard, AdminGuard)
   async analyzeBias(@Body() analyzeBiasDto: AnalyzeBiasDto) {
-    return this.moderationService.analyzeBias(analyzeBiasDto.feedContent, analyzeBiasDto.interactionContext);
+    return this.moderationService.analyzeBias(
+      analyzeBiasDto.feedContent,
+      analyzeBiasDto.interactionContext
+    );
   }
 
   @Get('bias/feed-metrics')
@@ -90,11 +96,11 @@ export class ModerationController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   async applyBiasMitigations(
     @CurrentUser() user: any,
-    @Body() applyMitigationsDto: ApplyMitigationsDto,
+    @Body() applyMitigationsDto: ApplyMitigationsDto
   ) {
     return this.moderationService.applyBiasMitigations(
       applyMitigationsDto.mitigationStrategy,
-      user?.userId,
+      user?.userId
     );
   }
 

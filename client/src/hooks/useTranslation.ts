@@ -3,7 +3,13 @@
  * useTranslation — React hook for internationalization.
  */
 import { useState, useCallback, useEffect } from 'react';
-import { t as translate, setLocale, loadSavedLocale, getCurrentLocale, type Locale } from '../lib/i18n';
+import {
+  t as translate,
+  setLocale,
+  loadSavedLocale,
+  getCurrentLocale,
+  type Locale,
+} from '../lib/i18n';
 
 interface UseTranslationReturn {
   t: (key: string, params?: Record<string, string | number>) => string;

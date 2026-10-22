@@ -55,24 +55,26 @@ export const LiveStreamPage = () => {
 
     // Listen for stream invites as guest
     socket.on('stream-invite', async ({ roomName, hostId }) => {
-      const accepted = window.confirm(`You have been invited to join the stream as a guest. Accept?`);
+      const accepted = window.confirm(
+        `You have been invited to join the stream as a guest. Accept?`
+      );
       if (accepted) {
         // Join as guest (can publish). The server derives identity from the
         // authenticated socket — sending userId here is ignored.
         socket.emit('join-stream', {
           roomName,
-          isHost: false
+          isHost: false,
         });
       }
     });
 
     // Listen for participants joining/leaving
     socket.on('participant-joined', ({ userId }) => {
-      setParticipants(prev => [...prev, userId]);
+      setParticipants((prev) => [...prev, userId]);
     });
 
     socket.on('participant-left', ({ userId }) => {
-      setParticipants(prev => prev.filter(id => id !== userId));
+      setParticipants((prev) => prev.filter((id) => id !== userId));
     });
 
     return () => {
@@ -132,7 +134,7 @@ export const LiveStreamPage = () => {
         video: true,
         audio: true,
       });
-      
+
       // Display local video
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
@@ -143,7 +145,7 @@ export const LiveStreamPage = () => {
       // is declared here.
       socket.emit('join-stream', {
         roomName: 'zynkra-main-stream',
-        isHost: true
+        isHost: true,
       });
 
       // Start recording
@@ -157,13 +159,13 @@ export const LiveStreamPage = () => {
 
   const handleInviteGuest = () => {
     if (!guestId || !currentUser?.id) return;
-    
+
     // Send invite to guest through backend (host identity is server-derived)
     socket.emit('invite-guest', {
       roomName: 'zynkra-main-stream',
-      guestId: guestId
+      guestId: guestId,
     });
-    
+
     addToast(`Invitation sent to ${guestId}`, 'success');
     setGuestId('');
   };
@@ -204,7 +206,7 @@ export const LiveStreamPage = () => {
         video: true,
         audio: true,
       });
-      
+
       screenStreamRef.current = screenStream;
       if (screenVideoRef.current) {
         screenVideoRef.current.srcObject = screenStream;
@@ -226,10 +228,10 @@ export const LiveStreamPage = () => {
 
   const handleStopScreenShare = async () => {
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
     }
-    
+
     if (screenVideoRef.current) {
       screenVideoRef.current.srcObject = null;
     }
@@ -301,11 +303,13 @@ export const LiveStreamPage = () => {
     try {
       const tx = (await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [{
-          from: address,
-          to: currentUser.walletAddress,
-          value: parseEther(tipAmount).toString(),
-        }],
+        params: [
+          {
+            from: address,
+            to: currentUser.walletAddress,
+            value: parseEther(tipAmount).toString(),
+          },
+        ],
       })) as string;
 
       await sendTip({
@@ -332,13 +336,18 @@ export const LiveStreamPage = () => {
             <div className="w-full max-w-4xl">
               <video ref={userVideo} autoPlay muted playsInline className="w-full rounded-lg" />
             </div>
-            <p className="my-4 text-lg font-medium">You are live! {participants.length} guest(s) connected</p>
-            
+            <p className="my-4 text-lg font-medium">
+              You are live! {participants.length} guest(s) connected
+            </p>
+
             {/* Guest videos grid - supports up to 10 guests */}
             {participants.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 w-full max-w-6xl">
                 {participants.map((guestId) => (
-                  <div key={guestId} className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                  <div
+                    key={guestId}
+                    className="aspect-video bg-gray-900 rounded-lg overflow-hidden"
+                  >
                     <video
                       ref={(el) => (guestVideos.current[guestId] = el)}
                       autoPlay
@@ -366,7 +375,10 @@ export const LiveStreamPage = () => {
                   Stop Screen Share
                 </Button>
               )}
-              <Button onClick={() => setShowOverlaySettings(!showOverlaySettings)} variant="secondary">
+              <Button
+                onClick={() => setShowOverlaySettings(!showOverlaySettings)}
+                variant="secondary"
+              >
                 <Settings size={18} className="mr-2" />
                 {showOverlay ? 'Edit Overlay' : 'Add Overlay'}
               </Button>
@@ -380,7 +392,13 @@ export const LiveStreamPage = () => {
             {isScreenSharing && (
               <div className="w-full max-w-4xl mt-4">
                 <h3 className="text-lg font-medium mb-2">Screen Share Preview</h3>
-                <video ref={screenVideoRef} autoPlay muted playsInline className="w-full rounded-lg" />
+                <video
+                  ref={screenVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full rounded-lg"
+                />
               </div>
             )}
 
@@ -409,7 +427,11 @@ export const LiveStreamPage = () => {
                       <Button onClick={handleAddOverlay} variant="primary" className="flex-1">
                         Add to Stream
                       </Button>
-                      <Button onClick={() => setShowOverlaySettings(false)} variant="secondary" className="flex-1">
+                      <Button
+                        onClick={() => setShowOverlaySettings(false)}
+                        variant="secondary"
+                        className="flex-1"
+                      >
                         Cancel
                       </Button>
                     </div>
@@ -435,16 +457,20 @@ export const LiveStreamPage = () => {
                 onChange={(e) => setGuestId(e.target.value)}
                 className="px-3 py-2 border rounded-lg w-64"
               />
-              <Button onClick={handleInviteGuest} variant="secondary" disabled={participants.length >= 9}>
+              <Button
+                onClick={handleInviteGuest}
+                variant="secondary"
+                disabled={participants.length >= 9}
+              >
                 Invite Guest {participants.length >= 9 ? '(Full)' : `(${participants.length}/9)`}
               </Button>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mt-8">
               <div className="w-full lg:w-80">
-                <SpatialAudioControls 
-                  roomName="zynkra-main-stream" 
-                  isHost={currentUser?.id === participants[0]} 
+                <SpatialAudioControls
+                  roomName="zynkra-main-stream"
+                  isHost={currentUser?.id === participants[0]}
                 />
               </div>
               <div className="flex-1">
@@ -480,10 +506,16 @@ export const LiveStreamPage = () => {
               />
               <span className="font-semibold text-green-900 dark:text-green-200">ETH</span>
             </div>
-            <p className="text-xs text-dark-500 mt-2">Your balance: {balance?.formatted} {balance?.symbol}</p>
+            <p className="text-xs text-dark-500 mt-2">
+              Your balance: {balance?.formatted} {balance?.symbol}
+            </p>
             <div className="flex gap-2 mt-4">
-              <Button variant="primary" size="sm" onClick={handleTip}>Send Tip</Button>
-              <Button variant="secondary" size="sm" onClick={() => setIsTipping(false)}>Cancel</Button>
+              <Button variant="primary" size="sm" onClick={handleTip}>
+                Send Tip
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setIsTipping(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,7 +9,7 @@ import { User } from '../users/entities/user.entity';
 export class WatchlistService {
   constructor(
     @InjectRepository(Watchlist)
-    private readonly watchlistRepository: Repository<Watchlist>,
+    private readonly watchlistRepository: Repository<Watchlist>
   ) {}
 
   async addToWatchlist(user: User, post: Post): Promise<Watchlist> {

@@ -5,13 +5,11 @@ export class NotificationMessagePreference1788100100000 implements MigrationInte
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "users" ADD "notificationSettingsMessages" boolean NOT NULL DEFAULT true`,
+      `ALTER TABLE "users" ADD "notificationSettingsMessages" boolean NOT NULL DEFAULT true`
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `ALTER TABLE "users" DROP COLUMN "notificationSettingsMessages"`,
-    );
+    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN "notificationSettingsMessages"`);
   }
 }

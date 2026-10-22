@@ -52,9 +52,7 @@ export function SessionsPage() {
               </p>
               <p className="text-sm text-gray-500">
                 Last used:{' '}
-                {session.lastSeenAt
-                  ? new Date(session.lastSeenAt).toLocaleString()
-                  : 'Unknown'}{' '}
+                {session.lastSeenAt ? new Date(session.lastSeenAt).toLocaleString() : 'Unknown'}{' '}
                 &bull; IP: {session.ipAddress}
               </p>
             </div>

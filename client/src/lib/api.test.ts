@@ -27,7 +27,7 @@ describe('reactivateAccount API helper', () => {
 
   it('posts to the account reactivation endpoint', async () => {
     server.use(
-      http.post('*/users/reactivate', () => HttpResponse.json({ id: 'user-1', status: 'active' })),
+      http.post('*/users/reactivate', () => HttpResponse.json({ id: 'user-1', status: 'active' }))
     );
 
     await expect(reactivateAccount()).resolves.toEqual({ id: 'user-1', status: 'active' });
@@ -41,7 +41,7 @@ describe('getPrivacySettings API helper', () => {
 
   it('fetches the current account permission settings', async () => {
     server.use(
-      http.get('*/users/me/privacy', () => HttpResponse.json({ postVisibility: 'public' })),
+      http.get('*/users/me/privacy', () => HttpResponse.json({ postVisibility: 'public' }))
     );
 
     await expect(getPrivacySettings()).resolves.toEqual({ postVisibility: 'public' });
@@ -206,7 +206,9 @@ describe('login API helper', () => {
       })
     );
 
-    await expect(login({ email: 'unverified@example.com', password: 'password123' })).rejects.toThrow();
+    await expect(
+      login({ email: 'unverified@example.com', password: 'password123' })
+    ).rejects.toThrow();
   });
 
   it('returns 2FA response when 2FA is enabled', async () => {
@@ -345,7 +347,12 @@ describe('account recovery API helpers', () => {
       http.post('*/users/me/account-recovery', async ({ request }) => {
         const body = await request.json();
         expect(body).toEqual({ method: 'email' });
-        return HttpResponse.json({ accountId: 'user-1', status: 'pending', method: 'email', createdAt: '2026-01-01T00:00:00.000Z' });
+        return HttpResponse.json({
+          accountId: 'user-1',
+          status: 'pending',
+          method: 'email',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        });
       })
     );
 
@@ -360,7 +367,12 @@ describe('account recovery API helpers', () => {
       http.post('*/users/me/account-recovery/complete', async ({ request }) => {
         const body = await request.json();
         expect(body).toEqual({ approved: true });
-        return HttpResponse.json({ accountId: 'user-1', status: 'approved', method: 'email', createdAt: '2026-01-01T00:00:00.000Z' });
+        return HttpResponse.json({
+          accountId: 'user-1',
+          status: 'approved',
+          method: 'email',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        });
       })
     );
 
@@ -465,7 +477,9 @@ describe('resetPassword API helper', () => {
       })
     );
 
-    await expect(resetPassword({ token: 'expired-token', password: 'newpassword123' })).rejects.toThrow();
+    await expect(
+      resetPassword({ token: 'expired-token', password: 'newpassword123' })
+    ).rejects.toThrow();
   });
 
   it('throws on 400 short password', async () => {

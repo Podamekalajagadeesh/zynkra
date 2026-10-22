@@ -69,7 +69,7 @@ describe('ReactionsService', () => {
 
       expect(result.reaction).toBe('love');
       expect(postReactionsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ reaction: 'love' }),
+        expect.objectContaining({ reaction: 'love' })
       );
     });
 
@@ -100,7 +100,9 @@ describe('ReactionsService', () => {
     it('throws NotFoundException when post does not exist', async () => {
       postsService.findOne.mockResolvedValue(undefined);
 
-      await expect(service.addReaction('user-1', 'bad-id', 'like')).rejects.toThrow(NotFoundException);
+      await expect(service.addReaction('user-1', 'bad-id', 'like')).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('checks visibility as the reacting user and notifies the post author', async () => {
@@ -118,13 +120,13 @@ describe('ReactionsService', () => {
       expect(notificationsService.createNotification).toHaveBeenCalledWith(
         { id: 'author-1' },
         NotificationType.LIKE,
-        { userId: 'user-1', postId: 'post-1' },
+        { userId: 'user-1', postId: 'post-1' }
       );
     });
 
     it('rejects unsupported reaction types', async () => {
       await expect(service.addReaction('user-1', 'post-1', 'rocket')).rejects.toThrow(
-        BadRequestException,
+        BadRequestException
       );
     });
 
@@ -137,7 +139,7 @@ describe('ReactionsService', () => {
       for (const type of ['like', 'love', 'haha', 'wow', 'sad', 'angry']) {
         await service.addReaction('user-1', 'post-1', type);
         expect(postReactionsRepo.create).toHaveBeenCalledWith(
-          expect.objectContaining({ reaction: type }),
+          expect.objectContaining({ reaction: type })
         );
       }
     });

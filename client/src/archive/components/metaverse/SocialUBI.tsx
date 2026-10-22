@@ -157,7 +157,9 @@ export const SocialUBI: React.FC = () => {
                       <Trophy className="h-3 w-3 mr-1 inline" />
                       {getParticipationTypeLabel(reward.type)}
                     </Badge>
-                    <span className="font-semibold text-purple-600">+{reward.amount.toFixed(2)}</span>
+                    <span className="font-semibold text-purple-600">
+                      +{reward.amount.toFixed(2)}
+                    </span>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -245,10 +247,7 @@ export const SocialUBI: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description
                   </label>
-                  <Textarea
-                    name="description"
-                    placeholder="Describe this participation"
-                  />
+                  <Textarea name="description" placeholder="Describe this participation" />
                 </div>
                 <Button type="submit" className="w-full">
                   <Plus className="h-4 w-4 mr-2" />

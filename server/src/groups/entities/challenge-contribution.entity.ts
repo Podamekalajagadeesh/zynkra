@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { CommunityChallenge } from './community-challenge.entity';
 import { User } from '../../users/entities/user.entity';
 import { ContributionType } from '../enums/contribution-type.enum';

@@ -18,7 +18,7 @@ export class MonetizationService {
     @InjectRepository(UserGift)
     private readonly userGiftRepository: Repository<UserGift>,
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async getBadges(): Promise<Badge[]> {
@@ -29,7 +29,14 @@ export class MonetizationService {
     return this.giftRepository.find();
   }
 
-  async sendGift(sender: User, recipient: User, gift: Gift, post?: Post, comment?: Comment, message?: string): Promise<UserGift> {
+  async sendGift(
+    sender: User,
+    recipient: User,
+    gift: Gift,
+    post?: Post,
+    comment?: Comment,
+    message?: string
+  ): Promise<UserGift> {
     const userGift = this.userGiftRepository.create({
       sender,
       recipient,

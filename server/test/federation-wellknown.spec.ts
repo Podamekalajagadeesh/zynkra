@@ -28,7 +28,8 @@ describe('Federation well-known endpoints', () => {
     };
 
     const configService = {
-      get: (key: string, fallback?: any) => (key === 'INSTANCE_BASE_URL' ? 'https://zynkra.local' : fallback),
+      get: (key: string, fallback?: any) =>
+        key === 'INSTANCE_BASE_URL' ? 'https://zynkra.local' : fallback,
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -66,7 +67,9 @@ describe('Federation well-known endpoints', () => {
   });
 
   it('returns webfinger results at root .well-known/webfinger', async () => {
-    const response = await request(app.getHttpServer()).get('/.well-known/webfinger').query({ resource: 'acct:alice@zynkra.local' });
+    const response = await request(app.getHttpServer())
+      .get('/.well-known/webfinger')
+      .query({ resource: 'acct:alice@zynkra.local' });
 
     expect(response.status).toBe(200);
     expect(response.body.subject).toBe('acct:alice@zynkra.local');

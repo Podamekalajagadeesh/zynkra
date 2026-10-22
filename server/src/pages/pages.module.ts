@@ -17,7 +17,16 @@ import { InsightsService } from './insights.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Page, PageMember, PageConversation, PageMessage, Conversation, Message, Comment, Mention]),
+    TypeOrmModule.forFeature([
+      Page,
+      PageMember,
+      PageConversation,
+      PageMessage,
+      Conversation,
+      Message,
+      Comment,
+      Mention,
+    ]),
   ],
   controllers: [PagesController, PageInboxController],
   providers: [PagesService, PageInboxService, PageInboxGateway, InsightsService],

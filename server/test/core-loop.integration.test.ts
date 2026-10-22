@@ -9,11 +9,7 @@
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 
 import { Test } from '@nestjs/testing';
-import {
-  INestApplication,
-  ValidationPipe,
-  NotFoundException,
-} from '@nestjs/common';
+import { INestApplication, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -190,9 +186,7 @@ function createStore() {
       return id ? users.get(id) : undefined;
     },
     isFollowing(followerId: Id, followingId: Id): boolean {
-      return follows.some(
-        (f) => f.followerId === followerId && f.followingId === followingId,
-      );
+      return follows.some((f) => f.followerId === followerId && f.followingId === followingId);
     },
     followingIds(userId: Id): Id[] {
       return follows.filter((f) => f.followerId === userId).map((f) => f.followingId);
@@ -220,8 +214,7 @@ function createStore() {
 type Store = ReturnType<typeof createStore>;
 
 function buildAuthMock(store: Store, signJwt?: (userId: Id) => string) {
-  const tokenFor = (userId: Id): string =>
-    signJwt ? signJwt(userId) : `token-${userId}`;
+  const tokenFor = (userId: Id): string => (signJwt ? signJwt(userId) : `token-${userId}`);
 
   return {
     signUp: jest.fn(async (dto: any) => {
@@ -336,23 +329,25 @@ function buildUsersMock(store: Store) {
     }),
     unfollow: jest.fn(async (followerId: Id, targetId: Id) => {
       const idx = store.follows.findIndex(
-        (f) => f.followerId === followerId && f.followingId === targetId,
+        (f) => f.followerId === followerId && f.followingId === targetId
       );
       if (idx >= 0) store.follows.splice(idx, 1);
       return undefined;
     }),
     findFollowingIds: jest.fn(async (userId: Id) => store.followingIds(userId)),
-    getFollowing: jest.fn(async (userId: Id) =>
-      store
-        .followingIds(userId)
-        .map((id) => store.getUser(id))
-        .filter(Boolean) as any,
+    getFollowing: jest.fn(
+      async (userId: Id) =>
+        store
+          .followingIds(userId)
+          .map((id) => store.getUser(id))
+          .filter(Boolean) as any
     ),
-    getFollowers: jest.fn(async (userId: Id) =>
-      store.follows
-        .filter((f) => f.followingId === userId)
-        .map((f) => store.getUser(f.followerId))
-        .filter(Boolean) as any,
+    getFollowers: jest.fn(
+      async (userId: Id) =>
+        store.follows
+          .filter((f) => f.followingId === userId)
+          .map((f) => store.getUser(f.followerId))
+          .filter(Boolean) as any
     ),
     getPendingFollowRequests: jest.fn(async () => []),
     cancelFollowRequest: jest.fn(),
@@ -430,16 +425,14 @@ function buildPostsMock(store: Store) {
       if (!post) throw new NotFoundException('Post not found');
       return post as any;
     }),
-    findPostsByUserId: jest.fn(async (userId: Id) =>
-      store.posts.filter((p) => p.user.id === userId) as any,
+    findPostsByUserId: jest.fn(
+      async (userId: Id) => store.posts.filter((p) => p.user.id === userId) as any
     ),
     like: jest.fn(async (postId: Id, userPayload: { userId: string }) => {
       const post = store.posts.find((p) => p.id === postId);
       const user = store.getUser(userPayload.userId);
       if (!post || !user) throw new Error('Post not found');
-      const existing = store.reactions.find(
-        (r) => r.post.id === postId && r.user.id === user.id,
-      );
+      const existing = store.reactions.find((r) => r.post.id === postId && r.user.id === user.id);
       if (!existing) {
         const reaction = {
           id: store.nextId('rx'),
@@ -460,7 +453,7 @@ function buildPostsMock(store: Store) {
     }),
     unlike: jest.fn(async (postId: Id, userPayload: { userId: string }) => {
       const idx = store.reactions.findIndex(
-        (r) => r.post.id === postId && r.user.id === userPayload.userId,
+        (r) => r.post.id === postId && r.user.id === userPayload.userId
       );
       if (idx >= 0) {
         const [removed] = store.reactions.splice(idx, 1);
@@ -494,8 +487,7 @@ function buildPostsMock(store: Store) {
 }
 
 function buildFeedMock(store: Store) {
-  const viewerIdOf = (user?: any): string | null =>
-    user?.userId ?? user?.id ?? null;
+  const viewerIdOf = (user?: any): string | null => user?.userId ?? user?.id ?? null;
 
   return {
     getForYouFeed: jest.fn(async (user?: any) => {
@@ -545,8 +537,8 @@ function buildCommentsMock(store: Store) {
       }
       return comment as any;
     }),
-    findByPost: jest.fn(async (postId: Id) =>
-      store.comments.filter((c) => c.post.id === postId && !c.parentId) as any,
+    findByPost: jest.fn(
+      async (postId: Id) => store.comments.filter((c) => c.post.id === postId && !c.parentId) as any
     ),
     findOne: jest.fn(async (id: Id) => store.comments.find((c) => c.id === id) as any),
     delete: jest.fn(async (commentId: Id) => {
@@ -567,7 +559,7 @@ function buildReactionsMock(store: Store) {
       if (!user) throw new NotFoundException('User not found');
 
       const existingIdx = store.reactions.findIndex(
-        (r) => r.post.id === postId && r.user.id === userId && r.reaction === reaction,
+        (r) => r.post.id === postId && r.user.id === userId && r.reaction === reaction
       );
       if (existingIdx >= 0) {
         const [removed] = store.reactions.splice(existingIdx, 1);
@@ -599,9 +591,7 @@ function buildReactionsMock(store: Store) {
 function buildDmsMock(store: Store) {
   return {
     createConversation: jest.fn(async (starter: any, recipientIds: string[], name?: string) => {
-      const recipients = recipientIds
-        .map((id) => store.getUser(id))
-        .filter(Boolean) as StoreUser[];
+      const recipients = recipientIds.map((id) => store.getUser(id)).filter(Boolean) as StoreUser[];
       if (recipients.length !== recipientIds.length) {
         throw new NotFoundException('One or more recipients not found');
       }
@@ -641,14 +631,15 @@ function buildDmsMock(store: Store) {
       }
       return message as any;
     }),
-    getConversations: jest.fn(async (user: any) =>
-      store.conversations
-        .filter((c) => c.participants.some((p) => p.id === user.id))
-        .map((c) => ({
-          ...c,
-          lastMessage: c.messages.at(-1),
-          unreadCount: c.messages.filter((m) => m.sender.id !== user.id).length,
-        })) as any,
+    getConversations: jest.fn(
+      async (user: any) =>
+        store.conversations
+          .filter((c) => c.participants.some((p) => p.id === user.id))
+          .map((c) => ({
+            ...c,
+            lastMessage: c.messages.at(-1),
+            unreadCount: c.messages.filter((m) => m.sender.id !== user.id).length,
+          })) as any
     ),
     getMessages: jest.fn(async (user: any, conversationId: Id) => {
       const conversation = store.conversations.find((c) => c.id === conversationId);
@@ -672,11 +663,11 @@ function buildDmsMock(store: Store) {
 
 function buildNotificationsMock(store: Store) {
   return {
-    create: jest.fn(async (user: any, type: any, data: any) =>
-      store.notify(user.id, type, data) as any,
+    create: jest.fn(
+      async (user: any, type: any, data: any) => store.notify(user.id, type, data) as any
     ),
-    createNotification: jest.fn(async (user: any, type: any, data: any) =>
-      store.notify(user.id, type, data) as any,
+    createNotification: jest.fn(
+      async (user: any, type: any, data: any) => store.notify(user.id, type, data) as any
     ),
     getNotifications: jest.fn(async (userId: Id) => store.notificationsFor(userId) as any),
     getUnreadCount: jest.fn(async (userId: Id) => ({
@@ -817,7 +808,7 @@ async function buildCoreLoopApp() {
         provide: getRepositoryToken(User),
         useValue: {
           findOne: jest.fn(async ({ where }: any) =>
-            where?.id ? (store.getUser(where.id) as any) : null,
+            where?.id ? (store.getUser(where.id) as any) : null
           ),
         },
       },
@@ -867,16 +858,14 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
     const http = ctx.app.getHttpServer();
 
     // --- 1. Signup: alice ---
-    const aliceSignup = await request(http)
-      .post('/auth/signup')
-      .send({
-        username: 'alice',
-        email: 'alice@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'cap-1',
-        captchaAnswer: '12',
-      });
+    const aliceSignup = await request(http).post('/auth/signup').send({
+      username: 'alice',
+      email: 'alice@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'cap-1',
+      captchaAnswer: '12',
+    });
     expect(aliceSignup.status).toBe(201);
     expect(aliceSignup.body.message).toContain('Signup successful');
     const alice = ctx.store.getUserByUsername('alice');
@@ -919,11 +908,9 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
     expect(ctx.store.posts[0].content).toContain('Core loop');
 
     // --- 5. Feed sees the post ---
-    const feed = await request(http)
-      .get('/feed')
-      .set('Authorization', `Bearer ${aliceToken}`);
+    const feed = await request(http).get('/feed').set('Authorization', `Bearer ${aliceToken}`);
     expect(feed.status).toBe(200);
-    const feedList = Array.isArray(feed.body) ? feed.body : feed.body.posts ?? [];
+    const feedList = Array.isArray(feed.body) ? feed.body : (feed.body.posts ?? []);
     expect(feedList.some((p: any) => p.id === postId)).toBe(true);
 
     const postsList = await request(http).get('/posts');
@@ -931,16 +918,14 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
     expect(postsList.body.some((p: any) => p.id === postId)).toBe(true);
 
     // --- 6. Signup bob + verify ---
-    const bobSignup = await request(http)
-      .post('/auth/signup')
-      .send({
-        username: 'bob',
-        email: 'bob@example.com',
-        password: 'Password123!',
-        birthDate: '1991-02-02',
-        captchaId: 'cap-2',
-        captchaAnswer: '12',
-      });
+    const bobSignup = await request(http).post('/auth/signup').send({
+      username: 'bob',
+      email: 'bob@example.com',
+      password: 'Password123!',
+      birthDate: '1991-02-02',
+      captchaId: 'cap-2',
+      captchaAnswer: '12',
+    });
     expect(bobSignup.status).toBe(201);
     const bob = ctx.store.getUserByUsername('bob');
     expect(bob).toBeDefined();
@@ -969,9 +954,7 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
       .get('/feed/friends')
       .set('Authorization', `Bearer ${bobToken}`);
     expect(friendsFeed.status).toBe(200);
-    expect(
-      (friendsFeed.body as any[]).some((p) => p.id === postId),
-    ).toBe(true);
+    expect((friendsFeed.body as any[]).some((p) => p.id === postId)).toBe(true);
 
     // --- 8. Comment on alice's post ---
     const comment = await request(http)
@@ -1015,7 +998,7 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
       .send({ reaction: 'like' });
     expect(unreact.status).toBe(201);
     expect(
-      ctx.store.reactions.filter((r) => r.post.id === postId && r.user.id === bob!.id),
+      ctx.store.reactions.filter((r) => r.post.id === postId && r.user.id === bob!.id)
     ).toHaveLength(0);
 
     // Re-add for the rest of the journey
@@ -1024,7 +1007,7 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
       .set('Authorization', `Bearer ${bobToken}`)
       .send({ reaction: 'heart' });
     expect(
-      ctx.store.reactions.filter((r) => r.post.id === postId && r.user.id === bob!.id),
+      ctx.store.reactions.filter((r) => r.post.id === postId && r.user.id === bob!.id)
     ).toHaveLength(1);
 
     // --- 10. DM: bob → alice ---
@@ -1109,9 +1092,10 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
     ];
 
     for (const { method, path, body } of cases) {
-      const r = body !== undefined
-        ? await (request(http) as any)[method](path).send(body)
-        : await (request(http) as any)[method](path);
+      const r =
+        body !== undefined
+          ? await (request(http) as any)[method](path).send(body)
+          : await (request(http) as any)[method](path);
       expect({ method, path, status: r.status }).toEqual({
         method,
         path,
@@ -1135,16 +1119,14 @@ describe('Core loop (Phase 1 exit): signup → profile → post → feed → fol
       })
       .expect(201);
 
-    const again = await request(http)
-      .post('/auth/signup')
-      .send({
-        username: 'dup2',
-        email: 'dup@example.com',
-        password: 'Password123!',
-        birthDate: '1990-01-01',
-        captchaId: 'c',
-        captchaAnswer: '1',
-      });
+    const again = await request(http).post('/auth/signup').send({
+      username: 'dup2',
+      email: 'dup@example.com',
+      password: 'Password123!',
+      birthDate: '1990-01-01',
+      captchaId: 'c',
+      captchaAnswer: '1',
+    });
     expect(again.status).toBe(409);
 
     const invalid = await request(http)

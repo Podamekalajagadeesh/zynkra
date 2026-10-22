@@ -8,13 +8,19 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(private configService: ConfigService) {
     super({
       clientID: configService.get<string>('GITHUB_CLIENT_ID') || 'github-oauth-not-configured',
-      clientSecret: configService.get<string>('GITHUB_CLIENT_SECRET') || 'github-oauth-not-configured',
+      clientSecret:
+        configService.get<string>('GITHUB_CLIENT_SECRET') || 'github-oauth-not-configured',
       callbackURL: configService.get<string>('GITHUB_CALLBACK_URL', '/auth/github/callback'),
       scope: ['user:email'],
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: VerifyCallback
+  ): Promise<any> {
     const { id, username, displayName, emails, photos } = profile;
 
     const user = {

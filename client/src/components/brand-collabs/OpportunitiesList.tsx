@@ -58,7 +58,9 @@ export function OpportunitiesList({ opportunities, onRefresh }: OpportunitiesLis
                   <p className="text-sm text-gray-600 mb-2">
                     <span className="font-medium">{opportunity.brand.name}</span>
                   </p>
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{opportunity.description}</p>
+                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">
+                    {opportunity.description}
+                  </p>
                   <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                     <span>Min. followers: {opportunity.minFollowers.toLocaleString()}</span>
                     <span>•</span>
@@ -67,9 +69,7 @@ export function OpportunitiesList({ opportunities, onRefresh }: OpportunitiesLis
                     <span>Deadline: {formatDate(opportunity.deadline)}</span>
                   </div>
                 </div>
-                <Button onClick={() => setSelectedOpportunity(opportunity)}>
-                  Apply Now
-                </Button>
+                <Button onClick={() => setSelectedOpportunity(opportunity)}>Apply Now</Button>
               </div>
             </CardContent>
           </Card>

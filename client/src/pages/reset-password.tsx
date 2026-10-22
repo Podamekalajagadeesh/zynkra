@@ -52,10 +52,7 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <AuthLayout
-      title="Reset Password"
-      subtitle="Enter your new password below."
-    >
+    <AuthLayout title="Reset Password" subtitle="Enter your new password below.">
       {error && (
         <div className="mb-5 rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
           {error}
@@ -63,7 +60,9 @@ export function ResetPasswordPage() {
       )}
       {isSubmitted ? (
         <div className="text-center">
-          <p>Your password has been reset successfully. You can now log in with your new password.</p>
+          <p>
+            Your password has been reset successfully. You can now log in with your new password.
+          </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,13 +88,7 @@ export function ResetPasswordPage() {
               placeholder="••••••••"
             />
           </div>
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
             {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>

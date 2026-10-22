@@ -60,10 +60,8 @@ export const ChannelList = ({
       setIsCreating(false);
       onSelectChannel(created);
       addToast(
-        newChannelType === 'broadcast'
-          ? 'Broadcast channel created'
-          : 'Channel created',
-        'success',
+        newChannelType === 'broadcast' ? 'Broadcast channel created' : 'Channel created',
+        'success'
       );
     } catch (error: any) {
       addToast(error?.response?.data?.message || 'Failed to create channel', 'error');
@@ -133,7 +131,9 @@ export const ChannelList = ({
               <option value="group">Group</option>
               <option value="broadcast">Broadcast (admin-only posting)</option>
             </select>
-            <Button size="sm" onClick={handleCreate}>Create</Button>
+            <Button size="sm" onClick={handleCreate}>
+              Create
+            </Button>
           </div>
         </div>
       )}
@@ -144,9 +144,7 @@ export const ChannelList = ({
           channels.map((channel) => (
             <div
               key={channel.id}
-              className={`p-md cursor-pointer ${
-                selectedId === channel.id ? 'bg-dark-100' : ''
-              }`}
+              className={`p-md cursor-pointer ${selectedId === channel.id ? 'bg-dark-100' : ''}`}
               onClick={() => onSelectChannel(channel)}
             >
               <div className="flex items-center gap-md">

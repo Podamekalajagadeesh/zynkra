@@ -21,13 +21,12 @@ import { Message } from '../lib/types';
 export const GroupsPage = () => {
   const { id: routeGroupId } = useParams<{ id: string }>();
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(routeGroupId);
-  const [selectedChannelId, setSelectedChannelId] = useState<
-    string | undefined
-  >();
+  const [selectedChannelId, setSelectedChannelId] = useState<string | undefined>();
   const [selectedChannelType, setSelectedChannelType] = useState<
     'group' | 'broadcast' | undefined
   >();
-  const [selectedModMailConversation, setSelectedModMailConversation] = useState<Conversation | null>(null);
+  const [selectedModMailConversation, setSelectedModMailConversation] =
+    useState<Conversation | null>(null);
   const [isUserModerator, setIsUserModerator] = useState(false);
   const [isCurrentMember, setIsCurrentMember] = useState(false);
   const [groupPanel, setGroupPanel] = useState<'channels' | 'calendar' | 'tasks'>('channels');
@@ -70,7 +69,7 @@ export const GroupsPage = () => {
         const currentMember = members.find((m: any) => m.user?.id === currentUserId);
         setIsCurrentMember(!!currentMember);
         setIsUserModerator(
-          !!currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator'),
+          !!currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator')
         );
       })
       .catch(() => {
@@ -97,7 +96,7 @@ export const GroupsPage = () => {
   };
 
   const handleModMailConversationCreated = () => {
-    setModMailRefreshKey(prev => prev + 1);
+    setModMailRefreshKey((prev) => prev + 1);
   };
 
   const handleSelectModMailConversation = (conversation: Conversation) => {
@@ -107,9 +106,7 @@ export const GroupsPage = () => {
   };
 
   const canPostToChannel =
-    !selectedChannelId ||
-    selectedChannelType !== 'broadcast' ||
-    isUserModerator;
+    !selectedChannelId || selectedChannelType !== 'broadcast' || isUserModerator;
 
   return (
     <PageShell title="Groups">
@@ -187,9 +184,7 @@ export const GroupsPage = () => {
               )}
               {groupPanel === 'calendar' && <GroupCalendar groupId={selectedGroupId} />}
               {groupPanel === 'tasks' && <GroupTodoList groupId={selectedGroupId} />}
-              {isUserModerator && (
-                <GroupLockdownPanel groupId={selectedGroupId} />
-              )}
+              {isUserModerator && <GroupLockdownPanel groupId={selectedGroupId} />}
             </div>
           )}
           <div className="flex flex-col h-full">
@@ -210,10 +205,7 @@ export const GroupsPage = () => {
               </>
             ) : selectedModMailConversation ? (
               <>
-                <MessageList
-                  conversationId={selectedModMailConversation.id}
-                  onReply={setReplyTo}
-                />
+                <MessageList conversationId={selectedModMailConversation.id} onReply={setReplyTo} />
                 {isUserModerator && (
                   <div className="p-3 border-t border-dark-200 dark:border-dark-700">
                     <ModMailInternalNoteForm

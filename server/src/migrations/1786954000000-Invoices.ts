@@ -4,9 +4,7 @@ export class Invoices1786954000000 implements MigrationInterface {
   name = 'Invoices1786954000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(
-      `CREATE TYPE "invoices_status_enum" AS ENUM ('draft', 'sent', 'paid')`,
-    );
+    await queryRunner.query(`CREATE TYPE "invoices_status_enum" AS ENUM ('draft', 'sent', 'paid')`);
     await queryRunner.query(`
       CREATE TABLE "invoices" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -29,10 +27,10 @@ export class Invoices1786954000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "invoices" ADD CONSTRAINT "UQ_invoices_invoiceNo" UNIQUE ("invoiceNo")`,
+      `ALTER TABLE "invoices" ADD CONSTRAINT "UQ_invoices_invoiceNo" UNIQUE ("invoiceNo")`
     );
     await queryRunner.query(
-      `ALTER TABLE "invoices" ADD CONSTRAINT "FK_invoices_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "invoices" ADD CONSTRAINT "FK_invoices_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
   }
 

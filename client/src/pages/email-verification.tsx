@@ -36,20 +36,18 @@ export function EmailVerificationPage() {
         status === 'verifying'
           ? 'Verifying your email...'
           : status === 'success'
-          ? 'Email Verified!'
-          : 'Verification Failed'
+            ? 'Email Verified!'
+            : 'Verification Failed'
       }
       subtitle={
         status === 'verifying'
           ? 'Please wait while we verify your email address.'
           : status === 'success'
-          ? 'You can now log in to your account.'
-          : 'There was a problem verifying your email.'
+            ? 'You can now log in to your account.'
+            : 'There was a problem verifying your email.'
       }
     >
-      {status === 'error' && (
-        <div className="mb-4 text-center text-red-500">{error}</div>
-      )}
+      {status === 'error' && <div className="mb-4 text-center text-red-500">{error}</div>}
       {status === 'success' && (
         <div className="text-center">
           <p className="mb-4">Your email has been successfully verified.</p>

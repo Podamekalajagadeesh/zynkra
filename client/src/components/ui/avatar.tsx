@@ -41,19 +41,16 @@ export function Avatar({ name = 'A', size = 40, className = '', children }: Avat
       aria-hidden="true"
     >
       <div className="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br from-primary-400 to-accent-400">
-        <span className="text-sm" style={{ fontSize: Math.max(12, size / 2.5) }}>{initial}</span>
+        <span className="text-sm" style={{ fontSize: Math.max(12, size / 2.5) }}>
+          {initial}
+        </span>
       </div>
     </div>
   );
 }
 
 export function AvatarImage({ className = '', ...props }: AvatarImageProps) {
-  return (
-    <img
-      className={`h-full w-full object-cover ${className}`}
-      {...props}
-    />
-  );
+  return <img className={`h-full w-full object-cover ${className}`} {...props} />;
 }
 
 export function AvatarFallback({ className = '', children, ...props }: AvatarFallbackProps) {

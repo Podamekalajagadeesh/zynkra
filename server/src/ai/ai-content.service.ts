@@ -27,28 +27,28 @@ export class AiContentService {
     tutorial: [
       "Want to learn how to {topic}? 🧵\n\nHere's a quick guide:\n\n1. {step1}\n2. {step2}\n3. {step3}\n\nSave this for later!",
       "New to {topic}? Here's everything you need to know:\n\n{details}\n\nWhat questions do you have?",
-      "Step-by-step: How to {topic}\n\n{details}\n\nShare this with someone who needs it!",
+      'Step-by-step: How to {topic}\n\n{details}\n\nShare this with someone who needs it!',
     ],
     opinion: [
       "Hot take: {topic}\n\nHere's why I think {argument}:\n\n{details}\n\nWhat's your take? Let's discuss below 👇",
       "I've been thinking about {topic} lately.\n\n{details}\n\nCurious to hear different perspectives on this.",
-      "Unpopular opinion: {topic}\n\n{details}\n\nChange my mind in the comments!",
+      'Unpopular opinion: {topic}\n\n{details}\n\nChange my mind in the comments!',
     ],
     promotional: [
-      "Check out {topic}! 🚀\n\n{details}\n\nAvailable now!",
-      "You asked, we delivered. Presenting {topic}!\n\n{details}\n\nGet started today.",
+      'Check out {topic}! 🚀\n\n{details}\n\nAvailable now!',
+      'You asked, we delivered. Presenting {topic}!\n\n{details}\n\nGet started today.',
       "Something new is here! ✨\n\n{topic}\n{details}\n\nDon't miss out!",
     ],
     question: [
-      "Quick question for the timeline:\n\n{topic}?\n\n{details}\n\nDrop your answer below!",
+      'Quick question for the timeline:\n\n{topic}?\n\n{details}\n\nDrop your answer below!',
       "I'd love to hear your thoughts on this:\n\n{topic}\n{details}",
-      "Help me decide! 🤔\n\n{topic}\n\n{details}\n\nVote in the poll!",
+      'Help me decide! 🤔\n\n{topic}\n\n{details}\n\nVote in the poll!',
     ],
   };
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly openRouter: OpenRouterService,
+    private readonly openRouter: OpenRouterService
   ) {}
 
   // ── Public API ──────────────────────────────────────────────────────────
@@ -58,7 +58,8 @@ export class AiContentService {
    */
   async generateContent(params: {
     topic: string;
-    type: 'announcement' | 'tutorial' | 'opinion' | 'promotional' | 'question' | 'story' | 'caption';
+    type:
+      'announcement' | 'tutorial' | 'opinion' | 'promotional' | 'question' | 'story' | 'caption';
     details?: string;
     tone?: 'professional' | 'casual' | 'humorous' | 'inspirational';
     keywords?: string[];
@@ -82,10 +83,7 @@ Each content variant should be 1-3 paragraphs suitable for a social media post.`
           userPrompt: `Write ${params.type} content about "${params.topic}".`,
           temperature: 0.8,
         });
-        const readingTime = Math.max(
-          1,
-          Math.ceil((result.content?.[0]?.length ?? 100) / 500),
-        );
+        const readingTime = Math.max(1, Math.ceil((result.content?.[0]?.length ?? 100) / 500));
         return {
           content: result.content ?? [],
           hashtags: result.hashtags ?? [],
@@ -105,8 +103,7 @@ Each content variant should be 1-3 paragraphs suitable for a social media post.`
     if (this.openRouter.isAvailable) {
       try {
         const result = await this.openRouter.structuredCompletion<{ hashtags: string[] }>({
-          systemPrompt:
-            `Generate 10 relevant, trending hashtags for a social media post about "${topic}".
+          systemPrompt: `Generate 10 relevant, trending hashtags for a social media post about "${topic}".
 ${keywords?.length ? `Focus on these themes: ${keywords.join(', ')}` : ''}
 Return valid JSON ONLY: { "hashtags": ["#tag1", "#tag2", ...] }
 Tags should be popular but specific — avoid generic overused tags.`,
@@ -136,8 +133,7 @@ Tags should be popular but specific — avoid generic overused tags.`,
           suggestions: string[];
           readabilityScore: number;
         }>({
-          systemPrompt:
-            `You are a social media engagement expert. Rewrite the following content to maximize engagement.
+          systemPrompt: `You are a social media engagement expert. Rewrite the following content to maximize engagement.
 Analyze it for: word count, call-to-action presence, emoji usage, and readability.
 Return valid JSON ONLY: { "optimized": "rewritten content", "suggestions": ["tip1", "tip2", ...], "readabilityScore": 0-100 }`,
           userPrompt: `Optimize this content for engagement:\n\n${content}`,
@@ -172,8 +168,7 @@ Return valid JSON ONLY: { "optimized": "rewritten content", "suggestions": ["tip
           wordCount: number;
           sentenceCount: number;
         }>({
-          systemPrompt:
-            `Analyze the sentiment, keywords, and readability of the following text.
+          systemPrompt: `Analyze the sentiment, keywords, and readability of the following text.
 Return valid JSON ONLY: { "sentiment": "positive|neutral|negative", "confidence": 0-1, "keywords": ["word1", "word2", ...], "readability": "easy|moderate|complex", "wordCount": number, "sentenceCount": number }`,
           userPrompt: `Analyze this content:\n\n${content}`,
           temperature: 0.3,
@@ -191,13 +186,12 @@ Return valid JSON ONLY: { "sentiment": "positive|neutral|negative", "confidence"
    */
   async generateCaption(
     mediaType: 'image' | 'video' | 'audio',
-    keywords?: string[],
+    keywords?: string[]
   ): Promise<string[]> {
     if (this.openRouter.isAvailable) {
       try {
         const result = await this.openRouter.structuredCompletion<{ captions: string[] }>({
-          systemPrompt:
-            `You are a creative social media caption writer. Generate 5 engaging captions for a ${mediaType} post.
+          systemPrompt: `You are a creative social media caption writer. Generate 5 engaging captions for a ${mediaType} post.
 ${keywords?.length ? `Theme/keywords: ${keywords.join(', ')}` : ''}
 Make each caption unique in style — some short & punchy, some storytelling, some question-based.
 Return valid JSON ONLY: { "captions": ["caption1", "caption2", "caption3", "caption4", "caption5"] }`,
@@ -224,10 +218,7 @@ Return valid JSON ONLY: { "captions": ["caption1", "caption2", "caption3", "capt
     day: string;
     reason: string;
   } {
-    const suggestions: Record<
-      string,
-      Array<{ time: string; day: string; reason: string }>
-    > = {
+    const suggestions: Record<string, Array<{ time: string; day: string; reason: string }>> = {
       post: [
         { time: '7:00 AM', day: 'weekdays', reason: 'Morning commute engagement spike' },
         { time: '12:00 PM', day: 'weekdays', reason: 'Lunch break scrolling' },
@@ -291,7 +282,7 @@ wallet/payments, tipping, AI content tools, and more.`;
 
     // Fallback: emit a single response string as an Observable
     const fallbackResponse = this.getChatFallback(
-      chatDto.messages[chatDto.messages.length - 1]?.content ?? '',
+      chatDto.messages[chatDto.messages.length - 1]?.content ?? ''
     );
     return new Observable<string>((subscriber) => {
       subscriber.next(fallbackResponse);
@@ -310,8 +301,8 @@ wallet/payments, tipping, AI content tools, and more.`;
     if (lower.includes('login') || lower.includes('sign in') || lower.includes('password'))
       return 'If you\'re having trouble logging in, use the "Forgot Password" option on the login page. For persistent issues, you can try clearing your browser cache or using a different browser.';
     if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey'))
-      return '👋 Welcome to Zynkra! I\'m your AI assistant. I can help with account issues, content creation, community management, and more. What can I help you with today?';
-    return 'Thanks for your message! I\'ll do my best to help. Could you provide a bit more detail about what you\'re looking for? You can ask me about account settings, creating content, managing communities, or using Zynkra\'s features.';
+      return "👋 Welcome to Zynkra! I'm your AI assistant. I can help with account issues, content creation, community management, and more. What can I help you with today?";
+    return "Thanks for your message! I'll do my best to help. Could you provide a bit more detail about what you're looking for? You can ask me about account settings, creating content, managing communities, or using Zynkra's features.";
   }
 
   // ── Fallback methods (original template logic) ──────────────────────────
@@ -421,12 +412,32 @@ wallet/payments, tipping, AI content tools, and more.`;
     const words = content.split(/\s+/).filter(Boolean);
     const sentences = content.split(/[.!?]+/).filter(Boolean);
     const positiveWords = [
-      'great', 'amazing', 'excellent', 'awesome', 'love', 'wonderful', 'fantastic',
-      'good', 'happy', 'beautiful', 'incredible', 'best', 'exciting',
+      'great',
+      'amazing',
+      'excellent',
+      'awesome',
+      'love',
+      'wonderful',
+      'fantastic',
+      'good',
+      'happy',
+      'beautiful',
+      'incredible',
+      'best',
+      'exciting',
     ];
     const negativeWords = [
-      'bad', 'terrible', 'awful', 'horrible', 'hate', 'worst', 'sad',
-      'angry', 'disappointing', 'poor', 'boring',
+      'bad',
+      'terrible',
+      'awful',
+      'horrible',
+      'hate',
+      'worst',
+      'sad',
+      'angry',
+      'disappointing',
+      'poor',
+      'boring',
     ];
     const lower = content.toLowerCase();
     const posCount = positiveWords.filter((w) => lower.includes(w)).length;
@@ -471,7 +482,7 @@ wallet/payments, tipping, AI content tools, and more.`;
 
   private generateCaptionFallback(
     mediaType: 'image' | 'video' | 'audio',
-    keywords?: string[],
+    keywords?: string[]
   ): string[] {
     const captions: Record<string, string[]> = {
       image: [
@@ -500,7 +511,10 @@ wallet/payments, tipping, AI content tools, and more.`;
     const suggestions = captions[mediaType] || captions.image;
     return suggestions.map((caption) => {
       if (keywords && keywords.length > 0) {
-        return `${caption}\n\n${keywords.slice(0, 3).map((k) => `#${k}`).join(' ')}`;
+        return `${caption}\n\n${keywords
+          .slice(0, 3)
+          .map((k) => `#${k}`)
+          .join(' ')}`;
       }
       return caption;
     });

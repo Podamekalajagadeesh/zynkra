@@ -20,7 +20,7 @@ export class TrendsGateway implements OnGatewayConnection, OnGatewayInit {
 
   constructor(
     private readonly trendsService: TrendsService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   afterInit(server: Server) {

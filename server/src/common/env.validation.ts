@@ -52,9 +52,7 @@ export const envValidationSchema = Joi.object({
     'string.min': 'SESSION_SECRET must be at least 32 characters',
   }),
 
-  NODE_ENV: Joi.string()
-    .valid('development', 'production', 'test')
-    .default('development'),
+  NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
 
   // Database
   DB_HOST: Joi.string().default('localhost'),
@@ -107,9 +105,7 @@ export const envValidationSchema = Joi.object({
   // Observability (optional — features are off when unset)
   SENTRY_DSN: Joi.string().uri().allow('').optional(),
   SENTRY_TRACES_SAMPLE_RATE: Joi.number().min(0).max(1).optional(),
-  LOG_LEVEL: Joi.string()
-    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
-    .optional(),
+  LOG_LEVEL: Joi.string().valid('fatal', 'error', 'warn', 'info', 'debug', 'trace').optional(),
 
   // Payments
   PAYMENTS_ENABLED: Joi.string().valid('true', 'false').optional(),

@@ -37,7 +37,7 @@ declare module '@privacyresearch/libsignal-protocol-typescript' {
     isTrustedIdentity(
       identifier: string,
       identityKey: ArrayBuffer,
-      direction: number,
+      direction: number
     ): Promise<boolean>;
     saveIdentity(identifier: string, identityKey: ArrayBuffer): Promise<boolean>;
     loadPreKey(keyId: number): Promise<KeyPairType | undefined>;
@@ -81,11 +81,11 @@ declare module '@privacyresearch/libsignal-protocol-typescript' {
     encrypt(message: ArrayBuffer): Promise<CiphertextMessageType>;
     decryptPreKeyWhisperMessage(
       ciphertext: ArrayBuffer | string,
-      encoding?: string,
+      encoding?: string
     ): Promise<ArrayBuffer>;
     decryptWhisperMessage(
       ciphertext: ArrayBuffer | string,
-      encoding?: string,
+      encoding?: string
     ): Promise<ArrayBuffer>;
   }
 
@@ -95,7 +95,7 @@ declare module '@privacyresearch/libsignal-protocol-typescript' {
     static generateRegistrationId(): number;
     static generateSignedPreKey(
       identityKeyPair: KeyPairType,
-      signedKeyId: number,
+      signedKeyId: number
     ): Promise<SignedPreKeyPairType>;
     static generatePreKey(keyId: number): Promise<PreKeyPairType>;
   }

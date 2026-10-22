@@ -12,7 +12,12 @@ jest.mock('bcrypt', () => ({
 }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
 import request from 'supertest';
@@ -62,8 +67,8 @@ describe('POST /auth/signin (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -108,32 +113,34 @@ describe('POST /auth/signin (HTTP integration)', () => {
   // --- Successful login ---
 
   it('returns 200 and access_token for valid email + password', async () => {
-    authService.signIn.mockResolvedValue({ access_token: 'jwt-token', refresh_token: 'refresh-token' });
+    authService.signIn.mockResolvedValue({
+      access_token: 'jwt-token',
+      refresh_token: 'refresh-token',
+    });
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'test@example.com',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'test@example.com',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.access_token).toBe('jwt-token');
     expect(authService.signIn).toHaveBeenCalledWith(
       { email: 'test@example.com', password: 'password123' },
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
   it('returns 200 for valid username + password', async () => {
-    authService.signIn.mockResolvedValue({ access_token: 'jwt-token', refresh_token: 'refresh-token' });
+    authService.signIn.mockResolvedValue({
+      access_token: 'jwt-token',
+      refresh_token: 'refresh-token',
+    });
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        username: 'testuser',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      username: 'testuser',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.access_token).toBe('jwt-token');
@@ -142,35 +149,29 @@ describe('POST /auth/signin (HTTP integration)', () => {
   // --- Validation errors ---
 
   it('returns 400 when password is missing', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'test@example.com',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'test@example.com',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signIn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when password is empty', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'test@example.com',
-        password: '',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'test@example.com',
+      password: '',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signIn).not.toHaveBeenCalled();
   });
 
   it('returns 400 when email is invalid format', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'not-an-email',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'not-an-email',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(400);
     expect(authService.signIn).not.toHaveBeenCalled();
@@ -181,12 +182,10 @@ describe('POST /auth/signin (HTTP integration)', () => {
   it('returns 401 when credentials are invalid', async () => {
     authService.signIn.mockRejectedValue(new UnauthorizedException('Invalid credentials'));
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'wrong@example.com',
-        password: 'wrongpassword',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'wrong@example.com',
+      password: 'wrongpassword',
+    });
 
     expect(response.status).toBe(401);
     expect(response.body.message).toContain('Invalid credentials');
@@ -194,15 +193,13 @@ describe('POST /auth/signin (HTTP integration)', () => {
 
   it('returns 401 when email is not verified', async () => {
     authService.signIn.mockRejectedValue(
-      new UnauthorizedException('Please verify your email before logging in.'),
+      new UnauthorizedException('Please verify your email before logging in.')
     );
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'unverified@example.com',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: 'unverified@example.com',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(401);
     expect(response.body.message).toContain('verify your email');
@@ -214,12 +211,10 @@ describe('POST /auth/signin (HTTP integration)', () => {
       tempToken: 'temp-jwt-token',
     });
 
-    const response = await request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: '2fa@example.com',
-        password: 'password123',
-      });
+    const response = await request(app.getHttpServer()).post('/auth/signin').send({
+      email: '2fa@example.com',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.twoFactorEnabled).toBe(true);

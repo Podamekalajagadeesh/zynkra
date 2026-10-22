@@ -12,7 +12,12 @@ jest.mock('bcrypt', () => ({
 }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import request from 'supertest';
 import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
@@ -64,8 +69,8 @@ describe('POST /auth/forgot-password (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -126,9 +131,7 @@ describe('POST /auth/forgot-password (HTTP integration)', () => {
   // --- DTO validation ---
 
   it('returns 400 when email is missing (DTO validation)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/auth/forgot-password')
-      .send({});
+    const response = await request(app.getHttpServer()).post('/auth/forgot-password').send({});
 
     expect(response.status).toBe(400);
     expect(authService.forgotPassword).not.toHaveBeenCalled();
@@ -179,8 +182,8 @@ describe('POST /auth/reset-password (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-      { provide: AccountLinkingService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
+        { provide: AccountLinkingService, useValue: {} },
+        { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -271,7 +274,7 @@ describe('POST /auth/reset-password (HTTP integration)', () => {
 
   it('returns 401 for invalid token', async () => {
     authService.resetPassword.mockRejectedValue(
-      new UnauthorizedException('Invalid or expired password reset token.'),
+      new UnauthorizedException('Invalid or expired password reset token.')
     );
 
     const response = await request(app.getHttpServer())

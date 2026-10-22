@@ -7,7 +7,7 @@ export class TipLeaderboardIndex1786952000000 implements MigrationInterface {
     // Leaderboard reads GROUP BY "toId" ORDER BY SUM(amount) over a period —
     // index the recipient + created_at so the aggregate stays fast.
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "IDX_tip_recipient_created" ON "tip" ("toId", "createdAt")`,
+      `CREATE INDEX IF NOT EXISTS "IDX_tip_recipient_created" ON "tip" ("toId", "createdAt")`
     );
   }
 

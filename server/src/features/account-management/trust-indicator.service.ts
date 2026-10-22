@@ -15,11 +15,13 @@ export class TrustIndicatorService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Post)
-    private postsRepository: Repository<Post>,
+    private postsRepository: Repository<Post>
   ) {}
 
   async getOrCreateTrustIndicator(userId: string): Promise<TrustIndicator> {
-    let indicator = await this.trustIndicatorRepository.findOne({ where: { user: { id: userId } } });
+    let indicator = await this.trustIndicatorRepository.findOne({
+      where: { user: { id: userId } },
+    });
 
     if (!indicator) {
       const user = await this.usersRepository.findOne({ where: { id: userId } });
@@ -190,7 +192,7 @@ export class TrustIndicatorService {
     const indicator = await this.getOrCreateTrustIndicator(userId);
 
     if (indicator.badges) {
-      indicator.badges = indicator.badges.filter(b => b !== badgeType);
+      indicator.badges = indicator.badges.filter((b) => b !== badgeType);
     }
 
     await this.decrementBadgeCount(userId);
@@ -216,7 +218,10 @@ export class TrustIndicatorService {
     return this.trustIndicatorRepository.save(indicator);
   }
 
-  async getUsersByTrustLevel(trustLevel: TrustLevel, limit: number = 50): Promise<TrustIndicator[]> {
+  async getUsersByTrustLevel(
+    trustLevel: TrustLevel,
+    limit: number = 50
+  ): Promise<TrustIndicator[]> {
     return this.trustIndicatorRepository.find({
       where: { trustLevel },
       order: { trustScore: 'DESC' },
@@ -224,7 +229,11 @@ export class TrustIndicatorService {
     });
   }
 
-  async getUsersByTrustScore(minScore: number = 0, maxScore: number = 100, limit: number = 50): Promise<TrustIndicator[]> {
+  async getUsersByTrustScore(
+    minScore: number = 0,
+    maxScore: number = 100,
+    limit: number = 50
+  ): Promise<TrustIndicator[]> {
     return this.trustIndicatorRepository
       .createQueryBuilder('indicator')
       .where('indicator.trustScore >= :minScore', { minScore })

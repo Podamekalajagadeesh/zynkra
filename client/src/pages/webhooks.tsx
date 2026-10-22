@@ -77,7 +77,7 @@ export const WebhooksPage = () => {
 
   const toggleEvent = (event: string) => {
     setEvents((prev) =>
-      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event],
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]
     );
   };
 
@@ -108,7 +108,7 @@ export const WebhooksPage = () => {
     try {
       await updateWebhookEndpoint(endpoint.id, { active: !endpoint.active });
       setEndpoints((prev) =>
-        prev.map((e) => (e.id === endpoint.id ? { ...e, active: !e.active } : e)),
+        prev.map((e) => (e.id === endpoint.id ? { ...e, active: !e.active } : e))
       );
       addToast(endpoint.active ? 'Endpoint paused' : 'Endpoint active', 'success');
     } catch {
@@ -120,7 +120,7 @@ export const WebhooksPage = () => {
     try {
       const result = await rotateWebhookSecret(endpointId);
       setEndpoints((prev) =>
-        prev.map((e) => (e.id === endpointId ? { ...e, secret: result.secret } : e)),
+        prev.map((e) => (e.id === endpointId ? { ...e, secret: result.secret } : e))
       );
       setTimeout(() => copy(result.secret), 0);
       addToast('New signing secret generated — copied', 'success');
@@ -206,9 +206,7 @@ export const WebhooksPage = () => {
 
       <div className="space-y-4">
         {isLoading
-          ? [...Array(2)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
-            ))
+          ? [...Array(2)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
           : endpoints.map((endpoint) => (
               <Card key={endpoint.id}>
                 <CardContent className="p-4 space-y-3">
@@ -234,14 +232,22 @@ export const WebhooksPage = () => {
                           <code className="rounded bg-gray-100 px-2 py-1 text-xs break-all">
                             {endpoint.secret}
                           </code>
-                          <Button variant="outline" size="sm" onClick={() => copy(endpoint.secret!)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copy(endpoint.secret!)}
+                          >
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      <Button variant="outline" size="sm" onClick={() => handleToggleActive(endpoint)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleActive(endpoint)}
+                      >
                         {endpoint.active ? 'Pause' : 'Resume'}
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => handleRotate(endpoint.id)}>
@@ -284,7 +290,9 @@ export const WebhooksPage = () => {
                                 }`}
                               >
                                 {d.status}
-                                {d.status === 'failed' && d.retries > 0 ? ` (${d.retries} retries)` : ''}
+                                {d.status === 'failed' && d.retries > 0
+                                  ? ` (${d.retries} retries)`
+                                  : ''}
                               </span>
                             </div>
                           ))

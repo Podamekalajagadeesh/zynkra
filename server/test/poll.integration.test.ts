@@ -4,7 +4,12 @@
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -18,13 +23,36 @@ import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [PollsController],
     providers: [
       { provide: PollsService, useValue: { vote: overrides.vote || jest.fn() } },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -42,7 +70,10 @@ async function buildApp(overrides: Record<string, jest.Mock> = {}) {
 describe('POST /polls/:pollOptionId/vote', () => {
   it('returns 200 when voted', async () => {
     const { app, pollsService, token } = await buildApp();
-    pollsService.vote.mockResolvedValue({ id: 'poll-1', options: [{ id: 'opt-1', voteCount: 1 }] } as any);
+    pollsService.vote.mockResolvedValue({
+      id: 'poll-1',
+      options: [{ id: 'opt-1', voteCount: 1 }],
+    } as any);
 
     const r = await request(app.getHttpServer())
       .post('/polls/opt-1/vote')

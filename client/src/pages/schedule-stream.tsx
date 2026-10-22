@@ -41,16 +41,31 @@ export const ScheduleStreamPage = () => {
           <h1 className="text-2xl font-bold mb-4">Schedule a Live Stream</h1>
           <div className="space-y-4">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                Title
+              </label>
               <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-              <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
             <div>
-              <label htmlFor="scheduledTime" className="block text-sm font-medium text-gray-700">Scheduled Time</label>
-              <Input id="scheduledTime" type="datetime-local" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+              <label htmlFor="scheduledTime" className="block text-sm font-medium text-gray-700">
+                Scheduled Time
+              </label>
+              <Input
+                id="scheduledTime"
+                type="datetime-local"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+              />
             </div>
             <Button onClick={handleScheduleStream}>Schedule Stream</Button>
           </div>

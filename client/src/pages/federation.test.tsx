@@ -36,7 +36,11 @@ const REMOTE_ITEM: FederatedTimelineItem = {
     name: 'Alice',
     avatarUrl: null,
   },
-  instance: { domain: 'mastodon.example', baseUrl: 'https://mastodon.example', software: 'mastodon' },
+  instance: {
+    domain: 'mastodon.example',
+    baseUrl: 'https://mastodon.example',
+    software: 'mastodon',
+  },
 };
 
 const STATS = {
@@ -65,7 +69,7 @@ async function renderPage() {
   return render(
     <MemoryRouter>
       <FederationPage />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 }
 
@@ -97,7 +101,7 @@ describe('interpretReport', () => {
     // correct idempotent response look broken.
     const outcome = interpretReport(
       report({ delivered: 0, skipped: true, reason: 'already federated a Like for this object' }),
-      'like',
+      'like'
     );
     expect(outcome.applied).toBe(true);
   });
@@ -110,7 +114,7 @@ describe('interpretReport', () => {
         skipped: true,
         reason: 'this like was never federated, so there is nothing to undo',
       }),
-      'unlike',
+      'unlike'
     );
     // Nothing was sent because nothing needed to be. The end state is correct.
     expect(outcome.applied).toBe(true);
@@ -120,7 +124,7 @@ describe('interpretReport', () => {
     const { interpretReport } = await import('./federation');
     const outcome = interpretReport(
       report({ delivered: 0, skipped: true, reason: 'no known remote object https://x.example/1' }),
-      'like',
+      'like'
     );
     expect(outcome.applied).toBe(false);
     expect(outcome.notice).toContain('no known remote object');
@@ -132,9 +136,15 @@ describe('interpretReport', () => {
       report({
         delivered: 0,
         failed: 1,
-        results: [{ domain: 'blocked.example', delivered: false, reason: 'instance is not connected or is blocked' }],
+        results: [
+          {
+            domain: 'blocked.example',
+            delivered: false,
+            reason: 'instance is not connected or is blocked',
+          },
+        ],
       }),
-      'boost',
+      'boost'
     );
     expect(outcome.applied).toBe(false);
     expect(outcome.notice).toBe('instance is not connected or is blocked');
@@ -177,7 +187,9 @@ describe('FederationPage', () => {
     // outage rendered as "you have nothing here". The contents must be reported
     // as unknown, and the empty state must not appear at all.
     await waitFor(() => {
-      expect(screen.getByText(/could not be loaded, so its contents are unknown/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/could not be loaded, so its contents are unknown/i)
+      ).toBeInTheDocument();
     });
     expect(screen.queryByText(/no remote posts have reached this instance yet/i)).toBeNull();
   });
@@ -219,7 +231,9 @@ describe('FederationPage', () => {
     await renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText(/no remote posts have reached this instance yet/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/no remote posts have reached this instance yet/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -259,8 +273,14 @@ describe('FederationPage', () => {
       report({
         delivered: 0,
         failed: 1,
-        results: [{ domain: 'mastodon.example', delivered: false, reason: 'instance is not connected or is blocked' }],
-      }),
+        results: [
+          {
+            domain: 'mastodon.example',
+            delivered: false,
+            reason: 'instance is not connected or is blocked',
+          },
+        ],
+      })
     );
 
     await renderPage();
@@ -304,7 +324,7 @@ describe('FederationPage', () => {
         delivered: 0,
         skipped: true,
         reason: 'this like was never federated, so there is nothing to undo',
-      }),
+      })
     );
 
     await renderPage();
@@ -335,8 +355,10 @@ describe('FederationPage', () => {
       report({
         delivered: 0,
         failed: 1,
-        results: [{ domain: 'mastodon.example', delivered: false, reason: 'signature rejected (401)' }],
-      }),
+        results: [
+          { domain: 'mastodon.example', delivered: false, reason: 'signature rejected (401)' },
+        ],
+      })
     );
 
     await renderPage();
@@ -374,7 +396,13 @@ describe('FederationPage', () => {
       hasMore: true,
     });
     mockGetFederatedTimeline.mockResolvedValueOnce({
-      items: [{ ...REMOTE_ITEM, id: 'https://mastodon.example/users/bob/statuses/2', content: 'Second page' }],
+      items: [
+        {
+          ...REMOTE_ITEM,
+          id: 'https://mastodon.example/users/bob/statuses/2',
+          content: 'Second page',
+        },
+      ],
       total: 60,
       limit: 20,
       offset: 20,
@@ -392,7 +420,7 @@ describe('FederationPage', () => {
       expect(screen.getByText('Second page')).toBeInTheDocument();
     });
     expect(mockGetFederatedTimeline).toHaveBeenLastCalledWith(
-      expect.objectContaining({ offset: 20 }),
+      expect.objectContaining({ offset: 20 })
     );
   });
 

@@ -53,7 +53,9 @@ export async function generateAndStoreKeys(userId: string): Promise<void> {
   });
 }
 
-export async function getKeys(userId: string | null): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array } | null> {
+export async function getKeys(
+  userId: string | null
+): Promise<{ publicKey: Uint8Array; privateKey: Uint8Array } | null> {
   if (!userId) {
     return null;
   }
@@ -90,36 +92,26 @@ export async function encryptMessage(
 }
 
 // For public posts/stories (self-encrypted so only owner can decrypt, but all users can verify authenticity)
-export async function encryptPublicContent(
-  userId: string,
-  content: string
-): Promise<string> {
+export async function encryptPublicContent(userId: string, content: string): Promise<string> {
   const keys = await getKeys(userId);
   if (!keys) throw new Error('No encryption keys found for user');
 
   await sodium.ready;
   const nonce = sodium.randombytes_buf(sodium.crypto_box_NONCEBYTES);
-  const ciphertext = sodium.crypto_box_easy(
-    content, 
-    nonce, 
-    keys.publicKey, 
-    keys.privateKey
-  );
+  const ciphertext = sodium.crypto_box_easy(content, nonce, keys.publicKey, keys.privateKey);
 
   return JSON.stringify({
     nonce: sodium.to_base64(nonce),
     ciphertext: sodium.to_base64(ciphertext),
-    senderPublicKey: sodium.to_base64(keys.publicKey)
+    senderPublicKey: sodium.to_base64(keys.publicKey),
   });
 }
 
 // Decrypt any public content (posts/stories)
-export async function decryptPublicContent(
-  encryptedContent: string
-): Promise<string> {
+export async function decryptPublicContent(encryptedContent: string): Promise<string> {
   await sodium.ready;
   const { nonce, ciphertext, senderPublicKey } = JSON.parse(encryptedContent);
-  
+
   const senderKeyBytes = sodium.from_base64(senderPublicKey);
   const currentUserKeys = await getKeys(null); // Get current user's private key to verify
   if (!currentUserKeys) throw new Error('No user keys found');
@@ -141,7 +133,7 @@ export async function decryptMessage(
 ): Promise<string> {
   await sodium.ready;
   const { nonce, ciphertext } = JSON.parse(encryptedMessage);
-  
+
   const decrypted = sodium.crypto_box_open_easy(
     sodium.from_base64(ciphertext),
     sodium.from_base64(nonce),

@@ -5,10 +5,10 @@
 const EMISSION_FACTORS = {
   // Cloud storage emissions
   storage: 1.5, // 1.5g CO2e per GB stored per year
-  
+
   // Data transfer emissions (varies by region, average global estimate)
   dataTransfer: 2.0, // 2.0g CO2e per GB transferred
-  
+
   // Content processing emissions (encoding, transcoding, etc.)
   processing: {
     video: 0.8, // 0.8g CO2e per minute of video processed
@@ -16,7 +16,7 @@ const EMISSION_FACTORS = {
     audio: 0.05, // 0.05g CO2e per minute of audio processed
     text: 0.001, // 0.001g CO2e per KB of text processed
   },
-  
+
   // Streaming emissions (per view)
   streaming: {
     '720p': 0.35, // 0.35g CO2e per view of 720p video (assumes 5min view)
@@ -25,7 +25,7 @@ const EMISSION_FACTORS = {
     '8k': 3.6, // 3.6g CO2e per view of 8K video
     image: 0.015, // 0.015g CO2e per image view
     audio: 0.03, // 0.03g CO2e per minute of audio streamed
-  }
+  },
 };
 
 // Platform's sustainability efforts offsets (percentage of emissions reduced through renewables)
@@ -58,7 +58,7 @@ export function calculateCarbonFootprint(metadata: ContentMetadata): CarbonFootp
   let processingEmissions = 0;
   const transferEmissions = sizeInGB * EMISSION_FACTORS.dataTransfer;
   const storageEmissions = sizeInGB * EMISSION_FACTORS.storage; // Annual storage emissions
-  
+
   // Calculate processing emissions based on content type
   if (metadata.type === 'video' && metadata.durationInSeconds) {
     const durationInMinutes = metadata.durationInSeconds / 60;
@@ -71,24 +71,26 @@ export function calculateCarbonFootprint(metadata: ContentMetadata): CarbonFootp
   } else if (metadata.type === 'text' && metadata.textLengthInKB) {
     processingEmissions = metadata.textLengthInKB * EMISSION_FACTORS.processing.text;
   }
-  
+
   const totalEmissions = processingEmissions + transferEmissions + storageEmissions;
   const platformOffset = totalEmissions * PLATFORM_OFFSET_RATE;
   const netEmissions = totalEmissions - platformOffset;
-  
+
   // Generate recommendations to reduce emissions
   const recommendations: string[] = [];
   let emissionsSaved = 0;
   let sustainabilityScore = 100;
-  
+
   // Resolution-based recommendations for videos
   if (metadata.type === 'video') {
     if (metadata.resolution === '8k') {
-      recommendations.push('Consider using 4K resolution instead of 8K to reduce emissions by ~50%');
+      recommendations.push(
+        'Consider using 4K resolution instead of 8K to reduce emissions by ~50%'
+      );
       emissionsSaved += 1.8; // Approximate savings
       sustainabilityScore -= 30;
     } else if (metadata.resolution === '4k') {
-      recommendations.push('1080p resolution would reduce this content\'s emissions by ~61%');
+      recommendations.push("1080p resolution would reduce this content's emissions by ~61%");
       emissionsSaved += 1.1;
       sustainabilityScore -= 15;
     } else if (metadata.resolution === '1080p') {
@@ -96,25 +98,26 @@ export function calculateCarbonFootprint(metadata: ContentMetadata): CarbonFootp
       sustainabilityScore += 5;
     }
   }
-  
+
   // Duration recommendations
   if (metadata.durationInSeconds && metadata.durationInSeconds > 60) {
     recommendations.push('Shorter videos (<60s) have significantly lower carbon footprints');
     sustainabilityScore -= 10;
   }
-  
+
   // Compression recommendation for large files
-  if (sizeInGB > 0.1) { // Files larger than 100MB
+  if (sizeInGB > 0.1) {
+    // Files larger than 100MB
     recommendations.push('Optimize file compression to reduce data transfer and storage emissions');
     sustainabilityScore -= 5;
   }
-  
+
   // General tips
-  recommendations.push('Learn more about our platform\'s transition to 100% renewable energy');
-  
+  recommendations.push("Learn more about our platform's transition to 100% renewable energy");
+
   // Ensure score stays within 0-100
   sustainabilityScore = Math.max(0, Math.min(100, sustainabilityScore));
-  
+
   return {
     processingEmissions,
     transferEmissions,
@@ -124,7 +127,7 @@ export function calculateCarbonFootprint(metadata: ContentMetadata): CarbonFootp
     netEmissions,
     emissionsSaved,
     sustainabilityScore,
-    recommendations
+    recommendations,
   };
 }
 

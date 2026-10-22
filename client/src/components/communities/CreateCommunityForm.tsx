@@ -35,7 +35,9 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
   const [newFlairName, setNewFlairName] = useState('');
   const [newFlairColor, setNewFlairColor] = useState('#3b82f6');
   const [newFlairTextColor, setNewFlairTextColor] = useState('#ffffff');
-  const [communityType, setCommunityType] = useState<'general' | 'local' | 'professional' | 'fan' | 'other'>('general');
+  const [communityType, setCommunityType] = useState<
+    'general' | 'local' | 'professional' | 'fan' | 'other'
+  >('general');
   // Location fields for local communities
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -65,14 +67,17 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
     e.preventDefault();
     if (name.trim() && description.trim()) {
       // For local communities, get coordinates from zipcode (simplified mock - in real app use geocoding API)
-      const location = communityType === 'local' && city && state && zipCode ? {
-        city,
-        state,
-        zipCode,
-        latitude: 40.7128, // Mock coordinates - would use geocoding in production
-        longitude: -74.0060,
-        radius
-      } : undefined;
+      const location =
+        communityType === 'local' && city && state && zipCode
+          ? {
+              city,
+              state,
+              zipCode,
+              latitude: 40.7128, // Mock coordinates - would use geocoding in production
+              longitude: -74.006,
+              radius,
+            }
+          : undefined;
 
       onCreateCommunity({
         name,
@@ -172,7 +177,9 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
                 className="w-10 h-10 rounded cursor-pointer"
                 title="Text color"
               />
-              <Button type="button" onClick={addFlair}>Add</Button>
+              <Button type="button" onClick={addFlair}>
+                Add
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2">
               {flairs.map((flair) => (
@@ -195,7 +202,7 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
           </div>
           <div>
             <label className="text-sm font-medium mb-1 block">Community Type</label>
-            <select 
+            <select
               value={communityType}
               onChange={(e) => setCommunityType(e.target.value as any)}
               className="w-full p-2 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
@@ -207,7 +214,7 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
               <option value="other">Other</option>
             </select>
           </div>
-          
+
           {/* Location fields - only show for local communities */}
           {communityType === 'local' && (
             <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
@@ -243,7 +250,9 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Neighborhood Radius (miles)</label>
+                  <label className="text-sm font-medium mb-1 block">
+                    Neighborhood Radius (miles)
+                  </label>
                   <Input
                     type="number"
                     value={radius}
@@ -255,12 +264,15 @@ export const CreateCommunityForm = ({ onCreateCommunity }: CreateCommunityFormPr
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Your community will only be visible to users within this radius of your neighborhood.
+                Your community will only be visible to users within this radius of your
+                neighborhood.
               </p>
             </div>
           )}
 
-          <Button type="submit" className="w-full">Create Community</Button>
+          <Button type="submit" className="w-full">
+            Create Community
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

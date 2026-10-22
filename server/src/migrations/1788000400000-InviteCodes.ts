@@ -17,14 +17,12 @@ export class InviteCodes1788000400000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "invite_codes" ADD CONSTRAINT "UQ_invite_codes_code" UNIQUE ("code")`,
+      `ALTER TABLE "invite_codes" ADD CONSTRAINT "UQ_invite_codes_code" UNIQUE ("code")`
     );
     await queryRunner.query(
-      `ALTER TABLE "invite_codes" ADD CONSTRAINT "FK_invite_codes_created_by" FOREIGN KEY ("created_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+      `ALTER TABLE "invite_codes" ADD CONSTRAINT "FK_invite_codes_created_by" FOREIGN KEY ("created_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`
     );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_invite_codes_code" ON "invite_codes" ("code")`,
-    );
+    await queryRunner.query(`CREATE INDEX "IDX_invite_codes_code" ON "invite_codes" ("code")`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

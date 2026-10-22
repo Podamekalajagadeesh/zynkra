@@ -15,14 +15,18 @@ export class DigitalAssetsService {
     @InjectRepository(DigitalAsset)
     private readonly assetRepository: Repository<DigitalAsset>,
     private readonly ipfsService: IpfsService,
-    private readonly federationService: FederationService,
+    private readonly federationService: FederationService
   ) {}
 
-  async createAsset(userId: string, createAssetDto: CreateAssetDto, fileBuffer: Buffer): Promise<DigitalAsset> {
+  async createAsset(
+    userId: string,
+    createAssetDto: CreateAssetDto,
+    fileBuffer: Buffer
+  ): Promise<DigitalAsset> {
     try {
       // Upload asset file to IPFS
       const fileCid = await this.ipfsService.upload(fileBuffer);
-      
+
       // Create standardized metadata for cross-platform compatibility
       const standardizedMetadata = {
         name: createAssetDto.name,
@@ -44,7 +48,10 @@ export class DigitalAssetsService {
       let tags: string[] = [];
       if (createAssetDto.tags) {
         if (typeof createAssetDto.tags === 'string') {
-          tags = (createAssetDto.tags as unknown as string).split(',').map(tag => tag.trim()).filter(tag => tag);
+          tags = (createAssetDto.tags as unknown as string)
+            .split(',')
+            .map((tag) => tag.trim())
+            .filter((tag) => tag);
         } else {
           tags = createAssetDto.tags;
         }
@@ -57,13 +64,16 @@ export class DigitalAssetsService {
         metadataCid,
         metadata: standardizedMetadata,
         ownerId: userId,
-        compatiblePlatforms: createAssetDto.compatiblePlatforms || ['zynkra', 'other-compatible-platforms'],
+        compatiblePlatforms: createAssetDto.compatiblePlatforms || [
+          'zynkra',
+          'other-compatible-platforms',
+        ],
         tags,
       });
 
       const savedAsset = await this.assetRepository.save(asset);
       this.logger.log(`Created interoperable digital asset: ${savedAsset.id} with CID ${fileCid}`);
-      
+
       return savedAsset;
     } catch (error) {
       this.logger.error('Failed to create digital asset:', error);
@@ -88,7 +98,7 @@ export class DigitalAssetsService {
 
   async transferAsset(userId: string, transferAssetDto: TransferAssetDto): Promise<DigitalAsset> {
     const asset = await this.getAssetById(transferAssetDto.assetId);
-    
+
     if (asset.ownerId !== userId) {
       throw new HttpException('You do not own this asset', HttpStatus.FORBIDDEN);
     }
@@ -100,39 +110,50 @@ export class DigitalAssetsService {
     // Update ownership
     asset.ownerId = transferAssetDto.newOwnerId;
     const updatedAsset = await this.assetRepository.save(asset);
-    
-    this.logger.log(`Transferred asset ${asset.id} from user ${userId} to ${transferAssetDto.newOwnerId}`);
+
+    this.logger.log(
+      `Transferred asset ${asset.id} from user ${userId} to ${transferAssetDto.newOwnerId}`
+    );
     return updatedAsset;
   }
 
   async syncAssetToRemoteInstance(assetId: string, targetInstanceDomain: string): Promise<boolean> {
     try {
       const asset = await this.getAssetById(assetId);
-      
+
       // Connect to the remote instance if not already connected
-      await this.federationService.connectToInstance({ 
+      await this.federationService.connectToInstance({
         domain: targetInstanceDomain,
-        baseUrl: `https://${targetInstanceDomain}`
+        baseUrl: `https://${targetInstanceDomain}`,
       });
-      
+
       // In a real implementation, this would federate the asset via ActivityPub
       // Send the asset metadata and CID to the remote instance
       this.logger.log(`Synced asset ${assetId} to remote instance ${targetInstanceDomain}`);
-      
+
       return true;
     } catch (error) {
       this.logger.error(`Failed to sync asset ${assetId} to remote instance:`, error);
-      throw new HttpException('Failed to sync asset to remote instance', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Failed to sync asset to remote instance',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
-  async verifyAssetInteroperability(assetId: string, targetPlatform: string): Promise<{ compatible: boolean; reasons: string[] }> {
+  async verifyAssetInteroperability(
+    assetId: string,
+    targetPlatform: string
+  ): Promise<{ compatible: boolean; reasons: string[] }> {
     const asset = await this.getAssetById(assetId);
     const reasons: string[] = [];
     let compatible = false;
 
     // Check if platform is in compatible platforms list
-    if (asset.compatiblePlatforms?.includes(targetPlatform) || asset.compatiblePlatforms?.includes('all')) {
+    if (
+      asset.compatiblePlatforms?.includes(targetPlatform) ||
+      asset.compatiblePlatforms?.includes('all')
+    ) {
       compatible = true;
       reasons.push(`Platform ${targetPlatform} is in the asset's compatible platforms list`);
     } else {

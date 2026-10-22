@@ -60,7 +60,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
               <p className="text-sm font-medium text-gray-600">{card.title}</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
             </div>
-            <div className={`w-12 h-12 rounded-full ${card.color} flex items-center justify-center text-2xl`}>
+            <div
+              className={`w-12 h-12 rounded-full ${card.color} flex items-center justify-center text-2xl`}
+            >
               {card.icon}
             </div>
           </div>

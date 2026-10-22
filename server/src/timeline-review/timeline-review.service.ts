@@ -12,7 +12,7 @@ export class TimelineReviewService {
   constructor(
     @InjectRepository(TimelineReview)
     private readonly timelineReviewRepository: Repository<TimelineReview>,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   findAll(userId: string) {
@@ -23,7 +23,10 @@ export class TimelineReviewService {
   }
 
   async approve(id: string, userId: string) {
-    const review = await this.timelineReviewRepository.findOne({ where: { id }, relations: ['user'] });
+    const review = await this.timelineReviewRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (review.user.id !== userId) {
       throw new UnauthorizedException();
     }
@@ -32,7 +35,10 @@ export class TimelineReviewService {
   }
 
   async hide(id: string, userId: string) {
-    const review = await this.timelineReviewRepository.findOne({ where: { id }, relations: ['user'] });
+    const review = await this.timelineReviewRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (review.user.id !== userId) {
       throw new UnauthorizedException();
     }

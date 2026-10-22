@@ -9,8 +9,7 @@ import { PageMessageList } from './PageMessageList';
 export function PageInboxPage() {
   const { pageId } = useParams<{ pageId: string }>();
   const [conversations, setConversations] = useState<PageConversation[]>([]);
-  const [selectedConversation, setSelectedConversation] =
-    useState<PageConversation | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<PageConversation | null>(null);
 
   useEffect(() => {
     if (pageId) {

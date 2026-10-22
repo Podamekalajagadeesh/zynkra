@@ -23,7 +23,10 @@ export class TranslationService {
 
   constructor(private readonly configService: ConfigService) {
     this.deeplApiKey = this.configService.get<string>('DEEPL_API_KEY');
-    this.libreUrl = this.configService.get<string>('LIBRETRANSLATE_URL', 'https://libretranslate.com');
+    this.libreUrl = this.configService.get<string>(
+      'LIBRETRANSLATE_URL',
+      'https://libretranslate.com'
+    );
     this.maxCacheEntries = this.configService.get<number>('TRANSLATION_CACHE_MAX_ENTRIES', 1000);
   }
 
@@ -68,7 +71,7 @@ export class TranslationService {
   async translate(
     text: string,
     sourceLang: string = 'auto',
-    targetLang: string = 'en',
+    targetLang: string = 'en'
   ): Promise<{ translatedText: string; detectedLanguage?: string; provider: string }> {
     if (!text || text.trim().length === 0) {
       return { translatedText: text, provider: 'none' };
@@ -141,7 +144,7 @@ export class TranslationService {
   async translateBatch(
     texts: string[],
     sourceLang: string = 'auto',
-    targetLang: string = 'en',
+    targetLang: string = 'en'
   ): Promise<{ translatedTexts: string[]; provider: string }> {
     // DeepL supports batch natively
     if (this.deeplApiKey) {
@@ -155,7 +158,7 @@ export class TranslationService {
 
     // Translate individually as fallback
     const results = await Promise.all(
-      texts.map((text) => this.translate(text, sourceLang, targetLang)),
+      texts.map((text) => this.translate(text, sourceLang, targetLang))
     );
     return {
       translatedTexts: results.map((r) => r.translatedText),
@@ -176,7 +179,7 @@ export class TranslationService {
           {
             headers: { Authorization: `DeepL-Auth-Key ${this.deeplApiKey}` },
             params: { auth_key: this.deeplApiKey, text: text.slice(0, 1000), source_lang: 'AUTO' },
-          },
+          }
         );
         return {
           language: response.data.translations?.[0]?.detected_source_language || 'unknown',
@@ -195,7 +198,7 @@ export class TranslationService {
   private async translateWithDeepL(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<{ translatedText: string; detectedLanguage?: string; provider: string }> {
     const params: Record<string, string> = {
       text,
@@ -205,14 +208,10 @@ export class TranslationService {
       params.source_lang = sourceLang.toUpperCase();
     }
 
-    const response = await axios.post(
-      'https://api-free.deepl.com/v2/translate',
-      null,
-      {
-        headers: { Authorization: `DeepL-Auth-Key ${this.deeplApiKey}` },
-        params,
-      },
-    );
+    const response = await axios.post('https://api-free.deepl.com/v2/translate', null, {
+      headers: { Authorization: `DeepL-Auth-Key ${this.deeplApiKey}` },
+      params,
+    });
 
     return {
       translatedText: response.data.translations[0].text,
@@ -224,7 +223,7 @@ export class TranslationService {
   private async translateWithLibre(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<{ translatedText: string; provider: string }> {
     const response = await axios.post(`${this.libreUrl}/translate`, {
       q: text,
@@ -239,11 +238,15 @@ export class TranslationService {
     };
   }
 
-  private async batchDeepL(texts: string[], sourceLang: string, targetLang: string): Promise<string[]> {
+  private async batchDeepL(
+    texts: string[],
+    sourceLang: string,
+    targetLang: string
+  ): Promise<string[]> {
     const response = await axios.post(
       'https://api-free.deepl.com/v2/translate',
       { text: texts, source_lang: sourceLang.toUpperCase(), target_lang: targetLang.toUpperCase() },
-      { headers: { Authorization: `DeepL-Auth-Key ${this.deeplApiKey}` } },
+      { headers: { Authorization: `DeepL-Auth-Key ${this.deeplApiKey}` } }
     );
 
     return response.data.translations.map((t: any) => t.text);
@@ -256,10 +259,13 @@ export class TranslationService {
     if (/[一-鿿]/.test(sample)) return { language: 'zh', confidence: 0.6 };
     if (/[؀-ۿ]/.test(sample)) return { language: 'ar', confidence: 0.6 };
     if (/[Ѐ-ӿ]/.test(sample)) return { language: 'ru', confidence: 0.6 };
-    if (/\b(the|is|are|was|were|have|has|been)\b/i.test(sample)) return { language: 'en', confidence: 0.5 };
+    if (/\b(the|is|are|was|were|have|has|been)\b/i.test(sample))
+      return { language: 'en', confidence: 0.5 };
     if (/\b(el|la|los|las|es|son|está)\b/i.test(sample)) return { language: 'es', confidence: 0.5 };
-    if (/\b(le|la|les|des|est|sont|été)\b/i.test(sample)) return { language: 'fr', confidence: 0.5 };
-    if (/\b(der|die|das|ist|sind|hat|haben)\b/i.test(sample)) return { language: 'de', confidence: 0.5 };
+    if (/\b(le|la|les|des|est|sont|été)\b/i.test(sample))
+      return { language: 'fr', confidence: 0.5 };
+    if (/\b(der|die|das|ist|sind|hat|haben)\b/i.test(sample))
+      return { language: 'de', confidence: 0.5 };
     return { language: 'en', confidence: 0.3 };
   }
 }

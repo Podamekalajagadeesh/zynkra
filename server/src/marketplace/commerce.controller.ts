@@ -1,6 +1,14 @@
 import {
-  Controller, Get, Post, Body, Param, Query,
-  UseGuards, Req, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CommerceService } from './commerce.service';
@@ -14,16 +22,20 @@ export class CommerceController {
   @Post('checkout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createCheckout(@Req() req, @Body() body: {
-    productId: string;
-    paymentMethod?: 'card' | 'crypto' | 'wallet';
-    shippingAddress?: any;
-  }) {
+  async createCheckout(
+    @Req() req,
+    @Body()
+    body: {
+      productId: string;
+      paymentMethod?: 'card' | 'crypto' | 'wallet';
+      shippingAddress?: any;
+    }
+  ) {
     return this.commerceService.createCheckoutSession(
       req.user.userId || req.user.id,
       body.productId,
       body.paymentMethod || 'card',
-      body.shippingAddress,
+      body.shippingAddress
     );
   }
 
@@ -47,7 +59,11 @@ export class CommerceController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async shipProduct(@Param('id') id: string, @Req() req, @Body() body: { trackingNumber: string }) {
-    return this.commerceService.shipProduct(id, req.user.userId || req.user.id, body.trackingNumber);
+    return this.commerceService.shipProduct(
+      id,
+      req.user.userId || req.user.id,
+      body.trackingNumber
+    );
   }
 
   @Post('escrow/:id/dispute')
@@ -62,18 +78,23 @@ export class CommerceController {
   @Post('reviews')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createReview(@Req() req, @Body() body: {
-    productId: string;
-    rating: number;
-    title: string;
-    content?: string;
-    images?: string[];
-  }) {
-    return this.commerceService.createReview(
-      req.user.userId || req.user.id,
-      body.productId,
-      { rating: body.rating, title: body.title, content: body.content, images: body.images },
-    );
+  async createReview(
+    @Req() req,
+    @Body()
+    body: {
+      productId: string;
+      rating: number;
+      title: string;
+      content?: string;
+      images?: string[];
+    }
+  ) {
+    return this.commerceService.createReview(req.user.userId || req.user.id, body.productId, {
+      rating: body.rating,
+      title: body.title,
+      content: body.content,
+      images: body.images,
+    });
   }
 
   @Get('reviews/:productId')
@@ -81,7 +102,7 @@ export class CommerceController {
     @Param('productId') productId: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('sortBy') sortBy?: string,
+    @Query('sortBy') sortBy?: string
   ) {
     return this.commerceService.getProductReviews(productId, {
       page: page ? parseInt(page, 10) : 1,

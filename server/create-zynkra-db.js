@@ -6,7 +6,7 @@ const { Client } = require('pg');
     port: 15432,
     user: 'postgres',
     password: 'postgres',
-    database: 'postgres'
+    database: 'postgres',
   });
 
   await client.connect();
@@ -21,7 +21,7 @@ const { Client } = require('pg');
   }
 
   await client.end();
-})().catch(err => {
+})().catch((err) => {
   console.error(err);
   process.exit(1);
 });

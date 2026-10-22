@@ -110,8 +110,22 @@ function renderProfilePage(userId?: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/profile" element={<ToastProvider><ProfilePage /></ToastProvider>} />
-        <Route path="/profile/:id" element={<ToastProvider><ProfilePage /></ToastProvider>} />
+        <Route
+          path="/profile"
+          element={
+            <ToastProvider>
+              <ProfilePage />
+            </ToastProvider>
+          }
+        />
+        <Route
+          path="/profile/:id"
+          element={
+            <ToastProvider>
+              <ProfilePage />
+            </ToastProvider>
+          }
+        />
       </Routes>
     </MemoryRouter>
   );
@@ -318,9 +332,7 @@ describe('ProfilePage', () => {
   it('displays follower names in the follower list', async () => {
     const profile = {
       ...mockUser,
-      followers: [
-        { id: 'f1', username: 'follower1', displayName: 'Follower One' },
-      ],
+      followers: [{ id: 'f1', username: 'follower1', displayName: 'Follower One' }],
     };
     mockGetProfile.mockResolvedValue(profile);
     mockGetReputation.mockResolvedValue({ score: 100 });

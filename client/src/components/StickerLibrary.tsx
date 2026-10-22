@@ -23,7 +23,7 @@ const StickerLibrary: React.FC<StickerLibraryProps> = ({ onSelect, onClose }) =>
             id: gif.id,
             title: gif.title,
             images: { fixed_height: { url: gif.url } },
-          })),
+          }))
         );
       } catch (error) {
         console.error('Error fetching GIFs:', error);
@@ -55,13 +55,17 @@ const StickerLibrary: React.FC<StickerLibraryProps> = ({ onSelect, onClose }) =>
           />
         </div>
         <div className="grid grid-cols-4 gap-4 h-96 overflow-y-auto">
-          {gifs.map(gif => (
+          {gifs.map((gif) => (
             <div
               key={gif.id}
               className="cursor-pointer"
               onClick={() => onSelect(gif.images.fixed_height.url)}
             >
-              <img src={gif.images.fixed_height.url} alt={gif.title} className="w-full h-full object-cover rounded" />
+              <img
+                src={gif.images.fixed_height.url}
+                alt={gif.title}
+                className="w-full h-full object-cover rounded"
+              />
             </div>
           ))}
         </div>

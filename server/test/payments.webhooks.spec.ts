@@ -32,21 +32,21 @@ describe('PaymentsService webhooks (replay + refund)', () => {
         else payouts.push(p);
         return p;
       }),
-      findOne: jest.fn(async ({ where }: any) =>
-        payouts.find(
-          (p) =>
-            p.id === where.id ||
-            p.payoutId === where.payoutId ||
-            (where.stripeTransferId && p.stripeTransferId === where.stripeTransferId),
-        ) ?? null,
+      findOne: jest.fn(
+        async ({ where }: any) =>
+          payouts.find(
+            (p) =>
+              p.id === where.id ||
+              p.payoutId === where.payoutId ||
+              (where.stripeTransferId && p.stripeTransferId === where.stripeTransferId)
+          ) ?? null
       ),
       find: jest.fn(async () => payouts),
       count: jest.fn(async () => payouts.length),
       update: jest.fn(async (criteria: any, patch: any) => {
         const payout = payouts.find(
           (p) =>
-            p.id === criteria.id &&
-            (criteria.status === undefined || p.status === criteria.status),
+            p.id === criteria.id && (criteria.status === undefined || p.status === criteria.status)
         );
         if (!payout) return { affected: 0 };
         Object.assign(payout, patch);
@@ -56,7 +56,7 @@ describe('PaymentsService webhooks (replay + refund)', () => {
 
     const usersRepository = {
       findOne: jest.fn(async ({ where }: any) =>
-        where?.id ? { id: where.id, walletBalance: 100 } : null,
+        where?.id ? { id: where.id, walletBalance: 100 } : null
       ),
       save: jest.fn(async (u: any) => u),
     };
@@ -90,10 +90,14 @@ describe('PaymentsService webhooks (replay + refund)', () => {
       usersRepository as any,
       walletService as any,
       configService as any,
-      webhooksService as any,
+      webhooksService as any
     );
 
-    const seedPayment = async (paymentId: string, amount = 100, status = 'requires_payment_method') => {
+    const seedPayment = async (
+      paymentId: string,
+      amount = 100,
+      status = 'requires_payment_method'
+    ) => {
       const txn = {
         provider: 'stripe',
         status,
@@ -101,7 +105,7 @@ describe('PaymentsService webhooks (replay + refund)', () => {
         purpose: 'tip',
         amount,
         currency: 'usd',
-        metadata: { platformFeeRate: 0.10, type: 'tip' },
+        metadata: { platformFeeRate: 0.1, type: 'tip' },
         payer: { id: 'fan-1' },
         recipient: { id: 'creator-1' },
       };
@@ -224,7 +228,9 @@ describe('PaymentsService webhooks (replay + refund)', () => {
     });
     await h.service.handleWebhookEvent({
       type: 'charge.refunded',
-      data: { object: { id: 'ch_partial_2', payment_intent: 'pi_partial', amount_refunded: 10000 } },
+      data: {
+        object: { id: 'ch_partial_2', payment_intent: 'pi_partial', amount_refunded: 10000 },
+      },
     });
 
     const creatorDebits = h.debits.filter((d) => d.userId === 'creator-1');
@@ -242,7 +248,9 @@ describe('PaymentsService webhooks (replay + refund)', () => {
 
     await h.service.handleWebhookEvent({
       type: 'charge.refunded',
-      data: { object: { id: 'ch_uncredited', payment_intent: 'pi_uncredited', amount_refunded: 5000 } },
+      data: {
+        object: { id: 'ch_uncredited', payment_intent: 'pi_uncredited', amount_refunded: 5000 },
+      },
     });
 
     expect(h.debits).toHaveLength(0);

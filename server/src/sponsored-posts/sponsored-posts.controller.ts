@@ -8,7 +8,7 @@ import { CreateSponsoredPostDto } from './dto/create-sponsored-post.dto';
 export class SponsoredPostsController {
   constructor(
     private readonly sponsoredPostsService: SponsoredPostsService,
-    private readonly postsService: PostsService,
+    private readonly postsService: PostsService
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -16,14 +16,14 @@ export class SponsoredPostsController {
   async create(
     @Request() req,
     @Param('postId') postId: string,
-    @Body() createSponsoredPostDto: CreateSponsoredPostDto,
+    @Body() createSponsoredPostDto: CreateSponsoredPostDto
   ) {
     const post = await this.postsService.findOne(postId);
     return this.sponsoredPostsService.create(
       req.user,
       post,
       createSponsoredPostDto.budget,
-      new Date(createSponsoredPostDto.expiresAt),
+      new Date(createSponsoredPostDto.expiresAt)
     );
   }
 }

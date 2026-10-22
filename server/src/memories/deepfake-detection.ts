@@ -49,27 +49,38 @@ export function analyzeNeuralAuthenticity(payload: {
 
   let score = 0.2;
 
-  const hasSpecificPersonalDetails = /\b(i|my|remember|felt|smell|sound|rain|cold|warm|hands|voice|touch|last night|when i|still remember)\b/.test(normalized);
+  const hasSpecificPersonalDetails =
+    /\b(i|my|remember|felt|smell|sound|rain|cold|warm|hands|voice|touch|last night|when i|still remember)\b/.test(
+      normalized
+    );
   if (hasSpecificPersonalDetails) {
     score += 0.35;
     signals.push('personal memory details detected');
   }
 
   const hasSensoryMedia = Boolean(
-    metadata?.sensory?.visual?.length || metadata?.sensory?.audio?.length || metadata?.sensory?.haptic?.length || metadata?.sensory?.olfactory?.length || metadata?.sensory?.gustatory?.length,
+    metadata?.sensory?.visual?.length ||
+    metadata?.sensory?.audio?.length ||
+    metadata?.sensory?.haptic?.length ||
+    metadata?.sensory?.olfactory?.length ||
+    metadata?.sensory?.gustatory?.length
   );
   if (hasSensoryMedia) {
     score += 0.2;
     signals.push('sensory media present');
   }
 
-  const hasEmotionalContext = Boolean(metadata?.emotions && Object.values(metadata.emotions).some((value) => Number(value) > 0));
+  const hasEmotionalContext = Boolean(
+    metadata?.emotions && Object.values(metadata.emotions).some((value) => Number(value) > 0)
+  );
   if (hasEmotionalContext) {
     score += 0.15;
     signals.push('emotional context present');
   }
 
-  const hasLocationContext = Boolean(metadata?.context?.location?.name || metadata?.context?.activity);
+  const hasLocationContext = Boolean(
+    metadata?.context?.location?.name || metadata?.context?.activity
+  );
   if (hasLocationContext) {
     score += 0.1;
     signals.push('situational context present');
@@ -88,7 +99,12 @@ export function analyzeNeuralAuthenticity(payload: {
   }
 
   const clampedScore = Math.max(0, Math.min(1, score));
-  const verdict = clampedScore >= 0.7 ? 'likely_authentic' : clampedScore <= 0.4 ? 'likely_synthetic' : 'needs_review';
+  const verdict =
+    clampedScore >= 0.7
+      ? 'likely_authentic'
+      : clampedScore <= 0.4
+        ? 'likely_synthetic'
+        : 'needs_review';
 
   return {
     score: Number(clampedScore.toFixed(3)),

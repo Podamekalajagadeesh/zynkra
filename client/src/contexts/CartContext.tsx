@@ -14,7 +14,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       // Add logic to handle adding items, including checking for existing items
       return { ...state, items: [...state.items, action.payload] };
     case 'REMOVE_ITEM':
-      return { ...state, items: state.items.filter(item => item.id !== action.payload.id) };
+      return { ...state, items: state.items.filter((item) => item.id !== action.payload.id) };
     case 'CLEAR_CART':
       return { ...state, items: [] };
     default:
@@ -25,11 +25,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
-  return (
-    <CartContext.Provider value={{ state, dispatch }}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={{ state, dispatch }}>{children}</CartContext.Provider>;
 };
 
 export const useCart = (): CartContextValue => {

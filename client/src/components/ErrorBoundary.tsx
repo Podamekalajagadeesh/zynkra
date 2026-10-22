@@ -34,7 +34,9 @@ export class ErrorBoundary extends React.Component<{ children: ReactNode }, Erro
               <ShieldAlert size={28} />
             </div>
             <h2 className="section-title mb-3">Something went wrong</h2>
-            <p className="section-subtitle mb-6">{this.state.error?.message || 'An unexpected error interrupted the experience.'}</p>
+            <p className="section-subtitle mb-6">
+              {this.state.error?.message || 'An unexpected error interrupted the experience.'}
+            </p>
             <Button onClick={() => window.location.reload()} icon={<RefreshCw size={16} />}>
               Reload page
             </Button>

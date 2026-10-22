@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -10,12 +6,12 @@ import {
   VerificationStatus,
   VerificationWorkflow,
 } from './entities/verification-request.entity';
-import { VerificationAppeal, VerificationAppealStatus } from './entities/verification-appeal.entity';
-import { User } from '../users/entities/user.entity';
 import {
-  CreateVerificationRequestDto,
-  SubmitVerificationAppealDto,
-} from './dto/verification.dto';
+  VerificationAppeal,
+  VerificationAppealStatus,
+} from './entities/verification-appeal.entity';
+import { User } from '../users/entities/user.entity';
+import { CreateVerificationRequestDto, SubmitVerificationAppealDto } from './dto/verification.dto';
 
 @Injectable()
 export class VerificationService {
@@ -25,7 +21,7 @@ export class VerificationService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     @InjectRepository(VerificationAppeal)
-    private readonly appealsRepository: Repository<VerificationAppeal>,
+    private readonly appealsRepository: Repository<VerificationAppeal>
   ) {}
 
   async apply(userId: string, dto: CreateVerificationRequestDto): Promise<VerificationRequest> {
@@ -55,27 +51,43 @@ export class VerificationService {
     return this.requestsRepository.save(request as VerificationRequest);
   }
 
-
   async submitAppeal(
     userId: string,
     requestId: string,
-    dto: SubmitVerificationAppealDto,
+    dto: SubmitVerificationAppealDto
   ): Promise<VerificationAppeal> {
     const request = await this.requestsRepository.findOne({ where: { id: requestId } });
     if (!request) throw new NotFoundException('Verification request not found.');
-    if (request.user.id !== userId) throw new BadRequestException('You can only appeal your own request.');
+    if (request.user.id !== userId)
+      throw new BadRequestException('You can only appeal your own request.');
     if (request.status !== VerificationStatus.REJECTED) {
       throw new BadRequestException('Only rejected verification requests can be appealed.');
     }
 
-    const appeals = await this.appealsRepository.find({ where: { requestId }, order: { submittedAt: 'DESC' } });
-    if (appeals.some((appeal) => appeal.status === VerificationAppealStatus.PENDING || appeal.status === VerificationAppealStatus.UNDER_REVIEW)) {
+    const appeals = await this.appealsRepository.find({
+      where: { requestId },
+      order: { submittedAt: 'DESC' },
+    });
+    if (
+      appeals.some(
+        (appeal) =>
+          appeal.status === VerificationAppealStatus.PENDING ||
+          appeal.status === VerificationAppealStatus.UNDER_REVIEW
+      )
+    ) {
       throw new BadRequestException('This request already has an appeal under review.');
     }
-    if (appeals.length >= 3) throw new BadRequestException('Maximum appeal limit reached for this request.');
+    if (appeals.length >= 3)
+      throw new BadRequestException('Maximum appeal limit reached for this request.');
 
-    const lastRejected = appeals.find((appeal) => appeal.status === VerificationAppealStatus.REJECTED);
-    if (lastRejected && lastRejected.reviewedAt && lastRejected.reviewedAt.getTime() + 30 * 24 * 60 * 60 * 1000 > Date.now()) {
+    const lastRejected = appeals.find(
+      (appeal) => appeal.status === VerificationAppealStatus.REJECTED
+    );
+    if (
+      lastRejected &&
+      lastRejected.reviewedAt &&
+      lastRejected.reviewedAt.getTime() + 30 * 24 * 60 * 60 * 1000 > Date.now()
+    ) {
       throw new BadRequestException('You must wait 30 days before submitting another appeal.');
     }
 
@@ -110,7 +122,8 @@ export class VerificationService {
   async getAppeal(appealId: string, userId: string): Promise<VerificationAppeal> {
     const appeal = await this.appealsRepository.findOne({ where: { id: appealId } });
     if (!appeal) throw new NotFoundException('Verification appeal not found.');
-    if (appeal.userId !== userId) throw new BadRequestException('You can only view your own appeal.');
+    if (appeal.userId !== userId)
+      throw new BadRequestException('You can only view your own appeal.');
     return appeal;
   }
 
@@ -128,12 +141,18 @@ export class VerificationService {
   async reviewAppeal(
     appealId: string,
     reviewerId: string,
-    status: VerificationAppealStatus.APPROVED | VerificationAppealStatus.REJECTED | VerificationAppealStatus.UNDER_REVIEW,
-    notes?: string,
+    status:
+      | VerificationAppealStatus.APPROVED
+      | VerificationAppealStatus.REJECTED
+      | VerificationAppealStatus.UNDER_REVIEW,
+    notes?: string
   ): Promise<VerificationAppeal> {
     const appeal = await this.appealsRepository.findOne({ where: { id: appealId } });
     if (!appeal) throw new NotFoundException('Verification appeal not found.');
-    if (appeal.status !== VerificationAppealStatus.PENDING && appeal.status !== VerificationAppealStatus.UNDER_REVIEW) {
+    if (
+      appeal.status !== VerificationAppealStatus.PENDING &&
+      appeal.status !== VerificationAppealStatus.UNDER_REVIEW
+    ) {
       throw new BadRequestException('This appeal has already been reviewed.');
     }
     appeal.status = status;
@@ -189,7 +208,7 @@ export class VerificationService {
     requestId: string,
     reviewerId: string,
     decision: 'approved' | 'rejected',
-    reviewNote?: string,
+    reviewNote?: string
   ): Promise<VerificationRequest> {
     const request = await this.requestsRepository.findOne({
       where: { id: requestId },

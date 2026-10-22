@@ -61,7 +61,7 @@ function buildService(overrides: Record<string, any> = {}) {
       { findOne: jest.fn(), save: jest.fn(), create: jest.fn() } as any,
       { findOne: jest.fn(), save: jest.fn(), create: jest.fn() } as any,
       listingRepository as any,
-      userRepository as any,
+      userRepository as any
     ),
     listingRepository,
     userRepository,
@@ -86,9 +86,9 @@ describe('MarketplaceService listings', () => {
 
     it('throws NotFound when the seller does not exist', async () => {
       const { service } = buildService({ userRepository: { findOne: jest.fn(async () => null) } });
-      await expect(service.createListing({ title: 'Desk', price: 1 } as any, SELLER_ID)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.createListing({ title: 'Desk', price: 1 } as any, SELLER_ID)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -99,53 +99,67 @@ describe('MarketplaceService listings', () => {
     });
 
     it('returns the listing when present', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
       await expect(service.findOneListing(LISTING_ID)).resolves.toMatchObject({ id: LISTING_ID });
     });
   });
 
   describe('updateListing', () => {
     it('lets the seller update', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
       await service.updateListing(LISTING_ID, { price: 99 } as any, SELLER_ID);
       expect(listingRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: LISTING_ID, price: 99 }),
+        expect.objectContaining({ id: LISTING_ID, price: 99 })
       );
     });
 
     it('forbids a non-seller', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
-      await expect(service.updateListing(LISTING_ID, { price: 1 } as any, OTHER_ID)).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
+      await expect(
+        service.updateListing(LISTING_ID, { price: 1 } as any, OTHER_ID)
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
     it('throws NotFound before the ownership check', async () => {
       const { service, listingRepository } = buildService();
-      await expect(service.updateListing(LISTING_ID, { price: 1 } as any, OTHER_ID)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.updateListing(LISTING_ID, { price: 1 } as any, OTHER_ID)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('ignores fields absent from the patch', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
       await service.updateListing(LISTING_ID, { price: 42 } as any, SELLER_ID);
       expect(listingRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Desk' }),
+        expect.objectContaining({ title: 'Desk' })
       );
     });
   });
 
   describe('removeListing', () => {
     it('lets the seller delete', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
       await service.removeListing(LISTING_ID, SELLER_ID);
       expect(listingRepository.remove).toHaveBeenCalled();
     });
 
     it('forbids a non-seller', async () => {
-      const { service, listingRepository } = buildService({ listingRepository: { findOne: jest.fn(async () => ownedListing()) } });
-      await expect(service.removeListing(LISTING_ID, OTHER_ID)).rejects.toBeInstanceOf(ForbiddenException);
+      const { service, listingRepository } = buildService({
+        listingRepository: { findOne: jest.fn(async () => ownedListing()) },
+      });
+      await expect(service.removeListing(LISTING_ID, OTHER_ID)).rejects.toBeInstanceOf(
+        ForbiddenException
+      );
       expect(listingRepository.remove).not.toHaveBeenCalled();
     });
   });
@@ -163,7 +177,9 @@ describe('MarketplaceService listings', () => {
       await service.findAllListings('  desk  ');
       const qb = listingRepository.createQueryBuilder.mock.results[0].value;
       expect(qb.where).toHaveBeenCalledWith('listing.title ILIKE :term', { term: '%desk%' });
-      expect(qb.orWhere).toHaveBeenCalledWith('listing.description ILIKE :term', { term: '%desk%' });
+      expect(qb.orWhere).toHaveBeenCalledWith('listing.description ILIKE :term', {
+        term: '%desk%',
+      });
     });
   });
 });
@@ -173,7 +189,10 @@ describe('MarketplaceService listings', () => {
 async function buildApp(overrides: Record<string, any> = {}, subject = SELLER_ID) {
   const repos = buildService(overrides);
   const ref = await Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [MarketplaceController],
     providers: [
       MarketplaceService,
@@ -187,7 +206,10 @@ async function buildApp(overrides: Record<string, any> = {}, subject = SELLER_ID
       { provide: getRepositoryToken(User), useValue: repos.userRepository },
       {
         provide: getRepositoryToken(LoginSession),
-        useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() },
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
       },
       JwtStrategy,
     ],
@@ -251,7 +273,7 @@ describe('listings routes', () => {
   it('DELETE /marketplace/listings/:id returns 403 for a non-seller', async () => {
     const { app, token } = await buildApp(
       { listingRepository: { findOne: jest.fn(async () => ownedListing()) } },
-      OTHER_ID,
+      OTHER_ID
     );
     const r = await request(app.getHttpServer())
       .delete(`/marketplace/listings/${LISTING_ID}`)

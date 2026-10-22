@@ -12,7 +12,7 @@ export class PollsService {
     private readonly pollsRepository: Repository<Poll>,
     @InjectRepository(PollOption)
     private readonly pollOptionsRepository: Repository<PollOption>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   async vote(pollOptionId: string, userId: string): Promise<Poll> {
@@ -22,25 +22,27 @@ export class PollsService {
     }
 
     const pollOption = await this.pollOptionsRepository.findOne({
-        where: { id: pollOptionId },
-        relations: ['poll', 'poll.options', 'votes']
+      where: { id: pollOptionId },
+      relations: ['poll', 'poll.options', 'votes'],
     });
     if (!pollOption) {
       throw new NotFoundException('Poll option not found');
     }
 
     const poll = await this.pollsRepository.findOne({
-        where: { id: pollOption.poll.id },
-        relations: ['options', 'options.votes']
+      where: { id: pollOption.poll.id },
+      relations: ['options', 'options.votes'],
     });
     if (!poll) {
-        throw new NotFoundException('Poll not found');
+      throw new NotFoundException('Poll not found');
     }
 
     // Check if the user has already voted on this poll
-    const hasVoted = poll.options.some(option => option.votes.some(vote => vote.id === user.id));
+    const hasVoted = poll.options.some((option) =>
+      option.votes.some((vote) => vote.id === user.id)
+    );
     if (hasVoted) {
-        throw new UnauthorizedException('User has already voted on this poll');
+      throw new UnauthorizedException('User has already voted on this poll');
     }
 
     pollOption.votes.push(user);
@@ -48,8 +50,8 @@ export class PollsService {
     await this.pollOptionsRepository.save(pollOption);
 
     return this.pollsRepository.findOne({
-        where: { id: poll.id },
-        relations: ['options', 'options.votes']
+      where: { id: poll.id },
+      relations: ['options', 'options.votes'],
     });
   }
 }

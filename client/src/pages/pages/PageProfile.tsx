@@ -34,7 +34,7 @@ export function PageProfile() {
 
   useEffect(() => {
     if (id) {
-      getPage(id).then(page => {
+      getPage(id).then((page) => {
         setPage(page);
         setAutomatedResponseEnabled(page.automatedResponseEnabled);
         setAutomatedResponseMessage(page.automatedResponseMessage);
@@ -80,9 +80,7 @@ export function PageProfile() {
   return (
     <PageShell title={page.name}>
       <p>{page.description}</p>
-      {!isMessaging && (
-        <button onClick={() => setIsMessaging(true)}>Message</button>
-      )}
+      {!isMessaging && <button onClick={() => setIsMessaging(true)}>Message</button>}
       {isMessaging && (
         <div>
           <textarea

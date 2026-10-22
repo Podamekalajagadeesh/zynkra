@@ -91,19 +91,42 @@ export const GroupLockdownPanel = ({ groupId }: { groupId: string }) => {
           {lockdown.activeUntil && (
             <div>Active until {new Date(lockdown.activeUntil).toLocaleString()}</div>
           )}
-          <Button size="sm" variant="outline" onClick={handleResolve} disabled={isBusy} className="mt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleResolve}
+            disabled={isBusy}
+            className="mt-2"
+          >
             Lift lockdown
           </Button>
         </div>
       ) : (
         <div className="space-y-1">
-          <Button size="sm" onClick={() => handleEnable('approval')} disabled={isBusy} className="w-full">
+          <Button
+            size="sm"
+            onClick={() => handleEnable('approval')}
+            disabled={isBusy}
+            className="w-full"
+          >
             Approve new joins
           </Button>
-          <Button size="sm" variant="outline" onClick={() => handleEnable('mute_new')} disabled={isBusy} className="w-full">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleEnable('mute_new')}
+            disabled={isBusy}
+            className="w-full"
+          >
             Mute new members
           </Button>
-          <Button size="sm" variant="outline" onClick={() => handleEnable('full')} disabled={isBusy} className="w-full">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleEnable('full')}
+            disabled={isBusy}
+            className="w-full"
+          >
             Full lockdown
           </Button>
         </div>

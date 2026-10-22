@@ -63,7 +63,7 @@ export default function RequestVerificationPage() {
       const message = error.response?.data?.message;
       addToast(
         Array.isArray(message) ? message[0] : message || 'Failed to submit request',
-        'error',
+        'error'
       );
     } finally {
       setSubmitting(false);
@@ -87,17 +87,15 @@ export default function RequestVerificationPage() {
             <>
               <BadgeCheck className="mx-auto h-12 w-12 text-blue-500 mb-4" />
               <h2 className="text-xl font-semibold mb-2">You're verified!</h2>
-              <p className="text-dark-500">
-                The verified badge now appears on your profile.
-              </p>
+              <p className="text-dark-500">The verified badge now appears on your profile.</p>
             </>
           ) : (
             <>
               <Clock className="mx-auto h-12 w-12 text-amber-500 mb-4" />
               <h2 className="text-xl font-semibold mb-2">Request under review</h2>
               <p className="text-dark-500">
-                Submitted {new Date(existing.createdAt).toLocaleDateString()}. We'll
-                notify you when it's reviewed.
+                Submitted {new Date(existing.createdAt).toLocaleDateString()}. We'll notify you when
+                it's reviewed.
               </p>
             </>
           )}

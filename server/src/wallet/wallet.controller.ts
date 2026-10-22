@@ -28,7 +28,7 @@ export class WalletController {
   constructor(
     private readonly walletService: WalletService,
     private readonly cryptoPayoutsService: CryptoPayoutsService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /** Issue a one-time message the wallet must sign before it can be linked. */
@@ -37,7 +37,7 @@ export class WalletController {
     @Req() req,
     @Query('walletAddress') walletAddress: string,
     @Session() session: Record<string, any>,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: Response
   ) {
     const nonce = randomBytes(16).toString('hex');
     session.walletLinkNonce = nonce;
@@ -50,11 +50,7 @@ export class WalletController {
       maxAgeMs: 24 * 60 * 60 * 1000,
     });
     return {
-      message: this.walletService.buildLinkMessage(
-        req.user.userId,
-        walletAddress,
-        nonce,
-      ),
+      message: this.walletService.buildLinkMessage(req.user.userId, walletAddress, nonce),
     };
   }
 
@@ -63,7 +59,7 @@ export class WalletController {
   async connectWallet(
     @Req() req,
     @Body() connectWalletDto: ConnectWalletDto,
-    @Session() session: Record<string, any>,
+    @Session() session: Record<string, any>
   ) {
     const nonce = session.walletLinkNonce;
     session.walletLinkNonce = null; // single use
@@ -71,7 +67,7 @@ export class WalletController {
       req.user.userId,
       connectWalletDto.walletAddress,
       connectWalletDto.signature,
-      nonce,
+      nonce
     );
   }
 
@@ -112,25 +108,18 @@ export class WalletController {
   }
 
   @Post('crypto/payout')
-  async requestCryptoPayout(
-    @Req() req,
-    @Body() body: { amount: number; chainId?: number },
-  ) {
+  async requestCryptoPayout(@Req() req, @Body() body: { amount: number; chainId?: number }) {
     const { amount, chainId } = body;
     if (!amount || amount <= 0) {
       throw new BadRequestException('Invalid payout amount');
     }
-    return this.cryptoPayoutsService.sendCryptoPayout(
-      req.user.userId,
-      amount,
-      chainId ?? 8453,
-    );
+    return this.cryptoPayoutsService.sendCryptoPayout(req.user.userId, amount, chainId ?? 8453);
   }
 
   @Get('crypto/status/:txHash')
   async getCryptoPayoutStatus(
     @Param('txHash') txHash: string,
-    @Query('chainId', new ParseIntPipe({ optional: true })) chainId?: number,
+    @Query('chainId', new ParseIntPipe({ optional: true })) chainId?: number
   ) {
     return this.cryptoPayoutsService.getTransactionStatus(txHash, chainId ?? 8453);
   }

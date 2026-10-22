@@ -37,7 +37,7 @@ export function MobilePayments() {
       recipient: 'John Doe',
       timestamp: new Date(Date.now() - 3600000),
       type: 'sent',
-      status: 'completed'
+      status: 'completed',
     },
     {
       id: '2',
@@ -45,17 +45,32 @@ export function MobilePayments() {
       recipient: 'Jane Smith',
       timestamp: new Date(Date.now() - 86400000),
       type: 'received',
-      status: 'completed'
-    }
+      status: 'completed',
+    },
   ]);
 
   const recentContacts: Contact[] = [
-    { id: '1', name: 'John Doe', avatar: 'https://i.pravatar.cc/150?u=1', phoneNumber: '+1234567890' },
-    { id: '2', name: 'Jane Smith', avatar: 'https://i.pravatar.cc/150?u=2', phoneNumber: '+0987654321' },
-    { id: '3', name: 'Mike Johnson', avatar: 'https://i.pravatar.cc/150?u=3', phoneNumber: '+1122334455' }
+    {
+      id: '1',
+      name: 'John Doe',
+      avatar: 'https://i.pravatar.cc/150?u=1',
+      phoneNumber: '+1234567890',
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      avatar: 'https://i.pravatar.cc/150?u=2',
+      phoneNumber: '+0987654321',
+    },
+    {
+      id: '3',
+      name: 'Mike Johnson',
+      avatar: 'https://i.pravatar.cc/150?u=3',
+      phoneNumber: '+1122334455',
+    },
   ];
 
-  const walletBalance = 15420.50;
+  const walletBalance = 15420.5;
 
   const handleSendMoney = async () => {
     if (!sendAmount || !recipientPhone) {
@@ -70,17 +85,17 @@ export function MobilePayments() {
     }
 
     setIsProcessing(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const newTransaction: Transaction = {
       id: Date.now().toString(),
       amount,
       recipient: recipientPhone,
       timestamp: new Date(),
       type: 'sent',
-      status: 'completed'
+      status: 'completed',
     };
 
     setTransactions([newTransaction, ...transactions]);
@@ -137,13 +152,18 @@ export function MobilePayments() {
                 <DialogTitle>Transaction History</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {transactions.map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg"
+                  >
                     <div>
                       <p className="font-medium">{tx.recipient}</p>
                       <p className="text-xs text-gray-500">{tx.timestamp.toLocaleString()}</p>
                     </div>
-                    <p className={`font-semibold ${tx.type === 'sent' ? 'text-red-600' : 'text-green-600'}`}>
+                    <p
+                      className={`font-semibold ${tx.type === 'sent' ? 'text-red-600' : 'text-green-600'}`}
+                    >
                       {tx.type === 'sent' ? '-' : '+'}${tx.amount}
                     </p>
                   </div>
@@ -173,11 +193,7 @@ export function MobilePayments() {
                 onChange={(e) => setSendAmount(e.target.value)}
               />
             </div>
-            <Button
-              onClick={handleSendMoney}
-              className="w-full"
-              disabled={isProcessing}
-            >
+            <Button onClick={handleSendMoney} className="w-full" disabled={isProcessing}>
               {isProcessing ? 'Processing...' : 'Send Money'}
             </Button>
           </div>
@@ -187,7 +203,7 @@ export function MobilePayments() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Recent Contacts</h3>
         <div className="grid grid-cols-3 gap-4">
-          {recentContacts.map(contact => (
+          {recentContacts.map((contact) => (
             <button
               key={contact.id}
               onClick={() => handleQuickSend(contact)}

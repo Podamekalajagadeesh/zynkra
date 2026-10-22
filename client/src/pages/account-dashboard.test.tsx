@@ -62,7 +62,7 @@ describe('AccountDashboardPage', () => {
     render(
       <MemoryRouter>
         <AccountDashboardPage />
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     await waitFor(() => {

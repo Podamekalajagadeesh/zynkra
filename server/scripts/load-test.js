@@ -44,9 +44,14 @@ async function runLoadTest({
   }
 
   const sortedLatencies = [...latencies].sort((a, b) => a - b);
-  const averageLatencyMs = latencies.length > 0 ? latencies.reduce((sum, value) => sum + value, 0) / latencies.length : 0;
+  const averageLatencyMs =
+    latencies.length > 0 ? latencies.reduce((sum, value) => sum + value, 0) / latencies.length : 0;
   const maxLatencyMs = latencies.length > 0 ? Math.max(...latencies) : 0;
-  const p95LatencyMs = sortedLatencies.length > 0 ? sortedLatencies[Math.floor(sortedLatencies.length * 0.95) - 1] || sortedLatencies[sortedLatencies.length - 1] : 0;
+  const p95LatencyMs =
+    sortedLatencies.length > 0
+      ? sortedLatencies[Math.floor(sortedLatencies.length * 0.95) - 1] ||
+        sortedLatencies[sortedLatencies.length - 1]
+      : 0;
 
   return {
     targetUrl,
@@ -62,7 +67,8 @@ async function runLoadTest({
 
 async function main() {
   const args = process.argv.slice(2);
-  const targetUrl = args[0] || process.env.LOAD_TEST_TARGET_URL || 'http://127.0.0.1:3000/infrastructure/health';
+  const targetUrl =
+    args[0] || process.env.LOAD_TEST_TARGET_URL || 'http://127.0.0.1:3000/infrastructure/health';
   const requests = Number(args[1] || process.env.LOAD_TEST_REQUESTS || 10);
   const concurrency = Number(args[2] || process.env.LOAD_TEST_CONCURRENCY || 4);
 

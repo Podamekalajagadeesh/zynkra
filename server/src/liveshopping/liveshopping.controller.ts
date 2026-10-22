@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { LiveshoppingService } from './liveshopping.service';
 import { CreateLiveShoppingEventDto } from './dto/create-live-shopping-event.dto';
 import { UpdateLiveShoppingEventDto } from './dto/update-live-shopping-event.dto';
@@ -24,7 +14,7 @@ export class LiveshoppingController {
   @UseGuards(JwtAuthGuard)
   create(
     @Body() createLiveShoppingEventDto: CreateLiveShoppingEventDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.liveshoppingService.create(createLiveShoppingEventDto, user.id);
   }
@@ -44,17 +34,14 @@ export class LiveshoppingController {
   update(
     @Param('id') id: string,
     @Body() updateLiveShoppingEventDto: UpdateLiveShoppingEventDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     return this.liveshoppingService.update(id, updateLiveShoppingEventDto, user.id);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ) {
+  remove(@Param('id') id: string, @CurrentUser() user: User) {
     return this.liveshoppingService.remove(id, user.id);
   }
 }

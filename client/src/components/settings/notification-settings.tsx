@@ -58,7 +58,8 @@ export const NotificationSettings = () => {
 
     let cancelled = false;
     setLoading(true);
-    api.get<NotificationPreferences>('/account/notifications/preferences')
+    api
+      .get<NotificationPreferences>('/account/notifications/preferences')
       .then(({ data }) => {
         if (!cancelled) setPreferences({ ...defaultPreferences, ...data });
       })
@@ -69,7 +70,9 @@ export const NotificationSettings = () => {
         if (!cancelled) setLoading(false);
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id]);
 
   const updateUserSettings = (next: NotificationPreferences) => {
@@ -99,7 +102,10 @@ export const NotificationSettings = () => {
     setError(null);
 
     try {
-      const response = await api.put<NotificationPreferences>('/account/notifications/preferences', { [key]: value });
+      const response = await api.put<NotificationPreferences>(
+        '/account/notifications/preferences',
+        { [key]: value }
+      );
       const saved = { ...defaultPreferences, ...response.data };
       setPreferences(saved);
       updateUserSettings(saved);
@@ -112,13 +118,20 @@ export const NotificationSettings = () => {
   };
 
   const enableBrowserPush = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (
+      !('Notification' in window) ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    )
+      return;
 
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return;
 
     const registration = await navigator.serviceWorker.ready;
-    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo';
+    const vapidPublicKey =
+      import.meta.env.VITE_VAPID_PUBLIC_KEY ||
+      'BKEjbr36R5cSGwT5Af7cgPUPXuaoBGC2KFjAZmehBh9h6ToZ1Cnb9gyptSsVyLb71Qg4_rHVF1J_4L6Okgrialo';
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
@@ -146,17 +159,31 @@ export const NotificationSettings = () => {
             <p className="font-medium">Browser push</p>
             <p className="text-sm text-gray-500">Allow push delivery for enabled alerts.</p>
           </div>
-          <button type="button" onClick={enableBrowserPush} disabled={loading} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+          <button
+            type="button"
+            onClick={enableBrowserPush}
+            disabled={loading}
+            className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
             Enable
           </button>
         </div>
       )}
-      {loading ? <p className="text-sm text-gray-500">Loading notification settings...</p> : preferenceRows.map(({ key, label }) => (
-        <div className="flex items-center justify-between" key={key}>
-          <label htmlFor={`notification-${key}`}>{label}</label>
-          <Switch id={`notification-${key}`} checked={preferences[key]} disabled={saving === key} onCheckedChange={(value) => handleSettingChange(key, value)} />
-        </div>
-      ))}
+      {loading ? (
+        <p className="text-sm text-gray-500">Loading notification settings...</p>
+      ) : (
+        preferenceRows.map(({ key, label }) => (
+          <div className="flex items-center justify-between" key={key}>
+            <label htmlFor={`notification-${key}`}>{label}</label>
+            <Switch
+              id={`notification-${key}`}
+              checked={preferences[key]}
+              disabled={saving === key}
+              onCheckedChange={(value) => handleSettingChange(key, value)}
+            />
+          </div>
+        ))
+      )}
     </div>
   );
 };

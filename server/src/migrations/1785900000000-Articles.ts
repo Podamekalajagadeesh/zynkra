@@ -35,7 +35,9 @@ export class Articles1785900000000 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX "IDX_articles_slug" ON "articles" ("slug")`);
     await queryRunner.query(`CREATE INDEX "IDX_articles_status" ON "articles" ("status")`);
     await queryRunner.query(`CREATE INDEX "IDX_articles_authorId" ON "articles" ("authorId")`);
-    await queryRunner.query(`CREATE INDEX "IDX_articles_publishedAt" ON "articles" ("publishedAt")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_articles_publishedAt" ON "articles" ("publishedAt")`
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

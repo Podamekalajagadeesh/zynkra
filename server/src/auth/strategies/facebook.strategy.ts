@@ -9,13 +9,14 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     const clientID = configService.get<string>('FACEBOOK_CLIENT_ID');
     if (!clientID) {
       new Logger(FacebookStrategy.name).warn(
-        'FACEBOOK_CLIENT_ID not set — Facebook sign-in is disabled.',
+        'FACEBOOK_CLIENT_ID not set — Facebook sign-in is disabled.'
       );
     }
 
     super({
       clientID: clientID || 'facebook-oauth-not-configured',
-      clientSecret: configService.get<string>('FACEBOOK_CLIENT_SECRET') || 'facebook-oauth-not-configured',
+      clientSecret:
+        configService.get<string>('FACEBOOK_CLIENT_SECRET') || 'facebook-oauth-not-configured',
       callbackURL: configService.get<string>('FACEBOOK_CALLBACK_URL', '/auth/facebook/callback'),
       scope: ['email', 'public_profile'],
     });
@@ -25,7 +26,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: (err: any, user?: any, info?: any) => void,
+    done: (err: any, user?: any, info?: any) => void
   ): Promise<any> {
     const { id, displayName, emails, photos } = profile;
 

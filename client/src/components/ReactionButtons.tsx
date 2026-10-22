@@ -11,9 +11,20 @@ const CUSTOM_EMOJIS = ['🎉', '🔥', '💯', '✨', '🙌', '🤔', '🥳', '�
 
 // Sentiment mapping for reactions
 const SENTIMENT_SCORES: Record<string, number> = {
-  '❤️': 1.0, '😂': 0.9, '👍': 0.8, '🎉': 0.9, '🔥': 0.95, '💯': 1.0,
-  '✨': 0.8, '🙌': 0.9, '🥳': 0.95, '💪': 0.85, '😮': 0.5, '🤔': 0.3,
-  '😢': -0.5, '😡': -0.8
+  '❤️': 1.0,
+  '😂': 0.9,
+  '👍': 0.8,
+  '🎉': 0.9,
+  '🔥': 0.95,
+  '💯': 1.0,
+  '✨': 0.8,
+  '🙌': 0.9,
+  '🥳': 0.95,
+  '💪': 0.85,
+  '😮': 0.5,
+  '🤔': 0.3,
+  '😢': -0.5,
+  '😡': -0.8,
 };
 
 interface PostReaction {
@@ -56,10 +67,8 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
     try {
       await addPostReaction(postId, reaction);
       // Update local state
-      setUserReactions(prev => 
-        prev.includes(reaction) 
-          ? prev.filter(r => r !== reaction)
-          : [...prev, reaction]
+      setUserReactions((prev) =>
+        prev.includes(reaction) ? prev.filter((r) => r !== reaction) : [...prev, reaction]
       );
       // Refresh post data
       const updatedPost = await getPost(postId);
@@ -78,7 +87,7 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
 
   const getReactionCount = (reaction: string) => {
     if (!post) return 0;
-    return post.reactions.filter(r => r.reaction === reaction).length;
+    return post.reactions.filter((r) => r.reaction === reaction).length;
   };
 
   const allReactions = [...DEFAULT_REACTIONS, ...CUSTOM_EMOJIS];
@@ -95,8 +104,8 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
               key={reaction}
               onClick={() => handleReaction(reaction)}
               className={`flex items-center gap-1 px-2 py-1 rounded-full transition-all ${
-                isSelected 
-                  ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500' 
+                isSelected
+                  ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500'
                   : 'hover:bg-gray-100 dark:hover:bg-dark-700'
               }`}
               title={reaction}
@@ -116,7 +125,8 @@ export const ReactionButtons: FC<ReactionButtonsProps> = ({ postId }) => {
       </div>
       {sentiment !== null && (
         <div className="text-xs text-dark-500 dark:text-dark-400">
-          Sentiment score: {sentiment.toFixed(2)} ({sentiment > 0.5 ? 'Positive' : sentiment < 0 ? 'Negative' : 'Neutral'})
+          Sentiment score: {sentiment.toFixed(2)} (
+          {sentiment > 0.5 ? 'Positive' : sentiment < 0 ? 'Negative' : 'Neutral'})
         </div>
       )}
     </div>

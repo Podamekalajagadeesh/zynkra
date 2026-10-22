@@ -23,8 +23,14 @@ const CrisisEventsPage: React.FC = () => {
       }
     >
       {/* Breadcrumb navigation */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-dark-500 dark:text-dark-400" aria-label="Breadcrumb">
-        <Link to="/" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+      <nav
+        className="mb-6 flex items-center gap-1.5 text-sm text-dark-500 dark:text-dark-400"
+        aria-label="Breadcrumb"
+      >
+        <Link
+          to="/"
+          className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+        >
           Home
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />

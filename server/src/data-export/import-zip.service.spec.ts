@@ -21,10 +21,7 @@ const emptyRepository = () => ({
 function buildZip(files: Record<string, Buffer | string>): Buffer {
   const zip = new AdmZip();
   for (const [name, content] of Object.entries(files)) {
-    zip.addFile(
-      name,
-      typeof content === 'string' ? Buffer.from(content, 'utf8') : content,
-    );
+    zip.addFile(name, typeof content === 'string' ? Buffer.from(content, 'utf8') : content);
   }
   return zip.toBuffer();
 }
@@ -71,10 +68,12 @@ describe('ExportService.importFromZip', () => {
   const makeService = () => {
     const configStub = {
       get: jest.fn((key: string, fallback?: unknown) =>
-        key === 'UPLOAD_DIR' ? uploadDir : fallback,
+        key === 'UPLOAD_DIR' ? uploadDir : fallback
       ),
     };
-    const repos = Array(20).fill(null).map(() => emptyRepository());
+    const repos = Array(20)
+      .fill(null)
+      .map(() => emptyRepository());
     return Reflect.construct(ExportService, [...repos, configStub]) as ExportService;
   };
 
@@ -104,32 +103,28 @@ describe('ExportService.importFromZip', () => {
     expect(result.mediaRehosted).toBe(1);
     expect(importSpy).toHaveBeenCalledWith(
       'user-1',
-      expect.objectContaining({ posts: expect.any(Array) }),
+      expect.objectContaining({ posts: expect.any(Array) })
     );
     expect(fs.existsSync(path.join(uploadDir, 'photo.jpg'))).toBe(true);
   });
 
   it('rejects a buffer that is not a zip archive', async () => {
     const service = makeService();
-    await expect(
-      service.importFromZip('user-1', Buffer.from('not a zip')),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.importFromZip('user-1', Buffer.from('not a zip'))).rejects.toBeInstanceOf(
+      BadRequestException
+    );
   });
 
   it('rejects an archive without data.json', async () => {
     const service = makeService();
     const zip = buildZip({ 'media/photo.jpg': Buffer.from('x') });
-    await expect(service.importFromZip('user-1', zip)).rejects.toThrow(
-      /data\.json/,
-    );
+    await expect(service.importFromZip('user-1', zip)).rejects.toThrow(/data\.json/);
   });
 
   it('rejects data.json that is not valid JSON', async () => {
     const service = makeService();
     const zip = buildZip({ 'data.json': '{nope' });
-    await expect(service.importFromZip('user-1', zip)).rejects.toThrow(
-      /not valid JSON/,
-    );
+    await expect(service.importFromZip('user-1', zip)).rejects.toThrow(/not valid JSON/);
   });
 
   it('does not write files outside a flat media/ directory', async () => {

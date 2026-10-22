@@ -15,7 +15,11 @@ interface LowBandwidthMediaProps {
 }
 
 const getConnectionInfo = () => {
-  const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean; downlink?: number } }).connection;
+  const connection = (
+    navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean; downlink?: number };
+    }
+  ).connection;
   return {
     effectiveType: connection?.effectiveType || '4g',
     saveData: connection?.saveData || false,
@@ -48,7 +52,11 @@ export function LowBandwidthMedia({
       return;
     }
 
-    const shouldDeferMedia = connection.saveData || connection.downlink <= 1.5 || connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g';
+    const shouldDeferMedia =
+      connection.saveData ||
+      connection.downlink <= 1.5 ||
+      connection.effectiveType === 'slow-2g' ||
+      connection.effectiveType === '2g';
     if (shouldDeferMedia) {
       setShowTextOnly(true);
       return;
@@ -60,7 +68,9 @@ export function LowBandwidthMedia({
 
   if (showTextOnly) {
     return (
-      <div className={`rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300 ${className}`}>
+      <div
+        className={`rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300 ${className}`}
+      >
         <div className="mb-2 flex items-center gap-2">
           {connection.saveData ? <WifiOff size={16} /> : <MonitorOff size={16} />}
           <span className="font-medium">Low-bandwidth mode</span>
@@ -68,7 +78,10 @@ export function LowBandwidthMedia({
         <p>{fallbackText}</p>
         <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <Wifi size={12} />
-          <span>{connection.effectiveType} • {connection.saveData ? 'data saver' : `${connection.downlink.toFixed(1)} Mbps`}</span>
+          <span>
+            {connection.effectiveType} •{' '}
+            {connection.saveData ? 'data saver' : `${connection.downlink.toFixed(1)} Mbps`}
+          </span>
         </div>
       </div>
     );
@@ -76,7 +89,9 @@ export function LowBandwidthMedia({
 
   if (!shouldLoad) {
     return (
-      <div className={`flex min-h-40 items-center justify-center rounded-2xl border border-gray-200 bg-gray-100 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 ${className}`}>
+      <div
+        className={`flex min-h-40 items-center justify-center rounded-2xl border border-gray-200 bg-gray-100 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 ${className}`}
+      >
         <div className="flex items-center gap-2">
           <ImageIcon size={16} />
           <span>Preparing media for your connection…</span>
@@ -87,14 +102,10 @@ export function LowBandwidthMedia({
 
   if (type === 'video') {
     return (
-      <video
-        src={src}
-        poster={poster}
-        controls={controls}
-        preload="metadata"
-        className={className}
-      >
-        {captionsUrl && <track src={captionsUrl} kind="captions" srcLang="en" label="English" default />}
+      <video src={src} poster={poster} controls={controls} preload="metadata" className={className}>
+        {captionsUrl && (
+          <track src={captionsUrl} kind="captions" srcLang="en" label="English" default />
+        )}
       </video>
     );
   }

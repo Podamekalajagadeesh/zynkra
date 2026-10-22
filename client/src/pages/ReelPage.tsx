@@ -28,15 +28,27 @@ export function ReelPage() {
   }, [id]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen bg-black text-white"><p>Loading...</p></div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-black text-white">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="flex items-center justify-center h-screen bg-black text-white"><p>{error}</p></div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-black text-white">
+        <p>{error}</p>
+      </div>
+    );
   }
 
   if (!reel) {
-    return <div className="flex items-center justify-center h-screen bg-black text-white"><p>Reel not found.</p></div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-black text-white">
+        <p>Reel not found.</p>
+      </div>
+    );
   }
 
   return (

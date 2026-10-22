@@ -66,7 +66,13 @@ export async function encryptAttachment(file: File | Blob): Promise<EncryptedAtt
   const plaintext = await blobToBytes(file);
   const key = s.randombytes_buf(s.crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
   const nonce = s.randombytes_buf(s.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
-  const ciphertext = s.crypto_aead_xchacha20poly1305_ietf_encrypt(plaintext, null, null, nonce, key);
+  const ciphertext = s.crypto_aead_xchacha20poly1305_ietf_encrypt(
+    plaintext,
+    null,
+    null,
+    nonce,
+    key
+  );
   return {
     blob: new Blob([toArrayBuffer(ciphertext)], { type: 'application/octet-stream' }),
     key: s.to_base64(key),
@@ -78,7 +84,7 @@ export async function encryptAttachment(file: File | Blob): Promise<EncryptedAtt
 /** Decrypt ciphertext previously produced by encryptAttachment. */
 export async function decryptAttachment(
   ciphertext: Blob,
-  keyMaterial: AttachmentKeyMaterial,
+  keyMaterial: AttachmentKeyMaterial
 ): Promise<Blob> {
   const s = await getSodium();
   const key = s.from_base64(keyMaterial.key);

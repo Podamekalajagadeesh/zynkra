@@ -12,7 +12,7 @@ export function CartPage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  
+
   const total = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const handleProcessPayment = async (paymentMethod: string, paymentDetails: any) => {
@@ -27,19 +27,22 @@ export function CartPage() {
           // Never send full card details to server in production!
           // This is just a placeholder - in real app, use Stripe/Payments processor SDK
           cardNumber: paymentDetails.cardNumber?.slice(-4),
-          expiryDate: paymentDetails.expiryDate
-        }
+          expiryDate: paymentDetails.expiryDate,
+        },
       });
 
       if (paymentResponse.data.success) {
         // Create order after successful payment
         const orderData = {
-          items: state.items.map(item => ({ productVariantId: item.id, quantity: item.quantity })),
+          items: state.items.map((item) => ({
+            productVariantId: item.id,
+            quantity: item.quantity,
+          })),
           paymentId: paymentResponse.data.paymentId,
-          total: total
+          total: total,
         };
         await api.post('/orders', orderData);
-        
+
         dispatch({ type: 'CLEAR_CART' });
         addToast('Payment successful! Your order has been placed.', 'success');
         navigate('/marketplace/orders');
@@ -58,8 +61,11 @@ export function CartPage() {
         <p>Your cart is empty.</p>
       ) : (
         <div>
-          {state.items.map(item => (
-            <div key={item.id} className="flex justify-between items-center mb-4 p-4 border border-dark-200 dark:border-dark-700 rounded-xl">
+          {state.items.map((item) => (
+            <div
+              key={item.id}
+              className="flex justify-between items-center mb-4 p-4 border border-dark-200 dark:border-dark-700 rounded-xl"
+            >
               <div className="flex items-center gap-4">
                 <div>
                   <p className="font-bold">{item.name}</p>
@@ -81,14 +87,19 @@ export function CartPage() {
           <hr className="my-6 border-dark-200 dark:border-dark-700" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <p className="text-lg text-dark-500 dark:text-dark-400">Shipping and taxes calculated at checkout</p>
+              <p className="text-lg text-dark-500 dark:text-dark-400">
+                Shipping and taxes calculated at checkout
+              </p>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-right">
                 <p className="text-sm text-dark-500 dark:text-dark-400">Order Total</p>
                 <p className="text-2xl font-bold">${total.toFixed(2)}</p>
               </div>
-              <Button onClick={() => setIsCheckoutOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 px-8 py-6 text-lg">
+              <Button
+                onClick={() => setIsCheckoutOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 px-8 py-6 text-lg"
+              >
                 Proceed to Checkout
               </Button>
             </div>

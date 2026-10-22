@@ -16,7 +16,7 @@ export class InvoicesService {
   constructor(
     @InjectRepository(Invoice)
     private invoicesRepository: Repository<Invoice>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   async create(userId: string, dto: CreateInvoiceDto): Promise<Invoice> {
@@ -24,10 +24,7 @@ export class InvoicesService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { subtotal, taxAmount, total } = this.computeTotals(
-      dto.lineItems,
-      dto.taxRate,
-    );
+    const { subtotal, taxAmount, total } = this.computeTotals(dto.lineItems, dto.taxRate);
 
     const invoice = this.invoicesRepository.create({
       user,
@@ -83,7 +80,7 @@ export class InvoicesService {
     // Recompute totals server-side — never trust a client-supplied total.
     const { subtotal, taxAmount, total } = this.computeTotals(
       invoice.lineItems,
-      Number(invoice.taxRate),
+      Number(invoice.taxRate)
     );
     invoice.subtotal = subtotal;
     invoice.taxAmount = taxAmount;
@@ -112,12 +109,9 @@ export class InvoicesService {
 
   private computeTotals(
     lineItems: { quantity: number; unitPrice: number }[],
-    taxRate: number,
+    taxRate: number
   ): { subtotal: number; taxAmount: number; total: number } {
-    const subtotal = lineItems.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
-      0,
-    );
+    const subtotal = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const taxAmount = subtotal * (taxRate / 100);
     return {
       subtotal: round2(subtotal),

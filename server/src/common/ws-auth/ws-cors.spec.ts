@@ -26,7 +26,7 @@ describe('resolveWsOrigins', () => {
 
     it('prefers the explicit allowlist over CLIENT_URL', () => {
       expect(
-        prod({ WS_ALLOWED_ORIGINS: 'https://sockets.example', CLIENT_URL: 'https://app.example' }),
+        prod({ WS_ALLOWED_ORIGINS: 'https://sockets.example', CLIENT_URL: 'https://app.example' })
       ).toContain('https://sockets.example');
     });
 
@@ -41,14 +41,16 @@ describe('resolveWsOrigins', () => {
 
     it('deduplicates', () => {
       expect(
-        prod({ WS_ALLOWED_ORIGINS: 'https://a.example', CLIENT_URL: 'https://a.example' }),
+        prod({ WS_ALLOWED_ORIGINS: 'https://a.example', CLIENT_URL: 'https://a.example' })
       ).toEqual(['https://a.example']);
     });
   });
 
   describe('development', () => {
     it('always allows the local dev origins', () => {
-      const origins = resolveWsOrigins(config({ NODE_ENV: 'development', CLIENT_URL: 'http://localhost:5173' }));
+      const origins = resolveWsOrigins(
+        config({ NODE_ENV: 'development', CLIENT_URL: 'http://localhost:5173' })
+      );
       expect(origins).toContain('http://localhost:5173');
       expect(origins).toContain('http://127.0.0.1:5173');
     });
@@ -60,7 +62,7 @@ describe('resolveWsOrigins', () => {
 
     it('still honours an explicit allowlist', () => {
       const origins = resolveWsOrigins(
-        config({ NODE_ENV: 'development', WS_ALLOWED_ORIGINS: 'https://staging.example' }),
+        config({ NODE_ENV: 'development', WS_ALLOWED_ORIGINS: 'https://staging.example' })
       );
       expect(origins).toContain('https://staging.example');
     });
@@ -69,8 +71,11 @@ describe('resolveWsOrigins', () => {
   it('trims whitespace around comma-separated entries', () => {
     expect(
       resolveWsOrigins(
-        config({ NODE_ENV: 'production', WS_ALLOWED_ORIGINS: ' https://a.example , https://b.example ' }),
-      ),
+        config({
+          NODE_ENV: 'production',
+          WS_ALLOWED_ORIGINS: ' https://a.example , https://b.example ',
+        })
+      )
     ).toEqual(['https://a.example', 'https://b.example']);
   });
 });

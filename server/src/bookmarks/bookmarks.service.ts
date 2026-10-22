@@ -19,7 +19,7 @@ export class BookmarksService {
     private postsRepository: Repository<Post>,
     @InjectRepository(Collection)
     private collectionsRepository: Repository<Collection>,
-    private readonly userInterestsService: UserInterestsService,
+    private readonly userInterestsService: UserInterestsService
   ) {}
 
   async createCollection(createCollectionDto: CreateCollectionDto, userId: string) {
@@ -48,11 +48,7 @@ export class BookmarksService {
     return collection;
   }
 
-  async updateCollection(
-    id: string,
-    updateCollectionDto: any,
-    userId: string,
-  ) {
+  async updateCollection(id: string, updateCollectionDto: any, userId: string) {
     const collection = await this.collectionsRepository.findOne({
       where: { id, user: { id: userId } },
     });

@@ -43,16 +43,17 @@ async function main() {
       fs.readdirSync(path.join(cwd, 'src/migrations')).some((f) => f.endsWith('.ts'));
     if (hasMigrations) {
       console.log('Applying existing migrations...');
-      execSync(
-        'npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts',
-        { stdio: 'inherit', cwd, env },
-      );
+      execSync('npx typeorm-ts-node-commonjs migration:run -d src/data-source.ts', {
+        stdio: 'inherit',
+        cwd,
+        env,
+      });
     }
 
     console.log('Generating migration...');
     execSync(
       `npx typeorm-ts-node-commonjs migration:generate src/migrations/${name} -d src/data-source.ts`,
-      { stdio: 'inherit', cwd, env },
+      { stdio: 'inherit', cwd, env }
     );
   } finally {
     console.log('Stopping embedded Postgres...');

@@ -9,7 +9,7 @@ import { User } from '../users/entities/user.entity';
 export class TrendsController {
   constructor(
     private readonly trendsService: TrendsService,
-    private readonly placesService: PlacesService,
+    private readonly placesService: PlacesService
   ) {}
 
   @Get()
@@ -18,21 +18,31 @@ export class TrendsController {
     @Request() req,
     @Query('limit') limit: string = '10',
     @Query('days') days: string = '7',
-    @Query('location') location?: string,
-  ): Promise<{ globalTrends: Trend[]; locationBasedTrends: Trend[]; trendingPlaces: any[]; limit: number; days: number }> {
+    @Query('location') location?: string
+  ): Promise<{
+    globalTrends: Trend[];
+    locationBasedTrends: Trend[];
+    trendingPlaces: any[];
+    limit: number;
+    days: number;
+  }> {
     const limitNumber = parseInt(limit, 10);
     const daysNumber = parseInt(days, 10);
     const globalTrends = await this.trendsService.getTrending(limitNumber, daysNumber);
-    
+
     // Get location-based trends if location is provided
     let locationBasedTrends: Trend[] = [];
     if (location) {
-      locationBasedTrends = await this.trendsService.getTrendingByLocation(location, limitNumber, daysNumber);
+      locationBasedTrends = await this.trendsService.getTrendingByLocation(
+        location,
+        limitNumber,
+        daysNumber
+      );
     }
 
     // Get trending places regardless
     const trendingPlaces = await this.placesService.getTrendingPlaces(5);
-    
+
     return {
       globalTrends,
       locationBasedTrends,
@@ -45,7 +55,7 @@ export class TrendsController {
   @Get(':tag')
   async getTrendDetails(
     @Param('tag') tag: string,
-    @Query('days') days: string = '30',
+    @Query('days') days: string = '30'
   ): Promise<Trend | null> {
     const daysNumber = parseInt(days, 10);
     return this.trendsService.getTrendHistory(tag, daysNumber);
@@ -55,15 +65,15 @@ export class TrendsController {
   @UseGuards(OptionalJwtAuthGuard)
   async getUserCustomizedTrends(
     @Request() req,
-    @Query('limit') limit: string = '10',
+    @Query('limit') limit: string = '10'
   ): Promise<Trend[]> {
     const limitNumber = parseInt(limit, 10);
     const userId = req.user?.id;
-    
+
     if (userId) {
       return this.trendsService.getPersonalizedTrends(userId, limitNumber);
     }
-    
+
     // Fallback to global trends if not logged in
     return this.trendsService.getTrending(limitNumber, 7);
   }

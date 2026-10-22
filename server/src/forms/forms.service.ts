@@ -1,4 +1,3 @@
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,14 +11,14 @@ export class FormsService {
     @InjectRepository(Form)
     private readonly formRepository: Repository<Form>,
     @InjectRepository(Submission)
-    private readonly submissionRepository: Repository<Submission>,
+    private readonly submissionRepository: Repository<Submission>
   ) {}
 
   async create(createFormDto: any): Promise<Form> {
     const { questions, ...formData } = createFormDto;
     const form = this.formRepository.create({
       ...formData,
-      questions: questions.map(q => this.formRepository.manager.create(Question, q)),
+      questions: questions.map((q) => this.formRepository.manager.create(Question, q)),
     });
     return this.formRepository.save(form) as unknown as Promise<Form>;
   }

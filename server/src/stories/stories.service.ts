@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, LessThan, In } from 'typeorm';
 import { Story, StoryAudience } from './entities/story.entity';
@@ -24,7 +30,7 @@ export class StoriesService {
     private subscriptionsRepository: Repository<Subscription>,
     @InjectRepository(CustomAudience)
     private customAudiencesRepository: Repository<CustomAudience>,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   @Cron('0 * * * *', { name: 'stories-expiration-cleanup' })
@@ -40,10 +46,7 @@ export class StoriesService {
     }
   }
 
-  async create(
-    createStoryDto: CreateStoryDto,
-    userId: string,
-  ): Promise<Story> {
+  async create(createStoryDto: CreateStoryDto, userId: string): Promise<Story> {
     if (!createStoryDto.mediaUrl && !createStoryDto.textContent) {
       throw new BadRequestException('Story must have either media or text content.');
     }
@@ -63,8 +66,8 @@ export class StoriesService {
         where: {
           subscriber: { id: userId },
           status: SubscriptionStatus.ACTIVE,
-          expiresAt: MoreThan(new Date())
-        }
+          expiresAt: MoreThan(new Date()),
+        },
       });
 
       if (!activeSubscription) {
@@ -107,7 +110,7 @@ export class StoriesService {
         Object.assign(new StoryElement(), {
           ...element,
           story,
-        }),
+        })
       );
     }
 
@@ -123,14 +126,18 @@ export class StoriesService {
   async findOne(storyId: string, viewerId?: string): Promise<Story | null> {
     const story = await this.storiesRepository.findOne({
       where: { id: storyId },
-      relations: ['user', 'elements']
+      relations: ['user', 'elements'],
     });
 
     if (!story || viewerId === undefined || story.user.id === viewerId) {
       return story;
     }
 
-    const viewer = await this.usersService.findOneById(viewerId, ['following', 'followers', 'closeFriendsWith']);
+    const viewer = await this.usersService.findOneById(viewerId, [
+      'following',
+      'followers',
+      'closeFriendsWith',
+    ]);
     if (!viewer || !(await this.canViewStory(story, viewer))) {
       return null;
     }
@@ -138,7 +145,10 @@ export class StoriesService {
     return story;
   }
 
-  private async canViewStory(story: Story, viewer: Pick<User, 'id' | 'following' | 'followers' | 'closeFriendsWith'>): Promise<boolean> {
+  private async canViewStory(
+    story: Story,
+    viewer: Pick<User, 'id' | 'following' | 'followers' | 'closeFriendsWith'>
+  ): Promise<boolean> {
     if (story.user.id === viewer.id) return true;
     if (story.excludedUserIds?.includes(viewer.id)) return false;
     if (story.audience === StoryAudience.CLOSE_FRIENDS) {
@@ -146,7 +156,9 @@ export class StoriesService {
     }
     if (story.audience === StoryAudience.CUSTOM) {
       if (!story.customAudienceId) return false;
-      const customAudience = await this.customAudiencesRepository.findOne({ where: { id: story.customAudienceId } });
+      const customAudience = await this.customAudiencesRepository.findOne({
+        where: { id: story.customAudienceId },
+      });
       return customAudience?.userId === story.user.id && customAudience.userIds.includes(viewer.id);
     }
 
@@ -154,8 +166,10 @@ export class StoriesService {
       case 'only_me':
         return false;
       case 'friends':
-        return viewer.following.some((user) => user.id === story.user.id)
-          && viewer.followers.some((user) => user.id === story.user.id);
+        return (
+          viewer.following.some((user) => user.id === story.user.id) &&
+          viewer.followers.some((user) => user.id === story.user.id)
+        );
       case 'followers':
         return viewer.following.some((user) => user.id === story.user.id);
       case 'public':
@@ -166,7 +180,11 @@ export class StoriesService {
 
   async findActiveStoriesForUser(userId: string): Promise<Story[]> {
     const now = new Date();
-    const user = await this.usersService.findOneById(userId, ['following', 'followers', 'closeFriendsWith']);
+    const user = await this.usersService.findOneById(userId, [
+      'following',
+      'followers',
+      'closeFriendsWith',
+    ]);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -192,7 +210,7 @@ export class StoriesService {
           closeFriendsAudience: StoryAudience.CLOSE_FRIENDS,
           customAudience: StoryAudience.CUSTOM,
           closeFriendsWithIds: closeFriendsWithIds.length > 0 ? closeFriendsWithIds : [null],
-        },
+        }
       )
       .orderBy('story.isBoosted', 'DESC')
       .addOrderBy('story.createdAt', 'DESC')
@@ -200,12 +218,14 @@ export class StoriesService {
 
     const visibleStories: Story[] = [];
     for (const story of stories) {
-      if (await this.canViewStory(story, {
-      id: userId,
-      following: user.following,
-      followers: user.followers,
-      closeFriendsWith: user.closeFriendsWith,
-      })) {
+      if (
+        await this.canViewStory(story, {
+          id: userId,
+          following: user.following,
+          followers: user.followers,
+          closeFriendsWith: user.closeFriendsWith,
+        })
+      ) {
         visibleStories.push(story);
       }
     }
@@ -225,8 +245,8 @@ export class StoriesService {
       relations: ['user', 'elements'],
       order: {
         isBoosted: 'DESC',
-        createdAt: 'DESC'
-      }
+        createdAt: 'DESC',
+      },
     });
   }
 
@@ -240,7 +260,11 @@ export class StoriesService {
     return stories;
   }
 
-  async trackView(storyId: string, userId: string, isAnonymous: boolean = false): Promise<StoryView> {
+  async trackView(
+    storyId: string,
+    userId: string,
+    isAnonymous: boolean = false
+  ): Promise<StoryView> {
     const story = await this.findOne(storyId, userId);
     if (!story) {
       throw new ForbiddenException('You are not authorized to view this story');
@@ -253,7 +277,7 @@ export class StoriesService {
 
     // Check if user already viewed this story to track rewatches
     const existingView = await this.storyViewsRepository.findOne({
-      where: { story: { id: storyId }, user: { id: userId } }
+      where: { story: { id: storyId }, user: { id: userId } },
     });
 
     if (existingView) {
@@ -270,27 +294,30 @@ export class StoriesService {
       user,
       isAnonymous,
       viewTimestamps: [new Date()],
-      rewatchCount: 1
+      rewatchCount: 1,
     });
 
     return this.storyViewsRepository.save(storyView);
   }
 
   async getViews(storyId: string, userId: string): Promise<StoryView[]> {
-    const story = await this.storiesRepository.findOne({ where: { id: storyId }, relations: ['user'] });
+    const story = await this.storiesRepository.findOne({
+      where: { id: storyId },
+      relations: ['user'],
+    });
     if (!story) {
       throw new NotFoundException('Story not found');
     }
 
     // Only the story owner can view the viewer list
     if (story.user.id !== userId) {
-      throw new UnauthorizedException('You are not authorized to view this story\'s viewers');
+      throw new UnauthorizedException("You are not authorized to view this story's viewers");
     }
 
     return this.storyViewsRepository.find({
       where: { story: { id: storyId } },
       relations: ['user'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -301,7 +328,10 @@ export class StoriesService {
       throw new NotFoundException('User not found');
     }
 
-    const story = await this.storiesRepository.findOne({ where: { id: storyId }, relations: ['user'] });
+    const story = await this.storiesRepository.findOne({
+      where: { id: storyId },
+      relations: ['user'],
+    });
 
     if (!story) {
       throw new Error('Story not found');

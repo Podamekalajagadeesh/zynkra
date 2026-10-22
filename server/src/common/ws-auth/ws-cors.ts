@@ -41,7 +41,7 @@ export function resolveWsOrigins(configService: ConfigService): string[] {
   if (allowed.length === 0) {
     throw new Error(
       'No WebSocket origins configured. Set WS_ALLOWED_ORIGINS (comma-separated) or CLIENT_URL. ' +
-        'Refusing to start rather than accepting connections from any origin.',
+        'Refusing to start rather than accepting connections from any origin.'
     );
   }
 

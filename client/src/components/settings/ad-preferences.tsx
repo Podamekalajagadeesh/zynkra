@@ -23,14 +23,14 @@ const AdPreferences = () => {
   }, []);
 
   const handleUpdate = async () => {
-      try {
-        await api.put('/ad-preferences', {
-          interestTopics,
-          showTargetedAds,
-        });
-      } catch (error) {
-        console.error('Error updating ad preferences:', error);
-      }
+    try {
+      await api.put('/ad-preferences', {
+        interestTopics,
+        showTargetedAds,
+      });
+    } catch (error) {
+      console.error('Error updating ad preferences:', error);
+    }
   };
 
   const addTopic = () => {
@@ -49,19 +49,21 @@ const AdPreferences = () => {
       <h3>Ad Preferences</h3>
       {isPremium ? (
         <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <p className="text-green-700 dark:text-green-300">🎉 You're a premium subscriber! All ads are automatically disabled for you.</p>
+          <p className="text-green-700 dark:text-green-300">
+            🎉 You're a premium subscriber! All ads are automatically disabled for you.
+          </p>
         </div>
       ) : (
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={showTargetedAds}
-            onChange={(e) => setShowTargetedAds(e.target.checked)}
-          />
-          Show targeted ads
-        </label>
-      </div>
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              checked={showTargetedAds}
+              onChange={(e) => setShowTargetedAds(e.target.checked)}
+            />
+            Show targeted ads
+          </label>
+        </div>
       )}
       <div>
         <h4>Interest Topics</h4>

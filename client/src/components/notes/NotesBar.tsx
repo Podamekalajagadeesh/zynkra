@@ -48,14 +48,9 @@ export const NotesBar = () => {
         </div>
       </div>
       {isCreateOpen && (
-        <CreateNote
-          onClose={() => setCreateOpen(false)}
-          onNoteCreated={handleNoteCreated}
-        />
+        <CreateNote onClose={() => setCreateOpen(false)} onNoteCreated={handleNoteCreated} />
       )}
-      {selectedNote && (
-        <ViewNote note={selectedNote} onClose={() => setSelectedNote(null)} />
-      )}
+      {selectedNote && <ViewNote note={selectedNote} onClose={() => setSelectedNote(null)} />}
     </div>
   );
 };

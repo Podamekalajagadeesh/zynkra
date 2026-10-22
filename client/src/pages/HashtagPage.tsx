@@ -36,7 +36,7 @@ export function HashtagPage() {
 
   const handleFollowToggle = async () => {
     if (!tag) return;
-    
+
     try {
       if (isFollowing) {
         await unfollowHashtag(tag);
@@ -58,11 +58,8 @@ export function HashtagPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">#{tag}</h1>
         {profile && (
-          <Button 
-            onClick={handleFollowToggle}
-            variant={isFollowing ? "secondary" : "default"}
-          >
-            {isFollowing ? "Unfollow" : "Follow"}
+          <Button onClick={handleFollowToggle} variant={isFollowing ? 'secondary' : 'default'}>
+            {isFollowing ? 'Unfollow' : 'Follow'}
           </Button>
         )}
       </div>
@@ -75,9 +72,7 @@ export function HashtagPage() {
       ) : (
         <div className="space-y-4">
           {posts.length > 0 ? (
-            posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))
+            posts.map((post) => <PostCard key={post.id} post={post} />)
           ) : (
             <p>No posts found for this hashtag.</p>
           )}

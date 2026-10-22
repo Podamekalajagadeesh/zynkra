@@ -34,11 +34,11 @@ async function main() {
     // Refuse to adopt an empty database — there, migrations should actually run.
     const { rows } = await client.query(
       `SELECT count(*)::int AS n FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name = 'user'`,
+       WHERE table_schema = 'public' AND table_name = 'user'`
     );
     if (rows[0].n === 0) {
       console.error(
-        'This looks like a fresh database (no "user" table). Just start the app — migrations run automatically.',
+        'This looks like a fresh database (no "user" table). Just start the app — migrations run automatically.'
       );
       process.exit(1);
     }
@@ -48,7 +48,7 @@ async function main() {
         "id" SERIAL PRIMARY KEY,
         "timestamp" bigint NOT NULL,
         "name" character varying NOT NULL
-      )`,
+      )`
     );
 
     for (const file of files) {
@@ -57,18 +57,15 @@ async function main() {
       if (!m) continue;
       const [, timestamp, label] = m;
       const name = `${label}${timestamp}`;
-      const existing = await client.query(
-        'SELECT 1 FROM "migrations" WHERE "name" = $1',
-        [name],
-      );
+      const existing = await client.query('SELECT 1 FROM "migrations" WHERE "name" = $1', [name]);
       if (existing.rowCount > 0) {
         console.log(`Already marked: ${name}`);
         continue;
       }
-      await client.query(
-        'INSERT INTO "migrations" ("timestamp", "name") VALUES ($1, $2)',
-        [timestamp, name],
-      );
+      await client.query('INSERT INTO "migrations" ("timestamp", "name") VALUES ($1, $2)', [
+        timestamp,
+        name,
+      ]);
       console.log(`Marked as applied: ${name}`);
     }
     console.log('Done. This database is now on the migrations workflow.');

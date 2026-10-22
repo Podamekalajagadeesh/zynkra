@@ -23,7 +23,7 @@ export class ThreadsService {
     @InjectRepository(Thread)
     private readonly threadsRepository: Repository<Thread>,
     @InjectRepository(ThreadMessage)
-    private readonly messagesRepository: Repository<ThreadMessage>,
+    private readonly messagesRepository: Repository<ThreadMessage>
   ) {}
 
   async createThread(dto: CreateThreadDto, userId: string): Promise<Thread> {
@@ -82,7 +82,11 @@ export class ThreadsService {
     return { ...thread, messages };
   }
 
-  async sendMessage(threadId: string, dto: SendThreadMessageDto, userId: string): Promise<ThreadMessage> {
+  async sendMessage(
+    threadId: string,
+    dto: SendThreadMessageDto,
+    userId: string
+  ): Promise<ThreadMessage> {
     const thread = await this.threadsRepository.findOne({ where: { id: threadId } });
     if (!thread) {
       throw new NotFoundException(`Thread with ID "${threadId}" not found`);

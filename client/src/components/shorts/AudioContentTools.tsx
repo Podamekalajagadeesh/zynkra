@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Mic, StopCircle, Music, Filter } from 'lucide-react';

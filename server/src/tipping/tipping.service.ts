@@ -1,4 +1,3 @@
-
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -37,7 +36,7 @@ export class TippingService {
     private postsRepository: Repository<Post>,
     private readonly reputationService: ReputationService,
     private readonly paymentsService: PaymentsService,
-    private readonly walletService: WalletService,
+    private readonly walletService: WalletService
   ) {
     if (typeof this.paymentsService.registerFulfillmentHandler === 'function') {
       this.paymentsService.registerFulfillmentHandler('tip', async (transaction) => {
@@ -55,7 +54,7 @@ export class TippingService {
     amount: number,
     postId?: string,
     currency: string = 'usd',
-    paymentMethodId?: string,
+    paymentMethodId?: string
   ): Promise<TipResult> {
     if (amount <= 0) {
       throw new BadRequestException('Tip amount must be greater than zero');
@@ -91,19 +90,14 @@ export class TippingService {
       postId,
       type: 'tip',
     };
-    const payment = await this.paymentsService.processPayment(
-      fromUserId,
-      amount,
-      'tip',
-      {
-        currency,
-        payerId: fromUserId,
-        recipientId: toUserId,
-        metadata,
-        platformFeeRate: 0.10,
-        paymentMethodId,
-      },
-    );
+    const payment = await this.paymentsService.processPayment(fromUserId, amount, 'tip', {
+      currency,
+      payerId: fromUserId,
+      recipientId: toUserId,
+      metadata,
+      platformFeeRate: 0.1,
+      paymentMethodId,
+    });
 
     if (!payment?.success) {
       return {
@@ -176,9 +170,7 @@ export class TippingService {
     }
 
     const postId = metadata.postId;
-    const post = postId
-      ? await this.postsRepository.findOne({ where: { id: postId } })
-      : undefined;
+    const post = postId ? await this.postsRepository.findOne({ where: { id: postId } }) : undefined;
     const tip = this.tipsRepository.create({
       from: fromUser,
       to: toUser,
@@ -202,7 +194,7 @@ export class TippingService {
     toUserId: string,
     amount: number,
     postId?: string,
-    txHash?: string,
+    txHash?: string
   ): Promise<TipResult> {
     if (amount <= 0) {
       throw new BadRequestException('Tip amount must be greater than zero');
@@ -295,7 +287,7 @@ export class TippingService {
 
   async getLeaderboard(
     period: 'all' | 'weekly' | 'monthly' = 'all',
-    limit = 50,
+    limit = 50
   ): Promise<LeaderboardEntry[]> {
     const since =
       period === 'weekly'
@@ -353,10 +345,7 @@ export class TippingService {
 
   async getTipHistory(userId: string, limit = 50): Promise<Tip[]> {
     return this.tipsRepository.find({
-      where: [
-        { from: { id: userId } },
-        { to: { id: userId } },
-      ],
+      where: [{ from: { id: userId } }, { to: { id: userId } }],
       relations: ['from', 'to', 'post'],
       order: { createdAt: 'DESC' },
       take: limit,

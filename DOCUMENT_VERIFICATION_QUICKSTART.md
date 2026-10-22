@@ -9,7 +9,7 @@
 cd server
 npm install tesseract.js sharp multer typeorm --save
 
-# Frontend  
+# Frontend
 cd ../client
 npm install lucide-react --save
 ```
@@ -17,6 +17,7 @@ npm install lucide-react --save
 ### Step 2: Configure Environment
 
 Create `server/.env`:
+
 ```env
 # Document Verification
 DOCUMENT_ENCRYPTION_KEY=your-32-character-encryption-key-here!!!!
@@ -50,11 +51,7 @@ import { DocumentValidationEngine } from './features/verification/document-valid
 
 @Module({
   controllers: [DocumentVerificationController],
-  providers: [
-    DocumentProcessingService,
-    DocumentStorageService,
-    DocumentValidationEngine,
-  ],
+  providers: [DocumentProcessingService, DocumentStorageService, DocumentValidationEngine],
 })
 export class VerificationModule {}
 ```
@@ -62,6 +59,7 @@ export class VerificationModule {}
 ### Step 5: Use Components
 
 **Frontend - User Upload:**
+
 ```tsx
 import { AdvancedVerificationDocumentUpload } from '@/components/AdvancedVerificationDocumentUpload';
 
@@ -79,6 +77,7 @@ export function VerificationPage() {
 ```
 
 **Frontend - Admin Dashboard:**
+
 ```tsx
 import { AdvancedAdminVerificationDashboard } from '@/components/AdvancedAdminVerificationDashboard';
 
@@ -114,6 +113,7 @@ npm run dev
 ## 📋 File Checklist
 
 Backend files created:
+
 - ✅ `server/src/features/verification/document-processing.service.ts`
 - ✅ `server/src/features/verification/document-storage.service.ts`
 - ✅ `server/src/features/verification/document-validation.engine.ts`
@@ -122,10 +122,12 @@ Backend files created:
 - ✅ `server/src/migrations/1704067200000-CreateDocumentVerificationTables.ts`
 
 Frontend files created:
+
 - ✅ `client/src/components/AdvancedVerificationDocumentUpload.tsx`
 - ✅ `client/src/components/AdvancedAdminVerificationDashboard.tsx`
 
 Documentation created:
+
 - ✅ `DOCUMENT_VERIFICATION_GUIDE.md`
 - ✅ `DOCUMENT_VERIFICATION_IMPLEMENTATION_SUMMARY.md`
 
@@ -134,6 +136,7 @@ Documentation created:
 ## 🔑 Key API Endpoints
 
 ### Upload Document
+
 ```bash
 POST /verification/documents/upload
 Content-Type: multipart/form-data
@@ -152,6 +155,7 @@ Response: {
 ```
 
 ### Get Pending Documents (Admin)
+
 ```bash
 GET /verification/documents/admin/pending?limit=50&offset=0
 
@@ -162,6 +166,7 @@ Response: {
 ```
 
 ### Approve Document (Admin)
+
 ```bash
 PUT /verification/documents/rec_123/approve
 Content-Type: application/json
@@ -182,6 +187,7 @@ Response: {
 ## 🛠️ Troubleshooting
 
 ### OCR Not Working
+
 ```bash
 # Install Tesseract dependencies
 npm install --save tesseract.js
@@ -191,6 +197,7 @@ node -e "require('tesseract.js').recognize('test.jpg')"
 ```
 
 ### Database Connection Error
+
 ```bash
 # Check PostgreSQL is running
 psql -U user -d zynkra -c "SELECT 1"
@@ -200,6 +207,7 @@ npm run typeorm migration:run
 ```
 
 ### Upload Directory Missing
+
 ```bash
 # Create directories
 mkdir -p uploads/documents
@@ -210,6 +218,7 @@ chmod 755 uploads/documents
 ```
 
 ### Encryption Key Error
+
 ```bash
 # Generate new key (32 characters)
 node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
@@ -269,6 +278,7 @@ DOCUMENT_ENCRYPTION_KEY=your-generated-key-here
 ## 🎯 Common Tasks
 
 ### Add Custom Validation Rule
+
 ```typescript
 // In DocumentValidationEngine
 private validateCustom(metadata: DocumentMetadata) {
@@ -283,30 +293,35 @@ private validateCustom(metadata: DocumentMetadata) {
 ```
 
 ### Change Scoring Weights
+
 ```typescript
 // In DocumentValidationEngine.calculateOverallScore()
-const weight = 
-  result.severity === 'critical' ? 5 :  // Change from 3
-  result.severity === 'warning' ? 3 :   // Change from 2
-  1;
+const weight =
+  result.severity === 'critical'
+    ? 5 // Change from 3
+    : result.severity === 'warning'
+      ? 3 // Change from 2
+      : 1;
 ```
 
 ### Update Validation Threshold
+
 ```typescript
 // In document-verification.controller.ts
 const isPassed = validationReport.overallScore >= 75; // Change from 70
 ```
 
 ### Extend Document Types
+
 ```typescript
 // In document-processing.service.ts
 export interface DocumentMetadata {
-  documentType: 
-    | 'passport' 
-    | 'driver_license' 
-    | 'national_id' 
-    | 'visa' 
-    | 'travel_permit'  // Add new type
+  documentType:
+    | 'passport'
+    | 'driver_license'
+    | 'national_id'
+    | 'visa'
+    | 'travel_permit' // Add new type
     | 'other';
 }
 ```
@@ -316,6 +331,7 @@ export interface DocumentMetadata {
 ## 📈 Performance Optimization
 
 ### Enable Document Caching
+
 ```typescript
 // In document-storage.service.ts
 private cache = new Map<string, DocumentRecord>();
@@ -329,20 +345,26 @@ async getDocumentById(id: string) {
 ```
 
 ### Batch Process Documents
+
 ```typescript
 // Process multiple documents in parallel
 const results = await Promise.all(
-  files.map(file => this.processingService.processDocument(file.path, file.name, type))
+  files.map((file) => this.processingService.processDocument(file.path, file.name, type))
 );
 ```
 
 ### Queue Long-Running Tasks
+
 ```typescript
 // Use Bull or similar for background jobs
-queue.add('process-document', { documentId }, {
-  attempts: 3,
-  backoff: { type: 'exponential', delay: 2000 }
-});
+queue.add(
+  'process-document',
+  { documentId },
+  {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+  }
+);
 ```
 
 ---
@@ -390,6 +412,7 @@ queue.add('process-document', { documentId }, {
 Your Document Verification system is now ready for production use.
 
 **Key Features Enabled:**
+
 - ✅ OCR text extraction
 - ✅ AI document detection
 - ✅ 8-rule validation

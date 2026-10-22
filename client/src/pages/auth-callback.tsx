@@ -29,7 +29,7 @@ export function AuthCallbackPage() {
         window.history.replaceState({}, '', window.location.pathname);
 
         // Wait a tick to ensure all state updates are processed
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Navigate to home
         navigate('/');
@@ -48,7 +48,9 @@ export function AuthCallbackPage() {
         <div className="h-12 w-12 animate-pulse rounded-2xl bg-gradient-to-br from-primary-600 to-accent-600 shadow-lg shadow-primary-500/20" />
         <div className="space-y-2">
           <p className="section-title text-2xl">Finishing sign-in</p>
-          <p className="section-subtitle">We’re securing your session and returning you to the app.</p>
+          <p className="section-subtitle">
+            We’re securing your session and returning you to the app.
+          </p>
         </div>
       </div>
     </div>

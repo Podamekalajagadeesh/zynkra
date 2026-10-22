@@ -43,17 +43,17 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
     love: 60,
     fear: 0,
   });
-  
+
   // AI Co-Pilot state
   const [isAICoPilotOpen, setIsAICoPilotOpen] = useState(false);
-  
+
   const handleAISuggestionApply = (suggestion: ContentSuggestion) => {
     setContent(suggestion.content);
     // Apply emotional context if available
     if (suggestion.emotionalContext) {
-      setEmotions(prev => ({
+      setEmotions((prev) => ({
         ...prev,
-        ...suggestion.emotionalContext
+        ...suggestion.emotionalContext,
       }));
     }
     addToast({ type: 'success', message: `Applied suggestion: ${suggestion.title}` });
@@ -175,9 +175,17 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
             disabled={isUploading}
           />
           {sensoryData.visual?.map((file, i) => (
-            <div key={i} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded">
+            <div
+              key={i}
+              className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded"
+            >
               <span className="text-sm truncate">{file.url.split('/').pop()}</span>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeFile('visual', i)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeFile('visual', i)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -197,9 +205,17 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
             disabled={isUploading}
           />
           {sensoryData.audio?.map((file, i) => (
-            <div key={i} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded">
+            <div
+              key={i}
+              className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded"
+            >
               <span className="text-sm truncate">{file.url.split('/').pop()}</span>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeFile('audio', i)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeFile('audio', i)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -221,7 +237,9 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
                 min={0}
                 max={100}
                 step={1}
-                onValueChange={([newValue]) => setEmotions((prev) => ({ ...prev, [emotion]: newValue }))}
+                onValueChange={([newValue]) =>
+                  setEmotions((prev) => ({ ...prev, [emotion]: newValue }))
+                }
               />
             </div>
           ))}
@@ -233,7 +251,9 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
         <div className="flex items-center justify-between">
           <div>
             <Label>Allow replay</Label>
-            <p className="text-sm text-gray-500">Let others replay this memory's full sensory experience</p>
+            <p className="text-sm text-gray-500">
+              Let others replay this memory's full sensory experience
+            </p>
           </div>
           <Switch checked={allowReplay} onCheckedChange={setAllowReplay} />
         </div>
@@ -250,7 +270,9 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="font-semibold">Time Capsule</h3>
-            <p className="text-sm text-gray-500">Schedule this memory to unlock automatically for your connections later.</p>
+            <p className="text-sm text-gray-500">
+              Schedule this memory to unlock automatically for your connections later.
+            </p>
           </div>
           <Switch checked={isTimeCapsule} onCheckedChange={setIsTimeCapsule} />
         </div>
@@ -259,11 +281,20 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="unlockAt">Unlock date and time</Label>
-                <Input id="unlockAt" type="datetime-local" value={unlockAt} onChange={(e) => setUnlockAt(e.target.value)} required={isTimeCapsule} />
+                <Input
+                  id="unlockAt"
+                  type="datetime-local"
+                  value={unlockAt}
+                  onChange={(e) => setUnlockAt(e.target.value)}
+                  required={isTimeCapsule}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Reality context</Label>
-                <Select value={realityContext} onValueChange={(value) => setRealityContext(value as RealityContext)}>
+                <Select
+                  value={realityContext}
+                  onValueChange={(value) => setRealityContext(value as RealityContext)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a reality" />
                   </SelectTrigger>
@@ -300,8 +331,8 @@ export const CreateMemoryForm: React.FC<CreateMemoryFormProps> = ({ onSuccess, o
       </div>
 
       <div className="flex gap-4 justify-between">
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           onClick={() => setIsAICoPilotOpen(true)}
           className="bg-purple-600 hover:bg-purple-700 text-white"
         >

@@ -7,7 +7,7 @@ import { CustomAudience } from './entities/custom-audience.entity';
 export class CustomAudiencesService {
   constructor(
     @InjectRepository(CustomAudience)
-    private readonly repository: Repository<CustomAudience>,
+    private readonly repository: Repository<CustomAudience>
   ) {}
 
   async listForUser(userId: string): Promise<CustomAudience[]> {
@@ -29,7 +29,7 @@ export class CustomAudiencesService {
   async update(
     userId: string,
     id: string,
-    data: { name?: string; userIds?: string[] },
+    data: { name?: string; userIds?: string[] }
   ): Promise<CustomAudience> {
     const audience = await this.repository.findOne({ where: { id, userId } });
     if (!audience) {

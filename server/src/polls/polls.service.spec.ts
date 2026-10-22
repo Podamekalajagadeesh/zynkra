@@ -12,7 +12,14 @@ function makeUser(overrides: any = {}) {
 }
 
 function makePollOption(overrides: any = {}) {
-  return { id: 'opt-1', text: 'Option A', voteCount: 0, votes: [], poll: { id: 'poll-1' }, ...overrides };
+  return {
+    id: 'opt-1',
+    text: 'Option A',
+    voteCount: 0,
+    votes: [],
+    poll: { id: 'poll-1' },
+    ...overrides,
+  };
 }
 
 function makePoll(overrides: any = {}) {
@@ -29,8 +36,14 @@ describe('PollsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PollsService,
-        { provide: getRepositoryToken(Poll), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn() } },
-        { provide: getRepositoryToken(PollOption), useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn() } },
+        {
+          provide: getRepositoryToken(Poll),
+          useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(PollOption),
+          useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn() },
+        },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
       ],
     }).compile();
@@ -90,9 +103,7 @@ describe('PollsService', () => {
       usersService.findOneById.mockResolvedValue(user as any);
       pollOptionRepo.findOne.mockResolvedValue(pollOption as any);
       // First call (for pollOption) returns the option, second call (for poll) returns null
-      pollRepo.findOne
-        .mockResolvedValueOnce(null as any)
-        .mockResolvedValueOnce(null as any);
+      pollRepo.findOne.mockResolvedValueOnce(null as any).mockResolvedValueOnce(null as any);
 
       await expect(service.vote('opt-1', 'user-1')).rejects.toThrow(NotFoundException);
     });

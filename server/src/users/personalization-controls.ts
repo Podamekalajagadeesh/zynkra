@@ -25,7 +25,7 @@ export const DEFAULT_PERSONALIZATION_CONTROLS: PersonalizationControls = {
 };
 
 export function normalizePersonalizationControls(
-  controls?: Partial<PersonalizationControls> | null,
+  controls?: Partial<PersonalizationControls> | null
 ): PersonalizationControls {
   return {
     ...DEFAULT_PERSONALIZATION_CONTROLS,

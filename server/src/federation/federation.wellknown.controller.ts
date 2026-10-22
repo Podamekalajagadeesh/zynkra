@@ -6,7 +6,7 @@ import { FederationService } from './federation.service';
 export class FederationWellKnownController {
   constructor(
     private readonly federationService: FederationService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   @Get('.well-known/webfinger')
@@ -20,7 +20,9 @@ export class FederationWellKnownController {
 
   @Get('.well-known/nodeinfo')
   nodeInfo() {
-    const baseUrl = this.configService.get<string>('INSTANCE_BASE_URL', 'http://localhost:3001').replace(/\/$/, '');
+    const baseUrl = this.configService
+      .get<string>('INSTANCE_BASE_URL', 'http://localhost:3001')
+      .replace(/\/$/, '');
 
     return {
       links: [

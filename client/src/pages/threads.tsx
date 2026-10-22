@@ -84,7 +84,7 @@ export default function ThreadsPage() {
         setLoading(false);
       }
     },
-    [addToast],
+    [addToast]
   );
 
   useEffect(() => {
@@ -174,7 +174,10 @@ export default function ThreadsPage() {
   if (id) {
     return (
       <div className="container mx-auto max-w-3xl p-4">
-        <Link to="/threads" className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline">
+        <Link
+          to="/threads"
+          className="inline-flex items-center gap-1 text-sm text-primary-600 hover:underline"
+        >
           <ArrowLeft className="w-4 h-4" /> All threads
         </Link>
 
@@ -188,31 +191,41 @@ export default function ThreadsPage() {
                 </p>
               </div>
               {user?.id === thread.userId && (
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteThread(thread.id)}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteThread(thread.id)}
+                >
                   <Trash2 className="w-4 h-4 mr-1" /> Delete
                 </Button>
               )}
             </div>
 
             <div className="mt-6 space-y-2">
-              {(thread.messages || []).filter((m) => m.parentMessageId === null).map((root) => (
-                <MessageBranch
-                  key={root.id}
-                  message={root}
-                  all={thread.messages || []}
-                  currentUserId={user?.id}
-                  replyingTo={replyingTo}
-                  replyDrafts={replyDrafts}
-                  onReplyToggle={(messageId) => setReplyingTo(replyingTo === messageId ? null : messageId)}
-                  onReplyDraftChange={(messageId, value) =>
-                    setReplyDrafts((drafts) => ({ ...drafts, [messageId]: value }))
-                  }
-                  onReply={handleReply}
-                  onDelete={(messageId) => handleDeleteMessage(thread.id, messageId)}
-                />
-              ))}
+              {(thread.messages || [])
+                .filter((m) => m.parentMessageId === null)
+                .map((root) => (
+                  <MessageBranch
+                    key={root.id}
+                    message={root}
+                    all={thread.messages || []}
+                    currentUserId={user?.id}
+                    replyingTo={replyingTo}
+                    replyDrafts={replyDrafts}
+                    onReplyToggle={(messageId) =>
+                      setReplyingTo(replyingTo === messageId ? null : messageId)
+                    }
+                    onReplyDraftChange={(messageId, value) =>
+                      setReplyDrafts((drafts) => ({ ...drafts, [messageId]: value }))
+                    }
+                    onReply={handleReply}
+                    onDelete={(messageId) => handleDeleteMessage(thread.id, messageId)}
+                  />
+                ))}
               {(thread.messages || []).length === 0 && (
-                <p className="text-gray-500 py-8 text-center">No messages yet. Start the conversation.</p>
+                <p className="text-gray-500 py-8 text-center">
+                  No messages yet. Start the conversation.
+                </p>
               )}
             </div>
 
@@ -256,14 +269,19 @@ export default function ThreadsPage() {
           onChange={(e) => setNewContent(e.target.value)}
         />
         <div className="mt-2 flex justify-end">
-          <Button onClick={handleCreate} disabled={submitting || (!newTitle.trim() && !newContent.trim())}>
+          <Button
+            onClick={handleCreate}
+            disabled={submitting || (!newTitle.trim() && !newContent.trim())}
+          >
             <MessageSquare className="w-4 h-4 mr-1" /> Start thread
           </Button>
         </div>
       </div>
 
       {threads.length === 0 ? (
-        <p className="text-gray-500 text-center py-12">No threads yet. Start the first one above.</p>
+        <p className="text-gray-500 text-center py-12">
+          No threads yet. Start the first one above.
+        </p>
       ) : (
         <ul className="space-y-3">
           {threads.map((threadItem) => (
@@ -277,7 +295,9 @@ export default function ThreadsPage() {
                     <h3 className="font-semibold">{threadItem.title || 'Untitled thread'}</h3>
                     <p className="text-sm text-gray-500">
                       {displayName(threadItem.user)} · {threadItem.messageCount ?? 0} messages ·{' '}
-                      {threadItem.lastMessageAt ? timeAgo(threadItem.lastMessageAt) : timeAgo(threadItem.createdAt)}
+                      {threadItem.lastMessageAt
+                        ? timeAgo(threadItem.lastMessageAt)
+                        : timeAgo(threadItem.createdAt)}
                     </p>
                   </div>
                   {user?.id === threadItem.userId && (
@@ -359,7 +379,11 @@ function MessageBranch({
             onChange={(e) => onReplyDraftChange(message.id, e.target.value)}
           />
           <div className="mt-2 flex justify-end">
-            <Button size="sm" onClick={() => onReply(message.id)} disabled={!replyDrafts[message.id]?.trim()}>
+            <Button
+              size="sm"
+              onClick={() => onReply(message.id)}
+              disabled={!replyDrafts[message.id]?.trim()}
+            >
               Reply
             </Button>
           </div>

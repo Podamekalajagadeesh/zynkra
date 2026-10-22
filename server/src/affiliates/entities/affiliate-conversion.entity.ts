@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { AffiliateLink } from './affiliate-link.entity';
 import { Transaction } from '../../marketplace/entities/transaction.entity';
 
@@ -7,7 +15,7 @@ export class AffiliateConversion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => AffiliateLink, link => link.conversions)
+  @ManyToOne(() => AffiliateLink, (link) => link.conversions)
   affiliateLink: AffiliateLink;
 
   @Column()

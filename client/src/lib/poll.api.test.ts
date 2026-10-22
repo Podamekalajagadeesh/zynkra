@@ -4,7 +4,9 @@ import { server } from '../mocks/server';
 import { voteOnPoll, createPost } from './api';
 
 vi.mock('./offlineSync', () => ({
-  enqueueOfflineOperation: vi.fn().mockResolvedValue({ id: 'offline-1', createdAt: new Date().toISOString() }),
+  enqueueOfflineOperation: vi
+    .fn()
+    .mockResolvedValue({ id: 'offline-1', createdAt: new Date().toISOString() }),
 }));
 Object.defineProperty(navigator, 'onLine', { value: true, writable: true });
 
@@ -59,7 +61,10 @@ describe('createPost with poll', () => {
       })
     );
 
-    await createPost('Vote now', [], 'public', '', false, [], { question: 'Fav?', options: ['A', 'B'] });
+    await createPost('Vote now', [], 'public', '', false, [], {
+      question: 'Fav?',
+      options: ['A', 'B'],
+    });
 
     expect(capturedBody.poll).toBeDefined();
     expect(capturedBody.poll.question).toBe('Fav?');

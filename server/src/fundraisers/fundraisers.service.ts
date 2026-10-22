@@ -15,7 +15,7 @@ export class FundraisersService {
     private readonly fundraiserRepository: Repository<Fundraiser>,
     @InjectRepository(Donation)
     private readonly donationRepository: Repository<Donation>,
-    private readonly paymentsService: PaymentsService,
+    private readonly paymentsService: PaymentsService
   ) {}
 
   async create(createFundraiserDto: CreateFundraiserDto, organizer: User): Promise<Fundraiser> {
@@ -31,18 +31,21 @@ export class FundraisersService {
   }
 
   async findOne(id: string): Promise<Fundraiser> {
-    return this.fundraiserRepository.findOne({ where: { id }, relations: ['organizer', 'donations', 'donations.donor'] });
+    return this.fundraiserRepository.findOne({
+      where: { id },
+      relations: ['organizer', 'donations', 'donations.donor'],
+    });
   }
 
   async createDonation(
     fundraiserId: string,
     createDonationDto: CreateDonationDto,
-    donor: User,
+    donor: User
   ): Promise<Donation> {
     const fundraiser = await this.findOne(fundraiserId);
     const paymentIntent = await this.paymentsService.createPaymentIntent(
       createDonationDto.amount * 100, // Stripe expects the amount in cents
-      fundraiser.currency,
+      fundraiser.currency
     );
 
     const donation = this.donationRepository.create({

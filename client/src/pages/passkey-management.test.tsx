@@ -32,7 +32,7 @@ describe('PasskeyManagementPage', () => {
         <ToastProvider>
           <PasskeyManagementPage />
         </ToastProvider>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
     expect(screen.getByRole('button', { name: 'Add Passkey' })).toBeInTheDocument();

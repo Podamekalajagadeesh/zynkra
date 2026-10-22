@@ -20,8 +20,26 @@ import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, StoryElement, StoryHighlight, StoryReaction, StoryReply, StoryView, Subscription, CustomAudience]), UsersModule, MediaModule],
-  controllers: [StoriesController, HighlightsController, StoriesReactionController, StoriesReplyController],
+  imports: [
+    TypeOrmModule.forFeature([
+      Story,
+      StoryElement,
+      StoryHighlight,
+      StoryReaction,
+      StoryReply,
+      StoryView,
+      Subscription,
+      CustomAudience,
+    ]),
+    UsersModule,
+    MediaModule,
+  ],
+  controllers: [
+    StoriesController,
+    HighlightsController,
+    StoriesReactionController,
+    StoriesReplyController,
+  ],
   providers: [StoriesService, HighlightsService, StoriesReactionService, StoriesReplyService],
   exports: [StoriesService],
 })

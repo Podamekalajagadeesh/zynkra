@@ -2,7 +2,19 @@ import { useState, useEffect } from 'react';
 import { PageShell } from '../components/PageShell';
 import { walletService, WalletInfo } from '../services/wallet';
 import { Button } from '../components/ui/button';
-import { LogOut, Copy, CheckCircle2, User, Wallet as WalletIcon, Receipt, Car, Coins, ExternalLink, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import {
+  LogOut,
+  Copy,
+  CheckCircle2,
+  User,
+  Wallet as WalletIcon,
+  Receipt,
+  Car,
+  Coins,
+  ExternalLink,
+  ArrowDownRight,
+  ArrowUpRight,
+} from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { getNftsForOwner, Nft } from '../services/nft';
 import { setNftPfp, getWalletBalance, getWalletLedger } from '../lib/api';
@@ -37,8 +49,12 @@ export function WalletPage() {
     if (user?.id) {
       get<any>(`/reputation/${user.id}`).then(setReputation);
       // Fetch backend wallet balance and ledger
-      getWalletBalance().then(setWalletBalance).catch(() => {});
-      getWalletLedger(20).then(setLedger).catch(() => {});
+      getWalletBalance()
+        .then(setWalletBalance)
+        .catch(() => {});
+      getWalletLedger(20)
+        .then(setLedger)
+        .catch(() => {});
     }
   }, [user]);
 
@@ -115,7 +131,11 @@ export function WalletPage() {
                       className="rounded-full border border-green-200 bg-white p-2 text-green-600 shadow-sm transition-colors hover:text-green-700 dark:border-green-900/40 dark:bg-dark-900 dark:text-green-300 dark:hover:text-green-200"
                       aria-label="Copy wallet address"
                     >
-                      {copiedField === 'Wallet Address' ? <CheckCircle2 size={18} /> : <Copy size={18} />}
+                      {copiedField === 'Wallet Address' ? (
+                        <CheckCircle2 size={18} />
+                      ) : (
+                        <Copy size={18} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -154,20 +174,36 @@ export function WalletPage() {
                   </div>
                   {ledger.length > 0 && (
                     <div className="mt-6">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Recent Transactions</p>
+                      <p className="text-sm font-semibold text-gray-700 mb-3">
+                        Recent Transactions
+                      </p>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {ledger.slice(0, 10).map((entry: LedgerEntry) => {
                           const credit = Number(entry.amount) >= 0;
                           return (
-                            <div key={entry.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div
+                              key={entry.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            >
                               <div className="flex items-center gap-2">
-                                <span className={`p-1 rounded-full ${credit ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                                  {credit ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+                                <span
+                                  className={`p-1 rounded-full ${credit ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}
+                                >
+                                  {credit ? (
+                                    <ArrowDownRight size={14} />
+                                  ) : (
+                                    <ArrowUpRight size={14} />
+                                  )}
                                 </span>
-                                <span className="text-sm text-gray-700 capitalize">{entry.purpose || entry.type}</span>
+                                <span className="text-sm text-gray-700 capitalize">
+                                  {entry.purpose || entry.type}
+                                </span>
                               </div>
-                              <span className={`text-sm font-medium ${credit ? 'text-green-600' : 'text-gray-700'}`}>
-                                {credit ? '+' : '−'}{Math.abs(Number(entry.amount)).toFixed(2)}
+                              <span
+                                className={`text-sm font-medium ${credit ? 'text-green-600' : 'text-gray-700'}`}
+                              >
+                                {credit ? '+' : '−'}
+                                {Math.abs(Number(entry.amount)).toFixed(2)}
                               </span>
                             </div>
                           );
@@ -189,7 +225,10 @@ export function WalletPage() {
                     <div className="bg-gradient-to-r from-yellow-50 to-amber-100 p-4 rounded-xl border border-yellow-200">
                       <p className="text-sm font-medium text-yellow-800">Total Earned</p>
                       <p className="text-3xl font-bold text-yellow-900">
-                        {reputation?.earnedCryptocurrency ? Number(reputation.earnedCryptocurrency).toFixed(4) : '0.0000'} ZYNK
+                        {reputation?.earnedCryptocurrency
+                          ? Number(reputation.earnedCryptocurrency).toFixed(4)
+                          : '0.0000'}{' '}
+                        ZYNK
                       </p>
                     </div>
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-100 p-4 rounded-xl border border-blue-200">
@@ -203,12 +242,22 @@ export function WalletPage() {
                     <div className="mt-6">
                       <p className="text-sm font-semibold text-gray-700 mb-3">Recent Earnings</p>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {reputation.logs.slice(-10).reverse().map((log: any) => (
-                          <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-gray-700 capitalize">{log.event.replace(/_/g, ' ')}</span>
-                            <span className="text-sm font-medium text-green-600">+{Number(log.cryptocurrencyEarned).toFixed(4)} ZYNK</span>
-                          </div>
-                        ))}
+                        {reputation.logs
+                          .slice(-10)
+                          .reverse()
+                          .map((log: any) => (
+                            <div
+                              key={log.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            >
+                              <span className="text-sm text-gray-700 capitalize">
+                                {log.event.replace(/_/g, ' ')}
+                              </span>
+                              <span className="text-sm font-medium text-green-600">
+                                +{Number(log.cryptocurrencyEarned).toFixed(4)} ZYNK
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -224,7 +273,10 @@ export function WalletPage() {
                   {nfts.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {nfts.map((nft) => (
-                        <div key={`${nft.contract.address}-${nft.id.tokenId}`} className="group relative">
+                        <div
+                          key={`${nft.contract.address}-${nft.id.tokenId}`}
+                          className="group relative"
+                        >
                           <img
                             src={nft.media[0]?.gateway}
                             alt={nft.metadata.name}
@@ -244,7 +296,9 @@ export function WalletPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-dark-500 dark:text-dark-400">No NFTs found for this wallet.</p>
+                    <p className="text-dark-500 dark:text-dark-400">
+                      No NFTs found for this wallet.
+                    </p>
                   )}
                 </div>
               </div>

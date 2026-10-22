@@ -1,10 +1,4 @@
-import {
-  Entity,
-  ManyToOne,
-  PrimaryColumn,
-  JoinColumn,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, ManyToOne, PrimaryColumn, JoinColumn, CreateDateColumn } from 'typeorm';
 import { User } from './user.entity';
 
 // Read-model over the `follows` ManyToMany join table declared on User

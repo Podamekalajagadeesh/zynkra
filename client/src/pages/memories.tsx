@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MemoriesList } from '../components/memories/MemoriesList';
 

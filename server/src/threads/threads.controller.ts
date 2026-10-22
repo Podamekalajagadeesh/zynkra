@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { ThreadsService } from './threads.service';
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { SendThreadMessageDto } from './dto/send-thread-message.dto';
@@ -47,7 +38,7 @@ export class ThreadsController {
   removeMessage(
     @Param('threadId') threadId: string,
     @Param('messageId') messageId: string,
-    @Request() req,
+    @Request() req
   ) {
     return this.threadsService.deleteMessage(threadId, messageId, req.user.userId);
   }

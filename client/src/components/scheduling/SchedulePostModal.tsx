@@ -17,64 +17,71 @@ type SchedulePostModalProps = {
   initialData?: SchedulePostRequest | null;
 };
 
-export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialData = null }: SchedulePostModalProps) => {
+export const SchedulePostModal = ({
+  isOpen,
+  onClose,
+  onPostScheduled,
+  initialData = null,
+}: SchedulePostModalProps) => {
   const [content, setContent] = useState('');
   const [useOptimalTime, setUseOptimalTime] = useState(true);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
-  const [optimalTime, setOptimalTime] = useState<{ recommendedHour: number; confidence: number } | null>(null);
+  const [optimalTime, setOptimalTime] = useState<{
+    recommendedHour: number;
+    confidence: number;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
-      Promise.all([
-        getOptimalPostingTime(),
-        getConnectedAccounts()
-      ]).then(([time, accounts]) => {
-        setOptimalTime(time);
-        setConnectedAccounts(accounts.filter(a => a.isActive));
-      }).catch(console.error);
-      
+      Promise.all([getOptimalPostingTime(), getConnectedAccounts()])
+        .then(([time, accounts]) => {
+          setOptimalTime(time);
+          setConnectedAccounts(accounts.filter((a) => a.isActive));
+        })
+        .catch(console.error);
+
       // Set default to tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setScheduledDate(tomorrow.toISOString().split('T')[0]);
-      
+
       // Use initial data if provided
       if (initialData?.content) {
         setContent(initialData.content);
       } else {
         setContent('');
       }
-      
+
       if (optimalTime) {
         setScheduledTime(`${optimalTime.recommendedHour.toString().padStart(2, '0')}:00`);
       } else {
         setScheduledTime('12:00');
       }
-      
+
       // Reset selected platforms when modal opens
       setSelectedPlatforms([]);
     }
   }, [isOpen, optimalTime, initialData]);
 
   const handlePlatformToggle = (accountId: string) => {
-    setSelectedPlatforms(prev => 
-      prev.includes(accountId) 
-        ? prev.filter(id => id !== accountId)
-        : [...prev, accountId]
+    setSelectedPlatforms((prev) =>
+      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      const scheduledFor = useOptimalTime ? undefined : new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
-      
+      const scheduledFor = useOptimalTime
+        ? undefined
+        : new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
+
       const post = await schedulePost({
         content,
         postType: 'feed',
@@ -82,9 +89,9 @@ export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialDat
         isOptimalTime: useOptimalTime,
         ...(initialData?.mediaUrl && { mediaUrl: initialData.mediaUrl }),
         ...(initialData?.visibility && { visibility: initialData.visibility }),
-        crossPlatformIds: selectedPlatforms.length > 0 ? selectedPlatforms : undefined
+        crossPlatformIds: selectedPlatforms.length > 0 ? selectedPlatforms : undefined,
       });
-      
+
       onPostScheduled(post);
       onClose();
       setContent('');
@@ -113,7 +120,7 @@ export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialDat
               className="min-h-[100px]"
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="use-optimal">Use Optimal Time</Label>
@@ -122,13 +129,9 @@ export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialDat
                 {optimalTime && ` (recommended: ${optimalTime.recommendedHour}:00 UTC)`}
               </p>
             </div>
-            <Switch
-              id="use-optimal"
-              checked={useOptimalTime}
-              onCheckedChange={setUseOptimalTime}
-            />
+            <Switch id="use-optimal" checked={useOptimalTime} onCheckedChange={setUseOptimalTime} />
           </div>
-          
+
           {!useOptimalTime && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -157,9 +160,11 @@ export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialDat
           {connectedAccounts.length > 0 && (
             <div className="space-y-3 border rounded-lg p-4">
               <Label>Publish to External Platforms</Label>
-              <p className="text-sm text-gray-500">Select which connected social media accounts to publish this post to</p>
+              <p className="text-sm text-gray-500">
+                Select which connected social media accounts to publish this post to
+              </p>
               <div className="grid grid-cols-2 gap-2">
-                {connectedAccounts.map(account => (
+                {connectedAccounts.map((account) => (
                   <div key={account.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={`platform-${account.id}`}
@@ -174,9 +179,11 @@ export const SchedulePostModal = ({ isOpen, onClose, onPostScheduled, initialDat
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
             </Button>

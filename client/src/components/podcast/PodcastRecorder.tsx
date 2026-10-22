@@ -14,9 +14,27 @@ const VOICE_FILTERS = [
 
 // Background music library
 const BACKGROUND_MUSIC = [
-  { id: 'lofi', title: 'Chill Lofi', artist: 'Ambient Beats', url: '/audio/lofi-podcast.mp3', volume: 0.2 },
-  { id: 'jazz', title: 'Smooth Jazz', artist: 'Jazz Collective', url: '/audio/jazz-podcast.mp3', volume: 0.15 },
-  { id: 'ambient', title: 'Ambient Calm', artist: 'Nature Sounds', url: '/audio/ambient-podcast.mp3', volume: 0.1 },
+  {
+    id: 'lofi',
+    title: 'Chill Lofi',
+    artist: 'Ambient Beats',
+    url: '/audio/lofi-podcast.mp3',
+    volume: 0.2,
+  },
+  {
+    id: 'jazz',
+    title: 'Smooth Jazz',
+    artist: 'Jazz Collective',
+    url: '/audio/jazz-podcast.mp3',
+    volume: 0.15,
+  },
+  {
+    id: 'ambient',
+    title: 'Ambient Calm',
+    artist: 'Nature Sounds',
+    url: '/audio/ambient-podcast.mp3',
+    volume: 0.1,
+  },
 ];
 
 interface PodcastRecorderProps {
@@ -31,7 +49,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [selectedFilter, setSelectedFilter] = useState(VOICE_FILTERS[0]);
-  const [selectedMusic, setSelectedMusic] = useState<typeof BACKGROUND_MUSIC[0] | null>(null);
+  const [selectedMusic, setSelectedMusic] = useState<(typeof BACKGROUND_MUSIC)[0] | null>(null);
   const [recordedTime, setRecordedTime] = useState(0);
   const [podcastTitle, setPodcastTitle] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -53,29 +71,32 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
-      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+      const ctx = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      )();
       setAudioContext(ctx);
-      
+
       const source = ctx.createMediaStreamSource(stream);
       sourceNodeRef.current = source;
-      
+
       const gainNode = ctx.createGain();
       gainNodeRef.current = gainNode;
-      
+
       // Create destination to record processed audio
       const dest = ctx.createMediaStreamDestination();
-      
+
       source.connect(gainNode);
       gainNode.connect(dest);
-      
+
       const recorder = new MediaRecorder(dest.stream);
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
-          setRecordedChunks(prev => [...prev, e.data]);
+          setRecordedChunks((prev) => [...prev, e.data]);
         }
       };
-      
+
       setMediaRecorder(recorder);
     } catch (error) {
       console.error('Error initializing audio:', error);
@@ -83,21 +104,21 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   };
 
   // Apply voice filter
-  const applyVoiceFilter = (filter: typeof VOICE_FILTERS[0]) => {
+  const applyVoiceFilter = (filter: (typeof VOICE_FILTERS)[0]) => {
     if (!audioContext || !gainNodeRef.current) return;
-    
+
     // Reset nodes
     if (distortionNodeRef.current) distortionNodeRef.current.disconnect();
     if (delayNodeRef.current) delayNodeRef.current.disconnect();
-    
+
     gainNodeRef.current.gain.setValueAtTime(filter.gain, audioContext.currentTime);
-    
+
     // Pitch modification (simplified)
     if (sourceNodeRef.current) {
       sourceNodeRef.current.disconnect();
       sourceNodeRef.current.connect(gainNodeRef.current);
     }
-    
+
     // Add distortion if needed
     if (filter.distortion) {
       const distortion = audioContext.createWaveShaper();
@@ -107,20 +128,20 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
         const curve = new Float32Array(n_samples);
         const deg = Math.PI / 180;
         for (let i = 0; i < n_samples; ++i) {
-          const x = i * 2 / n_samples - 1;
-          curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+          const x = (i * 2) / n_samples - 1;
+          curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
         }
         return curve;
-      }
+      };
       distortion.curve = makeDistortionCurve(filter.distortion);
       distortionNodeRef.current = distortion;
-      
+
       gainNodeRef.current.disconnect();
       gainNodeRef.current.connect(distortion);
       if (sourceNodeRef.current) sourceNodeRef.current.connect(gainNodeRef.current);
       distortion.connect(audioContext.destination);
     }
-    
+
     // Add delay if needed
     if (filter.delay) {
       const delay = audioContext.createDelay(5.0);
@@ -130,20 +151,20 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
       delay.connect(feedback);
       feedback.connect(delay);
       delayNodeRef.current = delay;
-      
+
       gainNodeRef.current.connect(delay);
       delay.connect(audioContext.destination);
     }
-    
+
     setSelectedFilter(filter);
   };
 
   // Play background music
-  const playBackgroundMusic = (music: typeof BACKGROUND_MUSIC[0]) => {
+  const playBackgroundMusic = (music: (typeof BACKGROUND_MUSIC)[0]) => {
     if (musicAudioRef.current) {
       musicAudioRef.current.pause();
     }
-    
+
     const audio = new Audio(music.url);
     audio.loop = true;
     audio.volume = music.volume;
@@ -156,25 +177,25 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   // Start recording
   const startRecording = () => {
     if (!mediaRecorder) return;
-    
+
     mediaRecorder.start();
     setIsRecording(true);
     setIsPaused(false);
-    
+
     // Start timer
     timerRef.current = setInterval(() => {
-      setRecordedTime(prev => prev + 1);
+      setRecordedTime((prev) => prev + 1);
     }, 1000);
   };
 
   // Pause recording
   const pauseRecording = () => {
     if (!mediaRecorder) return;
-    
+
     if (isPaused) {
       mediaRecorder.resume();
       timerRef.current = setInterval(() => {
-        setRecordedTime(prev => prev + 1);
+        setRecordedTime((prev) => prev + 1);
       }, 1000);
     } else {
       mediaRecorder.pause();
@@ -186,17 +207,17 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   // Stop recording
   const stopRecording = () => {
     if (!mediaRecorder) return;
-    
+
     mediaRecorder.stop();
     setIsRecording(false);
     if (timerRef.current) clearInterval(timerRef.current);
-    
+
     // Stop music
     if (musicAudioRef.current) {
       musicAudioRef.current.pause();
       musicAudioRef.current = null;
     }
-    
+
     // Create preview URL
     const blob = new Blob(recordedChunks, { type: 'audio/webm' });
     const url = URL.createObjectURL(blob);
@@ -206,12 +227,12 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   // Preview recording
   const previewRecording = () => {
     if (!previewUrl || previewAudioRef.current) return;
-    
+
     const audio = new Audio(previewUrl);
     previewAudioRef.current = audio;
     audio.play();
     setIsPreviewing(true);
-    
+
     audio.onended = () => {
       setIsPreviewing(false);
       previewAudioRef.current = null;
@@ -221,16 +242,16 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
   // Save podcast
   const savePodcast = () => {
     if (!previewUrl || !podcastTitle.trim()) return;
-    
+
     const blob = new Blob(recordedChunks, { type: 'audio/webm' });
     onSave(blob, {
       title: podcastTitle,
-      duration: recordedTime
+      duration: recordedTime,
     });
-    
+
     // Cleanup
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
     }
     onClose();
   };
@@ -241,7 +262,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
     setPreviewUrl(null);
     setRecordedTime(0);
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
     }
     onClose();
   };
@@ -258,7 +279,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
     initAudioContext();
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
       if (timerRef.current) clearInterval(timerRef.current);
       if (audioContext) audioContext.close();
@@ -290,9 +311,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
 
         {/* Recording Timer */}
         <div className="text-center mb-8">
-          <div className="text-6xl font-mono text-white mb-4">
-            {formatTime(recordedTime)}
-          </div>
+          <div className="text-6xl font-mono text-white mb-4">{formatTime(recordedTime)}</div>
           {isRecording && (
             <div className="flex items-center justify-center">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></div>
@@ -313,7 +332,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
               <Mic size={32} />
             </Button>
           )}
-          
+
           {isRecording && (
             <>
               <Button
@@ -360,10 +379,10 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
             </div>
             <span>{showFilters ? '▲' : '▼'}</span>
           </Button>
-          
+
           {showFilters && (
             <div className="mt-2 grid grid-cols-2 gap-2 p-2 bg-gray-800 rounded-lg">
-              {VOICE_FILTERS.map(filter => (
+              {VOICE_FILTERS.map((filter) => (
                 <Button
                   key={filter.id}
                   variant={selectedFilter.id === filter.id ? 'default' : 'ghost'}
@@ -390,7 +409,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
             </div>
             <span>{showMusic ? '▲' : '▼'}</span>
           </Button>
-          
+
           {showMusic && (
             <div className="mt-2 space-y-2 p-2 bg-gray-800 rounded-lg">
               <Button
@@ -407,7 +426,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
               >
                 No Music
               </Button>
-              {BACKGROUND_MUSIC.map(music => (
+              {BACKGROUND_MUSIC.map((music) => (
                 <Button
                   key={music.id}
                   variant={selectedMusic?.id === music.id ? 'default' : 'ghost'}
@@ -427,11 +446,7 @@ const PodcastRecorder = ({ onClose, onSave }: PodcastRecorderProps) => {
         {/* Save Button */}
         {previewUrl && (
           <div className="flex justify-end space-x-4">
-            <Button
-              variant="destructive"
-              onClick={discardRecording}
-              className="flex items-center"
-            >
+            <Button variant="destructive" onClick={discardRecording} className="flex items-center">
               <Trash2 className="mr-2" size={16} />
               Discard
             </Button>

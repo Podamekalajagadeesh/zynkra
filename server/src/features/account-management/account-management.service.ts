@@ -9,7 +9,10 @@ import { User } from '../../users/entities/user.entity';
 import { AccountDeletionRequest } from './entities/account-deletion-request.entity';
 import { AccountHistoryEntity } from './entities/account-history.entity';
 import { AccountSessionEntity } from './entities/account-session.entity';
-import { AccountRecoveryRequest, AccountRecoveryRequestStatus } from './entities/account-recovery-request.entity';
+import {
+  AccountRecoveryRequest,
+  AccountRecoveryRequestStatus,
+} from './entities/account-recovery-request.entity';
 import { UsersService } from '../../users/users.service';
 import { LoginSession } from '../../auth/entities/login-session.entity';
 import { DataPermission } from './dto/data-permissions.dto';
@@ -42,7 +45,14 @@ export interface AccountSecurityFeatureSettings {
 
 export interface AccountPreferences {
   theme: 'light' | 'dark' | 'system';
-  appIcon: 'default' | 'neon' | 'ocean' | 'sunset' | 'creator-classic' | 'creator-vibrant' | 'creator-minimal';
+  appIcon:
+    | 'default'
+    | 'neon'
+    | 'ocean'
+    | 'sunset'
+    | 'creator-classic'
+    | 'creator-vibrant'
+    | 'creator-minimal';
   language: string;
   timezone: string;
   defaultPrivacy: 'public' | 'friends' | 'private';
@@ -118,7 +128,13 @@ export interface VerificationAppeal {
 export interface SecurityAlert {
   id: string;
   accountId: string;
-  type: 'suspicious_login' | 'new_device' | 'password_reset' | 'verification' | 'account_recovery' | 'security_setting';
+  type:
+    | 'suspicious_login'
+    | 'new_device'
+    | 'password_reset'
+    | 'verification'
+    | 'account_recovery'
+    | 'security_setting';
   message: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   createdAt: string;
@@ -197,7 +213,10 @@ export class AccountManagementService {
   private readonly accountSecuritySettings = new Map<string, AccountSecurityFeatureSettings>();
   private readonly linkedAccounts = new Map<string, LinkedAccount[]>();
   private readonly accountHistory = new Map<string, AccountHistoryEntry[]>();
-  private readonly recoveryQueue = new Map<string, { status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string; }>();
+  private readonly recoveryQueue = new Map<
+    string,
+    { status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string }
+  >();
   private readonly verificationAppeals = new Map<string, VerificationAppeal[]>();
   private readonly privacySettings = new Map<string, PrivacySettingsSnapshot>();
   private readonly trustedDevices = new Map<string, TrustedDevice[]>();
@@ -206,21 +225,47 @@ export class AccountManagementService {
   private readonly accountProfiles = new Map<string, AccountProfile[]>();
   private readonly activeAccountProfileByAccount = new Map<string, string>();
   private readonly identitySettingsMap = new Map<string, IdentitySettings>();
-  private readonly trustIndicatorsMap = new Map<string, { verified: boolean; badges: string[]; trustScore: number; updatedAt: string; }>();
+  private readonly trustIndicatorsMap = new Map<
+    string,
+    { verified: boolean; badges: string[]; trustScore: number; updatedAt: string }
+  >();
   private readonly accountSessions = new Map<string, AccountSession[]>();
-  private readonly dataDownloadRequests = new Map<string, { id: string; accountId: string; dataTypes: string[]; status: 'ready' | 'processing' | 'failed'; fileUrl: string; createdAt: string; }[]>();
-  private readonly dataDeletionRequests = new Map<string, { id: string; accountId: string; dataTypes: string[]; reason: string; status: 'queued' | 'processing' | 'completed'; createdAt: string; }[]>();
-  private readonly accountDeletionRequests = new Map<string, {
-    id: string;
-    accountId: string;
-    reason: string;
-    additionalInfo?: string;
-    deleteLinkedAccounts: boolean;
-    deleteAllData: boolean;
-    status: 'pending' | 'deleted';
-    createdAt: string;
-    processedAt?: string;
-  }>();
+  private readonly dataDownloadRequests = new Map<
+    string,
+    {
+      id: string;
+      accountId: string;
+      dataTypes: string[];
+      status: 'ready' | 'processing' | 'failed';
+      fileUrl: string;
+      createdAt: string;
+    }[]
+  >();
+  private readonly dataDeletionRequests = new Map<
+    string,
+    {
+      id: string;
+      accountId: string;
+      dataTypes: string[];
+      reason: string;
+      status: 'queued' | 'processing' | 'completed';
+      createdAt: string;
+    }[]
+  >();
+  private readonly accountDeletionRequests = new Map<
+    string,
+    {
+      id: string;
+      accountId: string;
+      reason: string;
+      additionalInfo?: string;
+      deleteLinkedAccounts: boolean;
+      deleteAllData: boolean;
+      status: 'pending' | 'deleted';
+      createdAt: string;
+      processedAt?: string;
+    }
+  >();
 
   constructor(
     @Optional()
@@ -253,7 +298,7 @@ export class AccountManagementService {
     private readonly loginSessionsRepository?: Repository<LoginSession>,
     @Optional()
     @InjectRepository(AccountRecoveryRequest)
-    private readonly accountRecoveryRepository?: Repository<AccountRecoveryRequest>,
+    private readonly accountRecoveryRepository?: Repository<AccountRecoveryRequest>
   ) {}
 
   private ensureSettings(accountId: string): AccountSettings {
@@ -416,7 +461,12 @@ export class AccountManagementService {
     return this.trustedDevices.get(accountId)!;
   }
 
-  private recordHistory(accountId: string, type: AccountHistoryEntry['type'], summary: string, metadata?: Record<string, any>) {
+  private recordHistory(
+    accountId: string,
+    type: AccountHistoryEntry['type'],
+    summary: string,
+    metadata?: Record<string, any>
+  ) {
     const history = this.ensureHistory(accountId);
     const entry: AccountHistoryEntry = {
       id: `history-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -437,7 +487,9 @@ export class AccountManagementService {
     }
   }
 
-  async switchAccount(accountId: string): Promise<{ accountId: string; switched: boolean; message: string; settings: AccountSettings }> {
+  async switchAccount(
+    accountId: string
+  ): Promise<{ accountId: string; switched: boolean; message: string; settings: AccountSettings }> {
     const settings = this.ensureSettings(accountId);
     settings.switchingEnabled = true;
     settings.updatedAt = new Date().toISOString();
@@ -475,7 +527,16 @@ export class AccountManagementService {
     return profiles.find((profile) => profile.id === activeProfileId) ?? null;
   }
 
-  async deactivateAccount(accountId: string, reason: string): Promise<{ userId: string; status: string; reason: string; message: string; settings: AccountSettings }> {
+  async deactivateAccount(
+    accountId: string,
+    reason: string
+  ): Promise<{
+    userId: string;
+    status: string;
+    reason: string;
+    message: string;
+    settings: AccountSettings;
+  }> {
     const settings = this.ensureSettings(accountId);
     settings.deactivated = true;
     settings.updatedAt = new Date().toISOString();
@@ -494,7 +555,9 @@ export class AccountManagementService {
     };
   }
 
-  async reactivateAccount(accountId: string): Promise<{ userId: string; status: string; message: string; settings: AccountSettings }> {
+  async reactivateAccount(
+    accountId: string
+  ): Promise<{ userId: string; status: string; message: string; settings: AccountSettings }> {
     const settings = this.ensureSettings(accountId);
     settings.deactivated = false;
     settings.updatedAt = new Date().toISOString();
@@ -512,9 +575,16 @@ export class AccountManagementService {
     };
   }
 
-  async linkAccount(accountId: string, provider: string, externalUserId: string, metadata: Record<string, any> = {}): Promise<LinkedAccount> {
+  async linkAccount(
+    accountId: string,
+    provider: string,
+    externalUserId: string,
+    metadata: Record<string, any> = {}
+  ): Promise<LinkedAccount> {
     const accounts = this.linkedAccounts.get(accountId) ?? [];
-    const existing = accounts.find((entry) => entry.provider === provider && entry.externalUserId === externalUserId);
+    const existing = accounts.find(
+      (entry) => entry.provider === provider && entry.externalUserId === externalUserId
+    );
     if (existing) {
       return existing;
     }
@@ -531,11 +601,17 @@ export class AccountManagementService {
 
     accounts.unshift(linked);
     this.linkedAccounts.set(accountId, accounts);
-    this.recordHistory(accountId, 'security', `Linked ${provider} account`, { provider, externalUserId });
+    this.recordHistory(accountId, 'security', `Linked ${provider} account`, {
+      provider,
+      externalUserId,
+    });
     return linked;
   }
 
-  async unlinkAccount(accountId: string, provider: string): Promise<{ accountId: string; provider: string; unlinked: boolean; message: string }> {
+  async unlinkAccount(
+    accountId: string,
+    provider: string
+  ): Promise<{ accountId: string; provider: string; unlinked: boolean; message: string }> {
     const accounts = this.linkedAccounts.get(accountId) ?? [];
     const filtered = accounts.filter((entry) => entry.provider !== provider);
     this.linkedAccounts.set(accountId, filtered);
@@ -547,14 +623,19 @@ export class AccountManagementService {
     return this.linkedAccounts.get(accountId) ?? [];
   }
 
-  async updatePermissions(accountId: string, permissions: string[]): Promise<{ accountId: string; permissions: string[]; updatedAt: string }> {
+  async updatePermissions(
+    accountId: string,
+    permissions: string[]
+  ): Promise<{ accountId: string; permissions: string[]; updatedAt: string }> {
     const settings = this.ensureSettings(accountId);
     settings.permissions = Array.from(new Set(permissions));
     settings.updatedAt = new Date().toISOString();
     if (this.usersRepository) {
       await this.usersRepository.update(accountId, { accountPermissions: settings.permissions });
     }
-    this.recordHistory(accountId, 'settings', 'Updated account permissions', { permissions: settings.permissions });
+    this.recordHistory(accountId, 'settings', 'Updated account permissions', {
+      permissions: settings.permissions,
+    });
 
     return {
       accountId,
@@ -563,7 +644,9 @@ export class AccountManagementService {
     };
   }
 
-  async getPermissions(accountId: string): Promise<{ accountId: string; permissions: string[]; updatedAt: string }> {
+  async getPermissions(
+    accountId: string
+  ): Promise<{ accountId: string; permissions: string[]; updatedAt: string }> {
     if (this.usersRepository) {
       const user = await this.usersRepository.findOne({ where: { id: accountId } });
       if (!user) {
@@ -589,7 +672,10 @@ export class AccountManagementService {
     };
   }
 
-  async updateAccountPreferences(accountId: string, preferences: Partial<AccountPreferences>): Promise<AccountPreferences> {
+  async updateAccountPreferences(
+    accountId: string,
+    preferences: Partial<AccountPreferences>
+  ): Promise<AccountPreferences> {
     const current = this.ensureAccountPreferences(accountId);
     const next: AccountPreferences = {
       ...current,
@@ -621,14 +707,17 @@ export class AccountManagementService {
     return this.ensureAccountPreferences(accountId);
   }
 
-  async updateNotificationPreferences(accountId: string, preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
+  async updateNotificationPreferences(
+    accountId: string,
+    preferences: Partial<NotificationPreferences>
+  ): Promise<NotificationPreferences> {
     if (this.usersService) {
       const user = await this.usersService.findOneById(accountId);
       if (!user) {
         throw new Error('User not found');
       }
 
-      const current = user.notificationSettings ?? {} as any;
+      const current = user.notificationSettings ?? ({} as any);
       const next = {
         ...current,
         emailNotifications: preferences.emailDigest ?? current.emailNotifications ?? true,
@@ -656,7 +745,9 @@ export class AccountManagementService {
     };
 
     this.notificationPreferences.set(accountId, next);
-    this.recordHistory(accountId, 'settings', 'Updated notification preferences', { preferences: next });
+    this.recordHistory(accountId, 'settings', 'Updated notification preferences', {
+      preferences: next,
+    });
     return next;
   }
 
@@ -666,7 +757,7 @@ export class AccountManagementService {
       if (!user) {
         throw new Error('User not found');
       }
-      return this.toNotificationPreferences(user.notificationSettings ?? {} as any);
+      return this.toNotificationPreferences(user.notificationSettings ?? ({} as any));
     }
     return this.ensureNotificationPreferences(accountId);
   }
@@ -687,7 +778,12 @@ export class AccountManagementService {
     };
   }
 
-  async registerTrustedDevice(accountId: string, deviceName: string, deviceId: string, metadata: Record<string, any> = {}): Promise<TrustedDevice> {
+  async registerTrustedDevice(
+    accountId: string,
+    deviceName: string,
+    deviceId: string,
+    metadata: Record<string, any> = {}
+  ): Promise<TrustedDevice> {
     const devices = this.ensureTrustedDevices(accountId);
     const now = new Date().toISOString();
     const existing = devices.find((device) => device.deviceId === deviceId);
@@ -696,7 +792,9 @@ export class AccountManagementService {
       existing.platform = metadata.platform ?? existing.platform;
       existing.metadata = metadata;
       existing.lastSeenAt = now;
-      this.recordHistory(accountId, 'security', `Trusted device refreshed: ${deviceName}`, { deviceId });
+      this.recordHistory(accountId, 'security', `Trusted device refreshed: ${deviceName}`, {
+        deviceId,
+      });
       return existing;
     }
 
@@ -716,7 +814,10 @@ export class AccountManagementService {
     return newDevice;
   }
 
-  async revokeTrustedDevice(accountId: string, deviceId: string): Promise<{ accountId: string; deviceId: string; revoked: boolean; message: string }> {
+  async revokeTrustedDevice(
+    accountId: string,
+    deviceId: string
+  ): Promise<{ accountId: string; deviceId: string; revoked: boolean; message: string }> {
     const devices = this.ensureTrustedDevices(accountId);
     const remaining = devices.filter((device) => device.deviceId !== deviceId);
     this.trustedDevices.set(accountId, remaining);
@@ -733,14 +834,23 @@ export class AccountManagementService {
     return this.ensureTrustedDevices(accountId);
   }
 
-  async updatePersonalization(accountId: string, settings: Record<string, any>): Promise<{ accountId: string; personalizationSettings: Record<string, any>; updatedAt: string }> {
+  async updatePersonalization(
+    accountId: string,
+    settings: Record<string, any>
+  ): Promise<{
+    accountId: string;
+    personalizationSettings: Record<string, any>;
+    updatedAt: string;
+  }> {
     const account = this.ensureSettings(accountId);
     account.personalizationSettings = {
       ...account.personalizationSettings,
       ...settings,
     };
     account.updatedAt = new Date().toISOString();
-    this.recordHistory(accountId, 'settings', 'Updated personalization settings', { settings: account.personalizationSettings });
+    this.recordHistory(accountId, 'settings', 'Updated personalization settings', {
+      settings: account.personalizationSettings,
+    });
 
     return {
       accountId,
@@ -749,7 +859,10 @@ export class AccountManagementService {
     };
   }
 
-  async updateDataPermissions(accountId: string, dataTypes: string[]): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
+  async updateDataPermissions(
+    accountId: string,
+    dataTypes: string[]
+  ): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
     const allowedDataPermissions = new Set<string>(Object.values(DataPermission));
     if (dataTypes.some((dataType) => !allowedDataPermissions.has(dataType))) {
       throw new Error('Invalid data permission category');
@@ -758,9 +871,13 @@ export class AccountManagementService {
     settings.dataPermissions = Array.from(new Set(dataTypes));
     settings.updatedAt = new Date().toISOString();
     if (this.usersRepository) {
-      await this.usersRepository.update(accountId, { accountDataPermissions: settings.dataPermissions });
+      await this.usersRepository.update(accountId, {
+        accountDataPermissions: settings.dataPermissions,
+      });
     }
-    this.recordHistory(accountId, 'settings', 'Updated data permissions', { dataTypes: settings.dataPermissions });
+    this.recordHistory(accountId, 'settings', 'Updated data permissions', {
+      dataTypes: settings.dataPermissions,
+    });
 
     return {
       accountId,
@@ -769,7 +886,9 @@ export class AccountManagementService {
     };
   }
 
-  async getDataPermissions(accountId: string): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
+  async getDataPermissions(
+    accountId: string
+  ): Promise<{ accountId: string; dataPermissions: string[]; updatedAt: string }> {
     const settings = this.ensureSettings(accountId);
     if (this.usersRepository) {
       const user = await this.usersRepository.findOne({ where: { id: accountId } });
@@ -808,7 +927,7 @@ export class AccountManagementService {
 
   async updateAccountSecuritySettings(
     accountId: string,
-    updates: Partial<AccountSecurityFeatureSettings>,
+    updates: Partial<AccountSecurityFeatureSettings>
   ): Promise<AccountSecurityFeatureSettings> {
     const current = this.ensureAccountSecuritySettings(accountId);
     const next: AccountSecurityFeatureSettings = {
@@ -822,7 +941,9 @@ export class AccountManagementService {
     if (this.usersRepository) {
       await this.usersRepository.update(accountId, { accountSecuritySettings: next });
     }
-    this.recordHistory(accountId, 'security', 'Account security settings updated', { settings: next });
+    this.recordHistory(accountId, 'security', 'Account security settings updated', {
+      settings: next,
+    });
     return next;
   }
 
@@ -851,7 +972,8 @@ export class AccountManagementService {
     ].filter(Boolean).length;
 
     const enabledRatio = enabledCount / totalCount;
-    const riskLevel: 'low' | 'medium' | 'high' = enabledRatio >= 0.8 ? 'low' : enabledRatio >= 0.5 ? 'medium' : 'high';
+    const riskLevel: 'low' | 'medium' | 'high' =
+      enabledRatio >= 0.8 ? 'low' : enabledRatio >= 0.5 ? 'medium' : 'high';
     const nextActions = [] as string[];
 
     if (!settings.twoFactorAuthentication) nextActions.push('Enable two-factor authentication');
@@ -897,33 +1019,64 @@ export class AccountManagementService {
     }
 
     return Array.from(entriesById.values()).sort((left, right) =>
-      right.occurredAt.localeCompare(left.occurredAt),
+      right.occurredAt.localeCompare(left.occurredAt)
     );
   }
 
-  async startAccountRecovery(accountId: string, method: 'email' | 'trusted_contact' | 'passkey' = 'email'): Promise<{ accountId: string; status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string }> {
+  async startAccountRecovery(
+    accountId: string,
+    method: 'email' | 'trusted_contact' | 'passkey' = 'email'
+  ): Promise<{
+    accountId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    method: string;
+    createdAt: string;
+  }> {
     const createdAt = new Date().toISOString();
     const result = this.accountRecoveryRepository
-      ? await this.accountRecoveryRepository.save(this.accountRecoveryRepository.create({ accountId, method, status: 'pending' }))
+      ? await this.accountRecoveryRepository.save(
+          this.accountRecoveryRepository.create({ accountId, method, status: 'pending' })
+        )
       : null;
-    const recovery = { accountId, status: 'pending' as const, method, createdAt: result?.createdAt.toISOString() ?? createdAt };
+    const recovery = {
+      accountId,
+      status: 'pending' as const,
+      method,
+      createdAt: result?.createdAt.toISOString() ?? createdAt,
+    };
     this.recoveryQueue.set(accountId, recovery);
     this.recordHistory(accountId, 'recovery', 'Account recovery started', { method });
     return recovery;
   }
 
-  async completeAccountRecovery(accountId: string, approved = true): Promise<{ accountId: string; status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string }> {
+  async completeAccountRecovery(
+    accountId: string,
+    approved = true
+  ): Promise<{
+    accountId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    method: string;
+    createdAt: string;
+  }> {
     const persisted = this.accountRecoveryRepository
-      ? await this.accountRecoveryRepository.findOne({ where: { accountId }, order: { createdAt: 'DESC' } })
+      ? await this.accountRecoveryRepository.findOne({
+          where: { accountId },
+          order: { createdAt: 'DESC' },
+        })
       : null;
     const existing = persisted
-      ? { accountId, status: persisted.status, method: persisted.method, createdAt: persisted.createdAt.toISOString() }
-      : this.recoveryQueue.get(accountId) ?? {
-      accountId,
-      status: 'pending' as const,
-      method: 'email',
-      createdAt: new Date().toISOString(),
-    };
+      ? {
+          accountId,
+          status: persisted.status,
+          method: persisted.method,
+          createdAt: persisted.createdAt.toISOString(),
+        }
+      : (this.recoveryQueue.get(accountId) ?? {
+          accountId,
+          status: 'pending' as const,
+          method: 'email',
+          createdAt: new Date().toISOString(),
+        });
     const next = {
       ...existing,
       accountId,
@@ -935,11 +1088,20 @@ export class AccountManagementService {
       await this.accountRecoveryRepository.save(persisted);
     }
     this.recoveryQueue.set(accountId, next);
-    this.recordHistory(accountId, 'recovery', approved ? 'Account recovery approved' : 'Account recovery rejected', { method: next.method });
+    this.recordHistory(
+      accountId,
+      'recovery',
+      approved ? 'Account recovery approved' : 'Account recovery rejected',
+      { method: next.method }
+    );
     return next;
   }
 
-  async submitVerificationAppeal(accountId: string, reason: string, links: string[] = []): Promise<VerificationAppeal> {
+  async submitVerificationAppeal(
+    accountId: string,
+    reason: string,
+    links: string[] = []
+  ): Promise<VerificationAppeal> {
     const appeals = this.verificationAppeals.get(accountId) ?? [];
     const submission: VerificationAppeal = {
       id: `appeal-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -951,11 +1113,17 @@ export class AccountManagementService {
     };
     appeals.unshift(submission);
     this.verificationAppeals.set(accountId, appeals);
-    this.recordHistory(accountId, 'verification', 'Verification appeal submitted', { appealId: submission.id });
+    this.recordHistory(accountId, 'verification', 'Verification appeal submitted', {
+      appealId: submission.id,
+    });
     return submission;
   }
 
-  async reviewVerificationAppeal(accountId: string, appealId: string, status: 'approved' | 'rejected'): Promise<VerificationAppeal | null> {
+  async reviewVerificationAppeal(
+    accountId: string,
+    appealId: string,
+    status: 'approved' | 'rejected'
+  ): Promise<VerificationAppeal | null> {
     const appeals = this.verificationAppeals.get(accountId) ?? [];
     const appeal = appeals.find((entry) => entry.id === appealId);
     if (!appeal) {
@@ -967,7 +1135,10 @@ export class AccountManagementService {
     return appeal;
   }
 
-  async updatePrivacySettings(accountId: string, settings: Partial<PrivacySettingsSnapshot>): Promise<PrivacySettingsSnapshot> {
+  async updatePrivacySettings(
+    accountId: string,
+    settings: Partial<PrivacySettingsSnapshot>
+  ): Promise<PrivacySettingsSnapshot> {
     const current = this.ensurePrivacy(accountId);
     const next: PrivacySettingsSnapshot = {
       ...current,
@@ -999,16 +1170,26 @@ export class AccountManagementService {
 
   async createAccountProfile(
     accountId: string,
-    payload: { label?: string; accountType?: AccountProfile['accountType']; isPrimary?: boolean; id?: string } = {},
+    payload: {
+      label?: string;
+      accountType?: AccountProfile['accountType'];
+      isPrimary?: boolean;
+      id?: string;
+    } = {}
   ): Promise<AccountProfile> {
     const profiles = await this.loadAccountProfiles(accountId);
     const now = new Date().toISOString();
-    const profileId = payload.id ?? (profiles.length === 0 ? `${accountId}-profile-primary` : `profile-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`);
+    const profileId =
+      payload.id ??
+      (profiles.length === 0
+        ? `${accountId}-profile-primary`
+        : `profile-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`);
 
     const profile: AccountProfile = {
       id: profileId,
       accountId,
-      label: payload.label ?? (profiles.length === 0 ? 'Primary' : `Account ${profiles.length + 1}`),
+      label:
+        payload.label ?? (profiles.length === 0 ? 'Primary' : `Account ${profiles.length + 1}`),
       accountType: payload.accountType ?? 'personal',
       isPrimary: payload.isPrimary ?? profiles.length === 0,
       isActive: true,
@@ -1025,14 +1206,17 @@ export class AccountManagementService {
     this.accountProfiles.set(accountId, nextProfiles);
     if (this.accountProfilesRepository) {
       await this.accountProfilesRepository.save(
-        nextProfiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+        nextProfiles.map((entry) => this.accountProfileEntityFromModel(entry))
       );
     }
     this.activeAccountProfileByAccount.set(accountId, profile.id);
     if (this.usersRepository) {
       await this.usersRepository.update(accountId, { activeAccountProfileId: profile.id });
     }
-    this.recordHistory(accountId, 'settings', 'Account profile created', { profileId: profile.id, label: profile.label });
+    this.recordHistory(accountId, 'settings', 'Account profile created', {
+      profileId: profile.id,
+      label: profile.label,
+    });
     return profile;
   }
 
@@ -1041,13 +1225,31 @@ export class AccountManagementService {
     const activeProfileId = this.activeAccountProfileByAccount.get(accountId);
     return profiles
       .map((profile) => ({ ...profile, isCurrent: profile.id === activeProfileId }))
-      .sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent) || Number(b.isPrimary) - Number(a.isPrimary) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          Number(b.isCurrent) - Number(a.isCurrent) ||
+          Number(b.isPrimary) - Number(a.isPrimary) ||
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
   }
 
-  async switchAccountProfile(accountId: string, profileId: string): Promise<{ accountId: string; profileId: string; switched: boolean; message: string; profile: AccountProfile }> {
+  async switchAccountProfile(
+    accountId: string,
+    profileId: string
+  ): Promise<{
+    accountId: string;
+    profileId: string;
+    switched: boolean;
+    message: string;
+    profile: AccountProfile;
+  }> {
     const profiles = await this.loadAccountProfiles(accountId);
     if (profiles.length === 0) {
-      const created = await this.createAccountProfile(accountId, { label: 'Primary', accountType: 'personal', isPrimary: true });
+      const created = await this.createAccountProfile(accountId, {
+        label: 'Primary',
+        accountType: 'personal',
+        isPrimary: true,
+      });
       this.activeAccountProfileByAccount.set(accountId, created.id);
       return {
         accountId,
@@ -1066,14 +1268,17 @@ export class AccountManagementService {
     this.accountProfiles.set(accountId, profiles);
     if (this.accountProfilesRepository) {
       await this.accountProfilesRepository.save(
-        profiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+        profiles.map((entry) => this.accountProfileEntityFromModel(entry))
       );
     }
     this.activeAccountProfileByAccount.set(accountId, profile.id);
     if (this.usersRepository) {
       await this.usersRepository.update(accountId, { activeAccountProfileId: profile.id });
     }
-    this.recordHistory(accountId, 'settings', 'Account profile switched', { profileId: profile.id, label: profile.label });
+    this.recordHistory(accountId, 'settings', 'Account profile switched', {
+      profileId: profile.id,
+      label: profile.label,
+    });
 
     return {
       accountId,
@@ -1084,7 +1289,10 @@ export class AccountManagementService {
     };
   }
 
-  async setPrimaryAccountProfile(accountId: string, profileId: string): Promise<AccountProfile | null> {
+  async setPrimaryAccountProfile(
+    accountId: string,
+    profileId: string
+  ): Promise<AccountProfile | null> {
     const profiles = await this.loadAccountProfiles(accountId);
     const profile = profiles.find((entry) => entry.id === profileId);
     if (!profile) {
@@ -1099,7 +1307,7 @@ export class AccountManagementService {
     this.accountProfiles.set(accountId, profiles);
     if (this.accountProfilesRepository) {
       await this.accountProfilesRepository.save(
-        profiles.map((entry) => this.accountProfileEntityFromModel(entry)),
+        profiles.map((entry) => this.accountProfileEntityFromModel(entry))
       );
     }
     this.activeAccountProfileByAccount.set(accountId, profileId);
@@ -1114,7 +1322,10 @@ export class AccountManagementService {
       this.accountProfiles.set(accountId, profiles);
       if (this.usersRepository) {
         const user = await this.usersRepository.findOne({ where: { id: accountId } });
-        if (user?.activeAccountProfileId && profiles.some((profile) => profile.id === user.activeAccountProfileId)) {
+        if (
+          user?.activeAccountProfileId &&
+          profiles.some((profile) => profile.id === user.activeAccountProfileId)
+        ) {
           this.activeAccountProfileByAccount.set(accountId, user.activeAccountProfileId);
         }
       }
@@ -1172,7 +1383,10 @@ export class AccountManagementService {
     return initial;
   }
 
-  async updateIdentitySettings(accountId: string, settings: Partial<IdentitySettings>): Promise<IdentitySettings> {
+  async updateIdentitySettings(
+    accountId: string,
+    settings: Partial<IdentitySettings>
+  ): Promise<IdentitySettings> {
     const current = await this.getIdentitySettings(accountId);
     const next: IdentitySettings = {
       ...current,
@@ -1186,7 +1400,10 @@ export class AccountManagementService {
     return next;
   }
 
-  async requestAgeVerification(accountId: string, verificationDate?: Date): Promise<{ accountId: string; status: 'pending' | 'verified'; verifiedAt?: string }> {
+  async requestAgeVerification(
+    accountId: string,
+    verificationDate?: Date
+  ): Promise<{ accountId: string; status: 'pending' | 'verified'; verifiedAt?: string }> {
     const current = await this.getIdentitySettings(accountId);
     current.ageVerified = Boolean(verificationDate) || current.ageVerified;
     current.updatedAt = new Date().toISOString();
@@ -1200,9 +1417,22 @@ export class AccountManagementService {
     };
   }
 
-  async submitDocumentVerification(accountId: string, documentType: string, documentUrl: string): Promise<{ accountId: string; documentType: string; status: 'pending'; documentUrl: string; submittedAt: string }> {
+  async submitDocumentVerification(
+    accountId: string,
+    documentType: string,
+    documentUrl: string
+  ): Promise<{
+    accountId: string;
+    documentType: string;
+    status: 'pending';
+    documentUrl: string;
+    submittedAt: string;
+  }> {
     const submittedAt = new Date().toISOString();
-    this.recordHistory(accountId, 'verification', 'Document verification submitted', { documentType, documentUrl });
+    this.recordHistory(accountId, 'verification', 'Document verification submitted', {
+      documentType,
+      documentUrl,
+    });
 
     return {
       accountId,
@@ -1213,7 +1443,13 @@ export class AccountManagementService {
     };
   }
 
-  async getTrustIndicators(accountId: string): Promise<{ accountId: string; verified: boolean; badges: string[]; trustScore: number; updatedAt: string }> {
+  async getTrustIndicators(accountId: string): Promise<{
+    accountId: string;
+    verified: boolean;
+    badges: string[];
+    trustScore: number;
+    updatedAt: string;
+  }> {
     const existing = this.trustIndicatorsMap.get(accountId);
     if (existing) {
       return { ...existing, accountId };
@@ -1225,7 +1461,10 @@ export class AccountManagementService {
     const latestAppeal = appeals[0] ?? null;
     const hasLinkedAccount = (this.getLinkedAccounts(accountId)?.length ?? 0) > 0;
 
-    const verified = latestAppeal?.status === 'approved' || identitySettings.ageVerified || identitySettings.enhancedSecurity;
+    const verified =
+      latestAppeal?.status === 'approved' ||
+      identitySettings.ageVerified ||
+      identitySettings.enhancedSecurity;
     const badges: string[] = [];
     let trustScore = 0;
 
@@ -1234,7 +1473,9 @@ export class AccountManagementService {
       trustScore += 30;
     }
 
-    const hasProfile = Boolean(identitySettings.displayName && identitySettings.displayName.trim()) && Boolean(identitySettings.bio && identitySettings.bio.trim());
+    const hasProfile =
+      Boolean(identitySettings.displayName && identitySettings.displayName.trim()) &&
+      Boolean(identitySettings.bio && identitySettings.bio.trim());
     if (hasProfile) {
       badges.push('profile_complete');
       trustScore += 20;
@@ -1280,8 +1521,14 @@ export class AccountManagementService {
 
   async updateTrustIndicators(
     accountId: string,
-    settings: Partial<{ verified: boolean; badges: string[]; trustScore: number }>,
-  ): Promise<{ accountId: string; verified: boolean; badges: string[]; trustScore: number; updatedAt: string }> {
+    settings: Partial<{ verified: boolean; badges: string[]; trustScore: number }>
+  ): Promise<{
+    accountId: string;
+    verified: boolean;
+    badges: string[];
+    trustScore: number;
+    updatedAt: string;
+  }> {
     const current = await this.getTrustIndicators(accountId);
     const next = {
       accountId,
@@ -1292,7 +1539,10 @@ export class AccountManagementService {
     };
 
     this.trustIndicatorsMap.set(accountId, next);
-    this.recordHistory(accountId, 'verification', 'Trust indicators updated', { badges: next.badges, trustScore: next.trustScore });
+    this.recordHistory(accountId, 'verification', 'Trust indicators updated', {
+      badges: next.badges,
+      trustScore: next.trustScore,
+    });
     return next;
   }
 
@@ -1304,8 +1554,15 @@ export class AccountManagementService {
       includePrivacySettings?: boolean;
       includeHistory?: boolean;
       format?: 'json' | 'csv';
-    } = {},
-  ): Promise<{ accountId: string; status: 'ready'; fileUrl: string; generatedAt: string; format: string; includes: Record<string, boolean> }> {
+    } = {}
+  ): Promise<{
+    accountId: string;
+    status: 'ready';
+    fileUrl: string;
+    generatedAt: string;
+    format: string;
+    includes: Record<string, boolean>;
+  }> {
     const format = options.format ?? 'json';
     const now = new Date().toISOString();
     const fileUrl = `/exports/account/${accountId}-${Date.now()}.${format}`;
@@ -1316,7 +1573,11 @@ export class AccountManagementService {
       history: !!options.includeHistory,
     };
 
-    this.recordHistory(accountId, 'settings', 'Account data exported', { fileUrl, includes, format });
+    this.recordHistory(accountId, 'settings', 'Account data exported', {
+      fileUrl,
+      includes,
+      format,
+    });
     return {
       accountId,
       status: 'ready',
@@ -1327,7 +1588,12 @@ export class AccountManagementService {
     };
   }
 
-  async createAccountSession(accountId: string, deviceName: string, ipAddress?: string, userAgent?: string): Promise<AccountSession> {
+  async createAccountSession(
+    accountId: string,
+    deviceName: string,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<AccountSession> {
     if (this.loginSessionsRepository) {
       const loginSession = await this.loginSessionsRepository.save(
         this.loginSessionsRepository.create({
@@ -1337,15 +1603,21 @@ export class AccountManagementService {
           userAgent: userAgent ?? null,
           isTrusted: true,
           lastSeenAt: new Date(),
-        }),
+        })
       );
       const session = this.accountSessionModelFromLoginEntity(loginSession, true);
-      this.recordHistory(accountId, 'security', 'Account session created', { sessionId: session.id, deviceName, ipAddress });
+      this.recordHistory(accountId, 'security', 'Account session created', {
+        sessionId: session.id,
+        deviceName,
+        ipAddress,
+      });
       return session;
     }
 
     const sessions = this.accountSessionsRepository
-      ? (await this.accountSessionsRepository.find({ where: { accountId } })).map((session) => this.accountSessionModelFromEntity(session))
+      ? (await this.accountSessionsRepository.find({ where: { accountId } })).map((session) =>
+          this.accountSessionModelFromEntity(session)
+        )
       : (this.accountSessions.get(accountId) ?? []);
     const now = new Date().toISOString();
     const session: AccountSession = {
@@ -1365,7 +1637,11 @@ export class AccountManagementService {
     if (this.accountSessionsRepository) {
       await this.accountSessionsRepository.save(this.accountSessionEntityFromModel(session));
     }
-    this.recordHistory(accountId, 'security', 'Account session created', { sessionId: session.id, deviceName, ipAddress });
+    this.recordHistory(accountId, 'security', 'Account session created', {
+      sessionId: session.id,
+      deviceName,
+      ipAddress,
+    });
     return session;
   }
 
@@ -1379,7 +1655,10 @@ export class AccountManagementService {
     }
 
     if (this.accountSessionsRepository) {
-      const sessions = await this.accountSessionsRepository.find({ where: { accountId }, order: { createdAt: 'DESC' } });
+      const sessions = await this.accountSessionsRepository.find({
+        where: { accountId },
+        order: { createdAt: 'DESC' },
+      });
       const models = sessions.map((session) => this.accountSessionModelFromEntity(session));
       this.accountSessions.set(accountId, models);
       return models;
@@ -1387,7 +1666,10 @@ export class AccountManagementService {
     return this.accountSessions.get(accountId) ?? [];
   }
 
-  async revokeAccountSession(accountId: string, sessionId: string): Promise<{ accountId: string; sessionId: string; revoked: boolean; message: string }> {
+  async revokeAccountSession(
+    accountId: string,
+    sessionId: string
+  ): Promise<{ accountId: string; sessionId: string; revoked: boolean; message: string }> {
     if (this.loginSessionsRepository) {
       const session = await this.loginSessionsRepository.findOne({
         where: { id: sessionId, user: { id: accountId } },
@@ -1413,19 +1695,27 @@ export class AccountManagementService {
     target.status = 'revoked';
     target.lastSeenAt = new Date().toISOString();
     if (this.accountSessionsRepository) {
-      await this.accountSessionsRepository.update({ id: sessionId, accountId }, { status: 'revoked', lastSeenAt: new Date() });
+      await this.accountSessionsRepository.update(
+        { id: sessionId, accountId },
+        { status: 'revoked', lastSeenAt: new Date() }
+      );
     }
     this.accountSessions.set(accountId, sessions);
     this.recordHistory(accountId, 'security', 'Account session revoked', { sessionId });
     return { accountId, sessionId, revoked: true, message: 'Session revoked successfully.' };
   }
 
-  async revokeAllOtherSessions(accountId: string, currentSessionId?: string): Promise<{ accountId: string; revoked: boolean; message: string }> {
+  async revokeAllOtherSessions(
+    accountId: string,
+    currentSessionId?: string
+  ): Promise<{ accountId: string; revoked: boolean; message: string }> {
     if (this.loginSessionsRepository) {
       const sessions = await this.loginSessionsRepository.find({
         where: { user: { id: accountId } },
       });
-      const activeOtherSessions = sessions.filter((session) => session.id !== currentSessionId && !session.revokedAt);
+      const activeOtherSessions = sessions.filter(
+        (session) => session.id !== currentSessionId && !session.revokedAt
+      );
       if (activeOtherSessions.length > 0) {
         const revokedAt = new Date();
         await this.loginSessionsRepository
@@ -1437,7 +1727,9 @@ export class AccountManagementService {
           .andWhere(currentSessionId ? 'id != :currentSessionId' : '1 = 1', { currentSessionId })
           .execute();
       }
-      this.recordHistory(accountId, 'security', 'Other account sessions revoked', { currentSessionId });
+      this.recordHistory(accountId, 'security', 'Other account sessions revoked', {
+        currentSessionId,
+      });
       return { accountId, revoked: true, message: 'Other sessions revoked successfully.' };
     }
 
@@ -1462,7 +1754,9 @@ export class AccountManagementService {
         .andWhere(currentSessionId ? 'id != :currentSessionId' : '1 = 1', { currentSessionId })
         .execute();
     }
-    this.recordHistory(accountId, 'security', 'Other account sessions revoked', { currentSessionId });
+    this.recordHistory(accountId, 'security', 'Other account sessions revoked', {
+      currentSessionId,
+    });
 
     return { accountId, revoked: true, message: 'Other sessions revoked successfully.' };
   }
@@ -1495,7 +1789,10 @@ export class AccountManagementService {
     };
   }
 
-  private accountSessionModelFromLoginEntity(entity: LoginSession, isCurrent = false): AccountSession {
+  private accountSessionModelFromLoginEntity(
+    entity: LoginSession,
+    isCurrent = false
+  ): AccountSession {
     return {
       id: entity.id,
       accountId: entity.user.id,
@@ -1509,24 +1806,62 @@ export class AccountManagementService {
     };
   }
 
-  async requestDataDownload(accountId: string, dataTypes: string[] = []): Promise<{ accountId: string; status: 'ready'; fileUrl: string; createdAt: string; dataTypes: string[] }> {
+  async requestDataDownload(
+    accountId: string,
+    dataTypes: string[] = []
+  ): Promise<{
+    accountId: string;
+    status: 'ready';
+    fileUrl: string;
+    createdAt: string;
+    dataTypes: string[];
+  }> {
     const createdAt = new Date().toISOString();
     const fileUrl = `/downloads/account/${accountId}-${Date.now()}.zip`;
     const requests = this.dataDownloadRequests.get(accountId) ?? [];
-    const entry = { id: `download-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`, accountId, dataTypes, status: 'ready' as const, fileUrl, createdAt };
+    const entry = {
+      id: `download-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      accountId,
+      dataTypes,
+      status: 'ready' as const,
+      fileUrl,
+      createdAt,
+    };
     requests.unshift(entry);
     this.dataDownloadRequests.set(accountId, requests);
     this.recordHistory(accountId, 'settings', 'Data download requested', { dataTypes, fileUrl });
     return { accountId, status: 'ready', fileUrl, createdAt, dataTypes };
   }
 
-  async requestDataDeletion(accountId: string, dataTypes: string[] = [], reason = 'User requested deletion'): Promise<{ accountId: string; status: 'queued'; id: string; reason: string; dataTypes: string[]; createdAt: string }> {
+  async requestDataDeletion(
+    accountId: string,
+    dataTypes: string[] = [],
+    reason = 'User requested deletion'
+  ): Promise<{
+    accountId: string;
+    status: 'queued';
+    id: string;
+    reason: string;
+    dataTypes: string[];
+    createdAt: string;
+  }> {
     const createdAt = new Date().toISOString();
     const requests = this.dataDeletionRequests.get(accountId) ?? [];
-    const entry = { id: `delete-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`, accountId, dataTypes, reason, status: 'queued' as const, createdAt };
+    const entry = {
+      id: `delete-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      accountId,
+      dataTypes,
+      reason,
+      status: 'queued' as const,
+      createdAt,
+    };
     requests.unshift(entry);
     this.dataDeletionRequests.set(accountId, requests);
-    this.recordHistory(accountId, 'security', 'Data deletion requested', { dataTypes, reason, deletionId: entry.id });
+    this.recordHistory(accountId, 'security', 'Data deletion requested', {
+      dataTypes,
+      reason,
+      deletionId: entry.id,
+    });
     return { accountId, status: 'queued', id: entry.id, reason, dataTypes, createdAt };
   }
 
@@ -1537,8 +1872,16 @@ export class AccountManagementService {
       additionalInfo?: string;
       deleteLinkedAccounts?: boolean;
       deleteAllData?: boolean;
-    } = {},
-  ): Promise<{ accountId: string; status: 'pending'; message: string; reason: string; createdAt: string; deleteLinkedAccounts: boolean; deleteAllData: boolean }> {
+    } = {}
+  ): Promise<{
+    accountId: string;
+    status: 'pending';
+    message: string;
+    reason: string;
+    createdAt: string;
+    deleteLinkedAccounts: boolean;
+    deleteAllData: boolean;
+  }> {
     const createdAt = new Date().toISOString();
     const request = {
       id: `deletion-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
@@ -1553,14 +1896,16 @@ export class AccountManagementService {
 
     if (this.accountDeletionRepository) {
       await this.accountDeletionRepository.delete({ accountId, status: 'pending' });
-      await this.accountDeletionRepository.save(this.accountDeletionRepository.create({
-        accountId,
-        reason: request.reason,
-        additionalInfo: request.additionalInfo,
-        deleteLinkedAccounts: request.deleteLinkedAccounts,
-        deleteAllData: request.deleteAllData,
-        status: 'pending',
-      }));
+      await this.accountDeletionRepository.save(
+        this.accountDeletionRepository.create({
+          accountId,
+          reason: request.reason,
+          additionalInfo: request.additionalInfo,
+          deleteLinkedAccounts: request.deleteLinkedAccounts,
+          deleteAllData: request.deleteAllData,
+          status: 'pending',
+        })
+      );
     } else {
       this.accountDeletionRequests.set(accountId, request);
     }
@@ -1589,9 +1934,15 @@ export class AccountManagementService {
     };
   }
 
-  async confirmAccountDeletion(accountId: string, confirmationCode: string): Promise<{ accountId: string; status: 'deleted'; message: string; deletedAt: string }> {
+  async confirmAccountDeletion(
+    accountId: string,
+    confirmationCode: string
+  ): Promise<{ accountId: string; status: 'deleted'; message: string; deletedAt: string }> {
     const persisted = this.accountDeletionRepository
-      ? await this.accountDeletionRepository.findOne({ where: { accountId, status: 'pending' }, order: { createdAt: 'DESC' } })
+      ? await this.accountDeletionRepository.findOne({
+          where: { accountId, status: 'pending' },
+          order: { createdAt: 'DESC' },
+        })
       : null;
     const memoryRequest = this.accountDeletionRequests.get(accountId);
     const existing = persisted ?? memoryRequest;
@@ -1656,7 +2007,7 @@ export class AccountManagementService {
     type: SecurityAlert['type'],
     message: string,
     severity: SecurityAlert['severity'] = 'medium',
-    metadata: Record<string, any> = {},
+    metadata: Record<string, any> = {}
   ): Promise<SecurityAlert> {
     if (this.securityAlertsRepository) {
       const saved = await this.securityAlertsRepository.save(
@@ -1667,9 +2018,13 @@ export class AccountManagementService {
           severity,
           resolved: false,
           metadata,
-        }),
+        })
       );
-      this.recordHistory(accountId, 'security', `Security alert: ${message}`, { type, severity, metadata });
+      this.recordHistory(accountId, 'security', `Security alert: ${message}`, {
+        type,
+        severity,
+        metadata,
+      });
       return this.toSecurityAlert(saved);
     }
 
@@ -1687,19 +2042,34 @@ export class AccountManagementService {
 
     alerts.unshift(alert);
     this.securityAlerts.set(accountId, alerts);
-    this.recordHistory(accountId, 'security', `Security alert: ${message}`, { type, severity, metadata });
+    this.recordHistory(accountId, 'security', `Security alert: ${message}`, {
+      type,
+      severity,
+      metadata,
+    });
     return alert;
   }
 
-  async resolveSecurityAlert(accountId: string, alertId: string, resolved = true): Promise<SecurityAlert | null> {
+  async resolveSecurityAlert(
+    accountId: string,
+    alertId: string,
+    resolved = true
+  ): Promise<SecurityAlert | null> {
     if (this.securityAlertsRepository) {
-      const alert = await this.securityAlertsRepository.findOne({ where: { id: alertId, userId: accountId } });
+      const alert = await this.securityAlertsRepository.findOne({
+        where: { id: alertId, userId: accountId },
+      });
       if (!alert) {
         return null;
       }
       alert.resolved = resolved;
       const saved = await this.securityAlertsRepository.save(alert);
-      this.recordHistory(accountId, 'security', resolved ? 'Security alert resolved' : 'Security alert reopened', { alertId });
+      this.recordHistory(
+        accountId,
+        'security',
+        resolved ? 'Security alert resolved' : 'Security alert reopened',
+        { alertId }
+      );
       return this.toSecurityAlert(saved);
     }
 
@@ -1710,13 +2080,18 @@ export class AccountManagementService {
     }
 
     alert.resolved = resolved;
-    this.recordHistory(accountId, 'security', resolved ? 'Security alert resolved' : 'Security alert reopened', { alertId });
+    this.recordHistory(
+      accountId,
+      'security',
+      resolved ? 'Security alert resolved' : 'Security alert reopened',
+      { alertId }
+    );
     return alert;
   }
 
   async createLoginApproval(
     accountId: string,
-    details: { deviceName?: string; ipAddress?: string; userAgent?: string; location?: string } = {},
+    details: { deviceName?: string; ipAddress?: string; userAgent?: string; location?: string } = {}
   ): Promise<LoginApprovalRequest> {
     const approvals = this.loginApprovals.get(accountId) ?? [];
     const approval: LoginApprovalRequest = {
@@ -1741,7 +2116,12 @@ export class AccountManagementService {
     return approval;
   }
 
-  async reviewLoginApproval(accountId: string, approvalId: string, approved: boolean, note?: string): Promise<LoginApprovalRequest> {
+  async reviewLoginApproval(
+    accountId: string,
+    approvalId: string,
+    approved: boolean,
+    note?: string
+  ): Promise<LoginApprovalRequest> {
     const approvals = this.loginApprovals.get(accountId) ?? [];
     const approval = approvals.find((entry) => entry.id === approvalId);
     if (!approval) {
@@ -1751,10 +2131,15 @@ export class AccountManagementService {
     approval.status = approved ? 'approved' : 'rejected';
     approval.reviewedAt = new Date().toISOString();
     approval.reviewerNote = note;
-    this.recordHistory(accountId, 'security', approved ? 'Login approval approved' : 'Login approval rejected', {
-      approvalId,
-      note,
-    });
+    this.recordHistory(
+      accountId,
+      'security',
+      approved ? 'Login approval approved' : 'Login approval rejected',
+      {
+        approvalId,
+        note,
+      }
+    );
 
     return approval;
   }
@@ -1794,7 +2179,8 @@ export class AccountManagementService {
       settings.adPersonalization,
     ].filter((value) => value === false).length;
 
-    const protectionLevel = restrictedCount >= 4 ? 'strong' : restrictedCount >= 2 ? 'balanced' : 'limited';
+    const protectionLevel =
+      restrictedCount >= 4 ? 'strong' : restrictedCount >= 2 ? 'balanced' : 'limited';
 
     return {
       accountId,
@@ -1820,11 +2206,24 @@ export class AccountManagementService {
     linkedAccounts: LinkedAccount[];
     history: AccountHistoryEntry[];
     privacy: PrivacySettingsSnapshot;
-    recoveryStatus: { accountId: string; status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string } | null;
+    recoveryStatus: {
+      accountId: string;
+      status: 'pending' | 'approved' | 'rejected';
+      method: string;
+      createdAt: string;
+    } | null;
     appeals: VerificationAppeal[];
     securityCenter: Awaited<ReturnType<AccountManagementService['getSecurityCenter']>>;
   }> {
-    const [history, privacy, securityCenter, preferences, notifications, persistedUser, persistedLinkedAccounts] = await Promise.all([
+    const [
+      history,
+      privacy,
+      securityCenter,
+      preferences,
+      notifications,
+      persistedUser,
+      persistedLinkedAccounts,
+    ] = await Promise.all([
       this.getAccountHistory(accountId),
       this.getPrivacySettings(accountId),
       this.getSecurityCenter(accountId),
@@ -1835,22 +2234,33 @@ export class AccountManagementService {
     ]);
 
     const persistedRecovery = this.accountRecoveryRepository
-      ? await this.accountRecoveryRepository.findOne({ where: { accountId }, order: { createdAt: 'DESC' } })
+      ? await this.accountRecoveryRepository.findOne({
+          where: { accountId },
+          order: { createdAt: 'DESC' },
+        })
       : null;
     const recoveryStatus = persistedRecovery
-      ? { accountId, status: persistedRecovery.status, method: persistedRecovery.method, createdAt: persistedRecovery.createdAt.toISOString() }
+      ? {
+          accountId,
+          status: persistedRecovery.status,
+          method: persistedRecovery.method,
+          createdAt: persistedRecovery.createdAt.toISOString(),
+        }
       : this.recoveryQueue.get(accountId);
-    const mappedLinkedAccounts = persistedLinkedAccounts.length > 0
-      ? persistedLinkedAccounts.map((entry) => ({
-          id: entry.id,
-          provider: entry.provider,
-          externalUserId: entry.externalUserId,
-          displayName: entry.displayName ?? undefined,
-          email: entry.email ?? undefined,
-          connectedAt: entry.connectedAt ? new Date(entry.connectedAt).toISOString() : new Date().toISOString(),
-          isPrimary: entry.isPrimary,
-        }))
-      : this.getLinkedAccounts(accountId);
+    const mappedLinkedAccounts =
+      persistedLinkedAccounts.length > 0
+        ? persistedLinkedAccounts.map((entry) => ({
+            id: entry.id,
+            provider: entry.provider,
+            externalUserId: entry.externalUserId,
+            displayName: entry.displayName ?? undefined,
+            email: entry.email ?? undefined,
+            connectedAt: entry.connectedAt
+              ? new Date(entry.connectedAt).toISOString()
+              : new Date().toISOString(),
+            isPrimary: entry.isPrimary,
+          }))
+        : this.getLinkedAccounts(accountId);
 
     const account = persistedUser
       ? {
@@ -1858,7 +2268,8 @@ export class AccountManagementService {
           deactivated: Boolean(persistedUser.status === 'deactivated' || persistedUser.banned),
           status: persistedUser.status ?? 'active',
           switchingEnabled: true,
-          permissions: persistedUser.accountPermissions ?? this.ensureSettings(accountId).permissions,
+          permissions:
+            persistedUser.accountPermissions ?? this.ensureSettings(accountId).permissions,
           personalizationSettings: {},
           dataPermissions: ['profile', 'posts', 'settings'],
           updatedAt: new Date().toISOString(),
@@ -1867,15 +2278,37 @@ export class AccountManagementService {
 
     const persistedPrivacy = persistedUser
       ? {
-          showOnlineStatus: typeof persistedUser.showOnlineStatus === 'boolean' ? persistedUser.showOnlineStatus : privacy.showOnlineStatus,
-          readReceipts: typeof persistedUser.readReceipts === 'boolean' ? persistedUser.readReceipts : privacy.readReceipts,
-          mentions: (persistedUser.mentions as PrivacySettingsSnapshot['mentions']) ?? privacy.mentions,
-          activityVisibility: (persistedUser.activityVisibility as PrivacySettingsSnapshot['activityVisibility']) ?? privacy.activityVisibility,
-          storyVisibility: (persistedUser.storyVisibility as PrivacySettingsSnapshot['storyVisibility']) ?? privacy.storyVisibility,
-          searchVisibility: (persistedUser.searchVisibility as PrivacySettingsSnapshot['searchVisibility']) ?? privacy.searchVisibility,
-          contactDiscovery: typeof persistedUser.contactDiscovery === 'boolean' ? persistedUser.contactDiscovery : privacy.contactDiscovery,
-          personalization: typeof persistedUser.personalization === 'boolean' ? persistedUser.personalization : privacy.personalization,
-          adPersonalization: typeof persistedUser.adPersonalization === 'boolean' ? persistedUser.adPersonalization : privacy.adPersonalization,
+          showOnlineStatus:
+            typeof persistedUser.showOnlineStatus === 'boolean'
+              ? persistedUser.showOnlineStatus
+              : privacy.showOnlineStatus,
+          readReceipts:
+            typeof persistedUser.readReceipts === 'boolean'
+              ? persistedUser.readReceipts
+              : privacy.readReceipts,
+          mentions:
+            (persistedUser.mentions as PrivacySettingsSnapshot['mentions']) ?? privacy.mentions,
+          activityVisibility:
+            (persistedUser.activityVisibility as PrivacySettingsSnapshot['activityVisibility']) ??
+            privacy.activityVisibility,
+          storyVisibility:
+            (persistedUser.storyVisibility as PrivacySettingsSnapshot['storyVisibility']) ??
+            privacy.storyVisibility,
+          searchVisibility:
+            (persistedUser.searchVisibility as PrivacySettingsSnapshot['searchVisibility']) ??
+            privacy.searchVisibility,
+          contactDiscovery:
+            typeof persistedUser.contactDiscovery === 'boolean'
+              ? persistedUser.contactDiscovery
+              : privacy.contactDiscovery,
+          personalization:
+            typeof persistedUser.personalization === 'boolean'
+              ? persistedUser.personalization
+              : privacy.personalization,
+          adPersonalization:
+            typeof persistedUser.adPersonalization === 'boolean'
+              ? persistedUser.adPersonalization
+              : privacy.adPersonalization,
           updatedAt: privacy.updatedAt,
         }
       : privacy;
@@ -1883,7 +2316,9 @@ export class AccountManagementService {
     const persistedPreferences = persistedUser
       ? {
           ...preferences,
-          theme: ((persistedUser as any).profileTheme ?? preferences.theme ?? 'system') as AccountPreferences['theme'],
+          theme: ((persistedUser as any).profileTheme ??
+            preferences.theme ??
+            'system') as AccountPreferences['theme'],
           language: (persistedUser as any).language ?? preferences.language,
           timezone: (persistedUser as any).timezone ?? preferences.timezone,
         }
@@ -1900,9 +2335,7 @@ export class AccountManagementService {
       linkedAccounts: mappedLinkedAccounts,
       history,
       privacy: persistedPrivacy,
-      recoveryStatus: recoveryStatus
-        ? { ...recoveryStatus, accountId }
-        : null,
+      recoveryStatus: recoveryStatus ? { ...recoveryStatus, accountId } : null,
       appeals: this.verificationAppeals.get(accountId) ?? [],
       securityCenter,
     };
@@ -1935,8 +2368,22 @@ export class AccountManagementService {
   }> {
     const appeals = this.verificationAppeals.get(accountId) ?? [];
     const latest = appeals[0] ?? null;
-    const status = latest ? (latest.status === 'approved' ? 'approved' : latest.status === 'rejected' ? 'rejected' : 'pending') : 'not_started';
-    const type = latest?.reason.toLowerCase().includes('creator') ? 'creator' : latest?.reason.toLowerCase().includes('business') ? 'business' : latest?.reason.toLowerCase().includes('organization') ? 'organization' : latest?.reason.toLowerCase().includes('identity') ? 'identity' : 'other';
+    const status = latest
+      ? latest.status === 'approved'
+        ? 'approved'
+        : latest.status === 'rejected'
+          ? 'rejected'
+          : 'pending'
+      : 'not_started';
+    const type = latest?.reason.toLowerCase().includes('creator')
+      ? 'creator'
+      : latest?.reason.toLowerCase().includes('business')
+        ? 'business'
+        : latest?.reason.toLowerCase().includes('organization')
+          ? 'organization'
+          : latest?.reason.toLowerCase().includes('identity')
+            ? 'identity'
+            : 'other';
 
     return {
       accountId,
@@ -1985,22 +2432,31 @@ export class AccountManagementService {
     logs: Array<{ id: string; message: string; timestamp: string; type: string }>;
     connectedAccounts: LinkedAccount[];
     trustedDevices: TrustedDevice[];
-    recoveryStatus: { status: 'pending' | 'approved' | 'rejected'; method: string; createdAt: string } | null;
+    recoveryStatus: {
+      status: 'pending' | 'approved' | 'rejected';
+      method: string;
+      createdAt: string;
+    } | null;
     pendingAppeals: VerificationAppeal[];
     securityAlerts: SecurityAlert[];
     pendingApprovals: LoginApprovalRequest[];
   }> {
-    const fallbackLogs = this.ensureHistory(accountId).slice(0, 25).map((entry) => ({
-      id: entry.id,
-      message: entry.summary,
-      timestamp: entry.occurredAt,
-      type: entry.type,
-    }));
+    const fallbackLogs = this.ensureHistory(accountId)
+      .slice(0, 25)
+      .map((entry) => ({
+        id: entry.id,
+        message: entry.summary,
+        timestamp: entry.occurredAt,
+        type: entry.type,
+      }));
 
     let logs = fallbackLogs;
     if (this.securityAuditService) {
       try {
-        const persisted = await this.securityAuditService.getUserAuditLog(accountId, { take: 25, skip: 0 });
+        const persisted = await this.securityAuditService.getUserAuditLog(accountId, {
+          take: 25,
+          skip: 0,
+        });
         logs = persisted.logs.map((entry) => ({
           id: entry.id,
           message: entry.message,
@@ -2016,7 +2472,11 @@ export class AccountManagementService {
       Promise.resolve(this.getLinkedAccounts(accountId)),
       this.getTrustedDevices(accountId),
       this.securityAlertsRepository
-        ? this.securityAlertsRepository.find({ where: { userId: accountId }, order: { createdAt: 'DESC' }, take: 50 })
+        ? this.securityAlertsRepository.find({
+            where: { userId: accountId },
+            order: { createdAt: 'DESC' },
+            take: 50,
+          })
         : Promise.resolve(null),
     ]);
 
@@ -2027,15 +2487,24 @@ export class AccountManagementService {
       connectedAccounts,
       trustedDevices,
       recoveryStatus: this.recoveryQueue.get(accountId) ?? null,
-      pendingAppeals: (this.verificationAppeals.get(accountId) ?? []).filter((entry) => entry.status === 'pending'),
+      pendingAppeals: (this.verificationAppeals.get(accountId) ?? []).filter(
+        (entry) => entry.status === 'pending'
+      ),
       securityAlerts: storedAlerts
         ? storedAlerts.map((alert) => this.toSecurityAlert(alert))
-        : this.securityAlerts.get(accountId) ?? [],
-      pendingApprovals: (this.loginApprovals.get(accountId) ?? []).filter((entry) => entry.status === 'pending'),
+        : (this.securityAlerts.get(accountId) ?? []),
+      pendingApprovals: (this.loginApprovals.get(accountId) ?? []).filter(
+        (entry) => entry.status === 'pending'
+      ),
     };
   }
 
-  async exportSecurityLog(accountId: string): Promise<{ accountId: string; exportUrl: string; generatedAt: string; records: AccountHistoryEntry[] }> {
+  async exportSecurityLog(accountId: string): Promise<{
+    accountId: string;
+    exportUrl: string;
+    generatedAt: string;
+    records: AccountHistoryEntry[];
+  }> {
     const records = this.ensureHistory(accountId);
     return {
       accountId,

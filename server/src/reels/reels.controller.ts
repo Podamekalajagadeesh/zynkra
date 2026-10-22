@@ -23,7 +23,10 @@ export class ReelsController {
   }
 
   @Put('/effects/:id')
-  updateReelEffect(@Param('id') id: string, @Body() updateReelEffectDto: Partial<CreateReelEffectDto>) {
+  updateReelEffect(
+    @Param('id') id: string,
+    @Body() updateReelEffectDto: Partial<CreateReelEffectDto>
+  ) {
     return this.reelsService.updateReelEffect(id, updateReelEffectDto);
   }
 
@@ -53,7 +56,11 @@ export class ReelsController {
   }
 
   @Put(':id')
-  updateReel(@Param('id') id: string, @Body() updateReelDto: UpdateReelDto, @CurrentUser() user: User) {
+  updateReel(
+    @Param('id') id: string,
+    @Body() updateReelDto: UpdateReelDto,
+    @CurrentUser() user: User
+  ) {
     return this.reelsService.updateReel(id, updateReelDto, user);
   }
 

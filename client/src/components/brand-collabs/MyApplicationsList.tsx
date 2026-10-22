@@ -43,7 +43,9 @@ export function MyApplicationsList({ applications }: MyApplicationsListProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
         <div className="text-4xl mb-4">📝</div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
-        <p className="text-gray-600">Start applying to brand collaboration opportunities to grow your partnerships.</p>
+        <p className="text-gray-600">
+          Start applying to brand collaboration opportunities to grow your partnerships.
+        </p>
       </div>
     );
   }
@@ -55,7 +57,9 @@ export function MyApplicationsList({ applications }: MyApplicationsListProps) {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">{application.opportunity.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {application.opportunity.title}
+                </h3>
                 <p className="text-sm text-gray-600">{application.opportunity.brand.name}</p>
                 <p className="text-sm text-gray-700 mt-2 line-clamp-2">{application.pitch}</p>
                 <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
@@ -63,9 +67,7 @@ export function MyApplicationsList({ applications }: MyApplicationsListProps) {
                   <span>Applied: {formatDate(application.appliedAt)}</span>
                 </div>
               </div>
-              <Badge className={getStatusColor(application.status)}>
-                {application.status}
-              </Badge>
+              <Badge className={getStatusColor(application.status)}>{application.status}</Badge>
             </div>
           </CardContent>
         </Card>

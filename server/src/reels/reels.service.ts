@@ -17,7 +17,7 @@ export class ReelsService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     @InjectRepository(Media)
-    private readonly mediaRepository: Repository<Media>,
+    private readonly mediaRepository: Repository<Media>
   ) {}
 
   async getReelById(id: string): Promise<Post> {
@@ -46,14 +46,14 @@ export class ReelsService {
     });
 
     // Filter out the user's own posts
-    const otherUsersPosts = posts.filter(post => post.user.id !== user.id);
-    
+    const otherUsersPosts = posts.filter((post) => post.user.id !== user.id);
+
     // Calculate engagement score for each post (views + likes*2 + comments*3 + shares*5) to prioritize popular content
-    const postsWithEngagement = otherUsersPosts.map(post => {
+    const postsWithEngagement = otherUsersPosts.map((post) => {
       const likeCount = post.reactions.length;
       const commentCount = post.comments.length;
       const shareCount = post.shareCount || 0;
-      const engagementScore = post.viewCount + (likeCount * 2) + (commentCount * 3) + (shareCount * 5);
+      const engagementScore = post.viewCount + likeCount * 2 + commentCount * 3 + shareCount * 5;
       return { ...post, engagementScore };
     });
 
@@ -74,7 +74,10 @@ export class ReelsService {
   }
 
   async getReelInsights(id: string, user: User): Promise<any> {
-    const post = await this.postRepository.findOne({ where: { id }, relations: ['user', 'reactions', 'comments'] });
+    const post = await this.postRepository.findOne({
+      where: { id },
+      relations: ['user', 'reactions', 'comments'],
+    });
 
     if (!post || post.user.id !== user.id) {
       throw new NotFoundException('Post not found or user not authorized');
@@ -108,7 +111,9 @@ export class ReelsService {
 
     let reelEffect: ReelEffect | null = null;
     if (createReelDto.effectId) {
-      reelEffect = await this.reelEffectRepository.findOne({ where: { id: createReelDto.effectId } });
+      reelEffect = await this.reelEffectRepository.findOne({
+        where: { id: createReelDto.effectId },
+      });
       if (!reelEffect) {
         throw new NotFoundException('Reel effect not found');
       }
@@ -128,9 +133,9 @@ export class ReelsService {
   }
 
   async updateReel(id: string, updateReelDto: UpdateReelDto, user: User): Promise<Post> {
-    const reel = await this.postRepository.findOne({ 
+    const reel = await this.postRepository.findOne({
       where: { id, postType: PostType.REEL },
-      relations: ['user', 'reelEffect', 'media']
+      relations: ['user', 'reelEffect', 'media'],
     });
 
     if (!reel) {
@@ -142,7 +147,9 @@ export class ReelsService {
     }
 
     if (updateReelDto.effectId) {
-      const reelEffect = await this.reelEffectRepository.findOne({ where: { id: updateReelDto.effectId } });
+      const reelEffect = await this.reelEffectRepository.findOne({
+        where: { id: updateReelDto.effectId },
+      });
       if (!reelEffect) {
         throw new NotFoundException('Reel effect not found');
       }
@@ -154,9 +161,9 @@ export class ReelsService {
   }
 
   async deleteReel(id: string, user: User): Promise<void> {
-    const reel = await this.postRepository.findOne({ 
+    const reel = await this.postRepository.findOne({
       where: { id, postType: PostType.REEL },
-      relations: ['user']
+      relations: ['user'],
     });
 
     if (!reel) {
@@ -172,10 +179,10 @@ export class ReelsService {
 
   async getUserReels(userId: string): Promise<Post[]> {
     return this.postRepository.find({
-      where: { 
+      where: {
         user: { id: userId },
         postType: PostType.REEL,
-        visibility: Not(PostVisibility.PRIVATE)
+        visibility: Not(PostVisibility.PRIVATE),
       },
       relations: ['user', 'comments', 'comments.user', 'reactions', 'reelEffect', 'media'],
       order: { createdAt: 'DESC' },
@@ -187,7 +194,10 @@ export class ReelsService {
     return this.reelEffectRepository.save(effect);
   }
 
-  async updateReelEffect(id: string, updateReelEffectDto: Partial<CreateReelEffectDto>): Promise<ReelEffect> {
+  async updateReelEffect(
+    id: string,
+    updateReelEffectDto: Partial<CreateReelEffectDto>
+  ): Promise<ReelEffect> {
     const effect = await this.reelEffectRepository.findOne({ where: { id } });
     if (!effect) {
       throw new NotFoundException('Reel effect not found');

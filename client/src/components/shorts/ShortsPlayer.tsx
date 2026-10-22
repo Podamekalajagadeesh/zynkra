@@ -32,10 +32,7 @@ const ShortsPlayer = ({ shorts }: ShortsPlayerProps) => {
       onWheel={handleScroll}
     >
       {shorts.map((short, index) => (
-        <div
-          key={short.id}
-          className="flex h-full w-full snap-start items-center justify-center"
-        >
+        <div key={short.id} className="flex h-full w-full snap-start items-center justify-center">
           <video
             ref={(el) => (videoRefs.current[index] = el)}
             src={`${API_BASE_URL}${short.videoUrl || short.media?.[0]?.url || ''}`}

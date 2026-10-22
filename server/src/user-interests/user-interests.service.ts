@@ -28,7 +28,7 @@ export interface RecommendedContent<T> {
 @Injectable()
 export class UserInterestsService {
   private readonly logger = new Logger(UserInterestsService.name);
-  
+
   private readonly config: InterestScoreConfig = {
     baseInteractionScore: {
       view: 1,
@@ -52,24 +52,27 @@ export class UserInterestsService {
     @InjectRepository(Post)
     private readonly postsRepository: Repository<Post>,
     @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>,
+    private readonly productsRepository: Repository<Product>
   ) {}
 
   async recordInteraction(
     user: User,
     tags: Tag[],
-    interactionType: 'view' | 'like' | 'comment' | 'share' | 'save' | 'purchase' = 'view',
+    interactionType: 'view' | 'like' | 'comment' | 'share' | 'save' | 'purchase' = 'view'
   ): Promise<void> {
     const controls = normalizePersonalizationControls(user.personalizationControls);
-    if (tags.length === 0 || user.personalization === false || !controls.activityPersonalization) return;
+    if (tags.length === 0 || user.personalization === false || !controls.activityPersonalization)
+      return;
 
     const baseScore = this.config.baseInteractionScore[interactionType];
-    
+
     for (const tag of tags) {
       await this.updateInterestScore(user, tag, baseScore);
     }
 
-    this.logger.debug(`Recorded ${interactionType} interaction for user ${user.id} with ${tags.length} tags`);
+    this.logger.debug(
+      `Recorded ${interactionType} interaction for user ${user.id} with ${tags.length} tags`
+    );
   }
 
   private async updateInterestScore(user: User, tag: Tag, scoreIncrement: number): Promise<void> {
@@ -79,7 +82,8 @@ export class UserInterestsService {
 
     if (interest) {
       // Apply time decay before incrementing
-      const daysSinceLastInteraction = (Date.now() - interest.lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceLastInteraction =
+        (Date.now() - interest.lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
       const decayMultiplier = Math.pow(1 - this.config.decayRate, daysSinceLastInteraction);
       interest.score = interest.score * decayMultiplier + scoreIncrement;
       interest.interactionCount += 1;
@@ -145,7 +149,7 @@ export class UserInterestsService {
 
     await this.userInterestsRepository.save(interest);
     this.logger.log(`User ${user.id} manually added interest in tag ${tag.name}`);
-    
+
     return interest;
   }
 
@@ -165,7 +169,7 @@ export class UserInterestsService {
   async getRecommendedPosts(
     user: User,
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<RecommendedContent<Post>> {
     const skip = (page - 1) * limit;
     const controls = normalizePersonalizationControls(user.personalizationControls);
@@ -181,7 +185,7 @@ export class UserInterestsService {
       return { data: posts, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
     const interests = await this.getInterests(user, 15);
-    
+
     if (interests.length === 0) {
       // Return popular/trending posts if user has no interests
       const [posts, total] = await this.postsRepository.findAndCount({
@@ -204,7 +208,7 @@ export class UserInterestsService {
     // Calculate tag weights based on user's interest scores
     const tagWeights = new Map<string, number>();
     let totalScore = 0;
-    interests.forEach(interest => {
+    interests.forEach((interest) => {
       tagWeights.set(interest.tag.id, interest.score);
       totalScore += interest.score;
     });
@@ -226,17 +230,19 @@ export class UserInterestsService {
       .getManyAndCount();
 
     // Sort posts by relevance (number of matching tags and their weights)
-    const scoredPosts = posts.map(post => {
-      let relevanceScore = 0;
-      post.tags.forEach(tag => {
-        const weight = tagWeights.get(tag.id) || 0;
-        relevanceScore += weight;
-      });
-      return { post, relevanceScore };
-    }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const scoredPosts = posts
+      .map((post) => {
+        let relevanceScore = 0;
+        post.tags.forEach((tag) => {
+          const weight = tagWeights.get(tag.id) || 0;
+          relevanceScore += weight;
+        });
+        return { post, relevanceScore };
+      })
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
 
     return {
-      data: scoredPosts.map(sp => sp.post),
+      data: scoredPosts.map((sp) => sp.post),
       total,
       page,
       limit,
@@ -247,7 +253,7 @@ export class UserInterestsService {
   async getRecommendedProducts(
     user: User,
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<RecommendedContent<Product>> {
     const skip = (page - 1) * limit;
     const controls = normalizePersonalizationControls(user.personalizationControls);
@@ -263,7 +269,7 @@ export class UserInterestsService {
       return { data: products, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
     const interests = await this.getInterests(user, 15);
-    
+
     if (interests.length === 0) {
       // Return popular products if user has no interests
       const [products, total] = await this.productsRepository.findAndCount({
@@ -284,7 +290,7 @@ export class UserInterestsService {
     }
 
     // Get user's top categories from interests
-    const tagNames = interests.map(i => i.tag.name.toLowerCase());
+    const tagNames = interests.map((i) => i.tag.name.toLowerCase());
 
     const queryBuilder = this.productsRepository
       .createQueryBuilder('product')
@@ -295,10 +301,10 @@ export class UserInterestsService {
 
     // Add category matching
     if (tagNames.length > 0) {
-      const categoryConditions = tagNames.map((name, index) => 
-        `(product.categories LIKE :category${index})`
-      ).join(' OR ');
-      
+      const categoryConditions = tagNames
+        .map((name, index) => `(product.categories LIKE :category${index})`)
+        .join(' OR ');
+
       const categoryParams = tagNames.reduce((acc, name, index) => {
         acc[`category${index}`] = `%${name}%`;
         return acc;
@@ -330,7 +336,7 @@ export class UserInterestsService {
     const userInterests = await this.getInterests(user, 10);
     if (userInterests.length === 0) return [];
 
-    const userTagIds = userInterests.map(i => i.tag.id);
+    const userTagIds = userInterests.map((i) => i.tag.id);
 
     // Find other users who share these interests
     const similarUsersInterests = await this.userInterestsRepository
@@ -342,7 +348,7 @@ export class UserInterestsService {
 
     // Count tag occurrences to find related interests
     const tagCounts = new Map<string, number>();
-    similarUsersInterests.forEach(interest => {
+    similarUsersInterests.forEach((interest) => {
       if (!userTagIds.includes(interest.tag.id)) {
         const current = tagCounts.get(interest.tag.id) || 0;
         tagCounts.set(interest.tag.id, current + interest.score);
@@ -361,7 +367,7 @@ export class UserInterestsService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupOldInterests(): Promise<void> {
     this.logger.debug('Running user interests cleanup job');
-    
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -381,15 +387,16 @@ export class UserInterestsService {
   @Cron(CronExpression.EVERY_WEEK)
   async recalculateAllInterestScores(): Promise<void> {
     this.logger.debug('Running weekly interest score recalculation');
-    
+
     const allInterests = await this.userInterestsRepository.find();
     let updatedCount = 0;
 
     for (const interest of allInterests) {
-      const daysSinceLastUpdate = (Date.now() - interest.lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceLastUpdate =
+        (Date.now() - interest.lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
       const decayMultiplier = Math.pow(1 - this.config.decayRate, daysSinceLastUpdate);
       const newScore = interest.score * decayMultiplier;
-      
+
       if (newScore < this.config.threshold) {
         await this.userInterestsRepository.remove(interest);
       } else if (newScore !== interest.score) {
@@ -400,6 +407,8 @@ export class UserInterestsService {
       }
     }
 
-    this.logger.log(`Updated scores for ${updatedCount} user interests, removed others below threshold`);
+    this.logger.log(
+      `Updated scores for ${updatedCount} user interests, removed others below threshold`
+    );
   }
 }

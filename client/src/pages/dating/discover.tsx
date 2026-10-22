@@ -43,7 +43,7 @@ const DatingDiscoveryPage = () => {
         setMatchedWith(
           candidate?.datingProfile.user.displayName ||
             candidate?.datingProfile.user.username ||
-            'someone',
+            'someone'
         );
       }
       setCandidates((prev) => prev.filter((c) => c.id !== swipedUserId));
@@ -56,7 +56,9 @@ const DatingDiscoveryPage = () => {
     return (
       <div className="max-w-lg mx-auto p-6 text-center">
         <h1 className="text-2xl font-bold mb-2">Discover People</h1>
-        <p className="text-dark-500 mb-4">Create your dating profile to start discovering people.</p>
+        <p className="text-dark-500 mb-4">
+          Create your dating profile to start discovering people.
+        </p>
         <Link to="/dating/onboarding" className="text-primary-600 font-semibold hover:underline">
           Create dating profile →
         </Link>

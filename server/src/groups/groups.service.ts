@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Group } from './entities/group.entity';
@@ -67,7 +72,7 @@ export class GroupsService {
     private readonly lockdownsRepository: Repository<GroupLockdown>,
     private readonly usersService: UsersService,
     private readonly reputationService: ReputationService,
-    private readonly channelsGateway: ChannelsGateway,
+    private readonly channelsGateway: ChannelsGateway
   ) {}
 
   async createGroup(
@@ -76,7 +81,7 @@ export class GroupsService {
     privacy: GroupPrivacy,
     isDao?: boolean,
     votingSystem?: VotingSystem,
-    allowAnonymousPosting?: boolean,
+    allowAnonymousPosting?: boolean
   ): Promise<Group> {
     const group = this.groupsRepository.create({
       name,
@@ -187,11 +192,7 @@ export class GroupsService {
     });
   }
 
-  async updateMemberRole(
-    groupId: string,
-    userId: string,
-    role: GroupRole,
-  ): Promise<GroupMember> {
+  async updateMemberRole(groupId: string, userId: string, role: GroupRole): Promise<GroupMember> {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: userId } },
     });
@@ -217,7 +218,7 @@ export class GroupsService {
     groupId: string,
     name: string,
     user: User,
-    type: 'group' | 'broadcast' = 'group',
+    type: 'group' | 'broadcast' = 'group'
   ): Promise<Channel> {
     const group = await this.groupsRepository.findOne({
       where: { id: groupId },
@@ -310,11 +311,7 @@ export class GroupsService {
     await this.channelMembersRepository.remove(member);
   }
 
-  async addMessage(
-    channelId: string,
-    content: string,
-    sender: User,
-  ): Promise<Message> {
+  async addMessage(channelId: string, content: string, sender: User): Promise<Message> {
     const channel = await this.assertCanReadChannel(channelId, sender.id);
 
     if (channel.type === 'broadcast') {
@@ -323,7 +320,7 @@ export class GroupsService {
       });
       if (!member || member.role !== 'admin') {
         throw new UnauthorizedException(
-          'You do not have permission to send messages in this channel',
+          'You do not have permission to send messages in this channel'
         );
       }
     } else {
@@ -346,7 +343,7 @@ export class GroupsService {
             channel,
             user: sender,
             role: 'member',
-          }),
+          })
         );
       }
     }
@@ -375,7 +372,7 @@ export class GroupsService {
   async createProposal(
     groupId: string,
     creator: User,
-    createProposalDto: CreateProposalDto,
+    createProposalDto: CreateProposalDto
   ): Promise<Proposal> {
     const group = await this.groupsRepository.findOne({ where: { id: groupId } });
     if (!group) {
@@ -394,30 +391,36 @@ export class GroupsService {
   }
 
   async getProposals(groupId: string): Promise<Proposal[]> {
-    const group = await this.groupsRepository.findOne({ where: { id: groupId }, relations: ['proposals'] });
+    const group = await this.groupsRepository.findOne({
+      where: { id: groupId },
+      relations: ['proposals'],
+    });
     if (!group) {
       throw new NotFoundException('Group not found');
     }
     return group.proposals;
   }
 
-  async vote(
-    proposalId: string,
-    voter: User,
-    createVoteDto: CreateVoteDto,
-  ): Promise<Vote> {
-    const proposal = await this.proposalsRepository.findOne({ where: { id: proposalId }, relations: ['group'] });
+  async vote(proposalId: string, voter: User, createVoteDto: CreateVoteDto): Promise<Vote> {
+    const proposal = await this.proposalsRepository.findOne({
+      where: { id: proposalId },
+      relations: ['group'],
+    });
     if (!proposal) {
       throw new NotFoundException('Proposal not found');
     }
     if (proposal.status !== ProposalStatus.ACTIVE) {
       throw new UnauthorizedException('This proposal is not active');
     }
-    const member = await this.groupMembersRepository.findOne({ where: { group: { id: proposal.group.id }, user: { id: voter.id } } });
+    const member = await this.groupMembersRepository.findOne({
+      where: { group: { id: proposal.group.id }, user: { id: voter.id } },
+    });
     if (!member) {
       throw new UnauthorizedException('You are not a member of this group');
     }
-    const existingVote = await this.votesRepository.findOne({ where: { proposal: { id: proposalId }, voter: { id: voter.id } } });
+    const existingVote = await this.votesRepository.findOne({
+      where: { proposal: { id: proposalId }, voter: { id: voter.id } },
+    });
     if (existingVote) {
       throw new UnauthorizedException('You have already voted on this proposal');
     }
@@ -435,12 +438,15 @@ export class GroupsService {
   }
 
   // Community Challenges & Campaigns Methods
-  async createChallenge(createChallengeDto: CreateChallengeDto, creator: User): Promise<CommunityChallenge> {
+  async createChallenge(
+    createChallengeDto: CreateChallengeDto,
+    creator: User
+  ): Promise<CommunityChallenge> {
     const group = await this.groupsRepository.findOne({
       where: { id: createChallengeDto.groupId },
       relations: ['owner'],
     });
-    
+
     if (!group) {
       throw new NotFoundException('Group not found');
     }
@@ -449,7 +455,7 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: group.id }, user: { id: creator.id } },
     });
-    
+
     if (!membership || (membership.role !== GroupRole.ADMIN && group.owner.id !== creator.id)) {
       throw new ForbiddenException('Only group admins can create challenges');
     }
@@ -489,32 +495,43 @@ export class GroupsService {
       where: { id: challengeId },
       relations: ['creator', 'contributions', 'contributions.user', 'group'],
     });
-    
+
     if (!challenge) {
       throw new NotFoundException('Challenge not found');
     }
     return challenge;
   }
 
-  async updateChallenge(challengeId: string, updateChallengeDto: UpdateChallengeDto, updater: User): Promise<CommunityChallenge> {
+  async updateChallenge(
+    challengeId: string,
+    updateChallengeDto: UpdateChallengeDto,
+    updater: User
+  ): Promise<CommunityChallenge> {
     const challenge = await this.getChallenge(challengeId);
-    
+
     // Check if user is authorized to update
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: challenge.group.id }, user: { id: updater.id } },
     });
-    
-    if (!membership || (membership.role !== GroupRole.ADMIN && challenge.creator.id !== updater.id)) {
-      throw new ForbiddenException('Only group admins or the challenge creator can update this challenge');
+
+    if (
+      !membership ||
+      (membership.role !== GroupRole.ADMIN && challenge.creator.id !== updater.id)
+    ) {
+      throw new ForbiddenException(
+        'Only group admins or the challenge creator can update this challenge'
+      );
     }
 
     const updatedChallenge = this.challengesRepository.merge(challenge, updateChallengeDto);
-    
+
     // Auto-mark as completed if goals are reached
     if (
       (challenge.goalAmount && updatedChallenge.currentAmount >= challenge.goalAmount) ||
-      (challenge.goalParticipantCount && updatedChallenge.currentParticipantCount >= challenge.goalParticipantCount) ||
-      (challenge.goalActionCount && updatedChallenge.currentActionCount >= challenge.goalActionCount)
+      (challenge.goalParticipantCount &&
+        updatedChallenge.currentParticipantCount >= challenge.goalParticipantCount) ||
+      (challenge.goalActionCount &&
+        updatedChallenge.currentActionCount >= challenge.goalActionCount)
     ) {
       updatedChallenge.status = ChallengeStatus.COMPLETED;
     }
@@ -522,9 +539,12 @@ export class GroupsService {
     return this.challengesRepository.save(updatedChallenge);
   }
 
-  async addContribution(createContributionDto: CreateContributionDto, contributor: User): Promise<ChallengeContribution> {
+  async addContribution(
+    createContributionDto: CreateContributionDto,
+    contributor: User
+  ): Promise<ChallengeContribution> {
     const challenge = await this.getChallenge(createContributionDto.challengeId);
-    
+
     if (challenge.status !== ChallengeStatus.ACTIVE) {
       throw new UnauthorizedException('Cannot contribute to an inactive challenge');
     }
@@ -533,7 +553,7 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: challenge.group.id }, user: { id: contributor.id } },
     });
-    
+
     if (!membership) {
       throw new ForbiddenException('Only group members can contribute to challenges');
     }
@@ -541,7 +561,11 @@ export class GroupsService {
     // Check for duplicate participation contributions
     if (createContributionDto.type === ContributionType.PARTICIPATION) {
       const existingParticipation = await this.contributionsRepository.findOne({
-        where: { challenge: { id: challenge.id }, user: { id: contributor.id }, type: ContributionType.PARTICIPATION },
+        where: {
+          challenge: { id: challenge.id },
+          user: { id: contributor.id },
+          type: ContributionType.PARTICIPATION,
+        },
       });
       if (existingParticipation) {
         throw new UnauthorizedException('You have already participated in this challenge');
@@ -558,8 +582,11 @@ export class GroupsService {
 
     // Update challenge metrics based on contribution type
     const updates: Partial<CommunityChallenge> = {};
-    
-    if (createContributionDto.type === ContributionType.MONETARY || createContributionDto.type === ContributionType.DONATION) {
+
+    if (
+      createContributionDto.type === ContributionType.MONETARY ||
+      createContributionDto.type === ContributionType.DONATION
+    ) {
       if (createContributionDto.amount && challenge.currentAmount !== undefined) {
         updates.currentAmount = challenge.currentAmount + createContributionDto.amount;
       }
@@ -584,13 +611,18 @@ export class GroupsService {
 
   async deleteChallenge(challengeId: string, deleter: User): Promise<void> {
     const challenge = await this.getChallenge(challengeId);
-    
+
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: challenge.group.id }, user: { id: deleter.id } },
     });
-    
-    if (!membership || (membership.role !== GroupRole.ADMIN && challenge.creator.id !== deleter.id)) {
-      throw new ForbiddenException('Only group admins or the challenge creator can delete this challenge');
+
+    if (
+      !membership ||
+      (membership.role !== GroupRole.ADMIN && challenge.creator.id !== deleter.id)
+    ) {
+      throw new ForbiddenException(
+        'Only group admins or the challenge creator can delete this challenge'
+      );
     }
 
     // Delete all contributions first
@@ -602,12 +634,12 @@ export class GroupsService {
   async createCalendarEvent(createCalendarEventDto: any, creator: User): Promise<any> {
     const { groupId, ...eventData } = createCalendarEventDto;
     const group = await this.getGroupById(groupId);
-    
+
     // Check if user is a group member
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: creator.id } },
     });
-    
+
     if (!membership) {
       throw new ForbiddenException('Only group members can create calendar events');
     }
@@ -623,12 +655,12 @@ export class GroupsService {
 
   async getGroupCalendarEvents(groupId: string, user: User): Promise<any[]> {
     const group = await this.getGroupById(groupId);
-    
+
     // Check if user is a group member
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: user.id } },
     });
-    
+
     if (!membership) {
       throw new ForbiddenException('Only group members can view calendar events');
     }
@@ -640,12 +672,16 @@ export class GroupsService {
     });
   }
 
-  async updateCalendarEvent(eventId: string, updateCalendarEventDto: any, updater: User): Promise<any> {
+  async updateCalendarEvent(
+    eventId: string,
+    updateCalendarEventDto: any,
+    updater: User
+  ): Promise<any> {
     const event = await this.calendarEventsRepository.findOne({
       where: { id: eventId },
       relations: ['group'],
     });
-    
+
     if (!event) {
       throw new NotFoundException('Calendar event not found');
     }
@@ -654,7 +690,7 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: event.group.id }, user: { id: updater.id } },
     });
-    
+
     if (!membership || (membership.role !== GroupRole.ADMIN && event.creator.id !== updater.id)) {
       throw new ForbiddenException('Only group admins or the event creator can update this event');
     }
@@ -668,7 +704,7 @@ export class GroupsService {
       where: { id: eventId },
       relations: ['group'],
     });
-    
+
     if (!event) {
       throw new NotFoundException('Calendar event not found');
     }
@@ -677,7 +713,7 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: event.group.id }, user: { id: deleter.id } },
     });
-    
+
     if (!membership || (membership.role !== GroupRole.ADMIN && event.creator.id !== deleter.id)) {
       throw new ForbiddenException('Only group admins or the event creator can delete this event');
     }
@@ -689,12 +725,12 @@ export class GroupsService {
   async createTodoItem(createTodoItemDto: any, creator: User): Promise<any> {
     const { groupId, assigneeId, ...todoData } = createTodoItemDto;
     const group = await this.getGroupById(groupId);
-    
+
     // Check if user is a group member
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: creator.id } },
     });
-    
+
     if (!membership) {
       throw new ForbiddenException('Only group members can create todo items');
     }
@@ -716,12 +752,12 @@ export class GroupsService {
 
   async getGroupTodoItems(groupId: string, user: User): Promise<any[]> {
     const group = await this.getGroupById(groupId);
-    
+
     // Check if user is a group member
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: user.id } },
     });
-    
+
     if (!membership) {
       throw new ForbiddenException('Only group members can view todo items');
     }
@@ -738,7 +774,7 @@ export class GroupsService {
       where: { id: todoId },
       relations: ['group'],
     });
-    
+
     if (!todo) {
       throw new NotFoundException('Todo item not found');
     }
@@ -747,9 +783,16 @@ export class GroupsService {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: todo.group.id }, user: { id: updater.id } },
     });
-    
-    if (!membership || (membership.role !== GroupRole.ADMIN && todo.creator.id !== updater.id && todo.assignee?.id !== updater.id)) {
-      throw new ForbiddenException('Only group admins, the todo creator, or the assignee can update this item');
+
+    if (
+      !membership ||
+      (membership.role !== GroupRole.ADMIN &&
+        todo.creator.id !== updater.id &&
+        todo.assignee?.id !== updater.id)
+    ) {
+      throw new ForbiddenException(
+        'Only group admins, the todo creator, or the assignee can update this item'
+      );
     }
 
     const { assigneeId, ...updateData } = updateTodoItemDto;
@@ -803,7 +846,7 @@ export class GroupsService {
     creator: User,
     subject: string,
     recipientId: string,
-    initialMessage: string,
+    initialMessage: string
   ): Promise<Conversation> {
     const group = await this.getGroupById(groupId);
 
@@ -815,9 +858,7 @@ export class GroupsService {
     // Mods can open a thread with any member; a regular member can only open
     // a thread about themselves (i.e. contact the mod team).
     if (!this.isModRole(creatorRole) && recipientId !== creator.id) {
-      throw new ForbiddenException(
-        'Members can only open modmail threads for themselves',
-      );
+      throw new ForbiddenException('Members can only open modmail threads for themselves');
     }
 
     const recipientRole = await this.getMemberRole(groupId, recipientId);
@@ -828,13 +869,8 @@ export class GroupsService {
 
     // Participants: the recipient plus the whole mod team, so any mod can reply.
     const members = await this.getGroupMembers(groupId);
-    const mods = members
-      .filter((m) => this.isModRole(m.role))
-      .map((m) => m.user);
-    const participants = [
-      recipient,
-      ...mods.filter((mod) => mod.id !== recipient.id),
-    ];
+    const mods = members.filter((m) => this.isModRole(m.role)).map((m) => m.user);
+    const participants = [recipient, ...mods.filter((mod) => mod.id !== recipient.id)];
 
     const conversation = this.conversationsRepository.create({
       type: ConversationType.MODMAIL,
@@ -844,8 +880,7 @@ export class GroupsService {
       modmailRecipient: recipient,
       participants,
     });
-    const savedConversation =
-      await this.conversationsRepository.save(conversation);
+    const savedConversation = await this.conversationsRepository.save(conversation);
 
     const message = this.messagesRepository.create({
       content: initialMessage,
@@ -857,10 +892,7 @@ export class GroupsService {
     return savedConversation;
   }
 
-  async getModmailConversations(
-    groupId: string,
-    user: User,
-  ): Promise<Conversation[]> {
+  async getModmailConversations(groupId: string, user: User): Promise<Conversation[]> {
     await this.getGroupById(groupId);
 
     const role = await this.getMemberRole(groupId, user.id);
@@ -892,7 +924,7 @@ export class GroupsService {
 
   private async getModmailConversation(
     groupId: string,
-    conversationId: string,
+    conversationId: string
   ): Promise<Conversation> {
     const conversation = await this.conversationsRepository.findOne({
       where: {
@@ -911,19 +943,14 @@ export class GroupsService {
   async getModmailMessages(
     groupId: string,
     conversationId: string,
-    user: User,
+    user: User
   ): Promise<Message[]> {
-    const conversation = await this.getModmailConversation(
-      groupId,
-      conversationId,
-    );
+    const conversation = await this.getModmailConversation(groupId, conversationId);
 
     const role = await this.getMemberRole(groupId, user.id);
     const isMod = this.isModRole(role);
     if (!isMod && conversation.modmailRecipient.id !== user.id) {
-      throw new ForbiddenException(
-        'You do not have access to this modmail conversation',
-      );
+      throw new ForbiddenException('You do not have access to this modmail conversation');
     }
 
     const messages = await this.messagesRepository.find({
@@ -941,19 +968,14 @@ export class GroupsService {
     conversationId: string,
     user: User,
     content: string,
-    isInternal = false,
+    isInternal = false
   ): Promise<Message> {
-    const conversation = await this.getModmailConversation(
-      groupId,
-      conversationId,
-    );
+    const conversation = await this.getModmailConversation(groupId, conversationId);
 
     const role = await this.getMemberRole(groupId, user.id);
     const isMod = this.isModRole(role);
     if (!isMod && conversation.modmailRecipient.id !== user.id) {
-      throw new ForbiddenException(
-        'You do not have access to this modmail conversation',
-      );
+      throw new ForbiddenException('You do not have access to this modmail conversation');
     }
     if (isInternal && !isMod) {
       throw new ForbiddenException('Only moderators can post internal notes');
@@ -973,7 +995,7 @@ export class GroupsService {
     adminId: string,
     mode: LockdownMode,
     durationHours?: number,
-    newMemberMuteHours?: number,
+    newMemberMuteHours?: number
   ): Promise<GroupLockdown> {
     await this.assertAdmin(groupId, adminId);
     const group = await this.groupsRepository.findOne({ where: { id: groupId } });
@@ -1041,7 +1063,7 @@ export class GroupsService {
       where: { group: { id: groupId } },
     });
     const recentCount = recent.filter(
-      (member) => member.createdAt && member.createdAt >= since,
+      (member) => member.createdAt && member.createdAt >= since
     ).length;
     return recentCount >= 10 ? recentCount : 0;
   }

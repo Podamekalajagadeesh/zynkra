@@ -14,7 +14,10 @@ export interface MemoryProjectSummary {
 }
 
 export function buildMemoryProjectSummary(input: MemoryProjectSummaryInput): MemoryProjectSummary {
-  const contributors = input.contributorNames.length > 0 ? input.contributorNames.join(', ') : 'community contributors';
+  const contributors =
+    input.contributorNames.length > 0
+      ? input.contributorNames.join(', ')
+      : 'community contributors';
   const summary = [
     `Collaborative memory project focused on ${input.topic}.`,
     input.description,

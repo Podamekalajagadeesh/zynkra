@@ -18,7 +18,7 @@ const SubscribersPage = () => {
     setError(false);
     try {
       const data = await getSubscribers();
-      setSubscribers(Array.isArray(data) ? data : data.subscribers ?? []);
+      setSubscribers(Array.isArray(data) ? data : (data.subscribers ?? []));
     } catch {
       setError(true);
       addToast('Failed to load subscribers', 'error');
@@ -37,7 +37,10 @@ const SubscribersPage = () => {
         <h1 className="text-2xl font-bold mb-6">Your Subscribers</h1>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-800">
+            <div
+              key={i}
+              className="rounded-xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-800"
+            >
               <div className="flex items-center gap-4">
                 <Skeleton width={44} height={44} className="rounded-full" />
                 <div className="flex-1 space-y-2">
@@ -106,9 +109,7 @@ const SubscribersPage = () => {
                     <p className="font-semibold text-dark-900 dark:text-white truncate">
                       {sub.user?.displayName || sub.user?.username || 'Unknown'}
                     </p>
-                    <p className="text-sm text-dark-500">
-                      @{sub.user?.username}
-                    </p>
+                    <p className="text-sm text-dark-500">@{sub.user?.username}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     <Badge variant="secondary">{sub.tier || 'Free'}</Badge>

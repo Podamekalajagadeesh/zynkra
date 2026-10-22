@@ -25,19 +25,16 @@ export class OpenRouterService {
 
   constructor(
     private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {
     this.apiKey = this.configService.get<string>('OPENROUTER_API_KEY');
     this.baseUrl = this.configService.get<string>(
       'OPENROUTER_BASE_URL',
-      'https://openrouter.ai/api/v1',
+      'https://openrouter.ai/api/v1'
     );
     this.textModel = this.configService.get<string>('AI_TEXT_MODEL', 'openai/gpt-4o-mini');
     this.visionModel = this.configService.get<string>('AI_VISION_MODEL', 'openai/gpt-4o');
-    this.analysisModel = this.configService.get<string>(
-      'AI_ANALYSIS_MODEL',
-      'openai/gpt-4o-mini',
-    );
+    this.analysisModel = this.configService.get<string>('AI_ANALYSIS_MODEL', 'openai/gpt-4o-mini');
   }
 
   /** True when an API key is configured and AI features can call the LLM. */
@@ -159,7 +156,7 @@ export class OpenRouterService {
     };
 
     return this.httpService.post(`${this.baseUrl}/chat/completions`, body, config).pipe(
-      map((response) => response.data),
+      map((response) => response.data)
       // The caller gets the raw stream and reads SSE chunks from it.
     );
   }
@@ -181,7 +178,7 @@ export class OpenRouterService {
         this.httpService.post(`${this.baseUrl}/chat/completions`, body, {
           headers: this.buildHeaders(),
           timeout: 30_000,
-        }),
+        })
       );
       return response;
     } catch (error: any) {

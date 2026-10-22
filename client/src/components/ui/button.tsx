@@ -10,11 +10,15 @@ const buttonVariants = {
   // `default` is an alias for `primary` (shadcn-style call sites).
   default: primaryVariant,
   primary: primaryVariant,
-  secondary: 'border border-dark-200 bg-white/90 text-dark-900 hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:hover:bg-dark-700',
-  outline: 'border border-dark-200 bg-transparent text-dark-900 hover:bg-dark-50 dark:border-dark-700 dark:text-white dark:hover:bg-dark-800',
+  secondary:
+    'border border-dark-200 bg-white/90 text-dark-900 hover:bg-dark-50 dark:border-dark-700 dark:bg-dark-800 dark:text-white dark:hover:bg-dark-700',
+  outline:
+    'border border-dark-200 bg-transparent text-dark-900 hover:bg-dark-50 dark:border-dark-700 dark:text-white dark:hover:bg-dark-800',
   ghost: 'text-dark-700 hover:bg-dark-100 dark:text-dark-200 dark:hover:bg-dark-800',
-  destructive: 'bg-red-600 text-white shadow-lg shadow-red-600/20 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/25',
-  accent: 'bg-gradient-to-r from-accent-600 to-fuchsia-500 text-white shadow-lg shadow-accent-500/20 hover:shadow-xl hover:shadow-accent-500/25',
+  destructive:
+    'bg-red-600 text-white shadow-lg shadow-red-600/20 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/25',
+  accent:
+    'bg-gradient-to-r from-accent-600 to-fuchsia-500 text-white shadow-lg shadow-accent-500/20 hover:shadow-xl hover:shadow-accent-500/25',
 };
 
 const buttonSizes = {
@@ -36,7 +40,21 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', disabled = false, isLoading = false, icon, children, ariaLabel, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      disabled = false,
+      isLoading = false,
+      icon,
+      children,
+      ariaLabel,
+      asChild = false,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
@@ -45,8 +63,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 aria-busy:opacity-70 dark:focus:ring-offset-dark-900',
             buttonVariants[variant],
             buttonSizes[size],
-            className,
-          ),
+            className
+          )
         )}
         ref={ref}
         disabled={disabled || isLoading}
@@ -64,7 +82,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </Comp>
     );
-  },
+  }
 );
 Button.displayName = 'Button';
 

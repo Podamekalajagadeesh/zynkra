@@ -4,15 +4,7 @@ import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
-import { 
-  Volume2,
-  VolumeX,
-  Move3d,
-  Settings,
-  MapPin,
-  Volume,
-  Zap
-} from 'lucide-react';
+import { Volume2, VolumeX, Move3d, Settings, MapPin, Volume, Zap } from 'lucide-react';
 import { useSpatialAudio } from '../hooks/useSpatialAudio';
 import { Vector3D } from '../services/spatialAudio';
 
@@ -36,7 +28,7 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
       const positions = spatialAudio.getAllParticipantPositions();
       setParticipantCount(positions.size);
     };
-    
+
     // Update initially and set interval
     updateCount();
     const interval = setInterval(updateCount, 1000);
@@ -83,23 +75,23 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
   // Place all participants in a theatre-style seating arrangement
   const handleArrangeParticipantsTheatre = () => {
     if (!isHost) return;
-    
+
     const positions = spatialAudio.getAllParticipantPositions();
     let index = 0;
     const seatsPerRow = 8;
     const rowDepth = 5;
-    
+
     positions.forEach((_, participantId) => {
       const row = Math.floor(index / seatsPerRow);
       const seatInRow = index % seatsPerRow;
       const offset = (seatInRow - (seatsPerRow - 1) / 2) * 3; // Spread seats horizontally
-      
+
       const newPosition: Vector3D = {
         x: offset,
         y: 1.7,
-        z: -15 - (row * rowDepth) // Place rows behind each other
+        z: -15 - row * rowDepth, // Place rows behind each other
       };
-      
+
       spatialAudio.animateParticipantToPosition(participantId, newPosition, 1000);
       index++;
     });
@@ -112,8 +104,8 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
           <Move3d className="h-5 w-5 text-blue-400" />
           <h3 className="text-lg font-semibold text-white">Spatial Audio</h3>
         </div>
-        <Switch 
-          checked={isEnabled} 
+        <Switch
+          checked={isEnabled}
           onCheckedChange={handleToggle}
           className="data-[state=checked]:bg-blue-500"
         />
@@ -135,16 +127,16 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm text-gray-300">Your Position</Label>
-              <Button 
-                variant="secondary" 
-                size="sm" 
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleResetPosition}
                 className="text-xs"
               >
                 Reset
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 w-4">X</span>
@@ -158,7 +150,7 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
                 />
                 <span className="text-xs text-gray-400 w-8">{listenerPosition.x.toFixed(1)}</span>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 w-4">Z</span>
                 <Slider
@@ -176,8 +168,8 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
 
           {/* Quick actions */}
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="sm"
               onClick={handleTeleportFrontRow}
               className="text-xs bg-blue-600 hover:bg-blue-700 text-white"
@@ -185,10 +177,10 @@ const SpatialAudioControls: React.FC<SpatialAudioControlsProps> = ({ roomName, i
               <MapPin className="h-3 w-3 mr-1" />
               Front Row
             </Button>
-            
+
             {isHost && (
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={handleArrangeParticipantsTheatre}
                 className="text-xs bg-purple-600 hover:bg-purple-700 text-white"

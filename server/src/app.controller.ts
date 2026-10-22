@@ -1,4 +1,16 @@
-﻿import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, NotFoundException, Param, Post, Req, Res } from '@nestjs/common';
+﻿import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth/auth.service';
 import { Request, Response } from 'express';
@@ -37,7 +49,8 @@ export class AppController {
     {
       id: 'mobile-2',
       author: { name: 'Ayo', handle: '@ayo' },
-      content: 'The mobile experience supports posting, refresh, and recovery from temporary outages.',
+      content:
+        'The mobile experience supports posting, refresh, and recovery from temporary outages.',
       likes: 18,
       comments: 3,
       createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
@@ -46,7 +59,7 @@ export class AppController {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly authService: AuthService
   ) {}
 
   private assertMobileDemoEnabled(): void {
@@ -78,9 +91,7 @@ export class AppController {
 
   @Post('mobile/posts')
   @HttpCode(HttpStatus.CREATED)
-  createMobilePost(
-    @Body() body: { content?: string; author?: string; handle?: string },
-  ) {
+  createMobilePost(@Body() body: { content?: string; author?: string; handle?: string }) {
     this.assertMobileDemoEnabled();
     const content = body?.content?.trim();
     if (!content) {
@@ -104,11 +115,7 @@ export class AppController {
   }
 
   @Get('verify-email/:token')
-  async verifyEmailPage(
-    @Param('token') token: string,
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
+  async verifyEmailPage(@Param('token') token: string, @Req() req: Request, @Res() res: Response) {
     const clientUrl = this.configService
       .get<string>('CLIENT_URL', 'http://localhost:5173')
       .replace(/\/$/, '');
@@ -139,7 +146,8 @@ export class AppController {
 </html>`;
       return res.type('text/html').send(html);
     } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'Unable to verify your email.';
+      const message =
+        error?.response?.data?.message || error?.message || 'Unable to verify your email.';
       const html = `<!DOCTYPE html>
 <html lang="en">
   <head>

@@ -11,8 +11,10 @@
  */
 
 process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-only-jwt-secret-0123456789abcdef0123456789abcdef';
-process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'test-only-session-secret-0123456789abcdef0123456789abcdef';
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET || 'test-only-jwt-secret-0123456789abcdef0123456789abcdef';
+process.env.SESSION_SECRET =
+  process.env.SESSION_SECRET || 'test-only-session-secret-0123456789abcdef0123456789abcdef';
 process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1';
 process.env.DB_PORT = process.env.DB_PORT || '55432';
 process.env.DB_USERNAME = process.env.DB_USERNAME || 'postgres';
@@ -46,10 +48,7 @@ import { VisibilityModule } from '../src/common/visibility/visibility.module';
 import { User } from '../src/users/entities/user.entity';
 import { Post } from '../src/posts/entities/post.entity';
 import { Comment } from '../src/comments/entities/comment.entity';
-import {
-  Notification,
-  NotificationType,
-} from '../src/notifications/entities/notification.entity';
+import { Notification, NotificationType } from '../src/notifications/entities/notification.entity';
 import { Conversation } from '../src/dms/entities/conversation.entity';
 import { Message } from '../src/dms/entities/message.entity';
 
@@ -102,7 +101,7 @@ async function startEmbeddedPostgres(): Promise<void> {
   if (!EmbeddedPostgres) {
     throw new Error(
       'Could not load EmbeddedPostgres from the embedded-postgres package. ' +
-        'Is @embedded-postgres/linux-x64 installed with its build script allowed?',
+        'Is @embedded-postgres/linux-x64 installed with its build script allowed?'
     );
   }
 
@@ -226,10 +225,7 @@ describe('Full core loop over real Postgres', () => {
       const code = user.emailVerificationToken;
       expect(code).toBeTruthy();
 
-      const verify = await http()
-        .post('/auth/verify-code')
-        .send({ email, code })
-        .expect(200);
+      const verify = await http().post('/auth/verify-code').send({ email, code }).expect(200);
       expect(verify.body.access_token).toBeTruthy();
 
       return { id: user.id, token: verify.body.access_token, username, email };
@@ -263,10 +259,7 @@ describe('Full core loop over real Postgres', () => {
     expect(postRes.body.content).toBe('Hello from the real Postgres core loop.');
 
     // ── feed ─────────────────────────────────────────────────────────────
-    const feedRes = await http()
-      .get('/feed/chronological')
-      .set(bearer(user1.token))
-      .expect(200);
+    const feedRes = await http().get('/feed/chronological').set(bearer(user1.token)).expect(200);
     const feedBody = feedRes.body;
     const feedItems = Array.isArray(feedBody)
       ? feedBody
@@ -280,10 +273,7 @@ describe('Full core loop over real Postgres', () => {
     expect(feedItems.some((p: any) => p.id === postId)).toBe(true);
 
     // ── follow ───────────────────────────────────────────────────────────
-    await http()
-      .post(`/users/${user2.id}/follow`)
-      .set(bearer(user1.token))
-      .expect(204);
+    await http().post(`/users/${user2.id}/follow`).set(bearer(user1.token)).expect(204);
     const followRows = await dataSource.query('SELECT COUNT(*) AS c FROM follows');
     expect(Number(followRows[0]?.c ?? followRows[0]?.count)).toBe(1);
 
@@ -308,7 +298,7 @@ describe('Full core loop over real Postgres', () => {
     // than relaying on an (unverified) account-permissions API route.
     await dataSource.query(
       `UPDATE "users" SET "accountDataPermissions" = '["profile","posts","settings","messages"]'::jsonb WHERE id IN ($1, $2)`,
-      [user1.id, user2.id],
+      [user1.id, user2.id]
     );
 
     const convoRes = await http()
@@ -327,7 +317,7 @@ describe('Full core loop over real Postgres', () => {
 
     // ── notifications ────────────────────────────────────────────────────
     const notifsRes = await http().get('/notifications').set(bearer(user1.token)).expect(200);
-    const notifList = Array.isArray(notifsRes.body) ? notifsRes.body : notifsRes.body?.data ?? [];
+    const notifList = Array.isArray(notifsRes.body) ? notifsRes.body : (notifsRes.body?.data ?? []);
     const notifTypes = notifList.map((n: any) => n.type);
 
     expect(notifTypes).toContain(NotificationType.LOGIN_ALERT);

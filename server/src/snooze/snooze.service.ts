@@ -9,13 +9,10 @@ import { User } from '../users/entities/user.entity';
 export class SnoozeService {
   constructor(
     @InjectRepository(Snooze)
-    private snoozeRepository: Repository<Snooze>,
+    private snoozeRepository: Repository<Snooze>
   ) {}
 
-  async snooze(
-    user: User,
-    createSnoozeDto: CreateSnoozeDto,
-  ): Promise<Snooze> {
+  async snooze(user: User, createSnoozeDto: CreateSnoozeDto): Promise<Snooze> {
     const snooze = this.snoozeRepository.create({
       ...createSnoozeDto,
       user,
@@ -35,10 +32,7 @@ export class SnoozeService {
     return this.snoozeRepository.find({ where: { user } });
   }
 
-  async isSnoozed(
-    userId: string,
-    snoozedId: string,
-  ): Promise<boolean> {
+  async isSnoozed(userId: string, snoozedId: string): Promise<boolean> {
     const snooze = await this.snoozeRepository.findOne({
       where: { user: { id: userId }, snoozedId },
     });

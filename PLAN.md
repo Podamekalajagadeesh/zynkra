@@ -16,95 +16,95 @@ A full-stack, decentralized social media platform combining features from **ever
 
 ### 1. Social Features
 
-| Feature | Zynkra | X/Twitter | Facebook | Instagram | TikTok |
-|---------|:------:|:---------:|:--------:|:---------:|:------:|
-| Posts/Feed | ✅ | ✅ | ✅ | ✅ | — |
-| Comments | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Reactions | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Stories | ✅ | ✅ | ✅ | ✅ | — |
-| Reels/Shorts | ✅ | ✅ | — | ✅ | ✅ |
-| Polls | ✅ | ✅ | ✅ | — | ✅ |
-| Live Streaming | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Live Shopping | ✅ | — | — | ✅ | ✅ |
-| Hashtags/Trends | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Bookmarks | ✅ | ✅ | — | ✅ | ✅ |
-| Memories | ✅ | — | ✅ | ✅ | — |
-| Scheduled Posts | ✅ | ✅ | ✅ | — | — |
+| Feature         | Zynkra | X/Twitter | Facebook | Instagram | TikTok |
+| --------------- | :----: | :-------: | :------: | :-------: | :----: |
+| Posts/Feed      |   ✅   |    ✅     |    ✅    |    ✅     |   —    |
+| Comments        |   ✅   |    ✅     |    ✅    |    ✅     |   ✅   |
+| Reactions       |   ✅   |    ✅     |    ✅    |    ✅     |   ✅   |
+| Stories         |   ✅   |    ✅     |    ✅    |    ✅     |   —    |
+| Reels/Shorts    |   ✅   |    ✅     |    —     |    ✅     |   ✅   |
+| Polls           |   ✅   |    ✅     |    ✅    |     —     |   ✅   |
+| Live Streaming  |   ✅   |    ✅     |    ✅    |    ✅     |   ✅   |
+| Live Shopping   |   ✅   |     —     |    —     |    ✅     |   ✅   |
+| Hashtags/Trends |   ✅   |    ✅     |    ✅    |    ✅     |   ✅   |
+| Bookmarks       |   ✅   |    ✅     |    —     |    ✅     |   ✅   |
+| Memories        |   ✅   |     —     |    ✅    |    ✅     |   —    |
+| Scheduled Posts |   ✅   |    ✅     |    ✅    |     —     |   —    |
 
 ### 2. Messaging
 
-| Feature | Zynkra | WhatsApp | Telegram | Discord | Messenger |
-|---------|:------:|:--------:|:--------:|:-------:|:---------:|
-| DMs | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Group Chat | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Voice/Video Calls | ✅ | ✅ | ✅ | ✅ | ✅ |
-| E2EE (1:1 text) | ✅ | ✅ | 🔄 | ❌ | ❌ |
-| Screen Sharing | ✅ | — | — | ✅ | — |
+| Feature           | Zynkra | WhatsApp | Telegram | Discord | Messenger |
+| ----------------- | :----: | :------: | :------: | :-----: | :-------: |
+| DMs               |   ✅   |    ✅    |    ✅    |   ✅    |    ✅     |
+| Group Chat        |   ✅   |    ✅    |    ✅    |   ✅    |    ✅     |
+| Voice/Video Calls |   ✅   |    ✅    |    ✅    |   ✅    |    ✅     |
+| E2EE (1:1 text)   |   ✅   |    ✅    |    🔄    |   ❌    |    ❌     |
+| Screen Sharing    |   ✅   |    —     |    —     |   ✅    |     —     |
 
 ### 3. Monetization
 
-| Feature | Zynkra | Patreon | OnlyFans | YouTube | TikTok |
-|---------|:------:|:-------:|:--------:|:-------:|:------:|
-| Creator Split | **90%** | 70-80% | 80% | 55% | Varies |
-| Subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Tipping | ✅ | — | ✅ | ✅ | ✅ |
-| Sponsored Content | ✅ | — | — | ✅ | ✅ |
-| Brand Collabs | ✅ | — | — | — | ✅ |
-| Affiliates | ✅ | — | — | — | ✅ |
-| NFTs/Digital Assets | ✅ | — | — | — | — |
-| Token-Gated Content | ✅ | — | — | — | — |
+| Feature             | Zynkra  | Patreon | OnlyFans | YouTube | TikTok |
+| ------------------- | :-----: | :-----: | :------: | :-----: | :----: |
+| Creator Split       | **90%** | 70-80%  |   80%    |   55%   | Varies |
+| Subscriptions       |   ✅    |   ✅    |    ✅    |   ✅    |   ✅   |
+| Tipping             |   ✅    |    —    |    ✅    |   ✅    |   ✅   |
+| Sponsored Content   |   ✅    |    —    |    —     |   ✅    |   ✅   |
+| Brand Collabs       |   ✅    |    —    |    —     |    —    |   ✅   |
+| Affiliates          |   ✅    |    —    |    —     |    —    |   ✅   |
+| NFTs/Digital Assets |   ✅    |    —    |    —     |    —    |   —    |
+| Token-Gated Content |   ✅    |    —    |    —     |    —    |   —    |
 
 ### 4. Communities
 
-| Feature | Zynkra | Reddit | Discord | Facebook Groups |
-|---------|:------:|:------:|:-------:|:---------------:|
-| Groups | ✅ | ✅ | ✅ | ✅ |
-| Events | ✅ | — | ✅ | ✅ |
-| DAO Governance | ❌ cut | — | — | — |
-| Fundraisers | ✅ | — | — | ✅ |
-| Nonprofits | ❌ cut | — | — | ✅ |
+| Feature        | Zynkra | Reddit | Discord | Facebook Groups |
+| -------------- | :----: | :----: | :-----: | :-------------: |
+| Groups         |   ✅   |   ✅   |   ✅    |       ✅        |
+| Events         |   ✅   |   —    |   ✅    |       ✅        |
+| DAO Governance | ❌ cut |   —    |    —    |        —        |
+| Fundraisers    |   ✅   |   —    |    —    |       ✅        |
+| Nonprofits     | ❌ cut |   —    |    —    |       ✅        |
 
 ### 5. Decentralization
 
-| Feature | Zynkra | Mastodon | Bluesky | Nostr |
-|---------|:------:|:--------:|:-------:|:-----:|
-| ActivityPub Federation | ✅ | ✅ | — | — |
-| IPFS Storage | ✅ | — | — | — |
-| Blockchain Identity (SIWE wallet sign-in) | ✅ | — | — | ✅ |
-| Self-Sovereign ID | ❌ cut | — | — | ✅ |
-| Data Export | ✅ | ✅ | ✅ | ✅ |
-| Self-Hostable | ✅ | ✅ | — | ✅ |
+| Feature                                   | Zynkra | Mastodon | Bluesky | Nostr |
+| ----------------------------------------- | :----: | :------: | :-----: | :---: |
+| ActivityPub Federation                    |   ✅   |    ✅    |    —    |   —   |
+| IPFS Storage                              |   ✅   |    —     |    —    |   —   |
+| Blockchain Identity (SIWE wallet sign-in) |   ✅   |    —     |    —    |  ✅   |
+| Self-Sovereign ID                         | ❌ cut |    —     |    —    |  ✅   |
+| Data Export                               |   ✅   |    ✅    |   ✅    |  ✅   |
+| Self-Hostable                             |   ✅   |    ✅    |    —    |  ✅   |
 
 ### 6. Privacy
 
-| Feature | Zynkra | Signal | X | Meta |
-|---------|:------:|:------:|:-:|:----:|
-| E2EE DMs (1:1 text) | ✅ | ✅ | ❌ | ❌ |
-| Zero Data Collection | ✅ | ✅ | ❌ | ❌ |
-| 2FA | ✅ | ✅ | ✅ | ✅ |
-| Passkeys | ✅ | — | — | ✅ |
-| Screenshot Protection | ✅ | — | — | — |
-| No Ad Tracking | ✅ | ✅ | ❌ | ❌ |
+| Feature               | Zynkra | Signal |  X  | Meta |
+| --------------------- | :----: | :----: | :-: | :--: |
+| E2EE DMs (1:1 text)   |   ✅   |   ✅   | ❌  |  ❌  |
+| Zero Data Collection  |   ✅   |   ✅   | ❌  |  ❌  |
+| 2FA                   |   ✅   |   ✅   | ✅  |  ✅  |
+| Passkeys              |   ✅   |   —    |  —  |  ✅  |
+| Screenshot Protection |   ✅   |   —    |  —  |  —   |
+| No Ad Tracking        |   ✅   |   ✅   | ❌  |  ❌  |
 
 ### 7. Unique Features (No Competitor Has)
 
-| Feature | Status | Category |
-|---------|:------:|----------|
-| Offline-First | ✅ | Infrastructure |
-| 90/10 Creator Revenue | ✅ | Monetization |
-| Blockchain Identity | ✅ (SIWE wallet sign-in) | Identity |
-| IPFS Content Storage | ✅ | Storage |
-| ~~DAO Governance~~ | ❌ cut — was facade | Communities |
-| ~~Token-Gated Content~~ | ❌ cut — was facade | Web3 |
-| ~~Snap Map~~ | ❌ cut — in-process `Map`s, never persisted | Discovery |
-| Full Data Export | ✅ | Portability |
-| E-Ink Reader Mode | ✅ | Accessibility |
-| Spatial Audio | ✅ | Media |
-| Low Bandwidth Mode | ✅ | Accessibility |
-| Sustainability Tracking | ✅ | Wellness |
-| Crisis Support | ✅ | Safety |
-| Ethical AI Guardrails | ✅ | AI |
-| Community-Led Moderation | ✅ | Governance |
+| Feature                  |                   Status                    | Category       |
+| ------------------------ | :-----------------------------------------: | -------------- |
+| Offline-First            |                     ✅                      | Infrastructure |
+| 90/10 Creator Revenue    |                     ✅                      | Monetization   |
+| Blockchain Identity      |          ✅ (SIWE wallet sign-in)           | Identity       |
+| IPFS Content Storage     |                     ✅                      | Storage        |
+| ~~DAO Governance~~       |             ❌ cut — was facade             | Communities    |
+| ~~Token-Gated Content~~  |             ❌ cut — was facade             | Web3           |
+| ~~Snap Map~~             | ❌ cut — in-process `Map`s, never persisted | Discovery      |
+| Full Data Export         |                     ✅                      | Portability    |
+| E-Ink Reader Mode        |                     ✅                      | Accessibility  |
+| Spatial Audio            |                     ✅                      | Media          |
+| Low Bandwidth Mode       |                     ✅                      | Accessibility  |
+| Sustainability Tracking  |                     ✅                      | Wellness       |
+| Crisis Support           |                     ✅                      | Safety         |
+| Ethical AI Guardrails    |                     ✅                      | AI             |
+| Community-Led Moderation |                     ✅                      | Governance     |
 
 ---
 
@@ -112,23 +112,23 @@ A full-stack, decentralized social media platform combining features from **ever
 
 These are advantages competitors **cannot copy** because their business models depend on the opposite:
 
-| # | Advantage | Why Competitors Can't Copy |
-|---|-----------|---------------------------|
-| 1 | **90/10 Revenue Split** | Their ad businesses require taking more from creators |
-| 2 | **Zero Data Collection** | Meta/X/Google ARE advertising companies — data is their product |
-| 3 | **E2EE (1:1 DMs)** | They need to scan messages for ad targeting |
-| 4 | **IPFS Content Storage** | They want to control, moderate, and delete content |
-| 5 | ~~**DAO Community Governance**~~ | ❌ Cut — never built, so nothing to defend |
-| 6 | **Blockchain Identity (SIWE)** | They want to own and monetize your identity |
-| 7 | ~~**Token-Gated Content**~~ | ❌ Cut — never built, so nothing to defend |
-| 8 | **Offline-First** | They want you dependent on their servers |
-| 9 | **ActivityPub Federation** | They want walled gardens to lock users in |
-| 10 | **Self-Hostable** | They want centralized platform control |
-| 11 | **Full Data Export** | They want lock-in to prevent churn |
-| 12 | **No Ads** | Their entire business IS advertising |
-| 13 | **Open Source** | They keep their code closed for competitive advantage |
-| 14 | ~~**Self-Sovereign Identity**~~ | ❌ Cut — replaced by wallet-sign auth, which is 90% of it |
-| 15 | **Zero Platform Censorship** | They must moderate to satisfy advertisers |
+| #   | Advantage                        | Why Competitors Can't Copy                                      |
+| --- | -------------------------------- | --------------------------------------------------------------- |
+| 1   | **90/10 Revenue Split**          | Their ad businesses require taking more from creators           |
+| 2   | **Zero Data Collection**         | Meta/X/Google ARE advertising companies — data is their product |
+| 3   | **E2EE (1:1 DMs)**               | They need to scan messages for ad targeting                     |
+| 4   | **IPFS Content Storage**         | They want to control, moderate, and delete content              |
+| 5   | ~~**DAO Community Governance**~~ | ❌ Cut — never built, so nothing to defend                      |
+| 6   | **Blockchain Identity (SIWE)**   | They want to own and monetize your identity                     |
+| 7   | ~~**Token-Gated Content**~~      | ❌ Cut — never built, so nothing to defend                      |
+| 8   | **Offline-First**                | They want you dependent on their servers                        |
+| 9   | **ActivityPub Federation**       | They want walled gardens to lock users in                       |
+| 10  | **Self-Hostable**                | They want centralized platform control                          |
+| 11  | **Full Data Export**             | They want lock-in to prevent churn                              |
+| 12  | **No Ads**                       | Their entire business IS advertising                            |
+| 13  | **Open Source**                  | They keep their code closed for competitive advantage           |
+| 14  | ~~**Self-Sovereign Identity**~~  | ❌ Cut — replaced by wallet-sign auth, which is 90% of it       |
+| 15  | **Zero Platform Censorship**     | They must moderate to satisfy advertisers                       |
 
 Three of the fifteen were never real, and are struck through rather than quietly deleted so the
 gap is visible. ROADMAP.md §6 explains the cut.
@@ -167,9 +167,11 @@ zynkra/
 ## Development Status
 
 ### Development status (honest baseline — see ROADMAP.md for full assessment)
+
 Overall completeness toward a trustworthy product: **~25%** (breadth looks higher; depth, mocks, and tests lag).
 
 #### ✅ Load-bearing (real)
+
 - Core social: posts, comments, reactions, feeds, search
 - Authentication: JWT, OAuth, Passkeys, 2FA, SIWE
 - Messaging: DMs, group chat, real-time presence — **1:1 DMs are E2EE (ciphertext-only at rest)**
@@ -208,6 +210,7 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 - UX: dark mode, low bandwidth, e-ink mode, spatial audio
 
 ### 🔄 In Progress (1%)
+
 - Mobile apps (iOS/Android native)
 
 ---
@@ -215,6 +218,7 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 ## Priority Roadmap
 
 ### Phase 1: Complete Core Advantages
+
 1. ~~Finish server-enforced E2EE for DMs~~ ✅ Done for 1:1 text (ciphertext-only storage,
    plaintext rejected, legacy threads upgraded on first encrypted send) and per-attachment
    media (client-side XChaCha20-Poly1305 before upload, keys only inside the Signal envelope,
@@ -227,17 +231,20 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 4. ~~Offline sync engine~~ ✅ (IndexedDB queue + Service Worker; not yet conflict-resolving)
 
 ### Phase 2: Content Dominance
+
 5. Long-form articles + editor
 6. Podcast hosting + distribution
 7. Course/learning platform
 8. Newsletter system
 
 ### Phase 3: Commerce Dominance
+
 9. In-app checkout
 10. Escrow/buyer protection
 11. Product reviews
 
 ### Phase 4: AI Supremacy
+
 12. On-device private LLM (Preview panel exists; promote to default path)
 13. Real-time translation
 14. Smart notification filtering
@@ -247,26 +254,26 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 
 ## By The Numbers
 
-| Metric | Count |
-|--------|-------|
-| Backend module directories | ~98 (facade stubs deleted 2026-10-21) |
-| ...of which load-bearing (works end-to-end) | ~20 |
-| ...of which Preview (visible, shallow) | ~12 |
-| ...of which facade stubs | 0 — the old `src/features/*` stubs were deleted |
-| Frontend page files/dirs | 126 |
-| Frontend Components | 100+ |
-| React Contexts | 5 |
-| Custom Hooks | 16 |
-| Package Manager | npm |
-| Database | PostgreSQL 14+ |
-| Real-time | Socket.io + LiveKit |
-| Decentralized Storage | IPFS |
-| Blockchain | Ethereum / Polygon (payouts only) |
-| Federation | ActivityPub |
+| Metric                                      | Count                                           |
+| ------------------------------------------- | ----------------------------------------------- |
+| Backend module directories                  | ~98 (facade stubs deleted 2026-10-21)           |
+| ...of which load-bearing (works end-to-end) | ~20                                             |
+| ...of which Preview (visible, shallow)      | ~12                                             |
+| ...of which facade stubs                    | 0 — the old `src/features/*` stubs were deleted |
+| Frontend page files/dirs                    | 126                                             |
+| Frontend Components                         | 100+                                            |
+| React Contexts                              | 5                                               |
+| Custom Hooks                                | 16                                              |
+| Package Manager                             | npm                                             |
+| Database                                    | PostgreSQL 14+                                  |
+| Real-time                                   | Socket.io + LiveKit                             |
+| Decentralized Storage                       | IPFS                                            |
+| Blockchain                                  | Ethereum / Polygon (payouts only)               |
+| Federation                                  | ActivityPub                                     |
 
 > The old version of this table said "Backend Modules: 83" and "Frontend Pages: 79." Both were
 > inflated: they counted stub directories and never-registered modules as shipped features, and
-> the real directory counts were *higher* (105 / 128). Counting directories is the problem — it
+> the real directory counts were _higher_ (105 / 128). Counting directories is the problem — it
 > makes `healthcare/` or `government-services/` look like a working feature when it is one
 > `console.log` stub and no route. Those 64 stub directories (plus the `token`, `dao`,
 > `token-gated-content`, and `snapmap` modules) were deleted on 2026-10-21; the ~20

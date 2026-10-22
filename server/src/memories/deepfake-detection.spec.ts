@@ -16,7 +16,16 @@ describe('analyzeNeuralAuthenticity', () => {
       content:
         'I still remember the rain on the train window during our trip to Lisbon, the smell of coffee, and how my hands felt cold when I held your sleeve.',
       memoryMetadata: {
-        emotions: { joy: 20, sadness: 10, excitement: 15, calm: 0, anger: 0, surprise: 10, love: 25, fear: 5 },
+        emotions: {
+          joy: 20,
+          sadness: 10,
+          excitement: 15,
+          calm: 0,
+          anger: 0,
+          surprise: 10,
+          love: 25,
+          fear: 5,
+        },
         context: { location: { name: 'Lisbon train station' } },
         sensory: {
           visual: [{ url: 'https://example.com/photo.jpg', type: 'image' }],

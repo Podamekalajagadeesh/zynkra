@@ -14,8 +14,11 @@ describe('getTrendingTopics API helper', () => {
         const url = new URL(request.url);
         expect(url.searchParams.get('days')).toBe('30');
         expect(url.searchParams.get('limit')).toBe('10');
-        return HttpResponse.json({ globalTrends: [{ tag: '#test', occurrenceCount: 3, score: 1 }], days: 30 });
-      }),
+        return HttpResponse.json({
+          globalTrends: [{ tag: '#test', occurrenceCount: 3, score: 1 }],
+          days: 30,
+        });
+      })
     );
 
     const result = await getTrendingTopics(30);

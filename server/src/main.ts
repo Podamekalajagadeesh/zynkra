@@ -43,8 +43,8 @@ async function bootstrap() {
   } else if (trustProxySetting === 'true') {
     // Disallowed on purpose: it would let a client spoof any forwarded header.
     throw new Error(
-      "TRUST_PROXY=true is unsafe — it means \"believe any client's X-Forwarded-For\". " +
-        'Use a hop count (e.g. 1) or false.',
+      'TRUST_PROXY=true is unsafe — it means "believe any client\'s X-Forwarded-For". ' +
+        'Use a hop count (e.g. 1) or false.'
     );
   } else {
     const hops = Number(trustProxySetting);
@@ -91,7 +91,7 @@ async function bootstrap() {
       // The app serves the built SPA from the same origin as the API, and the
       // session cookie is set on that origin.
       hsts: isProduction ? { maxAge: 15_552_000, includeSubDomains: true } : false,
-    }),
+    })
   );
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
@@ -112,7 +112,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
-    }),
+    })
   );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
@@ -143,7 +143,7 @@ async function bootstrap() {
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000,
       },
-    }),
+    })
   );
 
   app.enableShutdownHooks();

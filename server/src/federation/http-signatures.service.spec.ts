@@ -22,7 +22,7 @@ function verify(signingString: string, signature: string): boolean {
     'sha256',
     Buffer.from(signingString, 'utf8'),
     publicKeyPem,
-    Buffer.from(signature, 'base64'),
+    Buffer.from(signature, 'base64')
   );
 }
 
@@ -39,7 +39,9 @@ beforeAll(() => {
 
 beforeEach(() => {
   instanceKeyRepository = {
-    findOne: jest.fn().mockResolvedValue({ isActive: true, privateKey: privateKeyPem, publicKey: publicKeyPem }),
+    findOne: jest
+      .fn()
+      .mockResolvedValue({ isActive: true, privateKey: privateKeyPem, publicKey: publicKeyPem }),
     create: jest.fn((data: any) => data),
     save: jest.fn(async (data: any) => ({ ...data, id: 'key-1' })),
   };
@@ -55,23 +57,19 @@ describe('initialize', () => {
     expect(service.getPublicKeyPem()).toBe(publicKeyPem);
   });
 
-  it(
-    'generates and persists a keypair when the instance has none',
-    async () => {
-      instanceKeyRepository.findOne.mockResolvedValue(null);
+  it('generates and persists a keypair when the instance has none', async () => {
+    instanceKeyRepository.findOne.mockResolvedValue(null);
 
-      await service.initialize();
+    await service.initialize();
 
-      expect(instanceKeyRepository.create).toHaveBeenCalledTimes(1);
-      expect(instanceKeyRepository.save).toHaveBeenCalledTimes(1);
-      const saved = instanceKeyRepository.create.mock.calls[0][0];
-      expect(saved.isActive).toBe(true);
-      expect(saved.privateKey).toContain('PRIVATE KEY');
-      expect(saved.publicKey).toContain('PUBLIC KEY');
-      expect(service.getPublicKeyPem()).toBe(saved.publicKey);
-    },
-    60000,
-  );
+    expect(instanceKeyRepository.create).toHaveBeenCalledTimes(1);
+    expect(instanceKeyRepository.save).toHaveBeenCalledTimes(1);
+    const saved = instanceKeyRepository.create.mock.calls[0][0];
+    expect(saved.isActive).toBe(true);
+    expect(saved.privateKey).toContain('PRIVATE KEY');
+    expect(saved.publicKey).toContain('PUBLIC KEY');
+    expect(service.getPublicKeyPem()).toBe(saved.publicKey);
+  }, 60000);
 });
 
 describe('pre-initialization guards', () => {
@@ -81,7 +79,7 @@ describe('pre-initialization guards', () => {
 
   it('refuses to sign before initialize()', () => {
     expect(() => service.signRequest('POST', '/inbox', 'example.com', 'body', 'keyId')).toThrow(
-      'Instance key not initialized',
+      'Instance key not initialized'
     );
   });
 });

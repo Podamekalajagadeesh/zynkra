@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Sticker } from './sticker.entity';
 
@@ -10,14 +17,14 @@ export class UserSticker {
   @Column()
   userId: string;
 
-  @ManyToOne(() => User, user => user.userStickers)
+  @ManyToOne(() => User, (user) => user.userStickers)
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()
   stickerId: string;
 
-  @ManyToOne(() => Sticker, sticker => sticker.userStickers)
+  @ManyToOne(() => Sticker, (sticker) => sticker.userStickers)
   @JoinColumn({ name: 'stickerId' })
   sticker: Sticker;
 

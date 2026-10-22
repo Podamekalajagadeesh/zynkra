@@ -58,14 +58,19 @@ export function CloseFriendsSettings() {
     <div className="max-w-2xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Close Friends</h1>
       <p className="text-dark-500 dark:text-dark-400 mb-6">
-        Add or remove people from your Close Friends list. Only people on this list can see your stories shared with Close Friends.
+        Add or remove people from your Close Friends list. Only people on this list can see your
+        stories shared with Close Friends.
       </p>
 
       <div className="space-y-4">
         {followers.map((user) => (
           <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
             <div className="flex items-center gap-4">
-              <img src={user.avatar ?? undefined} alt={user.username} className="w-10 h-10 rounded-full" />
+              <img
+                src={user.avatar ?? undefined}
+                alt={user.username}
+                className="w-10 h-10 rounded-full"
+              />
               <div>
                 <p className="font-semibold">{user.username}</p>
                 <p className="text-sm text-dark-500 dark:text-dark-400">{user.displayName}</p>

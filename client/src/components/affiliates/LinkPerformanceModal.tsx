@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from 'recharts';
 import { api } from '../../lib/api';
 
 interface AffiliateLink {
@@ -65,12 +75,19 @@ export function LinkPerformanceModal({ link, onClose }: LinkPerformanceModalProp
             <h3 className="text-lg font-semibold text-gray-900">{link.name}</h3>
             <p className="text-sm text-gray-500">{link.destinationUrl}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <svg
+              className="w-5 h-5 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -88,7 +105,10 @@ export function LinkPerformanceModal({ link, onClose }: LinkPerformanceModalProp
             </div>
             <div className="bg-gray-50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-gray-900">
-                {link.clickCount > 0 ? ((link.conversionCount / link.clickCount) * 100).toFixed(2) : '0.00'}%
+                {link.clickCount > 0
+                  ? ((link.conversionCount / link.clickCount) * 100).toFixed(2)
+                  : '0.00'}
+                %
               </p>
               <p className="text-sm text-gray-600">Conversion Rate</p>
             </div>
@@ -101,7 +121,9 @@ export function LinkPerformanceModal({ link, onClose }: LinkPerformanceModalProp
           {/* Clicks Over Time Chart */}
           {performance?.clicksByDay && performance.clicksByDay.length > 0 && (
             <div>
-              <h4 className="text-md font-semibold text-gray-900 mb-4">Clicks Over Time (Last 30 Days)</h4>
+              <h4 className="text-md font-semibold text-gray-900 mb-4">
+                Clicks Over Time (Last 30 Days)
+              </h4>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={performance.clicksByDay.reverse()}>
@@ -119,7 +141,9 @@ export function LinkPerformanceModal({ link, onClose }: LinkPerformanceModalProp
           {/* Earnings Over Time Chart */}
           {performance?.conversionsByDay && performance.conversionsByDay.length > 0 && (
             <div>
-              <h4 className="text-md font-semibold text-gray-900 mb-4">Earnings Over Time (Last 30 Days)</h4>
+              <h4 className="text-md font-semibold text-gray-900 mb-4">
+                Earnings Over Time (Last 30 Days)
+              </h4>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={performance.conversionsByDay.reverse()}>
@@ -142,8 +166,12 @@ export function LinkPerformanceModal({ link, onClose }: LinkPerformanceModalProp
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Clicks</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Country
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Clicks
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">

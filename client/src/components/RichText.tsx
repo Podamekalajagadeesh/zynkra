@@ -49,5 +49,9 @@ export const RichText: React.FC<RichTextProps> = ({ text, font }) => {
     });
   };
 
-  return <p className="text-dark-500" style={getFontStyle()}>{renderText()}</p>;
+  return (
+    <p className="text-dark-500" style={getFontStyle()}>
+      {renderText()}
+    </p>
+  );
 };

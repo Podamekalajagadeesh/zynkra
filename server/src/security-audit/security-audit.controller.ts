@@ -1,10 +1,17 @@
-import { Controller, Get, Post, Query, Request, UseGuards, Param, Delete, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+  Param,
+  Delete,
+  Body,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SecurityAuditService, CreateAuditLogDto } from './security-audit.service';
-import {
-  SecurityEventType,
-  SecurityEventSeverity,
-} from './entities/security-audit.entity';
+import { SecurityEventType, SecurityEventSeverity } from './entities/security-audit.entity';
 
 @Controller('security-audit')
 @UseGuards(JwtAuthGuard)
@@ -26,7 +33,7 @@ export class SecurityAuditController {
     @Query('skip') skip?: string,
     @Query('eventType') eventType?: SecurityEventType,
     @Query('severity') severity?: SecurityEventSeverity,
-    @Query('fromDate') fromDate?: string,
+    @Query('fromDate') fromDate?: string
   ) {
     return this.securityAuditService.getUserAuditLog(req.user.userId, {
       take: take ? +take : 50,

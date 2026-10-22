@@ -34,7 +34,15 @@ export default function VerificationAndTrustPage() {
         ]);
 
         setVerification(verificationRes.data);
-        setTrust(trustRes.data ?? { accountId: '', verified: false, badges: [], trustScore: 0, updatedAt: new Date().toISOString() });
+        setTrust(
+          trustRes.data ?? {
+            accountId: '',
+            verified: false,
+            badges: [],
+            trustScore: 0,
+            updatedAt: new Date().toISOString(),
+          }
+        );
         setLinkedAccounts(linkedRes);
         setDocumentStatus(documentRes.data?.[0] ?? { status: 'not_started' });
       } catch {
@@ -105,7 +113,9 @@ export default function VerificationAndTrustPage() {
           <div className="rounded-2xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900/70">
             <div className="mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary-600" />
-              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Trust Indicators</h3>
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                Trust Indicators
+              </h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {trustBadges.map((badge: string) => (
@@ -118,31 +128,37 @@ export default function VerificationAndTrustPage() {
               ))}
             </div>
             <p className="mt-4 text-sm text-dark-600 dark:text-dark-300">
-              Trust rating is based on account verification, security health, document review, and linked identity signals.
+              Trust rating is based on account verification, security health, document review, and
+              linked identity signals.
             </p>
           </div>
 
           <div className="rounded-2xl border border-dark-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900/70">
             <div className="mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-amber-600" />
-              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">Document Verification</h3>
+              <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+                Document Verification
+              </h3>
             </div>
             <p className="text-sm text-dark-600 dark:text-dark-300">
               Status: <span className="font-medium">{documentStatus?.status ?? 'not_started'}</span>
             </p>
             <div className="mt-4">
-              <Button variant="secondary" onClick={async () => {
-                try {
-                  const response = await api.post('/users/me/verification-request', {
-                    type: 'identity',
-                    reason: 'Identity verification requested from trust dashboard.',
-                    links: [],
-                  });
-                  setVerification(response.data);
-                } catch {
-                  // Intentionally silent; request will show the validation state.
-                }
-              }}>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    const response = await api.post('/users/me/verification-request', {
+                      type: 'identity',
+                      reason: 'Identity verification requested from trust dashboard.',
+                      links: [],
+                    });
+                    setVerification(response.data);
+                  } catch {
+                    // Intentionally silent; request will show the validation state.
+                  }
+                }}
+              >
                 Request verification
               </Button>
             </div>
@@ -156,14 +172,21 @@ export default function VerificationAndTrustPage() {
           </div>
 
           {linkedAccounts.length === 0 ? (
-            <p className="text-sm text-dark-600 dark:text-dark-300">No external accounts linked yet.</p>
+            <p className="text-sm text-dark-600 dark:text-dark-300">
+              No external accounts linked yet.
+            </p>
           ) : (
             <div className="space-y-3">
               {linkedAccounts.map((account: any) => (
-                <div key={account.provider || account.id} className="flex items-center justify-between rounded-xl border border-dark-200 p-3 dark:border-dark-700">
+                <div
+                  key={account.provider || account.id}
+                  className="flex items-center justify-between rounded-xl border border-dark-200 p-3 dark:border-dark-700"
+                >
                   <div>
                     <p className="font-medium text-dark-900 dark:text-white">{account.provider}</p>
-                    <p className="text-sm text-dark-500 dark:text-dark-400">{account.displayName || account.email || 'Connected account'}</p>
+                    <p className="text-sm text-dark-500 dark:text-dark-400">
+                      {account.displayName || account.email || 'Connected account'}
+                    </p>
                   </div>
                   {account.isPrimary ? (
                     <span className="rounded-full bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 dark:bg-primary-950/40 dark:text-primary-300">

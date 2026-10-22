@@ -7,14 +7,21 @@ import { ConfigService } from '@nestjs/config';
 export class TwitterStrategy extends PassportStrategy(Strategy, 'twitter') {
   constructor(private configService: ConfigService) {
     super({
-      consumerKey: configService.get<string>('TWITTER_CONSUMER_KEY') || 'twitter-oauth-not-configured',
-      consumerSecret: configService.get<string>('TWITTER_CONSUMER_SECRET') || 'twitter-oauth-not-configured',
+      consumerKey:
+        configService.get<string>('TWITTER_CONSUMER_KEY') || 'twitter-oauth-not-configured',
+      consumerSecret:
+        configService.get<string>('TWITTER_CONSUMER_SECRET') || 'twitter-oauth-not-configured',
       callbackURL: configService.get<string>('TWITTER_CALLBACK_URL', '/auth/twitter/callback'),
       includeEmail: true,
     });
   }
 
-  async validate(token: string, tokenSecret: string, profile: any, done: VerifyCallback): Promise<any> {
+  async validate(
+    token: string,
+    tokenSecret: string,
+    profile: any,
+    done: VerifyCallback
+  ): Promise<any> {
     const { id, username, displayName, emails, photos } = profile;
 
     const user = {

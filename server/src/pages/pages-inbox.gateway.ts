@@ -21,17 +21,14 @@ export class PageInboxGateway {
   constructor(private readonly pageInboxService: PageInboxService) {}
 
   @SubscribeMessage('joinConversation')
-  handleJoinConversation(
-    @MessageBody() conversationId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  handleJoinConversation(@MessageBody() conversationId: string, @ConnectedSocket() client: Socket) {
     client.join(conversationId);
   }
 
   @SubscribeMessage('leaveConversation')
   handleLeaveConversation(
     @MessageBody() conversationId: string,
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket
   ) {
     client.leave(conversationId);
   }
@@ -40,12 +37,12 @@ export class PageInboxGateway {
   async handleSendMessage(
     @MessageBody()
     payload: { conversationId: string; content: string },
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ) {
     const message = await this.pageInboxService.createMessage(
       payload.conversationId,
       payload.content,
-      user,
+      user
     );
     this.server.to(payload.conversationId).emit('newMessage', message);
   }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 // Mirrors server/src/forms/entities/question.entity.ts
@@ -47,7 +46,7 @@ export const FormBuilder = () => {
     },
     onError: () => {
       addToast('Failed to create form. Please try again.', 'error');
-    }
+    },
   });
 
   const addQuestion = () => {
@@ -94,10 +93,7 @@ export const FormBuilder = () => {
             onChange={(e) => handleQuestionChange(i, 'label', e.target.value)}
             placeholder="Question Label"
           />
-          <select
-            value={q.type}
-            onChange={(e) => handleQuestionChange(i, 'type', e.target.value)}
-          >
+          <select value={q.type} onChange={(e) => handleQuestionChange(i, 'type', e.target.value)}>
             {Object.values(QuestionType).map((type) => (
               <option key={type} value={type}>
                 {type}

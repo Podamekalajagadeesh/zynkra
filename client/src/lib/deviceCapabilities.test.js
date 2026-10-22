@@ -9,7 +9,11 @@ test('detects desktop mode by default', () => {
 });
 
 test('detects smart tv and smartwatch modes', () => {
-  const tv = detectDeviceCapabilities({ userAgent: 'Mozilla/5.0 GoogleTV', width: 1920, height: 1080 });
+  const tv = detectDeviceCapabilities({
+    userAgent: 'Mozilla/5.0 GoogleTV',
+    width: 1920,
+    height: 1080,
+  });
   const watch = detectDeviceCapabilities({ userAgent: 'Wear OS', width: 200, height: 200 });
 
   assert.equal(tv.mode, 'tv');

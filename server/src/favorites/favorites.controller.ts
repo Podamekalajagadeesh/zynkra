@@ -13,16 +13,13 @@ export class FavoritesController {
   async getMyFavorites(
     @CurrentUser() user: User,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query('limit') limit: number = 20
   ) {
     return this.favoritesService.getUserFavorites(user, page, limit);
   }
 
   @Get('posts/:postId/is-favorited')
-  async checkIsFavorited(
-    @CurrentUser() user: User,
-    @Param('postId') postId: string,
-  ) {
+  async checkIsFavorited(@CurrentUser() user: User, @Param('postId') postId: string) {
     return this.favoritesService.isFavorited(user, postId);
   }
 
@@ -32,18 +29,12 @@ export class FavoritesController {
   }
 
   @Post('posts/:postId')
-  async addToFavorites(
-    @CurrentUser() user: User,
-    @Param('postId') postId: string,
-  ) {
+  async addToFavorites(@CurrentUser() user: User, @Param('postId') postId: string) {
     return this.favoritesService.addFavorite(user, postId);
   }
 
   @Delete('posts/:postId')
-  async removeFromFavorites(
-    @CurrentUser() user: User,
-    @Param('postId') postId: string,
-  ) {
+  async removeFromFavorites(@CurrentUser() user: User, @Param('postId') postId: string) {
     return this.favoritesService.removeFavorite(user, postId);
   }
 }

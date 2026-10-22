@@ -30,12 +30,12 @@ export class CommentsService {
     private readonly sentimentService: SentimentService,
     private readonly visibilityService: VisibilityService,
     private readonly webhooksService: WebhooksService,
-    private readonly profileReviewService: ProfileReviewService,
+    private readonly profileReviewService: ProfileReviewService
   ) {}
 
   private canUserComment(commentingUser: User, postOwner: User): boolean {
     const privacy = postOwner.commentPrivacy;
-    
+
     // If no privacy set, default to everyone
     if (!privacy || privacy === CommentPrivacy.EVERYONE) {
       return true;
@@ -59,26 +59,21 @@ export class CommentsService {
 
   private areUsersFriends(user1: User, user2: User): boolean {
     // Check if they follow each other (mutual follow = friends)
-    const user1FollowsUser2 = user1.following?.some(f => f.id === user2.id);
-    const user2FollowsUser1 = user2.following?.some(f => f.id === user1.id);
+    const user1FollowsUser2 = user1.following?.some((f) => f.id === user2.id);
+    const user2FollowsUser1 = user2.following?.some((f) => f.id === user1.id);
     return user1FollowsUser2 && user2FollowsUser1;
   }
 
   private areFriendsOfFriends(user1: User, user2: User): boolean {
     // Check if any of user1's friends are friends with user2
     // This is a simplified implementation - in a real app you'd want to optimize this
-    const user1Friends = (user1.following || []).filter(f => 
-      user2.following?.some(uf => uf.id === f.id)
+    const user1Friends = (user1.following || []).filter((f) =>
+      user2.following?.some((uf) => uf.id === f.id)
     );
     return user1Friends.length > 0;
   }
 
-  async create(
-    content: string,
-    user: User,
-    post: Post,
-    parentId?: string,
-  ): Promise<Comment> {
+  async create(content: string, user: User, post: Post, parentId?: string): Promise<Comment> {
     let parent: Comment | null = null;
     if (parentId) {
       parent = await this.commentsRepository.findOne({
@@ -92,14 +87,15 @@ export class CommentsService {
 
     // Check comment privacy settings
     const postOwner = await this.usersService.findOneById(post.user.id, ['following']);
-    if (postOwner && postOwner.id !== user.id) { // Skip check if user is commenting on their own post
+    if (postOwner && postOwner.id !== user.id) {
+      // Skip check if user is commenting on their own post
       // Blocks (either direction) trump comment privacy settings.
       if (await this.visibilityService.isBlockedEither(user.id, postOwner.id)) {
-        throw new UnauthorizedException('You are not allowed to comment on this user\'s posts');
+        throw new UnauthorizedException("You are not allowed to comment on this user's posts");
       }
       const canComment = this.canUserComment(user, postOwner);
       if (!canComment) {
-        throw new UnauthorizedException('You are not allowed to comment on this user\'s posts');
+        throw new UnauthorizedException("You are not allowed to comment on this user's posts");
       }
     }
 
@@ -109,10 +105,10 @@ export class CommentsService {
       post,
       parent,
     });
-    
+
     // Perform sentiment analysis
     const sentimentResult = await this.sentimentService.analyzeSentiment(content);
-    
+
     // Map service sentiment types to entity sentiment types
     let entitySentiment: SentimentType;
     switch (sentimentResult.sentiment) {
@@ -125,18 +121,18 @@ export class CommentsService {
       default:
         entitySentiment = SentimentType.NEUTRAL;
     }
-    
+
     comment.sentiment = entitySentiment;
     comment.sentimentScore = sentimentResult.score;
     comment.sentimentConfidence = sentimentResult.confidence;
-    
+
     const savedComment = await this.commentsRepository.save(comment);
 
     const mentionedUsers = await this.mentionsService.createMentions(
       savedComment.content,
       null,
       savedComment,
-      user,
+      user
     );
 
     for (const mentionedUser of mentionedUsers) {
@@ -145,26 +141,23 @@ export class CommentsService {
       }
     }
 
-    await this.reputationService.addReputation(
-      ReputationEvent.COMMENT_CREATED,
-      user,
-    );
+    await this.reputationService.addReputation(ReputationEvent.COMMENT_CREATED, user);
 
     // Add cryptocurrency reward to post/parent comment author for receiving an interaction
     if (parent) {
       await this.reputationService.addReputation(ReputationEvent.INTERACTION_RECEIVED, parent.user);
-      await this.notificationsService.createNotification(
-        parent.user,
-        NotificationType.REPLY,
-        { userId: user.id, postId: post.id, commentId: savedComment.id }
-      );
+      await this.notificationsService.createNotification(parent.user, NotificationType.REPLY, {
+        userId: user.id,
+        postId: post.id,
+        commentId: savedComment.id,
+      });
     } else {
       await this.reputationService.addReputation(ReputationEvent.INTERACTION_RECEIVED, post.user);
-      await this.notificationsService.createNotification(
-        post.user,
-        NotificationType.COMMENT,
-        { userId: user.id, postId: post.id, commentId: savedComment.id }
-      );
+      await this.notificationsService.createNotification(post.user, NotificationType.COMMENT, {
+        userId: user.id,
+        postId: post.id,
+        commentId: savedComment.id,
+      });
     }
 
     // Record comment interaction for content recommendation
@@ -225,9 +218,7 @@ export class CommentsService {
     }
 
     if (comment.user.id !== user.id && comment.post.user.id !== user.id) {
-      throw new UnauthorizedException(
-        'You are not authorized to delete this comment',
-      );
+      throw new UnauthorizedException('You are not authorized to delete this comment');
     }
 
     await this.commentsRepository.remove(comment);
@@ -244,9 +235,7 @@ export class CommentsService {
     }
 
     if (comment.post.user.id !== user.id) {
-      throw new UnauthorizedException(
-        'You are not authorized to pin this comment',
-      );
+      throw new UnauthorizedException('You are not authorized to pin this comment');
     }
 
     comment.isPinned = !comment.isPinned;
@@ -264,9 +253,7 @@ export class CommentsService {
     }
 
     if (comment.post.user.id !== user.id) {
-      throw new UnauthorizedException(
-        'You are not authorized to lock this comment',
-      );
+      throw new UnauthorizedException('You are not authorized to lock this comment');
     }
 
     comment.isLocked = !comment.isLocked;

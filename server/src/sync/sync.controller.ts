@@ -25,7 +25,7 @@ export class SyncController {
   async getInitialSync(@Req() req, @Query('since') since?: string) {
     return this.syncService.getInitialSync(
       req.user.userId || req.user.id,
-      since ? new Date(since) : undefined,
+      since ? new Date(since) : undefined
     );
   }
 
@@ -38,7 +38,8 @@ export class SyncController {
   @HttpCode(HttpStatus.OK)
   async pushChanges(
     @Req() req,
-    @Body() body: {
+    @Body()
+    body: {
       posts?: Array<{
         id: string;
         content: string;
@@ -58,12 +59,9 @@ export class SyncController {
         reaction: string;
         action: 'add' | 'remove';
       }>;
-    },
+    }
   ) {
-    return this.syncService.pushChanges(
-      req.user.userId || req.user.id,
-      body,
-    );
+    return this.syncService.pushChanges(req.user.userId || req.user.id, body);
   }
 
   /**
@@ -71,14 +69,8 @@ export class SyncController {
    */
   @Get('pull')
   @UseGuards(JwtAuthGuard)
-  async pullChanges(
-    @Req() req,
-    @Query('since') since: string,
-  ) {
-    return this.syncService.pullChanges(
-      req.user.userId || req.user.id,
-      new Date(since),
-    );
+  async pullChanges(@Req() req, @Query('since') since: string) {
+    return this.syncService.pullChanges(req.user.userId || req.user.id, new Date(since));
   }
 
   /**
@@ -98,16 +90,14 @@ export class SyncController {
   @HttpCode(HttpStatus.OK)
   async resolveConflict(
     @Req() req,
-    @Body() body: {
+    @Body()
+    body: {
       entityType: 'post' | 'message';
       entityId: string;
       resolution: 'local' | 'remote';
       remoteData?: any;
-    },
+    }
   ) {
-    return this.syncService.resolveConflict(
-      req.user.userId || req.user.id,
-      body,
-    );
+    return this.syncService.resolveConflict(req.user.userId || req.user.id, body);
   }
 }

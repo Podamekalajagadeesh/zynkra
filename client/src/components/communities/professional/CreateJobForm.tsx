@@ -14,7 +14,9 @@ export const CreateJobForm = ({ communityId }: CreateJobFormProps) => {
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
   const [location, setLocation] = useState('');
-  const [jobType, setJobType] = useState<'full-time' | 'part-time' | 'contract' | 'remote' | 'hybrid'>('full-time');
+  const [jobType, setJobType] = useState<
+    'full-time' | 'part-time' | 'contract' | 'remote' | 'hybrid'
+  >('full-time');
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
@@ -25,12 +27,12 @@ export const CreateJobForm = ({ communityId }: CreateJobFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title || !company || !location || !description) {
       showToast({
         title: 'Missing information',
         description: 'Please fill in all required fields',
-        type: 'error'
+        type: 'error',
       });
       return;
     }
@@ -42,25 +44,28 @@ export const CreateJobForm = ({ communityId }: CreateJobFormProps) => {
       location,
       jobType,
       description,
-      requirements: requirements.split('\n').filter(r => r.trim()),
-      responsibilities: responsibilities.split('\n').filter(r => r.trim()),
-      salary: salaryMin && salaryMax ? {
-        min: parseInt(salaryMin),
-        max: parseInt(salaryMax),
-        currency: salaryCurrency
-      } : undefined,
+      requirements: requirements.split('\n').filter((r) => r.trim()),
+      responsibilities: responsibilities.split('\n').filter((r) => r.trim()),
+      salary:
+        salaryMin && salaryMax
+          ? {
+              min: parseInt(salaryMin),
+              max: parseInt(salaryMax),
+              currency: salaryCurrency,
+            }
+          : undefined,
       applicationUrl: applicationUrl || undefined,
       postedAt: new Date().toISOString(),
-      applications: []
+      applications: [],
     };
 
     // In a real app, we'd send this to the server to add to the community's jobListings
     console.log('Created new job listing:', newJob);
-    
+
     showToast({
       title: 'Job posted successfully!',
       description: 'Your job listing is now visible to the community',
-      type: 'success'
+      type: 'success',
     });
 
     // Reset form
@@ -195,7 +200,9 @@ export const CreateJobForm = ({ communityId }: CreateJobFormProps) => {
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="secondary">Cancel</Button>
+        <Button type="button" variant="secondary">
+          Cancel
+        </Button>
         <Button type="submit">Post Job</Button>
       </div>
     </form>

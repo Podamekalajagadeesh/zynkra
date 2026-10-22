@@ -132,16 +132,23 @@ export const SkillSharingCommunities: React.FC = () => {
 
   const selectedCommunity = useMemo(
     () => communities.find((community) => community.id === selectedCommunityId),
-    [communities, selectedCommunityId],
+    [communities, selectedCommunityId]
   );
 
-  const isMember = (communityId: string) => myMemberships.some((membership) => membership.communityId === communityId);
+  const isMember = (communityId: string) =>
+    myMemberships.some((membership) => membership.communityId === communityId);
 
   const joinCommunity = async (communityId: string) => {
     try {
       await api.post(`/skill-sharing/${communityId}/join`, {
-        offeringSkills: joinForm.offeringSkills.split(',').map((skill) => skill.trim()).filter(Boolean),
-        seekingSkills: joinForm.seekingSkills.split(',').map((skill) => skill.trim()).filter(Boolean),
+        offeringSkills: joinForm.offeringSkills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        seekingSkills: joinForm.seekingSkills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter(Boolean),
       });
       await fetchData();
     } catch (err) {
@@ -165,7 +172,10 @@ export const SkillSharingCommunities: React.FC = () => {
         topic: learningForm.topic || 'a new skill',
         skill: learningForm.skill || 'the craft',
         durationMinutes: Number(learningForm.durationMinutes) || 20,
-        steps: learningForm.steps.split(',').map((step) => step.trim()).filter(Boolean),
+        steps: learningForm.steps
+          .split(',')
+          .map((step) => step.trim())
+          .filter(Boolean),
       });
       setImmersiveSession(response.data);
     } catch (err) {
@@ -174,7 +184,11 @@ export const SkillSharingCommunities: React.FC = () => {
   };
 
   const createExchange = async () => {
-    if (!selectedCommunityId || !exchangeForm.offeredSkill.trim() || !exchangeForm.requestedSkill.trim()) {
+    if (
+      !selectedCommunityId ||
+      !exchangeForm.offeredSkill.trim() ||
+      !exchangeForm.requestedSkill.trim()
+    ) {
       return;
     }
 
@@ -219,7 +233,8 @@ export const SkillSharingCommunities: React.FC = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold">Skill-Sharing Collective Communities</h2>
         <p className="text-gray-500 mt-2">
-          Users trade skills and knowledge directly through practical exchanges, guided sessions, and peer learning
+          Users trade skills and knowledge directly through practical exchanges, guided sessions,
+          and peer learning
         </p>
       </div>
 
@@ -230,23 +245,53 @@ export const SkillSharingCommunities: React.FC = () => {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Session title</Label>
-            <Input value={learningForm.title} onChange={(event) => setLearningForm((current) => ({ ...current, title: event.target.value }))} placeholder="Neural pottery basics" />
+            <Input
+              value={learningForm.title}
+              onChange={(event) =>
+                setLearningForm((current) => ({ ...current, title: event.target.value }))
+              }
+              placeholder="Neural pottery basics"
+            />
           </div>
           <div className="space-y-2">
             <Label>Topic</Label>
-            <Input value={learningForm.topic} onChange={(event) => setLearningForm((current) => ({ ...current, topic: event.target.value }))} placeholder="Pottery, cooking, guitar" />
+            <Input
+              value={learningForm.topic}
+              onChange={(event) =>
+                setLearningForm((current) => ({ ...current, topic: event.target.value }))
+              }
+              placeholder="Pottery, cooking, guitar"
+            />
           </div>
           <div className="space-y-2">
             <Label>Skill focus</Label>
-            <Input value={learningForm.skill} onChange={(event) => setLearningForm((current) => ({ ...current, skill: event.target.value }))} placeholder="Throwing clay, kneading dough" />
+            <Input
+              value={learningForm.skill}
+              onChange={(event) =>
+                setLearningForm((current) => ({ ...current, skill: event.target.value }))
+              }
+              placeholder="Throwing clay, kneading dough"
+            />
           </div>
           <div className="space-y-2">
             <Label>Duration (minutes)</Label>
-            <Input type="number" value={learningForm.durationMinutes} onChange={(event) => setLearningForm((current) => ({ ...current, durationMinutes: event.target.value }))} />
+            <Input
+              type="number"
+              value={learningForm.durationMinutes}
+              onChange={(event) =>
+                setLearningForm((current) => ({ ...current, durationMinutes: event.target.value }))
+              }
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Guide steps</Label>
-            <Input value={learningForm.steps} onChange={(event) => setLearningForm((current) => ({ ...current, steps: event.target.value }))} placeholder="Warm-up, observe, practice, reflect" />
+            <Input
+              value={learningForm.steps}
+              onChange={(event) =>
+                setLearningForm((current) => ({ ...current, steps: event.target.value }))
+              }
+              placeholder="Warm-up, observe, practice, reflect"
+            />
           </div>
           <div className="md:col-span-2 flex justify-end">
             <Button onClick={createImmersiveSession}>Generate immersive lesson</Button>
@@ -255,9 +300,13 @@ export const SkillSharingCommunities: React.FC = () => {
             <div className="md:col-span-2 rounded-lg border border-indigo-200 bg-indigo-50 p-4">
               <p className="font-semibold">{immersiveSession.title}</p>
               <p className="text-sm text-gray-700 mt-1">{immersiveSession.summary}</p>
-              <p className="text-sm text-gray-600 mt-2">Duration: {immersiveSession.durationMinutes} minutes</p>
+              <p className="text-sm text-gray-600 mt-2">
+                Duration: {immersiveSession.durationMinutes} minutes
+              </p>
               <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
-                {immersiveSession.steps.map((step) => <li key={step}>{step}</li>)}
+                {immersiveSession.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
               </ul>
               <p className="text-sm text-gray-700 mt-2">{immersiveSession.takeaway}</p>
             </div>
@@ -287,11 +336,23 @@ export const SkillSharingCommunities: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label>Offered skill</Label>
-            <Input value={exchangeForm.offeredSkill} onChange={(event) => setExchangeForm((current) => ({ ...current, offeredSkill: event.target.value }))} placeholder="Editing, pottery, algebra tutoring" />
+            <Input
+              value={exchangeForm.offeredSkill}
+              onChange={(event) =>
+                setExchangeForm((current) => ({ ...current, offeredSkill: event.target.value }))
+              }
+              placeholder="Editing, pottery, algebra tutoring"
+            />
           </div>
           <div className="space-y-2">
             <Label>Requested skill</Label>
-            <Input value={exchangeForm.requestedSkill} onChange={(event) => setExchangeForm((current) => ({ ...current, requestedSkill: event.target.value }))} placeholder="Video editing, French, guitar" />
+            <Input
+              value={exchangeForm.requestedSkill}
+              onChange={(event) =>
+                setExchangeForm((current) => ({ ...current, requestedSkill: event.target.value }))
+              }
+              placeholder="Video editing, French, guitar"
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Learning mode</Label>
@@ -301,7 +362,9 @@ export const SkillSharingCommunities: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(LearningMode).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>{key.replaceAll('_', ' ')}</SelectItem>
+                  <SelectItem key={key} value={value}>
+                    {key.replaceAll('_', ' ')}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -310,7 +373,9 @@ export const SkillSharingCommunities: React.FC = () => {
             <Label>Exchange notes</Label>
             <Textarea
               value={exchangeForm.description}
-              onChange={(event) => setExchangeForm((current) => ({ ...current, description: event.target.value }))}
+              onChange={(event) =>
+                setExchangeForm((current) => ({ ...current, description: event.target.value }))
+              }
               placeholder="Describe the outcome you want from the learning exchange"
               rows={4}
             />
@@ -330,7 +395,9 @@ export const SkillSharingCommunities: React.FC = () => {
               <Label>Skills you offer on join</Label>
               <Input
                 value={joinForm.offeringSkills}
-                onChange={(event) => setJoinForm((current) => ({ ...current, offeringSkills: event.target.value }))}
+                onChange={(event) =>
+                  setJoinForm((current) => ({ ...current, offeringSkills: event.target.value }))
+                }
                 placeholder="JavaScript, drawing, sewing"
               />
             </div>
@@ -338,7 +405,9 @@ export const SkillSharingCommunities: React.FC = () => {
               <Label>Skills you want to learn</Label>
               <Input
                 value={joinForm.seekingSkills}
-                onChange={(event) => setJoinForm((current) => ({ ...current, seekingSkills: event.target.value }))}
+                onChange={(event) =>
+                  setJoinForm((current) => ({ ...current, seekingSkills: event.target.value }))
+                }
                 placeholder="Spanish, home repair, public speaking"
               />
             </div>
@@ -351,7 +420,9 @@ export const SkillSharingCommunities: React.FC = () => {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <CardTitle className="text-lg">{community.name}</CardTitle>
-                  {community.description && <p className="text-sm text-gray-500 mt-1">{community.description}</p>}
+                  {community.description && (
+                    <p className="text-sm text-gray-500 mt-1">{community.description}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(community.skills ?? []).map((skill) => (
@@ -379,7 +450,9 @@ export const SkillSharingCommunities: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-4 justify-between flex-wrap">
-                <p className="text-sm text-gray-500">Current exchange hub for mutual skill growth</p>
+                <p className="text-sm text-gray-500">
+                  Current exchange hub for mutual skill growth
+                </p>
                 {isMember(community.id) ? (
                   <Button variant="destructive" onClick={() => leaveCommunity(community.id)}>
                     Leave
@@ -400,20 +473,31 @@ export const SkillSharingCommunities: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {exchangesLoading && <p className="text-sm text-gray-500">Loading live exchange board...</p>}
-              {!exchangesLoading && exchanges.map((exchange) => (
-                <div key={exchange.id} className="rounded-lg border border-gray-200 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-sm">
-                      {exchange.offeredSkill || 'Skill'} for {exchange.requestedSkill || 'skill'}
-                    </p>
-                    <Badge className={exchange.completed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}>
-                      {exchange.completed ? 'completed' : 'open'}
-                    </Badge>
+              {exchangesLoading && (
+                <p className="text-sm text-gray-500">Loading live exchange board...</p>
+              )}
+              {!exchangesLoading &&
+                exchanges.map((exchange) => (
+                  <div key={exchange.id} className="rounded-lg border border-gray-200 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium text-sm">
+                        {exchange.offeredSkill || 'Skill'} for {exchange.requestedSkill || 'skill'}
+                      </p>
+                      <Badge
+                        className={
+                          exchange.completed
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }
+                      >
+                        {exchange.completed ? 'completed' : 'open'}
+                      </Badge>
+                    </div>
+                    {exchange.description && (
+                      <p className="text-sm text-gray-600 mt-2">{exchange.description}</p>
+                    )}
                   </div>
-                  {exchange.description && <p className="text-sm text-gray-600 mt-2">{exchange.description}</p>}
-                </div>
-              ))}
+                ))}
               {!exchangesLoading && exchanges.length === 0 && (
                 <p className="text-sm text-gray-500">
                   No exchanges yet. Start one to trade skills through live peer learning.

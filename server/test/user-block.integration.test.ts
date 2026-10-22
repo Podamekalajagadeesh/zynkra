@@ -4,7 +4,12 @@
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 
 import { Test } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -21,25 +26,60 @@ import { User } from '../src/users/entities/user.entity';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
-    follow: jest.fn(), unfollow: jest.fn(), getFollowers: jest.fn(),
-    block: jest.fn(), unblock: jest.fn(), getBlockedUsers: jest.fn(),
-    findOneById: jest.fn(), updateProfile: jest.fn(), update: jest.fn(),
-    updateAvatar: jest.fn(), findByUsername: jest.fn(), findOneWithPosts: jest.fn(),
-    search: jest.fn(), updatePrivacy: jest.fn(),
+    follow: jest.fn(),
+    unfollow: jest.fn(),
+    getFollowers: jest.fn(),
+    block: jest.fn(),
+    unblock: jest.fn(),
+    getBlockedUsers: jest.fn(),
+    findOneById: jest.fn(),
+    updateProfile: jest.fn(),
+    update: jest.fn(),
+    updateAvatar: jest.fn(),
+    findByUsername: jest.fn(),
+    findOneWithPosts: jest.fn(),
+    search: jest.fn(),
+    updatePrivacy: jest.fn(),
   };
   const serviceValue = { ...defaultService, ...overrides };
 
   return Test.createTestingModule({
-    imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
+    imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({ secret: 'test-secret' }),
+    ],
     controllers: [UsersController],
     providers: [
-    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
-    { provide: AccountManagementService, useValue: {} },
+      {
+        provide: VisibilityService,
+        useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) },
+      },
+      { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: serviceValue },
       { provide: PagesService, useValue: {} },
-      { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
-      { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
-      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
+      {
+        provide: ConfigService,
+        useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
+      },
+      {
+        provide: getRepositoryToken(LoginSession),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }),
+          update: jest.fn(),
+        },
+      },
+      {
+        provide: getRepositoryToken(User),
+        useValue: {
+          findOne: jest.fn().mockResolvedValue({
+            id: 'user-1',
+            email: 'user-1@test.com',
+            status: 'active',
+            banned: false,
+            role: 'user',
+          }),
+        },
+      },
       JwtStrategy,
     ],
   }).compile();
@@ -59,7 +99,9 @@ describe('POST /users/:id/block', () => {
     const { app, usersService, token } = await buildApp();
     usersService.block.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).post('/users/target-id/block').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .post('/users/target-id/block')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(204);
     expect(usersService.block).toHaveBeenCalledWith('user-1', 'target-id');
     await app.close();
@@ -76,7 +118,9 @@ describe('POST /users/:id/block', () => {
     const { app, usersService, token } = await buildApp();
     usersService.block.mockRejectedValue(new BadRequestException('Cannot block yourself'));
 
-    const r = await request(app.getHttpServer()).post('/users/user-1/block').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .post('/users/user-1/block')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(400);
     await app.close();
   });
@@ -85,7 +129,9 @@ describe('POST /users/:id/block', () => {
     const { app, usersService, token } = await buildApp();
     usersService.block.mockRejectedValue(new BadRequestException('User already blocked'));
 
-    const r = await request(app.getHttpServer()).post('/users/target-id/block').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .post('/users/target-id/block')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(400);
     await app.close();
   });
@@ -96,7 +142,9 @@ describe('DELETE /users/:id/block (unblock)', () => {
     const { app, usersService, token } = await buildApp();
     usersService.unblock.mockResolvedValue(undefined);
 
-    const r = await request(app.getHttpServer()).delete('/users/target-id/block').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/users/target-id/block')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(204);
     expect(usersService.unblock).toHaveBeenCalledWith('user-1', 'target-id');
     await app.close();
@@ -106,7 +154,9 @@ describe('DELETE /users/:id/block (unblock)', () => {
     const { app, usersService, token } = await buildApp();
     usersService.unblock.mockRejectedValue(new BadRequestException('User is not blocked'));
 
-    const r = await request(app.getHttpServer()).delete('/users/target-id/block').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .delete('/users/target-id/block')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(400);
     await app.close();
   });
@@ -119,7 +169,9 @@ describe('GET /users/blocked', () => {
       { id: 'user-2', username: 'blocked_user' },
     ] as any);
 
-    const r = await request(app.getHttpServer()).get('/users/blocked').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/blocked')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(1);
     expect(r.body[0].username).toBe('blocked_user');
@@ -130,7 +182,9 @@ describe('GET /users/blocked', () => {
     const { app, usersService, token } = await buildApp();
     usersService.getBlockedUsers.mockResolvedValue([]);
 
-    const r = await request(app.getHttpServer()).get('/users/blocked').set('Authorization', `Bearer ${token}`);
+    const r = await request(app.getHttpServer())
+      .get('/users/blocked')
+      .set('Authorization', `Bearer ${token}`);
     expect(r.status).toBe(200);
     expect(r.body).toHaveLength(0);
     await app.close();

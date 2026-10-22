@@ -42,9 +42,7 @@ type Harness = {
   httpSignaturesService: any;
 };
 
-function createService(
-  options: { federationEnabled?: boolean; remotePost?: any } = {},
-): Harness {
+function createService(options: { federationEnabled?: boolean; remotePost?: any } = {}): Harness {
   const outboxRows: any[] = [];
   const outboxLookup: any[] = [];
 
@@ -58,9 +56,9 @@ function createService(
   };
 
   const remotePostRepository = {
-    findOne: jest.fn().mockResolvedValue(
-      options.remotePost === undefined ? REMOTE_POST : options.remotePost,
-    ),
+    findOne: jest
+      .fn()
+      .mockResolvedValue(options.remotePost === undefined ? REMOTE_POST : options.remotePost),
     create: jest.fn((data: any) => data),
     save: jest.fn(async (data: any) => ({ ...data, id: 'remote-post-1' })),
     remove: jest.fn().mockResolvedValue(undefined),
@@ -76,7 +74,7 @@ function createService(
     }),
     findOne: jest.fn(async ({ where }: any) => {
       const match = outboxLookup.find(
-        (row) => row.objectId === where.objectId && row.activityType === where.activityType,
+        (row) => row.objectId === where.objectId && row.activityType === where.activityType
       );
       return match ?? null;
     }),
@@ -125,7 +123,7 @@ function createService(
     configService,
     userService,
     { findPostsByUserId: jest.fn().mockResolvedValue([]) },
-    httpSignaturesService,
+    httpSignaturesService
   );
 
   return {
@@ -190,7 +188,7 @@ describe('federateLike', () => {
     expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
       'http://localhost:3001/federation/users/localuser',
       expect.any(String),
-      'https://example.com/users/alice/inbox',
+      'https://example.com/users/alice/inbox'
     );
   });
 
@@ -266,7 +264,7 @@ describe('federateLike', () => {
   it('refuses to like while federation is disabled', async () => {
     const { service } = createService({ federationEnabled: false });
     await expect(service.federateLike('user-1', 'https://example.com/posts/1')).rejects.toThrow(
-      'Outbound federation is disabled',
+      'Outbound federation is disabled'
     );
   });
 });
@@ -313,7 +311,7 @@ describe('federateUndoLike', () => {
     expect(outboxRepository.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { objectId: 'https://example.com/posts/1', activityType: 'Like' },
-      }),
+      })
     );
   });
 });
@@ -403,7 +401,7 @@ describe('federateUpdate', () => {
     });
     outboxLookup.push({ ...CREATE_ROW, deliveredTo: ['first.example'] });
     instanceRepository.findOne.mockImplementation(async ({ where }: any) =>
-      where.domain === 'first.example' ? { ...INSTANCE, baseUrl: 'https://first.example' } : null,
+      where.domain === 'first.example' ? { ...INSTANCE, baseUrl: 'https://first.example' } : null
     );
 
     const report = await service.federateUpdate('user-1', 'post-1', 'edited text', [
@@ -447,7 +445,7 @@ describe('Create/Delete round trip', () => {
     // Make the ledger behave like the real table: a write is a later read.
     outboxRepository.findOne.mockImplementation(async ({ where }: any) => {
       const match = outboxRows.find(
-        (row) => row.objectId === where.objectId && row.activityType === where.activityType,
+        (row) => row.objectId === where.objectId && row.activityType === where.activityType
       );
       return match ?? null;
     });
@@ -470,7 +468,7 @@ describe('deliverToInbox — explicit inbox target', () => {
     const result = await service.deliverToInbox(
       {},
       { type: 'Like' },
-      { inboxUrl: 'https://example.com/users/alice/inbox' },
+      { inboxUrl: 'https://example.com/users/alice/inbox' }
     );
 
     expect(result.delivered).toBe(true);

@@ -15,6 +15,7 @@ Verification Appeals is a complete feature that allows users whose verification 
 ## Architecture
 
 ### Backend (Already Implemented)
+
 - **Database**: 5 TypeORM entities with proper relationships
 - **Service**: `VerificationService` with 70+ methods
 - **Controller**: `VerificationController` with REST endpoints
@@ -117,20 +118,20 @@ Verification Appeals is a complete feature that allows users whose verification 
 
 ### User Endpoints
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/verification/appeals` | Submit a new appeal |
-| GET | `/verification/appeals` | Get user's appeals |
-| GET | `/verification/appeals/:appealId` | Get specific appeal |
+| Method | Endpoint                          | Purpose             |
+| ------ | --------------------------------- | ------------------- |
+| POST   | `/verification/appeals`           | Submit a new appeal |
+| GET    | `/verification/appeals`           | Get user's appeals  |
+| GET    | `/verification/appeals/:appealId` | Get specific appeal |
 
 ### Admin Endpoints (Requires AdminGuard)
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/verification/admin/appeals?status=pending` | List appeals by status |
-| POST | `/verification/admin/appeals/:appealId/approve` | Approve appeal |
-| POST | `/verification/admin/appeals/:appealId/reject` | Reject with notes |
-| POST | `/verification/admin/appeals/:appealId/under-review` | Mark under review |
+| Method | Endpoint                                             | Purpose                |
+| ------ | ---------------------------------------------------- | ---------------------- |
+| GET    | `/verification/admin/appeals?status=pending`         | List appeals by status |
+| POST   | `/verification/admin/appeals/:appealId/approve`      | Approve appeal         |
+| POST   | `/verification/admin/appeals/:appealId/reject`       | Reject with notes      |
+| POST   | `/verification/admin/appeals/:appealId/under-review` | Mark under review      |
 
 ---
 
@@ -205,7 +206,7 @@ interface VerificationAppeal {
 ✅ Real-time status updates  
 ✅ Review notes from admins  
 ✅ Character count feedback  
-✅ Error handling with clear messages  
+✅ Error handling with clear messages
 
 ### Admin Features
 
@@ -216,7 +217,7 @@ interface VerificationAppeal {
 ✅ Track appeal count per user  
 ✅ View supporting documents/links  
 ✅ Real-time status display  
-✅ User identification (email, username)  
+✅ User identification (email, username)
 
 ### System Features
 
@@ -226,7 +227,7 @@ interface VerificationAppeal {
 ✅ Notifications to users  
 ✅ Automatic badge granting on approval  
 ✅ Original request status update on appeal approval  
-✅ Dark mode support  
+✅ Dark mode support
 
 ---
 

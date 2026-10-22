@@ -3,15 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PageShell } from '../../components/PageShell';
 import { Button } from '../../components/ui/button';
 import { useToast } from '../../hooks/useToast';
-import {
-  ArrowLeft,
-  Save,
-  Send,
-  Eye,
-  Clock,
-  Lock,
-  Trash2,
-} from 'lucide-react';
+import { ArrowLeft, Save, Send, Eye, Clock, Lock, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api';
 
 interface ArticleDraft {
@@ -138,11 +130,7 @@ const ArticleEditor: React.FC = () => {
           </Button>
 
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => setPreview(!preview)}
-              icon={<Eye size={16} />}
-            >
+            <Button variant="ghost" onClick={() => setPreview(!preview)} icon={<Eye size={16} />}>
               {preview ? 'Edit' : 'Preview'}
             </Button>
             <Button
@@ -153,11 +141,7 @@ const ArticleEditor: React.FC = () => {
             >
               Save Draft
             </Button>
-            <Button
-              onClick={publishArticle}
-              isLoading={publishing}
-              icon={<Send size={16} />}
-            >
+            <Button onClick={publishArticle} isLoading={publishing} icon={<Send size={16} />}>
               Publish
             </Button>
           </div>
@@ -167,9 +151,7 @@ const ArticleEditor: React.FC = () => {
           // Preview mode
           <div className="prose prose-lg dark:prose-invert max-w-none">
             <h1 className="text-4xl font-bold mb-4">{article.title || 'Untitled'}</h1>
-            {article.subtitle && (
-              <p className="text-xl text-gray-500 mb-6">{article.subtitle}</p>
-            )}
+            {article.subtitle && <p className="text-xl text-gray-500 mb-6">{article.subtitle}</p>}
             <div
               className="article-content"
               dangerouslySetInnerHTML={{ __html: article.content }}
@@ -219,10 +201,7 @@ const ArticleEditor: React.FC = () => {
                     className="px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full text-sm flex items-center gap-1"
                   >
                     {tag}
-                    <button
-                      onClick={() => removeTag(tag)}
-                      className="hover:text-red-500"
-                    >
+                    <button onClick={() => removeTag(tag)} className="hover:text-red-500">
                       ×
                     </button>
                   </span>

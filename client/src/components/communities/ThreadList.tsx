@@ -12,7 +12,13 @@ interface ThreadListProps {
   userVotes: { [threadId: string]: 'up' | 'down' | null };
 }
 
-export const ThreadList = ({ threads, community, onSelectThread, onVote, userVotes }: ThreadListProps) => {
+export const ThreadList = ({
+  threads,
+  community,
+  onSelectThread,
+  onVote,
+  userVotes,
+}: ThreadListProps) => {
   // Sort threads: pinned/megathreads first, then by score
   const sortedThreads = [...threads].sort((a, b) => {
     if (a.isPinned || a.isMegathread) return -1;
@@ -79,7 +85,9 @@ export const ThreadList = ({ threads, community, onSelectThread, onVote, userVot
                 ))}
               </div>
               <h3 className="text-lg font-semibold mb-2">{thread.title}</h3>
-              <p className="text-sm text-dark-600 dark:text-dark-300 line-clamp-2 mb-3">{thread.content}</p>
+              <p className="text-sm text-dark-600 dark:text-dark-300 line-clamp-2 mb-3">
+                {thread.content}
+              </p>
               {thread.media && thread.media.length > 0 && (
                 <div className="flex gap-2 mb-3">
                   {thread.media.slice(0, 3).map((media, idx) => (

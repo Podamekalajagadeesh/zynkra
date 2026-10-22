@@ -20,9 +20,7 @@ export const SubscribeButton = ({ creatorId }: { creatorId: string }) => {
           getCreatorSubscriptionTiers(creatorId),
         ]);
         if (!active) return;
-        setIsSubscribed(
-          subscriptions.some((sub: any) => sub.creator.id === creatorId),
-        );
+        setIsSubscribed(subscriptions.some((sub: any) => sub.creator.id === creatorId));
         if (tiers[0]?.name) {
           setTierName(tiers[0].name);
         } else {
@@ -69,7 +67,13 @@ export const SubscribeButton = ({ creatorId }: { creatorId: string }) => {
       onClick={handleSubscribe}
       disabled={isSubscribed || isSubmitting || !tierName}
     >
-      {isSubscribed ? 'Subscribed' : isSubmitting ? 'Processing…' : isPaymentPending ? 'Retry payment' : 'Subscribe'}
+      {isSubscribed
+        ? 'Subscribed'
+        : isSubmitting
+          ? 'Processing…'
+          : isPaymentPending
+            ? 'Retry payment'
+            : 'Subscribe'}
     </Button>
   );
 };

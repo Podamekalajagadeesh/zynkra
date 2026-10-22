@@ -28,13 +28,13 @@ export class FederationOutbox1790100000000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(
-      `ALTER TABLE "federation_outbox" ADD CONSTRAINT "FK_federation_outbox_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "federation_outbox" ADD CONSTRAINT "FK_federation_outbox_local_user" FOREIGN KEY ("localUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_outbox_local_user" ON "federation_outbox" ("localUserId")`,
+      `CREATE INDEX "IDX_federation_outbox_local_user" ON "federation_outbox" ("localUserId")`
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_federation_outbox_object" ON "federation_outbox" ("objectId", "activityType")`,
+      `CREATE INDEX "IDX_federation_outbox_object" ON "federation_outbox" ("objectId", "activityType")`
     );
   }
 

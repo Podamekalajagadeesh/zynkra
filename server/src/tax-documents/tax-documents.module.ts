@@ -7,10 +7,7 @@ import { TaxDocumentsController } from './tax-documents.controller';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TaxDocument, LedgerEntry]),
-    UsersModule,
-  ],
+  imports: [TypeOrmModule.forFeature([TaxDocument, LedgerEntry]), UsersModule],
   providers: [TaxDocumentsService],
   controllers: [TaxDocumentsController],
   exports: [TaxDocumentsService],

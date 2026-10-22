@@ -33,11 +33,13 @@ describe('ChangelogService', () => {
       changes: ['Added persistence', 'Added public page'],
     });
 
-    expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({
-      version: '1.4.0',
-      changes: ['Added persistence', 'Added public page'],
-      publishedAt: expect.any(Date),
-    }));
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: '1.4.0',
+        changes: ['Added persistence', 'Added public page'],
+        publishedAt: expect.any(Date),
+      })
+    );
     expect(result.id).toBe('entry-1');
   });
 
@@ -46,12 +48,14 @@ describe('ChangelogService', () => {
     repository.findOne.mockResolvedValue({ id: 'existing' });
     const service = new ChangelogService(repository as never);
 
-    await expect(service.publish({
-      version: '1.4.0',
-      title: 'Duplicate',
-      body: 'Duplicate release.',
-      changes: ['Nothing new'],
-    })).rejects.toBeInstanceOf(ConflictException);
+    await expect(
+      service.publish({
+        version: '1.4.0',
+        title: 'Duplicate',
+        body: 'Duplicate release.',
+        changes: ['Nothing new'],
+      })
+    ).rejects.toBeInstanceOf(ConflictException);
     expect(repository.save).not.toHaveBeenCalled();
   });
 });

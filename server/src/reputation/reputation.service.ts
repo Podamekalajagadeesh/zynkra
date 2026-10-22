@@ -12,7 +12,7 @@ export class ReputationService {
     @InjectRepository(Reputation)
     private readonly reputationRepository: Repository<Reputation>,
     @InjectRepository(ReputationLog)
-    private readonly reputationLogRepository: Repository<ReputationLog>,
+    private readonly reputationLogRepository: Repository<ReputationLog>
   ) {}
 
   private getPointsForEvent(event: ReputationEvent): number {
@@ -52,10 +52,10 @@ export class ReputationService {
   async addReputation(event: ReputationEvent, user: User): Promise<void> {
     let reputation = await this.reputationRepository.findOne({ where: { user: { id: user.id } } });
     if (!reputation) {
-      reputation = this.reputationRepository.create({ 
-        user, 
+      reputation = this.reputationRepository.create({
+        user,
         score: 0,
-        earnedCryptocurrency: 0 
+        earnedCryptocurrency: 0,
       });
     }
 
@@ -79,7 +79,7 @@ export class ReputationService {
       reputation,
       event,
       points,
-      cryptocurrencyEarned: cryptoEarned
+      cryptocurrencyEarned: cryptoEarned,
     });
 
     await this.reputationLogRepository.save(log);

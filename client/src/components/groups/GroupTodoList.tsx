@@ -109,8 +109,8 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
     }
   };
 
-  const pendingTodos = todos.filter(todo => !todo.completed);
-  const completedTodos = todos.filter(todo => todo.completed);
+  const pendingTodos = todos.filter((todo) => !todo.completed);
+  const completedTodos = todos.filter((todo) => todo.completed);
 
   return (
     <div className="space-y-4">
@@ -153,19 +153,26 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="assignee">Assign To</Label>
-                  <Select value={newTodo.assigneeId} onValueChange={(value) => setNewTodo({ ...newTodo, assigneeId: value })}>
+                  <Select
+                    value={newTodo.assigneeId}
+                    onValueChange={(value) => setNewTodo({ ...newTodo, assigneeId: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select member" />
                     </SelectTrigger>
                     <SelectContent>
-                      {members.map(member => (
-                        <SelectItem key={member.id} value={member.id}>{member.username}</SelectItem>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.username}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleCreateTodo} className="w-full">Create Task</Button>
+              <Button onClick={handleCreateTodo} className="w-full">
+                Create Task
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -173,7 +180,7 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
 
       <div className="space-y-2">
         <h4 className="font-medium">Pending Tasks ({pendingTodos.length})</h4>
-        {pendingTodos.map(todo => (
+        {pendingTodos.map((todo) => (
           <Card key={todo.id}>
             <CardHeader className="py-3">
               <div className="flex items-start gap-3">
@@ -185,11 +192,18 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">{todo.title}</CardTitle>
-                    <Button variant="ghost" size="sm" onClick={() => deleteTodo(todo.id)} className="h-8 px-2 text-destructive">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteTodo(todo.id)}
+                      className="h-8 px-2 text-destructive"
+                    >
                       Delete
                     </Button>
                   </div>
-                  {todo.description && <CardDescription className="text-xs">{todo.description}</CardDescription>}
+                  {todo.description && (
+                    <CardDescription className="text-xs">{todo.description}</CardDescription>
+                  )}
                   <div className="flex gap-2 mt-1">
                     {todo.dueDate && (
                       <CardDescription className="text-xs">
@@ -212,7 +226,7 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
       {completedTodos.length > 0 && (
         <div className="space-y-2">
           <h4 className="font-medium">Completed Tasks ({completedTodos.length})</h4>
-          {completedTodos.map(todo => (
+          {completedTodos.map((todo) => (
             <Card key={todo.id} className="opacity-60">
               <CardHeader className="py-3">
                 <div className="flex items-start gap-3">
@@ -223,8 +237,15 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium line-through">{todo.title}</CardTitle>
-                      <Button variant="ghost" size="sm" onClick={() => deleteTodo(todo.id)} className="h-8 px-2 text-destructive">
+                      <CardTitle className="text-sm font-medium line-through">
+                        {todo.title}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteTodo(todo.id)}
+                        className="h-8 px-2 text-destructive"
+                      >
                         Delete
                       </Button>
                     </div>
