@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Delete, UseGuards, Req, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Delete, UseGuards, Req, Res, HttpCode, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ExportService, ExportData } from './export.service';
 import { Response } from 'express';
@@ -17,6 +18,19 @@ export class ExportController {
   @UseGuards(JwtAuthGuard)
   async importData(@Req() req, @Body() body: ExportData) {
     return this.exportService.importFromJson(req.user.userId || req.user.id, body);
+  }
+
+  @Post('import-zip')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 200 * 1024 * 1024 } }))
+  async importZip(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file || !file.buffer || file.buffer.length === 0) {
+      throw new BadRequestException('Zip archive required (multipart field "file").');
+    }
+    return this.exportService.importFromZip(
+      req.user.userId || req.user.id,
+      file.buffer,
+    );
   }
 
   @Get('download')

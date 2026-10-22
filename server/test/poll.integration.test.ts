@@ -13,6 +13,7 @@ import request from 'supertest';
 import { PollsController } from '../src/polls/polls.controller';
 import { PollsService } from '../src/polls/polls.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
@@ -23,6 +24,7 @@ function createModule(overrides: Record<string, jest.Mock> = {}) {
       { provide: PollsService, useValue: { vote: overrides.vote || jest.fn() } },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
       { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
       JwtStrategy,
     ],
   }).compile();

@@ -10,7 +10,6 @@ import { UsersService } from '../users/users.service';
 import { Comment } from '../comments/entities/comment.entity';
 import { Report } from '../reports/entities/report.entity';
 import { StorageModule } from '../storage/storage.module';
-import { TokenGatedContentModule } from '../token-gated-content/token-gated-content.module';
 import { ReputationModule } from '../reputation/reputation.module';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -38,7 +37,6 @@ import { FederationModule } from '../federation/federation.module';
     TypeOrmModule.forFeature([Post, PostReaction, Comment, Report, Poll, PollOption, Media, ReelEffect, TimelineReview, Subscription]),
     UsersModule,
     StorageModule,
-    TokenGatedContentModule,
     ReputationModule,
     HttpModule,
     NotificationsModule,

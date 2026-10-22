@@ -41,16 +41,7 @@ export class Group {
   votingSystem: VotingSystem;
 
   @Column({ default: false })
-  tokenGated: boolean;
-
-  @Column({ default: false })
   allowAnonymousPosting: boolean;
-
-  @Column({ nullable: true })
-  contractAddress: string;
-
-  @Column({ nullable: true })
-  requiredTokenBalance: string;
 
   @ManyToOne(() => User, (user) => user.ownedGroups)
   owner: User;

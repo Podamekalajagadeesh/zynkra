@@ -11,6 +11,7 @@ const mockGetAgeVerificationStatus = vi.fn();
 const mockSetBirthDate = vi.fn();
 const mockDiscoverContacts = vi.fn();
 const mockResetPersonalizationControls = vi.fn();
+const mockDownloadApiFile = vi.fn();
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -35,6 +36,7 @@ vi.mock('../lib/api', () => ({
   getAgeVerificationStatus: mockGetAgeVerificationStatus,
   setBirthDate: mockSetBirthDate,
   discoverContacts: mockDiscoverContacts,
+  downloadApiFile: mockDownloadApiFile,
 }));
 
 describe('DataPrivacyPage', () => {
@@ -43,6 +45,11 @@ describe('DataPrivacyPage', () => {
     mockApiGet.mockImplementation((url: string) => {
       if (url === '/data-export') {
         return Promise.resolve({ data: null });
+      }
+      if (url === '/data-export/schedule') {
+        return Promise.resolve({
+          data: { enabled: false, intervalDays: 30, lastExportAt: null, nextExportAt: null },
+        });
       }
       if (url === '/users/me') {
         return Promise.resolve({
@@ -219,6 +226,28 @@ describe('DataPrivacyPage', () => {
 
     await waitFor(() => {
       expect(mockUpdatePrivacy).toHaveBeenCalledWith(expect.objectContaining({ tagPrivacy: 'friends_of_friends' }));
+    });
+  });
+
+  it('enables automatic backups on the default 30-day cadence', async () => {
+    const { default: DataPrivacyPage } = await import('./data-privacy');
+
+    render(
+      <ToastProvider>
+        <MemoryRouter>
+          <DataPrivacyPage />
+        </MemoryRouter>
+      </ToastProvider>,
+    );
+
+    const toggle = await screen.findByLabelText(/automatic backups/i);
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(mockApiPost).toHaveBeenCalledWith('/data-export/schedule', {
+        enabled: true,
+        intervalDays: 30,
+      });
     });
   });
 

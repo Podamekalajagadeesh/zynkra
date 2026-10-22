@@ -4,9 +4,20 @@ import { Brain, Lock, ShieldCheck, Volume2, VolumeX } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useE2EE } from '../../hooks/useE2EE';
 import { API_BASE_URL } from '../../lib/api';
+import {
+  decryptAttachment,
+  isE2eeMessagePayload,
+  type AttachmentKeyMaterial,
+} from '../../lib/attachment-crypto';
 
 /** Server-relative upload paths need the API origin prefixed. */
 const resolveMediaUrl = (url: string) => (url.startsWith('/') ? `${API_BASE_URL}${url}` : url);
+
+interface DecryptedAttachment {
+  url: string;
+  type: 'image' | 'video' | 'audio';
+  objectUrl: string;
+}
 
 interface MessageContentProps {
   message: Message;
@@ -14,6 +25,7 @@ interface MessageContentProps {
 
 export default function MessageContent({ message }: MessageContentProps) {
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
+  const [decryptedAttachments, setDecryptedAttachments] = useState<DecryptedAttachment[]>([]);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [decryptError, setDecryptError] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -34,6 +46,9 @@ export default function MessageContent({ message }: MessageContentProps) {
 
   // Decrypt message content using Signal Protocol
   useEffect(() => {
+    let cancelled = false;
+    const objectUrls: string[] = [];
+
     const decryptContent = async () => {
       if (!message.content || !user) return;
 
@@ -48,8 +63,37 @@ export default function MessageContent({ message }: MessageContentProps) {
 
           try {
             const decrypted = await decryptMessage(message.sender.id, message.content);
-            setDecryptedContent(decrypted);
+            if (cancelled) return;
+
+            // Phase 3 envelope: { v: 1, text?, attachments?: [{url,type,key,nonce}] }
+            let displayText = decrypted;
+            let attachments: DecryptedAttachment[] = [];
+            try {
+              const payload: unknown = JSON.parse(decrypted);
+              if (isE2eeMessagePayload(payload)) {
+                displayText = payload.text ?? '';
+                attachments = await Promise.all(
+                  (payload.attachments ?? []).map(async (att) => {
+                    const response = await fetch(resolveMediaUrl(att.url));
+                    const keyMaterial: AttachmentKeyMaterial = {
+                      key: att.key,
+                      nonce: att.nonce,
+                    };
+                    const plaintext = await decryptAttachment(await response.blob(), keyMaterial);
+                    const objectUrl = URL.createObjectURL(plaintext);
+                    objectUrls.push(objectUrl);
+                    return { url: att.url, type: att.type, objectUrl };
+                  }),
+                );
+              }
+            } catch {
+              // Not a structured payload — the decrypted string is the message text.
+            }
+            if (cancelled) return;
+            setDecryptedAttachments(attachments);
+            setDecryptedContent(displayText);
           } catch {
+            if (cancelled) return;
             // Old format fallback: check for legacy libsodium format
             if (parsed.nonce && parsed.ciphertext) {
               // Legacy format — show as-is (can't decrypt without old keys)
@@ -76,6 +120,10 @@ export default function MessageContent({ message }: MessageContentProps) {
     };
 
     decryptContent();
+    return () => {
+      cancelled = true;
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
   }, [message.content, message.sender.id, user, decryptMessage]);
 
   const isE2EE = (() => {
@@ -194,11 +242,27 @@ export default function MessageContent({ message }: MessageContentProps) {
       {message.media && message.media.length > 0 && (
         <div className="mt-2 grid gap-2 grid-cols-1">
           {message.media.map((media, index) => {
+            // E2EE attachments (Phase 3): render the decrypted blob URL when
+            // ready; show a placeholder while fetching/decrypting rather than
+            // leaking the ciphertext URL to <img>/<video>/<audio> elements.
+            const isEnc = 'enc' in media && !!media.enc;
+            const decrypted = decryptedAttachments[index];
+            if (isEnc && !decrypted) {
+              return (
+                <div
+                  key={index}
+                  className="max-w-xs rounded-lg border border-dashed border-neutral-300 p-3 text-xs text-neutral-500"
+                >
+                  {decryptError ? 'Attachment could not be decrypted' : 'Decrypting attachment…'}
+                </div>
+              );
+            }
+            const src = decrypted ? decrypted.objectUrl : resolveMediaUrl(media.url);
             if (media.type === 'image') {
-              return <img key={index} src={resolveMediaUrl(media.url)} alt="media" className="max-w-xs rounded-lg" />;
+              return <img key={index} src={src} alt="media" className="max-w-xs rounded-lg" />;
             }
             if (media.type === 'video') {
-              return <video key={index} src={resolveMediaUrl(media.url)} controls className="max-w-xs rounded-lg" />;
+              return <video key={index} src={src} controls className="max-w-xs rounded-lg" />;
             }
             if (media.type === 'audio') {
               return (
@@ -218,7 +282,7 @@ export default function MessageContent({ message }: MessageContentProps) {
                       </span>
                     </div>
                   )}
-                  <audio src={resolveMediaUrl(media.url)} controls />
+                  <audio src={src} controls />
                 </div>
               );
             }

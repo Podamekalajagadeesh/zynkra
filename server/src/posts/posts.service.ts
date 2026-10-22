@@ -8,7 +8,6 @@ import { UsersService } from '../users/users.service';
 import { Report } from '../reports/entities/report.entity';
 import { Comment } from '../comments/entities/comment.entity';
 import { WalletService } from '../wallet/wallet.service';
-import { TokenGatedContentService } from '../token-gated-content/token-gated-content.service';
 import { StorageService } from '../storage/storage.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { ReputationEvent } from '../reputation/reputation.enum';
@@ -66,7 +65,6 @@ export class PostsService {
     private readonly usersService: UsersService,
     private readonly storageService: StorageService,
     private readonly walletService: WalletService,
-    private readonly tokenGatedContentService: TokenGatedContentService,
     private readonly reputationService: ReputationService,
     private readonly httpService: HttpService,
     private readonly notificationsService: NotificationsService,
@@ -136,9 +134,6 @@ export class PostsService {
     post.user = user;
     post.tags = tags;
     post.visibility = createPostDto.visibility ?? (user.postVisibility as unknown as PostVisibility) ?? PostVisibility.PUBLIC;
-    post.tokenGated = createPostDto.tokenGated;
-    post.contractAddress = createPostDto.contractAddress;
-    post.requiredTokenBalance = createPostDto.requiredTokenBalance;
     post.filter = createPostDto.filter;
     post.showLikes = createPostDto.showLikes;
     post.locationName = createPostDto.locationName;
@@ -612,31 +607,6 @@ export class PostsService {
       }
     }
 
-    if (post.tokenGated) {
-      if (userId) {
-        const user = await this.usersService.findOneById(userId);
-        const hasAccess = await this.tokenGatedContentService.hasAccess(user, post);
-        if (hasAccess) {
-          // Record view interaction for content recommendation
-          if (post.tags && user) {
-            await this.postsRepository.increment({ id }, 'viewCount', 1);
-            await this.userInterestsService.recordInteraction(user, post.tags, 'view');
-          }
-          return post;
-        }
-        return {
-          ...post,
-          content: 'This content is token-gated.',
-          media: [],
-        };
-      }
-      return {
-        ...post,
-        content: 'This content is token-gated.',
-        media: [],
-      };
-    }
-
     if (post.subscriptionGated) {
       if (userId) {
         // Check if user is the creator or an active subscriber
@@ -737,23 +707,6 @@ export class PostsService {
         take,
         skip,
       });
-
-      if (user) {
-        posts = await Promise.all(
-          posts.map(async (post) => {
-            const hasAccess = await this.tokenGatedContentService.hasAccess(user, post);
-            if (hasAccess) {
-              return post;
-            }
-            return {
-              ...post,
-              content: 'This content is token-gated.',
-              mediaUrl: null,
-              mediaType: null,
-            };
-          }),
-        );
-      }
     } else {
       // For logged-out users, return only public posts
       posts = await this.postsRepository.find({

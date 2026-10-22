@@ -14,6 +14,7 @@ import { BookmarksController } from '../src/bookmarks/bookmarks.controller';
 import { CollectionsController } from '../src/bookmarks/collections.controller';
 import { BookmarksService } from '../src/bookmarks/bookmarks.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(bookmarkOverrides: Record<string, jest.Mock> = {}) {
@@ -30,6 +31,7 @@ function createModule(bookmarkOverrides: Record<string, jest.Mock> = {}) {
       { provide: BookmarksService, useValue: { ...defaultBookmarkService, ...bookmarkOverrides } },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
       { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
       JwtStrategy,
     ],
   }).compile();

@@ -83,10 +83,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<Post['visibility']>();
-  const [tokenGated, setTokenGated] = useState(false);
   const [subscriptionGated, setSubscriptionGated] = useState(false);
-  const [contractAddress, setContractAddress] = useState('');
-  const [requiredTokenBalance, setRequiredTokenBalance] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<UserType[]>([]);
   const [userSearch, setUserSearch] = useState('');
   const [userSearchResults, setUserSearchResults] = useState<UserType[]>([]);
@@ -182,10 +179,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         mediaFiles.map(mf => ({ file: mf.file, altText: mf.altText })),
         visibility as any,
         filter,
-        tokenGated,
         subscriptionGated,
-        contractAddress,
-        requiredTokenBalance,
         taggedUsers.map(u => u.id),
         poll,
         location,
@@ -218,9 +212,6 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
       setMediaFiles([]);
       setFilter('');
       setVisibility(undefined);
-      setTokenGated(false);
-      setContractAddress('');
-      setRequiredTokenBalance('');
       setTaggedUsers([]);
       onPostCreated?.(newPost);
     } catch (error) {
@@ -771,15 +762,6 @@ To transcribe your content in real-time.`;
             </SelectContent>
           </Select>
           <div className="flex items-center space-x-2">
-            <Checkbox id="token-gated" checked={tokenGated} onCheckedChange={(checked) => setTokenGated(checked as boolean)} />
-            <label
-              htmlFor="token-gated"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Token-Gated
-            </label>
-          </div>
-          <div className="flex items-center space-x-2">
             <Checkbox id="subscription-gated" checked={subscriptionGated} onCheckedChange={(checked) => setSubscriptionGated(checked as boolean)} />
             <label
               htmlFor="subscription-gated"
@@ -876,34 +858,6 @@ To transcribe your content in real-time.`;
           initialData={scheduleRequest}
         />
       </div>
-      {tokenGated && (
-        <div className="mt-md">
-          <div className="mb-md">
-            <label className="mb-2 text-sm font-medium text-dark-700 dark:text-dark-200">
-              Contract Address
-            </label>
-            <input
-              type="text"
-              placeholder="0x..."
-              value={contractAddress}
-              onChange={(e) => setContractAddress(e.target.value)}
-              className="input-field rounded-2xl border-dark-200 bg-white/90 shadow-sm dark:border-dark-700 dark:bg-dark-900/70"
-            />
-          </div>
-          <div className="mb-md">
-            <label className="mb-2 text-sm font-medium text-dark-700 dark:text-dark-200">
-              Required Token Balance
-            </label>
-            <input
-              type="text"
-              placeholder="1"
-              value={requiredTokenBalance}
-              onChange={(e) => setRequiredTokenBalance(e.target.value)}
-              className="input-field rounded-2xl border-dark-200 bg-white/90 shadow-sm dark:border-dark-700 dark:bg-dark-900/70"
-            />
-          </div>
-        </div>
-      )}
       {/* AI Co-Pilot Panel */}
       {isAICoPilotOpen && (
         <AICoPilotPanel

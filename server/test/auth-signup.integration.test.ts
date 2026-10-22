@@ -17,8 +17,9 @@ jest.mock('bcrypt', () => ({
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import request from 'supertest';
+import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
 
 import { AuthController } from '../src/auth/auth.controller';
 import { AuthService } from '../src/auth/auth.service';
@@ -66,6 +67,8 @@ describe('POST /auth/signup (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
+      { provide: AccountLinkingService, useValue: {} },
+      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,

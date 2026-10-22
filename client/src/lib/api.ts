@@ -269,11 +269,6 @@ export const get = api.get;
 export const post = api.post;
 export const del = api.delete;
 
-export const getLocalFeed = async (radius?: number) => {
-  const response = await api.get(`/feed/local${radius ? `?radius=${radius}` : ''}`);
-  return response.data;
-};
-
 // Fitness segment API functions
 export const getNearbyFitnessSegments = async (latitude: number, longitude: number, radius: number = 50) => {
   const response = await api.get(`/fitness/segments?lat=${latitude}&lng=${longitude}&radius=${radius}`);
@@ -983,18 +978,6 @@ type CreatePostPollInput = {
   options: string[];
 };
 
-type CreatePostPayload = {
-  content: string;
-  mediaFiles?: File[];
-  visibility?: CreatePostVisibility;
-  filter?: string;
-  tokenGated?: boolean;
-  contractAddress?: string;
-  requiredTokenBalance?: string;
-  taggedUserIds?: string[];
-  poll?: CreatePostPollInput | null;
-};
-
 export const getCloseFriends = async (): Promise<UserProfile[]> => {
   const response = await api.get('/users/me/close-friends');
   return response.data.map(normalizeUserProfile);
@@ -1059,10 +1042,7 @@ export const createPost = async (
   media: { file: File, altText: string, captionsFile?: File }[] = [],
   visibility?: CreatePostVisibility,
   filter = '',
-  tokenGated = false,
   subscriptionGated = false,
-  contractAddress = '',
-  requiredTokenBalance = '',
   taggedUserIds: string[] = [],
   poll: CreatePostPollInput | null = null,
   location: { name: string; latitude: number; longitude: number } | null = null,
@@ -1101,10 +1081,7 @@ export const createPost = async (
     media: mediaPayload,
     ...(visibility ? { visibility } : {}),
     filter,
-    tokenGated,
     subscriptionGated,
-    contractAddress,
-    requiredTokenBalance,
     taggedUserIds,
     autoTags,
     isSensitive,
@@ -1473,6 +1450,27 @@ export const uploadMedia = async (file: File) => {
 };
 
 /**
+ * Upload client-side ciphertext for an E2EE DM attachment. The matching
+ * key/nonce must be delivered inside the Signal-encrypted envelope — never
+ * alongside this request.
+ */
+export const uploadE2eeAttachment = async (
+  ciphertext: Blob,
+  type: 'image' | 'video' | 'audio',
+) => {
+  const formData = new FormData();
+  formData.append('file', ciphertext, `${type}.enc`);
+
+  const response = await api.post(`/media/upload/e2ee?type=${type}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data as { id: string; url: string; type?: string };
+};
+
+/**
  * Resolve a stored media path to a fetchable URL. Relative /uploads/… paths
  * are prefixed with the API origin so they work when the client and API
  * are on different hosts. Absolute/http(s)/data/blob URLs pass through.
@@ -1499,7 +1497,7 @@ export const sendMessage = async (
   channelId: string | undefined,
   content: string,
   replyToId?: string,
-  media?: { url: string; type: 'image' | 'video' | 'audio' }[],
+  media?: { url: string; type: 'image' | 'video' | 'audio'; enc?: string }[],
   voiceNote?: { durationSeconds: number; waveform: number[] },
   senderPublicKey?: string,
 ) => {
@@ -1574,17 +1572,11 @@ export const assignBadge = async (badgeId: string) => {
 export const createGroup = async (
   name: string,
   privacy: 'public' | 'private' | 'secret',
-  tokenGated?: boolean,
-  contractAddress?: string,
-  requiredTokenBalance?: string,
   allowAnonymousPosting?: boolean,
 ) => {
   const response = await api.post('/groups', {
     name,
     privacy,
-    tokenGated,
-    contractAddress,
-    requiredTokenBalance,
     allowAnonymousPosting,
   });
   return response.data;
@@ -1592,6 +1584,21 @@ export const createGroup = async (
 
 export const getGroups = async () => {
   const response = await api.get('/groups');
+  return response.data;
+};
+
+export const discoverGroups = async () => {
+  const response = await api.get('/groups/discover');
+  return response.data;
+};
+
+export const joinGroup = async (groupId: string) => {
+  const response = await api.post(`/groups/${groupId}/join`);
+  return response.data;
+};
+
+export const leaveGroup = async (groupId: string) => {
+  const response = await api.post(`/groups/${groupId}/leave`);
   return response.data;
 };
 
@@ -2620,6 +2627,29 @@ export const importAccountData = async (data: unknown) => {
   return response.data;
 };
 
+/**
+ * Download a server file through the authenticated axios instance.
+ *
+ * Export archives live behind JwtAuthGuard (header-only auth), so raw
+ * `<a href>` / `window.open` links would 401 — fetch as a blob with the
+ * Authorization header attached, then hand the bytes to the browser.
+ */
+export const downloadApiFile = async (url: string, filename?: string): Promise<void> => {
+  const response = await api.get(url, { responseType: 'blob' });
+  const objectUrl = URL.createObjectURL(response.data);
+  try {
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.rel = 'noopener';
+    if (filename) anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+};
+
 export type LinkedIdentityProvider = 'google' | 'facebook' | 'twitter' | 'github' | 'apple' | 'discord';
 
 export type LinkedIdentityAccount = {
@@ -3324,95 +3354,6 @@ export interface Course {
 
 export const getCourseFeed = async (page = 1): Promise<{ courses: Course[]; total: number }> => {
   const response = await api.get(`/courses/feed?page=${page}`);
-  return response.data;
-};
-
-// ---- DAO API ---------------------------------------------------------------
-
-export const createDao = async (groupId: string) => {
-  const response = await api.post('/dao', { groupId });
-  return response.data;
-};
-
-export const getDao = async (daoId: string) => {
-  const response = await api.get(`/dao/${daoId}/stats`);
-  return response.data;
-};
-
-export const getDaoStats = async (daoId: string) => {
-  const response = await api.get(`/dao/${daoId}/stats`);
-  return response.data;
-};
-
-export const getProposals = async (daoId: string) => {
-  const response = await api.get(`/dao/${daoId}/proposals`);
-  return response.data;
-};
-
-export const getProposal = async (proposalId: string) => {
-  const response = await api.get(`/dao/proposals/${proposalId}`);
-  return response.data;
-};
-
-export const createProposal = async (daoId: string, title: string, description: string) => {
-  const response = await api.post(`/dao/${daoId}/proposals`, { title, description });
-  return response.data;
-};
-
-export const vote = async (proposalId: string, voterId: string, support: boolean) => {
-  const response = await api.post(`/dao/proposals/${proposalId}/vote`, { voterId, support });
-  return response.data;
-};
-
-export const executeProposal = async (proposalId: string) => {
-  const response = await api.post(`/dao/proposals/${proposalId}/execute`);
-  return response.data;
-};
-
-// ---- Token-Gated API -------------------------------------------------------
-
-export const getTokenGatedContent = async (contentId: string) => {
-  const response = await api.get(`/token-gated/content/${contentId}`);
-  return response.data;
-};
-
-export const createTokenGatedContent = async (
-  name: string,
-  description: string,
-  tokenAddress: string,
-  minTokenBalance: number,
-) => {
-  const response = await api.post('/token-gated/content', {
-    name,
-    description,
-    tokenAddress,
-    minTokenBalance,
-  });
-  return response.data;
-};
-
-export const createTokenGatedGroup = async (
-  name: string,
-  description: string,
-  tokenAddress: string,
-  minTokenBalance: number,
-) => {
-  const response = await api.post('/token-gated/group', {
-    name,
-    description,
-    tokenAddress,
-    minTokenBalance,
-  });
-  return response.data;
-};
-
-export const getTokenGatedGroup = async (groupId: string) => {
-  const response = await api.get(`/token-gated/group/${groupId}`);
-  return response.data;
-};
-
-export const joinTokenGatedGroup = async (groupId: string) => {
-  const response = await api.post(`/token-gated/group/${groupId}/join`);
   return response.data;
 };
 

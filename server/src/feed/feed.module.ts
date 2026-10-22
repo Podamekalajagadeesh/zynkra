@@ -12,7 +12,6 @@ import { UsersModule } from '../users/users.module';
 import { SponsoredPostsModule } from '../sponsored-posts/sponsored-posts.module';
 import { BookmarksModule } from '../bookmarks/bookmarks.module';
 import { StoriesModule } from '../stories/stories.module';
-import { SnapMapModule } from '../snapmap/snapmap.module';
 import { TrendsModule } from '../trends/trends.module';
 import { TranslationModule } from '../translation/translation.module';
 import { DataPermissionsModule } from '../common/data-permissions/data-permissions.module';
@@ -26,7 +25,6 @@ import { DataPermissionsModule } from '../common/data-permissions/data-permissio
     forwardRef(() => SponsoredPostsModule),
     forwardRef(() => BookmarksModule),
     forwardRef(() => StoriesModule),
-    SnapMapModule,
     TrendsModule,
     TranslationModule,
     DataPermissionsModule,

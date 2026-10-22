@@ -21,17 +21,5 @@ export class CreateGroupDto {
 
   @IsOptional()
   @IsBoolean()
-  tokenGated?: boolean;
-
-  @IsOptional()
-  @IsString()
-  contractAddress?: string;
-
-  @IsOptional()
-  @IsString()
-  requiredTokenBalance?: string;
-
-  @IsOptional()
-  @IsBoolean()
   allowAnonymousPosting?: boolean;
 }

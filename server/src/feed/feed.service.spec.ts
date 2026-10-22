@@ -8,8 +8,6 @@ import { UsersService } from '../users/users.service';
 import { SponsoredPostsService } from '../sponsored-posts/sponsored-posts.service';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
-import { SnapMapGateway } from '../snapmap/snapmap.gateway';
-import { LocationService } from '../snapmap/location.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { User } from '../users/entities/user.entity';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
@@ -54,7 +52,6 @@ describe('FeedService', () => {
   let userInterestsService: jest.Mocked<UserInterestsService>;
   let usersService: jest.Mocked<UsersService>;
   let trendsService: jest.Mocked<TrendsService>;
-  let locationService: jest.Mocked<LocationService>;
   let dataPermissions: jest.Mocked<DataPermissionsService>;
   let bookmarksService: jest.Mocked<BookmarksService>;
   let storiesService: jest.Mocked<StoriesService>;
@@ -63,7 +60,6 @@ describe('FeedService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FeedService,
-        { provide: LocationService, useValue: { getLocation: jest.fn() } },
         {
           provide: getRepositoryToken(Post),
           useValue: {
@@ -100,7 +96,6 @@ describe('FeedService', () => {
           provide: StoriesService,
           useValue: { findActiveStoriesForUser: jest.fn().mockResolvedValue([]) },
         },
-        { provide: SnapMapGateway, useValue: { userLocations: new Map() } },
         { provide: TrendsService, useValue: { getTrending: jest.fn().mockResolvedValue([]) } },
         {
           provide: VisibilityService,
@@ -125,7 +120,6 @@ describe('FeedService', () => {
     userInterestsService = module.get(UserInterestsService) as jest.Mocked<UserInterestsService>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     trendsService = module.get(TrendsService) as jest.Mocked<TrendsService>;
-    locationService = module.get(LocationService) as jest.Mocked<LocationService>;
     dataPermissions = module.get(DataPermissionsService) as jest.Mocked<DataPermissionsService>;
     bookmarksService = module.get(BookmarksService) as jest.Mocked<BookmarksService>;
     storiesService = module.get(StoriesService) as jest.Mocked<StoriesService>;
@@ -473,150 +467,6 @@ describe('FeedService', () => {
 
       expect(result).toEqual({ posts: [], hasMore: false });
       expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(null, []);
-    });
-  });
-
-  // ─── getLocalFeed ────────────────────────────────────────────────────
-
-  describe('getLocalFeed', () => {
-    it('returns an empty feed when the user has not shared a location', async () => {
-      (locationService.getLocation as jest.Mock).mockReturnValue(undefined);
-
-      const result = await service.getLocalFeed(makeUser());
-
-      expect(result).toEqual([]);
-      expect(postsRepo.find).not.toHaveBeenCalled();
-    });
-
-    it('returns nearby posts sorted by distance, applying blocked-content filters', async () => {
-      const user = makeUser({
-        blockedKeywords: ['spoiler'],
-        blockedHashtags: ['politics'],
-        blockedContentTypes: ['reel'],
-      });
-      (locationService.getLocation as jest.Mock).mockReturnValue({
-        userId: 'user-1',
-        latitude: 1,
-        longitude: 1,
-        lastUpdated: new Date(),
-      });
-
-      const closest = makePost({ id: 'closest', place: { latitude: 1.01, longitude: 1 } as any });
-      const withTagsOk = makePost({
-        id: 'withTagsOk',
-        place: { latitude: 1.02, longitude: 1 } as any,
-        tags: [{ id: 't1', name: 'sunset' } as any],
-      });
-      const noTagsNoContent = makePost({
-        id: 'noTagsNoContent',
-        content: undefined as any,
-        tags: undefined as any,
-        place: { latitude: 1.03, longitude: 1 } as any,
-      });
-      const elevenKm = makePost({ id: 'elevenKm', place: { latitude: 1.05, longitude: 1 } as any });
-      const farAway = makePost({ id: 'farAway', place: { latitude: 5, longitude: 5 } as any });
-      const noPlace = makePost({ id: 'noPlace' });
-      const blockedType = makePost({
-        id: 'blockedType',
-        postType: PostType.REEL,
-        place: { latitude: 1.04, longitude: 1 } as any,
-      });
-      const blockedTag = makePost({
-        id: 'blockedTag',
-        tags: [{ id: 't2', name: 'Politics' } as any],
-        place: { latitude: 1.04, longitude: 1 } as any,
-      });
-      const blockedWord = makePost({
-        id: 'blockedWord',
-        content: 'Total spoiler ahead',
-        place: { latitude: 1.04, longitude: 1 } as any,
-      });
-
-      postsRepo.find.mockResolvedValue([
-        closest,
-        withTagsOk,
-        noTagsNoContent,
-        elevenKm,
-        farAway,
-        noPlace,
-        blockedType,
-        blockedTag,
-        blockedWord,
-      ]);
-
-      const result = await service.getLocalFeed(user);
-
-      expect(result.map((p) => p.id)).toEqual([
-        'closest',
-        'withTagsOk',
-        'noTagsNoContent',
-        'elevenKm',
-      ]);
-      expect(result[0].distance).toBeCloseTo(1.11, 1);
-      expect(result.every((p) => (p.distance ?? 0) <= 50)).toBe(true);
-      expect(postsRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { isDraft: false } })
-      );
-      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(
-        'user-1',
-        expect.any(Array)
-      );
-    });
-
-    it('honours a custom radius and defaults block lists to empty', async () => {
-      const user = makeUser({
-        blockedKeywords: undefined as any,
-        blockedHashtags: undefined as any,
-        blockedContentTypes: undefined as any,
-      });
-      (locationService.getLocation as jest.Mock).mockReturnValue({
-        userId: 'user-1',
-        latitude: 1,
-        longitude: 1,
-        lastUpdated: new Date(),
-      });
-      const inside = makePost({ id: 'inside', place: { latitude: 1.01, longitude: 1 } as any });
-      const outside = makePost({ id: 'outside', place: { latitude: 1.04, longitude: 1 } as any });
-      postsRepo.find.mockResolvedValue([inside, outside]);
-
-      const result = await service.getLocalFeed(user, 3);
-
-      expect(result.map((p) => p.id)).toEqual(['inside']);
-    });
-
-    it('passes a null viewer when the user id is missing', async () => {
-      (locationService.getLocation as jest.Mock).mockReturnValue({
-        userId: undefined,
-        latitude: 1,
-        longitude: 1,
-        lastUpdated: new Date(),
-      });
-      const post = makePost({ id: 'nearby', place: { latitude: 1.01, longitude: 1 } as any });
-      postsRepo.find.mockResolvedValue([post]);
-
-      const result = await service.getLocalFeed(makeUser({ id: undefined as any }));
-
-      expect(result.map((p) => p.id)).toEqual(['nearby']);
-      expect(visibilityService.filterVisiblePostsForViewer).toHaveBeenCalledWith(
-        null,
-        expect.any(Array)
-      );
-    });
-
-    it('excludes posts whose place latitude or longitude is exactly 0 (current truthiness check)', async () => {
-      (locationService.getLocation as jest.Mock).mockReturnValue({
-        userId: 'user-1',
-        latitude: 10,
-        longitude: 10,
-        lastUpdated: new Date(),
-      });
-      const onEquator = makePost({ id: 'onEquator', place: { latitude: 0, longitude: 5 } as any });
-      const nearby = makePost({ id: 'nearby', place: { latitude: 10.01, longitude: 10 } as any });
-      postsRepo.find.mockResolvedValue([onEquator, nearby]);
-
-      const result = await service.getLocalFeed(makeUser());
-
-      expect(result.map((p) => p.id)).toEqual(['nearby']);
     });
   });
 

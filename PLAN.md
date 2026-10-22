@@ -142,7 +142,7 @@ zynkra/
 ├── client/                    # Frontend (React + Vite + TypeScript + Tailwind)
 │   └── src/
 │       ├── components/        # 100+ reusable components
-│       ├── pages/             # 79 full-page features
+│       ├── pages/             # 126 full-page features
 │       ├── services/          # API clients & business logic
 │       ├── contexts/          # React state management (Auth, Cart, Preferences, Toast)
 │       ├── hooks/             # 16 custom React hooks
@@ -151,7 +151,7 @@ zynkra/
 │
 ├── server/                    # Backend (NestJS + TypeScript + PostgreSQL)
 │   └── src/
-│       ├── 83 feature modules
+│       ├── ~98 feature modules (facade stubs deleted)
 │       ├── app.module.ts      # Root module
 │       └── main.ts            # Entry point
 │
@@ -187,8 +187,8 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 - **In-app Checkout + Escrow + Product Reviews** ✅
 - Monetization: subscriptions, tipping, earnings, creator tiers
 - Communities: groups, events, fundraisers
-- ~~DAO Governance~~ / ~~Token-Gated Content~~ / ~~in-app token system~~ / ~~snap map~~ — ❌ **cut**;
-  they were facade, not features. See ROADMAP.md §6.
+- ~~DAO Governance~~ / ~~Token-Gated Content~~ / ~~in-app token system~~ / ~~snap map~~ — ❌ **cut and deleted**
+  (2026-10-21: server dirs, routes, and client UI removed); they were facade, not features. See ROADMAP.md §6.
 - Web3: crypto wallet, NFTs, SIWE wallet-sign auth (no in-app token)
 - Decentralization: IPFS, data export, blockchain identity (SIWE)
 - Discovery: explore, trends, hashtags
@@ -216,8 +216,10 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 
 ### Phase 1: Complete Core Advantages
 1. ~~Finish server-enforced E2EE for DMs~~ ✅ Done for 1:1 text (ciphertext-only storage,
-   plaintext rejected, legacy threads upgraded on first encrypted send). Remaining: DM media,
-   groups, key rotation — ROADMAP.md Phase 3.
+   plaintext rejected, legacy threads upgraded on first encrypted send) and per-attachment
+   media (client-side XChaCha20-Poly1305 before upload, keys only inside the Signal envelope,
+   server rejects untagged media on encrypted threads). Remaining: groups, key rotation,
+   manual cross-browser verification — ROADMAP.md Phase 3.
 2. Verify ActivityPub federation interop against a real Mastodon instance — **the one item here
    still open**, and it needs a live instance, not code.
 3. ~~Wallet connect + blockchain payouts~~ ✅ (USDC on Base/Polygon/Arbitrum; Arbitrum address
@@ -247,11 +249,11 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 
 | Metric | Count |
 |--------|-------|
-| Backend feature directories | 105 |
+| Backend module directories | ~98 (facade stubs deleted 2026-10-21) |
 | ...of which load-bearing (works end-to-end) | ~20 |
 | ...of which Preview (visible, shallow) | ~12 |
-| ...of which facade stubs (`src/features/*`, unregistered) | 64 |
-| Frontend page files/dirs | 128 |
+| ...of which facade stubs | 0 — the old `src/features/*` stubs were deleted |
+| Frontend page files/dirs | 126 |
 | Frontend Components | 100+ |
 | React Contexts | 5 |
 | Custom Hooks | 16 |
@@ -264,10 +266,11 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 
 > The old version of this table said "Backend Modules: 83" and "Frontend Pages: 79." Both were
 > inflated: they counted stub directories and never-registered modules as shipped features, and
-> the real directory counts are *higher* (105 / 128). Counting directories is the problem — it
+> the real directory counts were *higher* (105 / 128). Counting directories is the problem — it
 > makes `healthcare/` or `government-services/` look like a working feature when it is one
-> `console.log` stub and no route. The ~20 load-bearing figure is the one that matters, and it
-> is far below what the raw counts suggest.
+> `console.log` stub and no route. Those 64 stub directories (plus the `token`, `dao`,
+> `token-gated-content`, and `snapmap` modules) were deleted on 2026-10-21; the ~20
+> load-bearing figure is still the one that matters.
 
 ---
 

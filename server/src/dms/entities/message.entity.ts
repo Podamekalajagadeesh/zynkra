@@ -36,9 +36,10 @@ export class Message {
   @Column({ type: 'text', nullable: true })
   mediaUrl: string;
 
-  /** Media attachments in the shape the client renders (images/videos/audio). */
+  /** Media attachments in the shape the client renders (images/videos/audio).
+   *  `enc` marks E2EE ciphertext blobs (key travels only in the envelope). */
   @Column({ type: 'jsonb', nullable: true })
-  media: { url: string; type: 'image' | 'video' | 'audio' }[] | null;
+  media: { url: string; type: 'image' | 'video' | 'audio'; enc?: string }[] | null;
 
   /** Voice note metadata: set when the message is a recorded voice message. */
   @Column({ type: 'jsonb', nullable: true })

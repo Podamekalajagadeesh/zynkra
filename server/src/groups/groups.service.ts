@@ -16,7 +16,6 @@ import { Proposal, ProposalStatus } from './entities/proposal.entity';
 import { Vote } from './entities/vote.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CreateVoteDto } from './dto/create-vote.dto';
-import { TokenGatedContentService } from '../token-gated-content/token-gated-content.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { ReputationEvent } from '../reputation/reputation.enum';
 import { VotingSystem } from './voting-system.enum';
@@ -67,7 +66,6 @@ export class GroupsService {
     @InjectRepository(GroupLockdown)
     private readonly lockdownsRepository: Repository<GroupLockdown>,
     private readonly usersService: UsersService,
-    private readonly tokenGatedContentService: TokenGatedContentService,
     private readonly reputationService: ReputationService,
     private readonly channelsGateway: ChannelsGateway,
   ) {}
@@ -78,9 +76,6 @@ export class GroupsService {
     privacy: GroupPrivacy,
     isDao?: boolean,
     votingSystem?: VotingSystem,
-    tokenGated?: boolean,
-    contractAddress?: string,
-    requiredTokenBalance?: string,
     allowAnonymousPosting?: boolean,
   ): Promise<Group> {
     const group = this.groupsRepository.create({
@@ -89,9 +84,6 @@ export class GroupsService {
       privacy,
       isDao,
       votingSystem,
-      tokenGated,
-      contractAddress,
-      requiredTokenBalance,
       allowAnonymousPosting,
     });
     await this.groupsRepository.save(group);
@@ -127,6 +119,65 @@ export class GroupsService {
       relations: ['group'],
     });
     return groupMemberships.map((gm) => gm.group);
+  }
+
+  // Public groups the user has not joined yet. Secret groups are never
+  // listed (joining requires knowing the id); private groups are joinable
+  // by id but not advertised.
+  async getDiscoverableGroups(user: User): Promise<Group[]> {
+    const memberships = await this.groupMembersRepository.find({
+      where: { user: { id: user.id } },
+      relations: ['group'],
+    });
+    const joined = new Set(memberships.map((gm) => gm.group.id));
+    const candidates = await this.groupsRepository.find({
+      where: { privacy: GroupPrivacy.PUBLIC },
+      take: 100,
+    });
+    return candidates.filter((group) => !joined.has(group.id));
+  }
+
+  async joinGroup(groupId: string, user: User): Promise<GroupMember> {
+    const group = await this.groupsRepository.findOne({ where: { id: groupId } });
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+    const existing = await this.groupMembersRepository.findOne({
+      where: { group: { id: groupId }, user: { id: user.id } },
+    });
+    if (existing) {
+      return existing;
+    }
+    if (group.privacy === GroupPrivacy.SECRET) {
+      throw new NotFoundException('Group not found');
+    }
+    const lockdown = await this.getLockdown(groupId);
+    if (lockdown) {
+      throw new ForbiddenException('This group is in lockdown');
+    }
+    const member = this.groupMembersRepository.create({
+      group,
+      user,
+      role: GroupRole.MEMBER,
+    });
+    return this.groupMembersRepository.save(member);
+  }
+
+  async leaveGroup(groupId: string, user: User): Promise<void> {
+    const membership = await this.groupMembersRepository.findOne({
+      where: { group: { id: groupId }, user: { id: user.id } },
+    });
+    if (!membership) {
+      throw new NotFoundException('You are not a member of this group');
+    }
+    const group = await this.groupsRepository.findOne({
+      where: { id: groupId },
+      relations: ['owner'],
+    });
+    if (group && group.owner && group.owner.id === user.id) {
+      throw new ForbiddenException('The group owner cannot leave the group');
+    }
+    await this.groupMembersRepository.remove(membership);
   }
 
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
@@ -199,11 +250,36 @@ export class GroupsService {
     return channel;
   }
 
-  async joinChannel(channelId: string, user: User): Promise<ChannelMember> {
-    const channel = await this.channelsRepository.findOne({ where: { id: channelId } });
-    if (!channel) {
+  // Single access policy for channel reads (also mirrored by
+  // ChannelsGateway.canRead for the socket path — keep both in sync):
+  //   public group  -> any authenticated user
+  //   private group -> group members only (403 otherwise)
+  //   secret group  -> group members only (404 otherwise, no existence leak)
+  async assertCanReadChannel(channelId: string, userId: string): Promise<Channel> {
+    const channel = await this.channelsRepository.findOne({
+      where: { id: channelId },
+      relations: ['group'],
+    });
+    if (!channel || !channel.group) {
       throw new NotFoundException('Channel not found');
     }
+    if (channel.group.privacy === GroupPrivacy.PUBLIC) {
+      return channel;
+    }
+    const member = await this.groupMembersRepository.findOne({
+      where: { group: { id: channel.group.id }, user: { id: userId } },
+    });
+    if (member) {
+      return channel;
+    }
+    if (channel.group.privacy === GroupPrivacy.SECRET) {
+      throw new NotFoundException('Channel not found');
+    }
+    throw new ForbiddenException('You are not a member of this group');
+  }
+
+  async joinChannel(channelId: string, user: User): Promise<ChannelMember> {
+    const channel = await this.assertCanReadChannel(channelId, user.id);
 
     const existingMember = await this.channelMembersRepository.findOne({
       where: { channel: { id: channelId }, user: { id: user.id } },
@@ -239,12 +315,7 @@ export class GroupsService {
     content: string,
     sender: User,
   ): Promise<Message> {
-    const channel = await this.channelsRepository.findOne({
-      where: { id: channelId },
-    });
-    if (!channel) {
-      throw new NotFoundException('Channel not found');
-    }
+    const channel = await this.assertCanReadChannel(channelId, sender.id);
 
     if (channel.type === 'broadcast') {
       const member = await this.channelMembersRepository.findOne({
@@ -253,6 +324,29 @@ export class GroupsService {
       if (!member || member.role !== 'admin') {
         throw new UnauthorizedException(
           'You do not have permission to send messages in this channel',
+        );
+      }
+    } else {
+      // Posting in a regular channel requires group membership — being able
+      // to read a public group's channels does not grant write access.
+      const membership = await this.groupMembersRepository.findOne({
+        where: { group: { id: channel.group.id }, user: { id: sender.id } },
+      });
+      if (!membership) {
+        throw new ForbiddenException('Join the group to post in this channel');
+      }
+      // Implicit join keeps channel-member bookkeeping consistent with
+      // posting access (the UI never calls joinChannel explicitly).
+      const channelMember = await this.channelMembersRepository.findOne({
+        where: { channel: { id: channelId }, user: { id: sender.id } },
+      });
+      if (!channelMember) {
+        await this.channelMembersRepository.save(
+          this.channelMembersRepository.create({
+            channel,
+            user: sender,
+            role: 'member',
+          }),
         );
       }
     }
@@ -269,7 +363,8 @@ export class GroupsService {
     return savedMessage;
   }
 
-  async getMessages(channelId: string): Promise<Message[]> {
+  async getMessages(channelId: string, userId: string): Promise<Message[]> {
+    await this.assertCanReadChannel(channelId, userId);
     return this.messagesRepository.find({
       where: { channel: { id: channelId } },
       relations: ['sender'],
@@ -327,22 +422,7 @@ export class GroupsService {
       throw new UnauthorizedException('You have already voted on this proposal');
     }
 
-    let voteWeight = 1;
-    if (proposal.group.votingSystem === VotingSystem.TOKEN_WEIGHTED) {
-      const balance = await this.tokenGatedContentService.checkTokenBalance(
-        voter.walletAddress,
-        proposal.group.contractAddress,
-      );
-      voteWeight = Number(balance);
-    } else if (proposal.group.votingSystem === VotingSystem.NFT_GATED) {
-      const balance = await this.tokenGatedContentService.checkTokenBalance(
-        voter.walletAddress,
-        proposal.group.contractAddress,
-      );
-      if (balance === BigInt(0)) {
-        throw new UnauthorizedException('You do not own the required NFT to vote');
-      }
-    }
+    const voteWeight = 1;
 
     const vote = this.votesRepository.create({
       ...createVoteDto,

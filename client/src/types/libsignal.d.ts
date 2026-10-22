@@ -30,20 +30,9 @@ declare module '@privacyresearch/libsignal-protocol-typescript' {
     signature: ArrayBuffer;
   }
 
-  export interface PreKeyBundleType {
-    registrationId: number;
-    deviceId: number;
-    identityKey: ArrayBuffer;
-    signedPreKeyId: number;
-    signedPreKey: ArrayBuffer;
-    signedPreKeySignature: ArrayBuffer;
-    preKeyId?: number;
-    preKey?: ArrayBuffer;
-  }
-
   // --- Storage Interface ---
   export interface SignalProtocolStore {
-    getIdentityKeyPair(): Promise<KeyPairType | null>;
+    getIdentityKeyPair(): Promise<KeyPairType | undefined>;
     getLocalRegistrationId(): Promise<number>;
     isTrustedIdentity(
       identifier: string,
@@ -51,58 +40,63 @@ declare module '@privacyresearch/libsignal-protocol-typescript' {
       direction: number,
     ): Promise<boolean>;
     saveIdentity(identifier: string, identityKey: ArrayBuffer): Promise<boolean>;
-    loadPreKey(keyId: number): Promise<KeyPairType | null>;
+    loadPreKey(keyId: number): Promise<KeyPairType | undefined>;
     storePreKey(keyId: number, keyPair: KeyPairType): Promise<void>;
     removePreKey(keyId: number): Promise<void>;
-    loadSignedPreKey(keyId: number): Promise<KeyPairType | null>;
+    loadSignedPreKey(keyId: number): Promise<KeyPairType | undefined>;
     storeSignedPreKey(keyId: number, keyPair: KeyPairType): Promise<void>;
-    loadSession(identifier: string): Promise<string | null>;
+    loadSession(identifier: string): Promise<string | undefined>;
     storeSession(identifier: string, record: string): Promise<void>;
     removeSession(identifier: string): Promise<void>;
     removeAllSessions(identifier: string): Promise<void>;
   }
 
   // --- Session Builder ---
+  // Real 0.0.16 API: DeviceType-shaped bundle via processPreKey().
+  export interface PreKeyBundleType {
+    registrationId?: number;
+    identityKey: ArrayBuffer;
+    signedPreKey: {
+      keyId: number;
+      publicKey: ArrayBuffer;
+      signature: ArrayBuffer;
+    };
+    preKey?: { keyId: number; publicKey: ArrayBuffer };
+  }
+
   export class SessionBuilder {
     constructor(store: SignalProtocolStore, address: SignalProtocolAddress);
-    processPreKeyBundle(preKeyBundle: PreKeyBundleType): Promise<void>;
+    processPreKey(bundle: PreKeyBundleType): Promise<void>;
   }
 
   // --- Session Cipher ---
   export interface CiphertextMessageType {
     type: number;
     body: string;
-    serialized: string;
+    registrationId?: number;
   }
 
   export class SessionCipher {
     constructor(store: SignalProtocolStore, address: SignalProtocolAddress);
     encrypt(message: ArrayBuffer): Promise<CiphertextMessageType>;
     decryptPreKeyWhisperMessage(
-      ciphertext: ArrayBuffer,
-      encoding: string,
+      ciphertext: ArrayBuffer | string,
+      encoding?: string,
     ): Promise<ArrayBuffer>;
     decryptWhisperMessage(
-      ciphertext: ArrayBuffer,
-      encoding: string,
+      ciphertext: ArrayBuffer | string,
+      encoding?: string,
     ): Promise<ArrayBuffer>;
   }
 
-  // --- Crypto Functions ---
-  export function generateIdentityKeyPair(): Promise<KeyPairType>;
-  export function generatePreKey(keyId: number): Promise<PreKeyPairType>;
-  export function generateSignedPreKey(
-    identityKeyPair: KeyPairType,
-    keyId: number,
-  ): Promise<SignedPreKeyPairType>;
-  export function createPreKeyBundle(
-    store: SignalProtocolStore,
-    identityKeyPair: KeyPairType,
-    signedPreKey: SignedPreKeyPairType,
-    preKeys: PreKeyPairType | null,
-  ): Promise<PreKeyBundleType>;
-
-  // --- Curve ---
-  export function generateKeyPair(): Promise<KeyPairType>;
-  export function createKeyPair(privKey: ArrayBuffer): Promise<KeyPairType>;
+  // --- Key generation (0.0.16: static KeyHelper class) ---
+  export class KeyHelper {
+    static generateIdentityKeyPair(): Promise<KeyPairType>;
+    static generateRegistrationId(): number;
+    static generateSignedPreKey(
+      identityKeyPair: KeyPairType,
+      signedKeyId: number,
+    ): Promise<SignedPreKeyPairType>;
+    static generatePreKey(keyId: number): Promise<PreKeyPairType>;
+  }
 }

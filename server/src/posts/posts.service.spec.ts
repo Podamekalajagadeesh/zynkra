@@ -10,7 +10,6 @@ import { PostReaction } from './entities/post-reaction.entity';
 import { UsersService } from '../users/users.service';
 import { StorageService } from '../storage/storage.service';
 import { WalletService } from '../wallet/wallet.service';
-import { TokenGatedContentService } from '../token-gated-content/token-gated-content.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TrendsService } from '../trends/trends.service';
@@ -104,7 +103,6 @@ describe('PostsService', () => {
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
         { provide: StorageService, useValue: { upload: jest.fn() } },
         { provide: WalletService, useValue: {} },
-        { provide: TokenGatedContentService, useValue: { hasAccess: jest.fn().mockResolvedValue(true) } },
         { provide: ReputationService, useValue: { addReputation: jest.fn() } },
         { provide: HttpService, useValue: {} },
         { provide: NotificationsService, useValue: { createNotification: jest.fn() } },

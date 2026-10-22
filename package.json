@@ -16,7 +16,8 @@
     "typecheck:server": "cd server && npx tsc --noEmit",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
-    "build:server": "cd server && npm run build"
+    "build:server": "cd server && npm run build",
+    "prepare": "husky"
   },
   "dependencies": {
     "multer": "^2.3.0",
@@ -25,6 +26,9 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "husky": "^9.1.7",
     "prettier": "^3.0.0"
   }
 }

@@ -13,6 +13,8 @@ jest.mock('bcrypt', () => ({
 
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
 import request from 'supertest';
 
 import { AuthController } from '../src/auth/auth.controller';
@@ -60,6 +62,8 @@ describe('POST /auth/signin (HTTP integration)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
+      { provide: AccountLinkingService, useValue: {} },
+      { provide: ConfigService, useValue: { get: (_key: string, def?: unknown) => def } },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -104,7 +108,7 @@ describe('POST /auth/signin (HTTP integration)', () => {
   // --- Successful login ---
 
   it('returns 200 and access_token for valid email + password', async () => {
-    authService.signIn.mockResolvedValue({ access_token: 'jwt-token' });
+    authService.signIn.mockResolvedValue({ access_token: 'jwt-token', refresh_token: 'refresh-token' });
 
     const response = await request(app.getHttpServer())
       .post('/auth/signin')
@@ -122,7 +126,7 @@ describe('POST /auth/signin (HTTP integration)', () => {
   });
 
   it('returns 200 for valid username + password', async () => {
-    authService.signIn.mockResolvedValue({ access_token: 'jwt-token' });
+    authService.signIn.mockResolvedValue({ access_token: 'jwt-token', refresh_token: 'refresh-token' });
 
     const response = await request(app.getHttpServer())
       .post('/auth/signin')

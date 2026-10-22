@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { Button } from '../ui/button';
-import { sendMessage, getPublicKey, uploadMedia } from '../../lib/api';
+import { sendMessage, getPublicKey, uploadMedia, uploadE2eeAttachment } from '../../lib/api';
+import {
+  encryptAttachment,
+  E2EE_ATTACHMENT_ALG,
+  type E2eeMessagePayload,
+} from '../../lib/attachment-crypto';
 import { Send, X, Gift, Brain, ShieldCheck, Mic, Square, Video } from 'lucide-react';
 import { Message, EmotionData, ContextualData, NeuralMessageMetadata } from '../../lib/types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -189,17 +194,38 @@ export const SendMessageForm = ({
       if (!result) return;
       setIsSendingVoice(true);
       try {
-        const { url } = await uploadMedia(
-          new File([result.blob], 'voice.webm', { type: result.blob.type }),
-        );
-        await sendMessage(
-          conversationId,
-          channelId,
-          '',
-          replyTo?.id,
-          [{ url, type: 'audio' }],
-          { durationSeconds: result.durationSeconds, waveform: result.waveform },
-        );
+        const voiceFile = new File([result.blob], 'voice.webm', { type: result.blob.type });
+        const voiceNote = { durationSeconds: result.durationSeconds, waveform: result.waveform };
+        if (recipientId && user && e2eeReady) {
+          // Phase 3: encrypt the audio client-side; the key rides inside the
+          // Signal envelope, so the server only ever stores ciphertext.
+          const encrypted = await encryptAttachment(voiceFile);
+          const { url } = await uploadE2eeAttachment(encrypted.blob, 'audio');
+          const payload: E2eeMessagePayload = {
+            v: 1,
+            text: '',
+            attachments: [{ url, type: 'audio', key: encrypted.key, nonce: encrypted.nonce }],
+          };
+          const contentToSend = await encryptMessage(recipientId, JSON.stringify(payload));
+          await sendMessage(
+            conversationId,
+            channelId,
+            contentToSend,
+            replyTo?.id,
+            [{ url, type: 'audio', enc: E2EE_ATTACHMENT_ALG }],
+            voiceNote,
+          );
+        } else {
+          const { url } = await uploadMedia(voiceFile);
+          await sendMessage(
+            conversationId,
+            channelId,
+            '',
+            replyTo?.id,
+            [{ url, type: 'audio' }],
+            voiceNote,
+          );
+        }
         addToast('Voice message sent', 'success');
         onMessageSent?.();
       } catch (error) {
@@ -220,14 +246,32 @@ export const SendMessageForm = ({
     }
     setIsSendingVideo(true);
     try {
-      const { url } = await uploadMedia(file);
-      await sendMessage(
-        conversationId,
-        channelId,
-        '',
-        replyTo?.id,
-        [{ url, type: 'video' }],
-      );
+      if (recipientId && user && e2eeReady) {
+        const encrypted = await encryptAttachment(file);
+        const { url } = await uploadE2eeAttachment(encrypted.blob, 'video');
+        const payload: E2eeMessagePayload = {
+          v: 1,
+          text: '',
+          attachments: [{ url, type: 'video', key: encrypted.key, nonce: encrypted.nonce }],
+        };
+        const contentToSend = await encryptMessage(recipientId, JSON.stringify(payload));
+        await sendMessage(
+          conversationId,
+          channelId,
+          contentToSend,
+          replyTo?.id,
+          [{ url, type: 'video', enc: E2EE_ATTACHMENT_ALG }],
+        );
+      } else {
+        const { url } = await uploadMedia(file);
+        await sendMessage(
+          conversationId,
+          channelId,
+          '',
+          replyTo?.id,
+          [{ url, type: 'video' }],
+        );
+      }
       addToast('Video message sent', 'success');
       onMessageSent?.();
     } catch (error) {

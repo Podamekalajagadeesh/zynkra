@@ -62,6 +62,14 @@ export class Media {
   @Column({ type: 'uuid', nullable: true })
   userId?: string;
 
+  /**
+   * True when the stored bytes are client-side ciphertext (E2EE DM
+   * attachments). The server never derives metadata or thumbnails for
+   * these blobs and cannot read their contents.
+   */
+  @Column({ type: 'boolean', default: false })
+  isEncrypted: boolean;
+
   @ManyToOne(() => Post, (post) => post.media, { nullable: true })
   post: Post;
 }

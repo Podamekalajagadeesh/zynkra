@@ -22,12 +22,9 @@ import { Conversation } from '../../dms/entities/conversation.entity';
 import { Story } from '../../stories/entities/story.entity';
 import { Group } from '../../groups/entities/group.entity';
 import { GroupMember } from '../../groups/entities/group-member.entity';
-import { TokenGatedContent } from '../../token-gated-content/entities/token-gated-content.entity';
 import { Subscription } from '../../subscriptions/entities/subscription.entity';
-import { TokenGatedGroup } from '../../token-gated-content/entities/token-gated-group.entity';
 // import { Stream } from '../../../broken-modules/livestream/entities/stream.entity';
 import { Reputation } from '../../reputation/entities/reputation.entity';
-import { Balance } from '../../token/entities/balance.entity';
 import { PollOption } from '../../polls/entities/poll-option.entity';
 import { Event } from '../../events/entities/event.entity';
 import { Bookmark } from '../../bookmarks/entities/bookmark.entity';
@@ -672,15 +669,6 @@ export class User {
   @OneToMany(() => GroupMember, (groupMember) => groupMember.user)
   groupMemberships: GroupMember[];
 
-  @OneToMany(() => TokenGatedContent, (content) => content.creator)
-  tokenGatedContent: TokenGatedContent[];
-
-  @OneToMany(() => TokenGatedGroup, (group) => group.creator)
-  createdTokenGatedGroups: TokenGatedGroup[];
-
-  @ManyToMany(() => TokenGatedGroup, (group) => group.members)
-  joinedTokenGatedGroups: TokenGatedGroup[];
-
   @OneToMany(() => Subscription, (subscription) => subscription.subscriber)
   subscriptions: Subscription[];
 
@@ -696,9 +684,6 @@ export class User {
   @OneToOne(() => Reputation, (reputation) => reputation.user, { cascade: true, eager: true })
   @JoinColumn()
   reputation: Reputation;
-
-  @OneToMany(() => Balance, (balance) => balance.user)
-  balances: Balance[];
 
   @ManyToMany(() => PollOption, (option) => option.votes)
   @JoinTable()

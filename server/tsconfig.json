@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "multer"],
     "typeRoots": ["./node_modules/@types"],
     "target": "es2021",
     "sourceMap": true,

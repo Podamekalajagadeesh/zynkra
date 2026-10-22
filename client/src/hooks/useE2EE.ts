@@ -16,6 +16,11 @@ interface UseE2EEReturn {
   establishSession: (userId: string) => Promise<void>;
   hasSession: (userId: string) => Promise<boolean>;
   getIdentityKey: () => Promise<string | null>;
+  getRotationEvents: (since?: string) => Promise<
+    Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>
+  >;
+  exportRecovery: (passphrase: string) => Promise<string>;
+  importRecovery: (envelope: string, passphrase: string) => Promise<void>;
   initializeE2EE: () => Promise<void>;
 }
 
@@ -103,6 +108,39 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
     return service.getIdentityKeyB64();
   }, []);
 
+  const getRotationEvents = useCallback(
+    async (since?: string) => {
+      const service = getE2EEService();
+      if (!initializedRef.current) {
+        await initializeE2EE();
+      }
+      return service.getRotationEvents(since);
+    },
+    [initializeE2EE],
+  );
+
+  const exportRecovery = useCallback(
+    async (passphrase: string) => {
+      const service = getE2EEService();
+      if (!initializedRef.current) {
+        await initializeE2EE();
+      }
+      return service.exportRecovery(passphrase);
+    },
+    [initializeE2EE],
+  );
+
+  const importRecovery = useCallback(
+    async (envelope: string, passphrase: string) => {
+      const service = getE2EEService();
+      if (!initializedRef.current) {
+        await initializeE2EE();
+      }
+      await service.importRecovery(envelope, passphrase);
+    },
+    [initializeE2EE],
+  );
+
   return {
     isReady,
     isInitializing,
@@ -112,6 +150,9 @@ export function useE2EE(userId: string | null | undefined): UseE2EEReturn {
     establishSession,
     hasSession,
     getIdentityKey,
+    getRotationEvents,
+    exportRecovery,
+    importRecovery,
     initializeE2EE,
   };
 }

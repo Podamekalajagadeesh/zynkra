@@ -4,6 +4,10 @@ import { PostsService } from '../src/posts/posts.service';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../src/auth/auth.service';
 
+// AppController gates the mobile demo routes on this flag; the test builds a
+// bare ConfigService that reads process.env.
+process.env.MOBILE_DEMO_ENDPOINTS_ENABLED = 'true';
+
 describe('Week 1 readiness checks', () => {
   it('returns a mobile feed and creates mobile posts with a real backend payload', async () => {
     const controller = new AppController(
@@ -28,6 +32,9 @@ describe('Week 1 readiness checks', () => {
 
   it('rejects encrypted posts that do not include encrypted content', async () => {
     const service = new (PostsService as any)(...Array(24).fill({}));
+    service.dataPermissions = {
+      require: jest.fn(async () => undefined),
+    };
     service.postsRepository = {
       save: jest.fn(async (post) => ({ ...post, id: 'post-1' })),
     };
@@ -93,9 +100,14 @@ describe('Week 1 readiness checks', () => {
       { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
       { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
       { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
+      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
+      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
+      { findOne: jest.fn(async () => null), create: jest.fn((item) => item), save: jest.fn(async (item) => item) } as any,
+      { find: jest.fn(async () => []), findOne: jest.fn(async () => null), create: jest.fn((row: any) => row), save: jest.fn(async (row: any) => row), update: jest.fn(async () => ({ affected: 0 })) } as any,
       { get: jest.fn((key: string, fallback?: string) => fallback ?? null) } as any,
       { findOneById: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })), findByUsername: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })) } as any,
       { findPostsByUserId: jest.fn(async () => []) } as any,
+      { initialize: jest.fn(async () => undefined) } as any,
     );
 
     try {

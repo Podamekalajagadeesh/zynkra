@@ -157,10 +157,7 @@ async function executeQueuedOperation(operation: QueuedOperation): Promise<void>
       media?: Array<{ fileName: string; mimeType: string; dataUrl: string; altText?: string }>;
       visibility?: string;
       filter?: string;
-      tokenGated?: boolean;
       subscriptionGated?: boolean;
-      contractAddress?: string;
-      requiredTokenBalance?: string;
       taggedUsers?: string[];
       autoTags?: unknown;
       isSensitive?: boolean;

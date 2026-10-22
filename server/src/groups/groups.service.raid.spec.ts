@@ -16,7 +16,6 @@ import { ChallengeContribution } from './entities/challenge-contribution.entity'
 import { CalendarEvent } from './entities/calendar-event.entity';
 import { TodoItem } from './entities/todo-item.entity';
 import { UsersService } from '../users/users.service';
-import { TokenGatedContentService } from '../token-gated-content/token-gated-content.service';
 import { ReputationService } from '../reputation/reputation.service';
 import { ChannelsGateway } from './channels.gateway';
 
@@ -52,7 +51,6 @@ describe('GroupsService (raid protection)', () => {
         { provide: getRepositoryToken(CalendarEvent), useValue: mockRepo() },
         { provide: getRepositoryToken(TodoItem), useValue: mockRepo() },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
-        { provide: TokenGatedContentService, useValue: {} },
         { provide: ReputationService, useValue: {} },
         { provide: ChannelsGateway, useValue: {} },
       ],

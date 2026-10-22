@@ -30,10 +30,10 @@ depth, mocked features, and near-zero tests put it at ~25%.
 | Notifications / stories / marketplace | Real-ish | ⚠️ Usable, needs polish |
 | Offline (IndexedDB queue + SW) | Real queue | ⚠️ Not a conflict-resolving sync engine |
 | ActivityPub federation | Both directions implemented: signed+verified delivery, persisted inbound follows, **post fan-out on create**, **retraction on delete**, boosts, and a **readable federated timeline** (when `FEDERATION_ENABLED=true`) | ⚠️ Works when enabled; off by default. **No Mastodon interop test** — the exit criterion. No outbound `Like` or `Update`; no delivery queue; remote posts live in a separate read model rather than the local `posts` table |
-| Blockchain identity / DAO / token / tipping | Wallet-sign auth (SIWE) only; the fake `$ZYNK` token, DAO, token-gating, and snapmap are now cut and unwired | ❌ Cut per §6 |
+| Blockchain identity / DAO / token / tipping | Wallet-sign auth (SIWE) only; the fake `$ZYNK` token, DAO, token-gating, and snapmap are **deleted** (2026-10-21) — dirs, routes, and UI removed | ❌ Cut per §6 |
 | AI | On-device WebLLM panel (Preview) + OpenRouter cloud for most AI features | ⚠️ Mixed: panel is local, chatbot/content tools are cloud |
-| ~40 modules (metaverse, digital-twin, brainwave-auth, nonprofits, fundraisers…) | CRUD skeletons / empty | ❌ Facade — unregistered; not in the product surface |
-| Directory/module counts in the marketing docs | `PLAN.md` claimed "83 backend modules / 79 frontend pages." Actual counts are **105 feature dirs and 128 page files** — the docs were both wrong *and* flattering, because they counted unregistered stubs as features. `PLAN.md` now reports the split (105 = ~20 load-bearing + ~12 preview + 64 facade) so the directory count can't be read as delivery | ✅ Corrected |
+| ~40 modules (metaverse, digital-twin, brainwave-auth, nonprofits, fundraisers…) | Were CRUD skeletons / empty under `src/features/*` — **deleted 2026-10-21** (only registered `features/account-management` remains) | ❌ Cut — deleted |
+| Directory/module counts in the marketing docs | `PLAN.md` claimed "83 backend modules / 79 frontend pages." Actual counts were **105 feature dirs and 128 page files** — the docs were both wrong *and* flattering, because they counted unregistered stubs as features. After the 2026-10-21 facade deletion the counts are honest (~98 server module dirs, 126 client page files, ~20 load-bearing) | ✅ Corrected |
 | Primary-nav community pages with no backend | `/skill-sharing`, `/cultural-preservation-communities`, `/crisis-response-communities`, `/accessibility-first-communities` were complete client UIs calling endpoints with no server module behind them; 404s were swallowed into `console.error`, so an empty list was indistinguishable from "you have none". | ✅ De-routed 2026-09 — routes and the "Communities" nav section removed; components left on disk with a comment in `App.tsx` |
 | Tests | Server unit/integration suites are growing; the money path now exercises the production `WalletService`; federation signing + activity handling now have collected coverage; client coverage remains limited | ⚠️ Improving |
 
@@ -41,7 +41,9 @@ depth, mocked features, and near-zero tests put it at ~25%.
 1. ~~DMs advertised as E2EE but stored in plaintext~~ → **Resolved** (contradictorily
    documented): 1:1 DMs *are* E2EE — the server stores ciphertext-only and rejects plaintext.
    The ROADMAP was right and `README.md`/`PLAN.md`/`ARCHITECTURE.md` were wrong; they have been
-   corrected. Remaining E2EE gaps are media, groups, and key rotation (Phase 3).
+   corrected. Remaining E2EE gaps are groups, multi-device, and recovery (key rotation
+   shipped server-side: rotation events, atomic pre-key claims, identity/bundle rotation
+   endpoints).
 2. ~~Federation advertised as interoperable but outbound unsigned~~ → **Fixed in code**, and
    the mirror-image bug is now fixed too: outbound signs with HTTP Signatures when
    `FEDERATION_ENABLED=true` (default off), **and inbound activities are verified** — the inbox
@@ -82,16 +84,19 @@ Goal: the product tells the truth, and we can move safely.
   `TokenModule` (a fake `$ZYNK` token held as a Postgres row), `SnapMapModule` (locations in
   in-process `Map`s, never persisted), and the client routes `/blockchain-identity`, `/dao`,
   `/token-gated`, `/snapmap`. `DaoModule` and `TokenGatedContentModule` were never registered.
-  Code stays on disk; `app.module.ts` carries a comment so they are not silently re-added.
-  The ~64 stub services under `src/features/*` were already unregistered. ⏳ Remaining: move the
-  cut pages under `archive/` and delete the dead stubs.
+  ✅ **Completed 2026-10-21:** the `token/`, `dao/`, `token-gated-content/`, and `snapmap/`
+  server directories are deleted (token-gated and snapmap had still been reachable
+  transitively via posts/groups/feed — now unwired and removed, along with the token-gated
+  post/group UI, DAO API helpers, Local Feed page/route, and the snapmap components).
+  The ~64 stub services under `src/features/*` are deleted too (only the registered
+  `features/account-management` remains). Cut pages moved under `client/src/archive/pages/`.
   ⚠️ `archive-modules.sh` previously listed `crypto` and `tipping` as archive candidates.
   Both are load-bearing (`crypto` = Signal Protocol X3DH key store for Phase 3; `tipping` =
   the `'tip'` fulfillment handler in `PaymentsService`, i.e. the Phase 2 money path). The script
   has been corrected; do not trust its old output.
 - **CI + quality gate:** GitHub Actions running lint + typecheck + build for client and server on every PR. ✅ Exists (`client-ci.yml`, `server-ci.yml`).
-- **Commit hygiene:** enforce conventional commits (CONTRIBUTING.md already prescribes them; history shows `lsksk`/`lsks`). Add a commit-lint hook. ⏳ Pending
-- **Exit:** `main` is green in CI; no user-visible feature is mocked-but-unlabeled; README/ARCHITECTURE updated to match reality. ⏳ Partially met (docs relabeled; facade archiving done for the cut list, commit lint still pending)
+- **Commit hygiene:** enforce conventional commits (CONTRIBUTING.md already prescribes them; history shows `lsksk`/`lsks`). Add a commit-lint hook. ✅ Done (husky + `@commitlint/config-conventional` on `commit-msg`, 2026-10-21).
+- **Exit:** `main` is green in CI; no user-visible feature is mocked-but-unlabeled; README/ARCHITECTURE updated to match reality. ✅ Met (docs relabeled; facade fully archived/deleted; commit lint installed)
 
 ### Phase 1 — Harden the Core loop (M–L) · *the product people actually use daily*
 Goal: signup → profile → post → feed → follow → comment → react → DM → notify works flawlessly.
@@ -153,14 +158,66 @@ Goal: make the E2EE claim true.
   envelopes are stored — `DmsService.isE2eeEnvelope`), and progressively upgrades legacy
   threads on the first encrypted send. Server test `test/e2ee.dm.spec.ts` proves a libsodium
   round-trip with zero plaintext at rest (the server never holds decryption keys).
-- ⏳ Media/voice attachments in DMs are stored server-side and served to anyone with the URL —
-  per-recipient media encryption (Signal-style) is not done yet.
+- ✅ Per-attachment media encryption (Signal-style): the client encrypts each voice/video
+  attachment with a random XChaCha20-Poly1305 key (`client/src/lib/attachment-crypto.ts`)
+  before upload to `POST /media/upload/e2ee`, and the key+nonce travel only inside the
+  Signal-encrypted envelope as `{v:1, text, attachments:[{url,type,key,nonce}]}`. The server
+  stores ciphertext verbatim (new `media.isEncrypted` column — no sharp metadata, no
+  thumbnails, never reads the bytes) and enforces the split on encrypted threads: untagged
+  media is rejected, and ciphertext media without an accompanying envelope is rejected (no
+  key-delivery channel). Receive side decrypts and renders blob URLs in `MessageContent`.
+  Covered by `client/src/lib/attachment-crypto.test.ts` (5) and `test/e2ee.dm-media.spec.ts` (4).
 - ⏳ Group DMs, page DMs, and modmail remain readable by the server by design (not E2EE).
-- ⏳ Key rotation / multi-device / recovery story and a real two-browser round-trip remain;
+- ✅ Key rotation (server): identity rotation replaces + records an event peers can poll
+  (`GET /keys/identity/:userId`, `GET /keys/rotation-events?since=`), signed pre-keys keep
+  current + previous with pruning, one-time pre-key claims are atomic (pessimistic lock —
+  no duplicate claims) and keyIds are never re-used. Identity rotation also **purges the
+  user's one-time + signed pre-keys** — stale material issued under the old identity is
+  cryptographically dead (private halves gone) and must never be claimed again; the client
+  re-uploads fresh keys right after, before its next pre-key replenishment can be wiped.
+  Migration `KeyRotationEvents`. Covered by `src/keys/prekeys.service.spec.ts` (14).
+  *Multi-device remains ⏳;*
+  client rotation wiring ✅ — before every send, `ensureFreshSession`
+  throttled-checks the peer's server identity against the key cached at session build
+  and tears down + re-runs X3DH on mismatch (peer re-install / key rotation), decrypt
+  failures rebuild from a clean slate, and `initialize` self-heals a missing/stale
+  server identity copy from the local private key (`e2ee-rotation` decision logic +
+  service policy covered by `client/src/lib/e2ee-rotation.test.ts` (8) and
+  `client/src/services/e2ee.service.test.ts` (8));
   existing pre-E2EE plaintext rows can't be retro-encrypted (explicit: they stay readable
   until the thread upgrades to encrypted).
+- ✅ Recovery story (and a bug it exposed): the identity key pair was **never persisted**
+  — `store._initialize` was never called and first-time generation skipped the local
+  write, so every page load minted a *new* identity (server-side rotation each reload,
+  sessions orphaned). Fixed via `saveIdentityKeyPair` at generation time. Recovery =
+  Settings → "Encryption key recovery": passphrase-encrypted export/import of the full
+  key state (identity + session ratchet records + pre-keys) as one `.zkebackup` file —
+  PBKDF2-HMAC-SHA256 (600k, WebCrypto) → XChaCha20-Poly1305 (libsodium); restore keeps
+  the same identity (no safety-number change) and self-heals the server copy. Passphrase
+  never leaves the device; no server escrow. Covered by
+  `client/src/lib/e2ee-recovery.test.ts` (10).
+- ✅ **The Signal library actually loads (latent "E2EE disabled" bug found by the round-trip
+  test):** the client pinned `@privacyresearch/libsignal-protocol-typescript` to `^0.0.3`
+  (which permits only that exact patch) and the 0.0.3 npm tarball ships a broken
+  `lib/index.js` whose requires resolve to files that don't exist — `getLibsignal()`
+  *always* threw, so runtime E2EE had silently degraded to "disabled". Upgraded to `0.0.16`
+  (complete build) and adapted to its real API: static `KeyHelper.generate*`,
+  `SessionBuilder.processPreKey()` with the nested `DeviceType` bundle, library
+  latin1/binary ciphertext string → base64 on the wire, decrypt with the library's default
+  `'binary'` encoding (it rejects `'base64'`), store reads return `undefined` (never
+  `null` — the library checks `!== undefined` strictly), and `TextEncoder` output is copied
+  into a same-realm `ArrayBuffer` (jsdom `instanceof` check). Type surface:
+  `client/src/types/libsignal.d.ts` now mirrors 0.0.16.
+- ✅ **Automated two-party round-trip** — `client/src/services/e2ee.roundtrip.test.ts` (3)
+  runs two real `E2EEService` instances with the real Signal library against a fake
+  in-memory key directory: bidirectional X3DH + ratchet advancement across messages,
+  peer-reinstall rotation (fresh identity → cached-key mismatch → session torn down and
+  re-established; the fake directory purges pre-keys on identity change, mirroring
+  `prekeys.service.ts`, and the *new* install decrypts the rebuilt session), and
+  offline-tolerant identity checks (endpoint down → keep session, still decrypts).
 - **Exit:** one-to-one DMs store no readable message content and round-trip across two
-  devices. (Text ✅; media + manual cross-browser verification ⏳ pending.)
+  devices. (Text ✅ + media ✅ + automated two-party round-trip ✅; manual cross-browser
+  verification ⏳ pending.)
 
 ### Phase 4 — Open-web federation that actually federates (L) · *the "universal" claim*
 Goal: interoperate with Mastodon/Pixelfed for real.
@@ -202,9 +259,15 @@ Goal: interoperate with Mastodon/Pixelfed for real.
   meaning the signature is wrong, the single most likely misconfiguration — collapsed into a
   generic "Failed to follow remote user" 400. It now routes through `deliverToInbox` and reports
   the real reason with a 502.
-- ⏳ **No dead-letter queue.** A failed delivery is now *reported* but not retained, so there is
-  nothing to retry from automatically. `POST /federation/posts/:id/redrive` covers the manual
-  case, but a real queue (delivery-attempt table + scheduled re-drive) is still missing.
+- ✅ **Dead-letter queue.** Failed deliveries are retained in
+  `federation_delivery_attempts` (payload verbatim, retry schedule) and redriven by a
+  scheduled job every minute with hour-capped exponential backoff (10 redrive cycles
+  beyond the in-request retries). Deterministic rejections (401/403/4xx) are stored dead
+  immediately; delivered activities close their pending rows; a vanished/blocked instance
+  kills the row. Operator surface: `GET /federation/deliveries?status=pending|dead|delivered`
+  and `POST /federation/deliveries/:id/redrive` (admin). Migration
+  `1793000000000-FederationDeliveryAttempts`; covered by
+  `src/federation/delivery-queue.federation.spec.ts` (9 cases).
 - ✅ **Inbound follows are actually persisted (they previously were not).** `processSharedInbox`
   answered a `Follow` with an `Accept` and then **discarded the relationship**. Nothing was
   written, so an inbound follower never appeared in the local user's followers collection, and
@@ -606,11 +669,26 @@ Goal: users truly own their data.
   - **Linked accounts** — metadata only; OAuth credentials are neither exported nor
     imported (re-link to use).
   - Covered by `test/data-export.portability.spec.ts` (in-memory transaction harness).
-- ⏳ Media re-hosting inside the import flow (zip-import endpoint — blocked on a zip
-  extraction dependency; the operator restore step is the documented path for now).
+- ✅ **Zip import with media re-hosting** (`POST /data-export/import-zip`, multipart
+  `file`): accepts the export archive (`data.json` + `media/<basename>`), re-hosts every
+  flat `media/` file into this instance's `UPLOAD_DIR`, then runs the JSON import — so
+  posts/stories/DM attachments/podcasts/avatar resolve locally after an instance move.
+  Guards: zip-slip sanitization, 256 MiB/entry and 1 GiB total uncompressed caps, flat
+  `media/` only. Covered by `src/data-export/import-zip.service.spec.ts`.
+- ✅ **Scheduled/automated exports** (Wave 5's last open item): per-user opt-in via
+  `GET/POST /data-export/schedule` (7/14/30/90-day intervals) arms an hourly cron that
+  generates a fresh archive (`origin: scheduled`), with history at
+  `GET /data-export/history`. Archives moved out of the publicly served `uploads/`
+  directory — where they had been protected only by UUID unguessability — into a private
+  `EXPORT_DIR` (default `./exports`) reachable only through the owner-guarded
+  `GET /data-export/archive/:id`. Nightly retention (`EXPORT_RETENTION_DAYS`, default 30,
+  `0` disables) expires archive files while history rows survive with `fileUrl` cleared.
+  UI: Settings → data & privacy → "Automatic backups" (toggle, interval, next/last run);
+  both export download paths now fetch authenticated blobs because raw links 401 once the
+  archive leaves `/uploads/`. Covered by `src/data-export/data-export.service.spec.ts` (17).
 - **Exit:** a user can export their full account and re-import it into a fresh instance.
-  (Content + DMs with existing peers ✅; money and trust are archival **by design** — import
-  never fabricates a balance, a badge, or credentials.)
+  (Content + DMs with existing peers ✅; scheduled automatic exports ✅; money and trust are
+  archival **by design** — import never fabricates a balance, a badge, or credentials.)
 
 ### Phase 6 — Promote Previews to real, one at a time (ongoing L)
 Goal: expand the surface *only* as each feature earns "real" status.
@@ -671,20 +749,17 @@ the *"universal / user-owned"* story true and can proceed in parallel by differe
 
 1. ~~Set up CI (lint + typecheck + build) for client and server~~ ✅ Done (`client-ci.yml`, `server-ci.yml`).
 2. ~~Relabel/flag the three credibility bombs (E2EE, federation, AI).~~ ✅ Done — see updated bomb status in §1.
-3. ~~Archive the facade modules out of the product surface.~~ ✅ Done for the verified cut list
-   (`token`, `token-gated-content`, `dao`, `snapmap` unwired; `/blockchain-identity`, `/dao`,
-   `/token-gated`, `/snapmap` de-routed). See Phase 0 above — and note the `archive-modules.sh`
-   correction. ⏳ Still open: physically move the cut pages under `archive/` and delete the
-   dead stub services under `server/src/features/*` (64 directories, each a `console.log`
-   stub that was never registered).
+3. ~~Archive the facade modules out of the product surface.~~ ✅ Done —
+   (`token`, `token-gated-content`, `dao`, `snapmap` deleted; `/blockchain-identity`, `/dao`,
+   `/token-gated`, `/snapmap` de-routed; cut pages moved to `client/src/archive/pages/`;
+   the 64 dead stub services under `server/src/features/*` deleted 2026-10-21 — only the
+   registered `features/account-management` remains). See Phase 0 above — and note the
+   `archive-modules.sh` correction.
 3. ~~Stop the placeholder files claiming to be implemented.~~ ✅ Done —
-   `client/src/features/missing-features.ts` (108 exports) now returns
-   `status: 'not_implemented'` instead of `'implemented'`, and
-   `client/src/components/missing-features.tsx` (61 components) renders one honest
-   "isn't built" component instead of "Pending Implementation". The two files no longer
-   contradict each other. `server/src/features/qa/qa.service.ts` no longer returns
-   `{ implemented: true }`; it throws. Export names are unchanged so existing imports
-   still resolve. ⏳ Still open: delete these files once unused.
+   `client/src/features/missing-features.ts` (108 exports) and
+   `client/src/components/missing-features.tsx` (61 components) were unused by
+   2026-10-21 and have been deleted; the server `features/qa` stub went with the
+   features/* facade deletion.
 4. ~~Commit and finish the in-flight wallet/payments migration cleanly (don't leave it dangling).~~ ✅ Done (Phase 2: 90/10, platform ledger, webhook replay/refund tests).
 5. ~~Pick the media backend (S3 vs local+CDN) — it blocks Phase 1.~~ ✅ Local disk + optional CDN
 6. **Fix the test-integrity problems** — substantially done. `server/test/immersive-learning.test.js`
@@ -778,11 +853,11 @@ the *"universal / user-owned"* story true and can proceed in parallel by differe
     ✅ **The file deletions this passage used to beg for are done** (previous sessions had no
     shell to remove files with): `federation.service.test.js`, the four superseded `.js` test
     files (`immersive-learning`, `archive-library`, `deepfake-detection`, `memory-documentary`),
-    and the three CommonJS twins in `src/memories/` are all gone. Still open, and now the only
-    items of this kind left: the 64 stub directories under `server/src/features/*` (each a
-    `console.log`, never registered) are dead weight awaiting a delete decision; and
-    `e2e-smoke`/`qa-smoke` only cover `AppController` — they never boot `AppModule` or
-    touch the database.
+    and the three CommonJS twins in `src/memories/` are all gone. ✅ **Also done 2026-10-21:**
+    the 64 stub directories under `server/src/features/*` are deleted (only the registered
+    `features/account-management` remains), and the `token/`, `dao/`, `token-gated-content/`,
+    `snapmap/` dirs are deleted with their client surface. Still open: `e2e-smoke`/`qa-smoke`
+    only cover `AppController` — they never boot `AppModule` or touch the database.
     ✅ **The headline counts are no longer inflated.** `PLAN.md` advertised "Backend Modules: 83"
     and "Frontend Pages: 79" in a table titled "By The Numbers." The actual counts are **105
     feature directories and 128 page files** — so the docs were wrong in the *flattering*

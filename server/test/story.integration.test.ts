@@ -18,6 +18,7 @@ import { StoriesReactionService } from '../src/stories/stories-reaction.service'
 import { StoriesReplyController } from '../src/stories/stories-reply.controller';
 import { StoriesReplyService } from '../src/stories/stories-reply.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 function createModule(overrides: Record<string, any> = {}) {
@@ -48,6 +49,7 @@ function createModule(overrides: Record<string, any> = {}) {
       { provide: StoriesReplyService, useValue: { addReply: overrides.addReply || jest.fn() } },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
       { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
       JwtStrategy,
     ],
   }).compile();

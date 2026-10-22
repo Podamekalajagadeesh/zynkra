@@ -77,16 +77,7 @@ export class Post {
   visibility: PostVisibility;
 
   @Column({ type: 'boolean', default: false })
-  tokenGated: boolean;
-
-  @Column({ type: 'boolean', default: false })
   subscriptionGated: boolean;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  contractAddress: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  requiredTokenBalance: string;
 
   @Column({ type: 'boolean', default: false })
   isPinned: boolean;

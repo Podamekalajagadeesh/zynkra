@@ -11,8 +11,11 @@ interface GroupMember {
   };
 }
 
-const GroupMembers = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+const GroupMembers = ({ groupId: groupIdProp }: { groupId?: string } = {}) => {
+  const { groupId: routeGroupId } = useParams<{ groupId: string }>();
+  // Prefer the explicit prop: at /groups (no :id) the selected group is
+  // component state, and route params alone would leave this panel empty.
+  const groupId = groupIdProp ?? routeGroupId;
   const [members, setMembers] = useState<GroupMember[]>([]);
 
   useEffect(() => {

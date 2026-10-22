@@ -7,9 +7,6 @@ import { GroupPrivacy } from '../../types';
 export function CreateGroupForm() {
   const [name, setName] = useState('');
   const [privacy, setPrivacy] = useState<GroupPrivacy>(GroupPrivacy.PUBLIC);
-  const [tokenGated, setTokenGated] = useState(false);
-  const [contractAddress, setContractAddress] = useState('');
-  const [requiredTokenBalance, setRequiredTokenBalance] = useState('');
   const [allowAnonymousPosting, setAllowAnonymousPosting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,16 +26,10 @@ export function CreateGroupForm() {
       await createGroup(
         name,
         privacy,
-        tokenGated,
-        contractAddress,
-        requiredTokenBalance,
         allowAnonymousPosting,
       );
       setName('');
       setPrivacy(GroupPrivacy.PUBLIC);
-      setTokenGated(false);
-      setContractAddress('');
-      setRequiredTokenBalance('');
       addToast('Group created successfully!', 'success');
     } catch (error) {
       console.error('Failed to create group:', error);
@@ -114,36 +105,6 @@ export function CreateGroupForm() {
           <span>Allow anonymous posting</span>
         </label>
       </div>
-      <div className="mb-md">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={tokenGated}
-            onChange={(e) => setTokenGated(e.target.checked)}
-          />
-          <span>Token-Gated</span>
-        </label>
-      </div>
-      {tokenGated && (
-        <>
-          <div className="mb-md">
-            <input
-              placeholder="Contract address"
-              value={contractAddress}
-              onChange={(e) => setContractAddress(e.target.value)}
-              className="input-field rounded-2xl border-dark-200 bg-white/90 shadow-sm dark:border-dark-700 dark:bg-dark-900/70"
-            />
-          </div>
-          <div className="mb-md">
-            <input
-              placeholder="Required token balance"
-              value={requiredTokenBalance}
-              onChange={(e) => setRequiredTokenBalance(e.target.value)}
-              className="input-field rounded-2xl border-dark-200 bg-white/90 shadow-sm dark:border-dark-700 dark:bg-dark-900/70"
-            />
-          </div>
-        </>
-      )}
       <Button
         type="submit"
         variant="primary"

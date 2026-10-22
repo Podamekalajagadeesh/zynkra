@@ -9,6 +9,7 @@ import { DataPermissionsSettings } from '../components/settings/data-permissions
 import {
   createAccountProfile,
   deactivateAccount,
+  downloadApiFile,
   getAccountDashboard,
   importAccountData,
   listAccountProfiles,
@@ -87,7 +88,11 @@ export default function AccountControlsPage() {
         includeHistory: true,
       });
       toast.success(result.fileUrl ? 'Account export is ready.' : 'Account export requested.');
-      if (result.fileUrl) window.open(result.fileUrl, '_blank', 'noopener,noreferrer');
+      // Authenticated download — the archive route requires the JWT header,
+      // so a plain window.open would be rejected.
+      if (result.fileUrl) {
+        await downloadApiFile(result.fileUrl, `zynkra-account-export-${new Date().toISOString().split('T')[0]}.zip`);
+      }
     } catch {
       toast.error('Unable to export account data.');
     } finally {

@@ -10,6 +10,7 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import request from 'supertest';
+import sharp from 'sharp';
 import { mkdtempSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -18,15 +19,24 @@ import { MediaController } from '../src/media/media.controller';
 import { MediaService } from '../src/media/media.service';
 import { Media } from '../src/media/entities/media.entity';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 
 describe('Media upload pipeline (integration)', () => {
   let app: INestApplication;
   let uploadRoot: string;
   let token: string;
+  let realJpeg: Buffer;
 
   beforeAll(async () => {
     uploadRoot = mkdtempSync(join(tmpdir(), 'zynkra-media-it-'));
+    // sharp is a declared dependency and rejects fake bytes with a 500, so
+    // generate a real (tiny) JPEG instead of a hand-rolled base64 stub.
+    realJpeg = await sharp({
+      create: { width: 8, height: 8, channels: 3, background: { r: 255, g: 0, b: 0 } },
+    })
+      .jpeg()
+      .toBuffer();
 
     const mediaRepo = {
       create: jest.fn((input) => ({ ...input, id: 'new-id' })),
@@ -65,6 +75,7 @@ describe('Media upload pipeline (integration)', () => {
             update: jest.fn(),
           },
         },
+        { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
         JwtStrategy,
       ],
     }).compile();
@@ -84,7 +95,7 @@ describe('Media upload pipeline (integration)', () => {
     const res = await request(app.getHttpServer())
       .post('/media/upload')
       .set('Authorization', `Bearer ${token}`)
-      .attach('file', Buffer.from('fake-image-bytes'), {
+      .attach('file', realJpeg, {
         filename: 'photo.jpg',
         contentType: 'image/jpeg',
       });
@@ -121,29 +132,17 @@ describe('Media upload pipeline (integration)', () => {
   });
 
   it('POST /media/upload/image processes with sharp when available', async () => {
-    // uploadImage throws if sharp is missing; with sharp as a declared dep
-    // it should succeed for a real image. Use a tiny valid JPEG.
-    const jpeg = Buffer.from(
-      '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAGcP//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//Z',
-      'base64',
-    );
-
+    // sharp is a declared dependency, so a real image must process to 201.
     const res = await request(app.getHttpServer())
       .post('/media/upload/image')
       .set('Authorization', `Bearer ${token}`)
-      .attach('file', jpeg, {
+      .attach('file', realJpeg, {
         filename: 'tiny.jpg',
         contentType: 'image/jpeg',
       });
 
-    // If sharp is installed this is 201; if not, MediaService throws 400.
-    // Both are valid assertions of honest behavior — assert one of them.
-    expect([201, 400]).toContain(res.status);
-    if (res.status === 201) {
-      expect(res.body.url).toMatch(/^\/uploads\/images\//);
-    } else {
-      expect(res.body.message).toMatch(/sharp|processing/i);
-    }
+    expect(res.status).toBe(201);
+    expect(res.body.url).toMatch(/^\/uploads\/images\//);
   });
 
   it('POST /media/upload rejects missing file', async () => {
@@ -158,7 +157,7 @@ describe('Media upload pipeline (integration)', () => {
     const uploadRes = await request(app.getHttpServer())
       .post('/media/upload')
       .set('Authorization', `Bearer ${token}`)
-      .attach('file', Buffer.from('img'), {
+      .attach('file', realJpeg, {
         filename: 'x.jpg',
         contentType: 'image/jpeg',
       });

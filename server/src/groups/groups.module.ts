@@ -10,7 +10,6 @@ import { Message } from '../dms/entities/message.entity';
 import { Conversation } from '../dms/entities/conversation.entity';
 import { Proposal } from './entities/proposal.entity';
 import { Vote } from './entities/vote.entity';
-import { TokenGatedContentModule } from '../token-gated-content/token-gated-content.module';
 import { ReputationModule } from '../reputation/reputation.module';
 import { ChannelsGateway } from './channels.gateway';
 // Community challenges entities
@@ -39,7 +38,6 @@ import { GroupLockdown } from './entities/group-lockdown.entity';
       GroupLockdown,
     ]),
     UsersModule,
-    TokenGatedContentModule,
     ReputationModule,
   ],
   providers: [GroupsService, ChannelsGateway],

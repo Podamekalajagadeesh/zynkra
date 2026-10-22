@@ -11,7 +11,7 @@ import { getForYouFeed, getFeedView, setAuthToken, getFollowSuggestions, followU
 import { PostList } from './components/post-list';
 import { useDarkMode } from './hooks/useDarkMode';
 import { Button } from './components/ui/button';
-import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, MapPin, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText, Trophy, Package, KeyRound, Webhook, Leaf } from 'lucide-react';
+import { MessageSquare, LogOut, LogIn, Menu, X, Sun, Moon, Users, Video, Zap, MoreHorizontal, Calendar, Clock, Heart, HandHeart, CalendarDays, Building2, Megaphone, UserPlus, Settings, Compass, ArrowUpDown, Globe, Bot, Bookmark, BookOpen, Home, ShoppingBag, Plus, Coins, GitBranch, FileText, Trophy, Package, KeyRound, Webhook, Leaf } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from './components/search';
 import { NotificationIcon } from './components/notifications/notification-icon';
@@ -137,7 +137,6 @@ const ProductDetailPage = lazy(() => import('./pages/marketplace/ProductDetailPa
 const CartPage = lazy(() => import('./pages/marketplace/CartPage').then((module) => ({ default: module.CartPage })));
 const OrdersPage = lazy(() => import('./pages/marketplace/OrdersPage').then((module) => ({ default: module.OrdersPage })));
 const SavedMarketplaceListingsPage = lazy(() => import('./pages/marketplace/SavedMarketplaceListingsPage').then((module) => ({ default: module.SavedMarketplaceListingsPage })));
-const LocalFeedPage = lazy(() => import('./pages/local-feed').then((module) => ({ default: module.default })));
 const FitnessSegmentsPage = lazy(() => import('./pages/fitness-segments').then((module) => ({ default: module.default })));
 const WatchLaterPage = lazy(() => import('./pages/watch').then((module) => ({ default: module.default })));
 const ReadLaterPage = lazy(() => import('./pages/read-later').then((module) => ({ default: module.default })));
@@ -218,7 +217,6 @@ const MORE_SECTIONS: { title: string; items: NavLeaf[] }[] = [
     title: 'Discover',
     items: [
       { to: '/threads', label: 'Threads', icon: GitBranch },
-      { to: '/local-feed', label: 'Local Feed', icon: MapPin },
       { to: '/federation', label: 'Federation', icon: Globe },
       { to: '/fitness-segments', label: 'Fitness Segments', icon: Compass },
       { to: '/dating/discover', label: 'Dating', icon: UserPlus },
@@ -985,14 +983,6 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <ShortsEditorPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/local-feed"
-                      element={
-                        <ProtectedRoute>
-                          <LocalFeedPage />
                         </ProtectedRoute>
                       }
                     />

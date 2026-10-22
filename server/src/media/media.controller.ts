@@ -42,6 +42,57 @@ export class MediaController {
     return this.mediaService.uploadFile(file, { userId: req.user?.userId });
   }
 
+  /**
+   * E2EE DM attachments (Phase 3): the client encrypts the bytes
+   * (XChaCha20-Poly1305) before upload; the matching key travels only
+   * inside the Signal-encrypted message envelope. The server stores the
+   * ciphertext verbatim — no metadata, no thumbnails, no decryption key.
+   * `type` labels the row for the client renderer; the mimetype stays
+   * octet-stream because the bytes are opaque.
+   */
+  @Post('upload/e2ee')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 100 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/octet-stream') {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              'E2EE attachments must be uploaded as application/octet-stream ciphertext',
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async uploadE2eeAttachment(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
+    @Query('type') type?: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    if (type !== 'image' && type !== 'video' && type !== 'audio') {
+      throw new BadRequestException('type must be one of: image, video, audio');
+    }
+    // Re-label the ciphertext blob as its plaintext type so the media row
+    // routes to the right subdir and the client renders it correctly after
+    // decryption. The stored bytes are never interpreted by the server.
+    const relabeled: Express.Multer.File = {
+      ...file,
+      mimetype: `${type}/e2ee-ciphertext`,
+      originalname: `${type}.enc`,
+    };
+    return this.mediaService.uploadFile(relabeled, {
+      userId: req.user?.userId,
+      encrypted: true,
+    });
+  }
+
   @Post('upload/image')
   @UseInterceptors(
     FileInterceptor('file', {

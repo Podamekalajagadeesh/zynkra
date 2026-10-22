@@ -136,18 +136,6 @@ export class CreatePostDto {
   visibility?: PostVisibility;
 
   @IsOptional()
-  @IsBoolean()
-  tokenGated?: boolean;
-
-  @IsOptional()
-  @IsString()
-  contractAddress?: string;
-
-  @IsOptional()
-  @IsString()
-  requiredTokenBalance?: string;
-
-  @IsOptional()
   @ValidateNested()
   @Type(() => PollDto)
   poll?: PollDto;

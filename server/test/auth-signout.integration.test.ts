@@ -17,6 +17,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { AccountLinkingService } from '../src/features/account-management/account-linking.service';
 import request from 'supertest';
 
 import { AuthController } from '../src/auth/auth.controller';
@@ -28,6 +29,7 @@ import { NotificationsService } from '../src/notifications/notifications.service
 import { WebauthnService } from '../src/auth/webauthn.service';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 
 describe('POST /auth/signout (HTTP integration)', () => {
   let app: INestApplication;
@@ -72,6 +74,7 @@ describe('POST /auth/signout (HTTP integration)', () => {
       ],
       controllers: [AuthController],
       providers: [
+      { provide: AccountLinkingService, useValue: {} },
         { provide: AuthService, useValue: mockAuthService },
         {
           provide: WebauthnService,
@@ -104,6 +107,7 @@ describe('POST /auth/signout (HTTP integration)', () => {
           provide: CaptchaService,
           useValue: { generate: jest.fn(), verify: jest.fn().mockReturnValue(true) },
         },
+        { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
         JwtStrategy,
       ],
     }).compile();

@@ -9,22 +9,28 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { VisibilityService } from '../src/common/visibility/visibility.service';
 import request from 'supertest';
 import { UsersController } from '../src/users/users.controller';
 import { UsersService } from '../src/users/users.service';
 import { PagesService } from '../src/pages/pages.service';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
+import { AccountManagementService } from '../src/features/account-management/account-management.service';
 
 function createModule() {
   return Test.createTestingModule({
     imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
     controllers: [UsersController],
     providers: [
+    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
+    { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: { follow: jest.fn(), unfollow: jest.fn(), findOneById: jest.fn(), updateProfile: jest.fn(), update: jest.fn(), updateAvatar: jest.fn(), findByUsername: jest.fn(), findOneWithPosts: jest.fn(), search: jest.fn(), updatePrivacy: jest.fn(), getFollowing: jest.fn(), getPendingFollowRequests: jest.fn(), cancelFollowRequest: jest.fn(), getFollowers: jest.fn(), removeFollower: jest.fn() } },
       { provide: PagesService, useValue: {} },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
       { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
       JwtStrategy,
     ],
   }).compile();

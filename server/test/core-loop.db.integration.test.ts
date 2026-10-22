@@ -153,7 +153,7 @@ beforeAll(async () => {
       }),
       // @Global() shared providers (WsAuthService etc.) — AppModule imports it
       // for exactly this reason, and without it the module graph under test
-      // cannot resolve SnapMapGateway (reached via FeedModule → SnapMapModule).
+      // cannot resolve globally-provided services.
       CommonModule,
       // The other @Global() module; AppModule imports both, DmsService etc.
       // inject VisibilityService assuming global availability.

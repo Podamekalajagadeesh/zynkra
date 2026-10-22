@@ -121,6 +121,7 @@ function createService(
     noopRepo,
     noopRepo,
     outboxRepository,
+    noopRepo,
     configService,
     userService,
     { findPostsByUserId: jest.fn().mockResolvedValue([]) },

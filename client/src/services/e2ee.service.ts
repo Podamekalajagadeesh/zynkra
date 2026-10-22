@@ -13,7 +13,18 @@
  * because the CJS package (curve25519, signal-protocol-address, etc.) can't be bundled
  * by Vite/Rollup. If the dependency is not installed, E2EE functions throw a clear error.
  */
-import { createSignalProtocolStore } from '../lib/signal-protocol-store';
+import {
+  createSignalProtocolStore,
+  getPeerIdentityKey,
+  saveIdentityKeyPair,
+  collectE2eeStoreData,
+  restoreE2eeStoreData,
+} from '../lib/signal-protocol-store';
+import {
+  encryptRecoveryPackage,
+  decryptRecoveryPackage,
+} from '../lib/e2ee-recovery';
+import { decidePeerRotation, PEER_IDENTITY_CHECK_TTL_MS } from '../lib/e2ee-rotation';
 import { api } from '../lib/api';
 import type {
   PreKeyPairType,
@@ -43,6 +54,8 @@ const SIGNED_PREKEY_ID = 1;
 export class E2EEService {
   private store: ReturnType<typeof createSignalProtocolStore> | null = null;
   private userId: string | null = null;
+  /** Per-peer epoch ms of the last server-side identity check (rotation detection). */
+  private peerCheckedAt = new Map<string, number>();
 
   /**
    * Initialize the E2EE service for a given user.
@@ -60,6 +73,10 @@ export class E2EEService {
       // First-time setup: generate all keys
       await this.generateAndUploadKeys();
     } else {
+      // Re-publish identity FIRST if it diverged from the server: an identity
+      // change purges the server's old pre-keys, so the replenish step below
+      // must run after, not before, or the batch would be purged with them.
+      await this.syncSelfIdentity();
       // Refresh one-time pre-keys if running low
       await this.refreshPreKeys();
     }
@@ -75,10 +92,14 @@ export class E2EEService {
     const libsignal = await getLibsignal();
 
     // 1. Generate identity key pair
-    const identityKeyPair = await libsignal.generateIdentityKeyPair();
+    const identityKeyPair = await libsignal.KeyHelper.generateIdentityKeyPair();
+
+    // Persist IMMEDIATELY — an in-memory-only identity would regenerate on
+    // every page load, rotating on the server and orphaning all sessions.
+    await saveIdentityKeyPair(this.userId, identityKeyPair);
 
     // 2. Generate signed pre-key
-    const signedPreKey = await libsignal.generateSignedPreKey(
+    const signedPreKey = await libsignal.KeyHelper.generateSignedPreKey(
       identityKeyPair,
       SIGNED_PREKEY_ID,
     );
@@ -86,7 +107,7 @@ export class E2EEService {
     // 3. Generate one-time pre-keys
     const oneTimePreKeys: PreKeyPairType[] = [];
     for (let i = 0; i < PREKEY_BATCH_SIZE; i++) {
-      const preKey = await libsignal.generatePreKey(i + 2); // start from keyId 2
+      const preKey = await libsignal.KeyHelper.generatePreKey(i + 2); // start from keyId 2
       oneTimePreKeys.push(preKey);
     }
 
@@ -138,7 +159,7 @@ export class E2EEService {
         const libsignal = await getLibsignal();
         const oneTimePreKeys: PreKeyPairType[] = [];
         for (let i = 0; i < PREKEY_BATCH_SIZE; i++) {
-          const pk = await libsignal.generatePreKey(
+          const pk = await libsignal.KeyHelper.generatePreKey(
             Math.floor(Math.random() * 100000) + 100,
           );
           oneTimePreKeys.push(pk);
@@ -160,9 +181,116 @@ export class E2EEService {
   }
 
   /**
+   * Self-heal the server's copy of this device's identity material.
+   *
+   * The local store holds the private keys, so on any divergence the local
+   * copy wins: if the server reports a *different* identity (a stale copy
+   * from a failed/partial upload, or a restored device) or has none at all
+   * (404 — first upload never landed), re-publish the identity key and a
+   * freshly signed pre-key. Peers re-establish via X3DH on their side
+   * (rotation event), so divergence is safe to correct in place.
+   */
+  private async syncSelfIdentity(): Promise<void> {
+    if (!this.store || !this.userId) return;
+
+    const keyPair = await this.store.getIdentityKeyPair();
+    if (!keyPair) return;
+    const localB64 = arrayBufferToBase64(keyPair.pubKey);
+
+    try {
+      const res = await api.get(`/keys/identity/${this.userId}`);
+      const remote = (res.data as { publicKey?: string }).publicKey;
+      if (remote === localB64) return;
+      console.warn('E2EE: server identity differs from local — re-publishing');
+    } catch {
+      // Missing on server (404) or unreachable — attempt the upload anyway;
+      // if we're offline it fails soft and is retried on next initialize.
+    }
+
+    try {
+      await api.post('/keys/identity', { identityKey: localB64 });
+
+      // Signature over the signed pre-key must be made with the identity
+      // private key; regenerate the SPK (same keyId → server upserts, other
+      // peers pick it up on their next session establishment).
+      const libsignal = await getLibsignal();
+      const spk = await libsignal.KeyHelper.generateSignedPreKey(keyPair, SIGNED_PREKEY_ID);
+      await this.store.storeSignedPreKey(spk.keyId, spk.keyPair);
+      await api.post('/keys/signed-prekey', {
+        keyId: spk.keyId,
+        publicKey: arrayBufferToBase64(spk.keyPair.pubKey),
+        signature: arrayBufferToBase64(spk.signature),
+      });
+    } catch (err) {
+      console.warn('E2EE: identity self-sync failed (will retry):', err);
+    }
+  }
+
+  /**
+   * Guarantee the session with `recipientUserId` is aimed at their *current*
+   * identity key before sending.
+   *
+   *  - No session → establish one (X3DH).
+   *  - Session exists → throttled check of the server's identity for the peer
+   *    against the identity cached when the session was built. On mismatch the
+   *    peer rotated their keys (new install / compromise response): the old
+   *    session is torn down and rebuilt from a fresh pre-key bundle, because
+   *    ratcheting further would produce ciphertext they can no longer decrypt.
+   *  - Server unreachable → keep the existing session (offline tolerance).
+   */
+  async ensureFreshSession(recipientUserId: string): Promise<void> {
+    if (!this.store || !this.userId) throw new Error('E2EE not initialized');
+
+    const libsignal = await getLibsignal();
+    const address = new libsignal.SignalProtocolAddress(recipientUserId, 1);
+    const existing = await this.store.loadSession(address.toString());
+    if (!existing) {
+      await this.establishSession(recipientUserId);
+      return;
+    }
+
+    const now = Date.now();
+    const lastCheckedAt = this.peerCheckedAt.get(recipientUserId) ?? 0;
+    if (lastCheckedAt > 0 && now - lastCheckedAt < PEER_IDENTITY_CHECK_TTL_MS) {
+      return;
+    }
+
+    let remoteKey: string | null = null;
+    try {
+      const res = await api.get(`/keys/identity/${recipientUserId}`);
+      remoteKey = (res.data as { publicKey?: string }).publicKey ?? null;
+    } catch {
+      remoteKey = null;
+    }
+
+    let cachedKey: string | null = null;
+    try {
+      const cached = await getPeerIdentityKey(address.toString());
+      cachedKey = cached ? arrayBufferToBase64(cached) : null;
+    } catch {
+      cachedKey = null;
+    }
+
+    this.peerCheckedAt.set(recipientUserId, now);
+    const decision = decidePeerRotation(cachedKey, remoteKey, lastCheckedAt, now);
+
+    if (decision === 'reestablish') {
+      console.warn(
+        `E2EE: identity key rotated for ${recipientUserId} — rebuilding session`,
+      );
+      await this.store.removeSession(address.toString());
+      await this.establishSession(recipientUserId);
+    }
+  }
+
+  /**
    * Establish a session with another user by fetching their PreKey bundle
    * from the server and processing it with SessionBuilder (X3DH).
    * After the session is established, messages can be encrypted/decrypted.
+   *
+   * The caller must ensure no stale session exists (see `ensureFreshSession`);
+   * this method always fetches a *current* bundle, which consumes one of the
+   * recipient's one-time pre-keys.
    */
   async establishSession(recipientUserId: string): Promise<void> {
     if (!this.store || !this.userId) throw new Error('E2EE not initialized');
@@ -181,24 +309,29 @@ export class E2EEService {
       const address = new libsignal.SignalProtocolAddress(recipientUserId, 1);
       const builder = new libsignal.SessionBuilder(this.store, address);
 
-      // Convert base64 fields to ArrayBuffers for the Signal Protocol library
+      // Convert base64 fields to ArrayBuffers — DeviceType shape expected by
+      // SessionBuilder.processPreKey (identityKey, nested signedPreKey, preKey).
       const preKeyBundle: PreKeyBundleType = {
         registrationId: b.registrationId,
-        deviceId: 1,
         identityKey: base64ToArrayBuffer(b.identityKey),
-        signedPreKeyId: b.signedPreKey.keyId,
-        signedPreKey: base64ToArrayBuffer(b.signedPreKey.publicKey),
-        signedPreKeySignature: base64ToArrayBuffer(b.signedPreKey.signature),
+        signedPreKey: {
+          keyId: b.signedPreKey.keyId,
+          publicKey: base64ToArrayBuffer(b.signedPreKey.publicKey),
+          signature: base64ToArrayBuffer(b.signedPreKey.signature),
+        },
       };
 
       // Include one-time pre-key if available
       if (b.oneTimePreKey) {
-        preKeyBundle.preKeyId = b.oneTimePreKey.keyId;
-        preKeyBundle.preKey = base64ToArrayBuffer(b.oneTimePreKey.publicKey);
+        preKeyBundle.preKey = {
+          keyId: b.oneTimePreKey.keyId,
+          publicKey: base64ToArrayBuffer(b.oneTimePreKey.publicKey),
+        };
       }
 
-      // Process the pre-key bundle (X3DH key agreement)
-      await builder.processPreKeyBundle(preKeyBundle);
+      // X3DH key agreement (verifies the signed-prekey signature against the
+      // fetched identity key, then persists the session record).
+      await builder.processPreKey(preKeyBundle);
     } catch (err) {
       console.error('E2EE: Failed to establish session with', recipientUserId, err);
       throw new Error('Cannot establish encrypted session. User may not have keys published.');
@@ -219,12 +352,9 @@ export class E2EEService {
     const libsignal = await getLibsignal();
     const address = new libsignal.SignalProtocolAddress(recipientUserId, 1);
 
-    // Check if session exists, if not, establish one
-    const sessionRecord = await this.store.loadSession(address.toString());
-
-    if (!sessionRecord) {
-      await this.establishSession(recipientUserId);
-    }
+    // Ensure a session exists AND still targets the recipient's current
+    // identity (re-establishes if their keys rotated).
+    await this.ensureFreshSession(recipientUserId);
 
     const cipher = new libsignal.SessionCipher(this.store, address);
 
@@ -232,10 +362,11 @@ export class E2EEService {
     const plaintextBuffer = stringToArrayBuffer(plaintext);
     const ciphertext = await cipher.encrypt(plaintextBuffer);
 
-    // Return as JSON with type info so the recipient knows how to decrypt
+    // The library's `body` is a latin1/binary string; the wire format carries
+    // base64 (decoded by the recipient before handing bytes to the library).
     return JSON.stringify({
       type: ciphertext.type,
-      body: ciphertext.body,
+      body: arrayBufferToBase64(binaryStringToArrayBuffer(ciphertext.body)),
       version: 1,
     });
   }
@@ -263,22 +394,32 @@ export class E2EEService {
 
       if (parsed.type === 3) {
         // PreKeyWhisperMessage: first message in a session
+        // No encoding argument: the default ('binary') passes an
+        // ArrayBuffer through unchanged — any other value is rejected.
         decrypted = await cipher.decryptPreKeyWhisperMessage(
           ciphertextBuffer,
-          'base64',
         );
       } else {
         // Regular WhisperMessage
         decrypted = await cipher.decryptWhisperMessage(
           ciphertextBuffer,
-          'base64',
         );
       }
 
       return arrayBufferToString(decrypted);
     } catch (err) {
       console.error('E2EE: Decryption failed for message from', senderUserId, err);
-      // Attempt session re-establishment
+      // The session is unusable (rotated peer, lost state, or corrupted
+      // ratchet). Tear it down first so the rebuild starts from a clean slate
+      // instead of layering a new X3DH handshake over broken state. The failed
+      // message itself still can't be decrypted — the sender must re-send
+      // under the new session — so this re-throws after re-establishing.
+      try {
+        await this.store.removeSession(address.toString());
+        this.peerCheckedAt.delete(senderUserId);
+      } catch {
+        // Fall through — establishSession below rebuilds regardless.
+      }
       await this.establishSession(senderUserId);
       throw new Error('Decryption failed. Session may have been lost.');
     }
@@ -303,6 +444,63 @@ export class E2EEService {
     const keyPair = await this.store.getIdentityKeyPair();
     if (!keyPair) return null;
     return arrayBufferToBase64(keyPair.pubKey);
+  }
+
+  /**
+   * This device's key-rotation history from the server (newest first).
+   * `since` is an ISO-8601 instant; pass the last seen `createdAt` to sync
+   * incrementally — the building block for the recovery/resync story after a
+   * device was offline.
+   */
+  async getRotationEvents(
+    since?: string,
+  ): Promise<Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>> {
+    if (!this.store) throw new Error('E2EE not initialized');
+    const qs = since ? `?since=${encodeURIComponent(since)}` : '';
+    const res = await api.get(`/keys/rotation-events${qs}`);
+    return res.data as Array<{
+      kind: string;
+      keyId: number | null;
+      detail: string | null;
+      createdAt: string;
+    }>;
+  }
+
+  /**
+   * Recovery export: wrap the full local E2EE store (identity + session
+   * ratchet state + pre-keys) in a passphrase-encrypted envelope, returned as
+   * a JSON string for the caller to download. The passphrase never leaves the
+   * device; the server never sees any of it.
+   */
+  async exportRecovery(passphrase: string): Promise<string> {
+    if (!this.store || !this.userId) throw new Error('E2EE not initialized');
+    const snapshot = await collectE2eeStoreData(this.userId);
+    return encryptRecoveryPackage(this.userId, snapshot, passphrase);
+  }
+
+  /**
+   * Recovery import: decrypt an envelope with the passphrase, replace the
+   * local E2EE store, then verify the server's copy of this identity
+   * (self-heal if missing/stale). After this the device can decrypt restored
+   * session history and continue existing conversations.
+   */
+  async importRecovery(envelope: string, passphrase: string): Promise<void> {
+    if (!this.store || !this.userId) throw new Error('E2EE not initialized');
+
+    const pkg = await decryptRecoveryPackage(envelope, passphrase);
+    if (pkg.userId !== this.userId) {
+      throw new Error(
+        'This backup belongs to a different account. Sign in as that account first.',
+      );
+    }
+
+    await restoreE2eeStoreData(this.userId, pkg.snapshot);
+
+    // Rebuild in-memory handles — the underlying IndexedDB was replaced.
+    this.store = createSignalProtocolStore(this.userId);
+    this.peerCheckedAt = new Map();
+
+    await this.syncSelfIdentity();
   }
 }
 
@@ -336,9 +534,23 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+/** latin1/binary string (as produced by the library) → raw bytes. */
+function binaryStringToArrayBuffer(str: string): ArrayBuffer {
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    bytes[i] = str.charCodeAt(i) & 0xff;
+  }
+  return bytes.buffer;
+}
+
 function stringToArrayBuffer(str: string): ArrayBuffer {
-  const encoder = new TextEncoder();
-  return encoder.encode(str).buffer;
+  const encoded = new TextEncoder().encode(str);
+  // Copy into a locally-constructed buffer: in test/jsdom environments
+  // TextEncoder may come from another realm, and the Signal library checks
+  // `buffer instanceof ArrayBuffer` strictly.
+  const bytes = new Uint8Array(encoded.length);
+  bytes.set(encoded);
+  return bytes.buffer;
 }
 
 function arrayBufferToString(buffer: ArrayBuffer): string {

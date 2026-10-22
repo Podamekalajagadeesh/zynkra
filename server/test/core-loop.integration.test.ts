@@ -515,7 +515,6 @@ function buildFeedMock(store: Store) {
       return store.posts.filter((p) => following.has(p.user.id)) as any;
     }),
     getSubscriptionsFeed: jest.fn(async () => []),
-    getLocalFeed: jest.fn(async () => []),
     getTrendingFeed: jest.fn(async () => store.posts as any),
     getExploreFeed: jest.fn(async () => ({ posts: store.posts, hasMore: false })),
     getExploreCategories: jest.fn(async () => ({ categories: [] })),

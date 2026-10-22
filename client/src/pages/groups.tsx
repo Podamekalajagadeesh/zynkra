@@ -11,7 +11,10 @@ import { CreateGroupForm } from '../components/groups/CreateGroupForm';
 import { ModMailConversationList } from '../components/groups/ModMailConversationList';
 import { ModMailComposer } from '../components/groups/ModMailComposer';
 import { ModMailInternalNoteForm } from '../components/groups/ModMailInternalNoteForm';
-import { getGroupMembers } from '../lib/api';
+import { getGroupMembers, leaveGroup } from '../lib/api';
+import { GroupCalendar } from '../components/groups/GroupCalendar';
+import { GroupTodoList } from '../components/groups/GroupTodoList';
+import { useToast } from '../hooks/useToast';
 import { Conversation } from '../components/dms/ConversationList';
 import { Message } from '../lib/types';
 
@@ -26,14 +29,21 @@ export const GroupsPage = () => {
   >();
   const [selectedModMailConversation, setSelectedModMailConversation] = useState<Conversation | null>(null);
   const [isUserModerator, setIsUserModerator] = useState(false);
+  const [isCurrentMember, setIsCurrentMember] = useState(false);
+  const [groupPanel, setGroupPanel] = useState<'channels' | 'calendar' | 'tasks'>('channels');
+  const [listRefreshKey, setListRefreshKey] = useState(0);
   const [modMailRefreshKey, setModMailRefreshKey] = useState(0);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const { addToast } = useToast();
 
   const handleSelectGroup = (id: string) => {
     setSelectedGroupId(id);
     setSelectedChannelId(undefined);
     setSelectedChannelType(undefined);
     setSelectedModMailConversation(null);
+    setGroupPanel('channels');
+    setIsUserModerator(false);
+    setIsCurrentMember(false);
   };
 
   useEffect(() => {
@@ -45,20 +55,46 @@ export const GroupsPage = () => {
     }
   }, [routeGroupId]);
 
-  // Check if current user is a moderator or admin for the selected group
+  // Check membership + moderator status for the selected group
   useEffect(() => {
-    if (selectedGroupId) {
-      getGroupMembers(selectedGroupId).then(members => {
-        const currentUserId = localStorage.getItem('currentUserId');
-        const currentMember = members.find((m: any) => m.user.id === currentUserId);
-        if (currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator')) {
-          setIsUserModerator(true);
-        } else {
-          setIsUserModerator(false);
-        }
-      });
+    if (!selectedGroupId) {
+      setIsUserModerator(false);
+      setIsCurrentMember(false);
+      return;
     }
-  }, [selectedGroupId]);
+    let cancelled = false;
+    getGroupMembers(selectedGroupId)
+      .then((members) => {
+        if (cancelled) return;
+        const currentUserId = localStorage.getItem('currentUserId');
+        const currentMember = members.find((m: any) => m.user?.id === currentUserId);
+        setIsCurrentMember(!!currentMember);
+        setIsUserModerator(
+          !!currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator'),
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setIsCurrentMember(false);
+        setIsUserModerator(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedGroupId, listRefreshKey]);
+
+  const handleLeaveGroup = async () => {
+    if (!selectedGroupId) return;
+    try {
+      await leaveGroup(selectedGroupId);
+      addToast('You left the group', 'success');
+      setSelectedGroupId(undefined);
+      setSelectedChannelId(undefined);
+      setListRefreshKey((prev) => prev + 1);
+    } catch (error: any) {
+      addToast(error?.response?.data?.message || 'Failed to leave group', 'error');
+    }
+  };
 
   const handleModMailConversationCreated = () => {
     setModMailRefreshKey(prev => prev + 1);
@@ -83,37 +119,75 @@ export const GroupsPage = () => {
           <GroupList
             onSelectGroup={handleSelectGroup}
             selectedId={selectedGroupId}
+            refreshKey={listRefreshKey}
           />
         </div>
         <div className="grid grid-cols-[3fr_7fr] h-full">
           {selectedGroupId && (
             <div className="flex flex-col overflow-y-auto">
-              <ChannelList
-                groupId={selectedGroupId}
-                onSelectChannel={(channel) => {
-                  setSelectedChannelId(channel.id);
-                  setSelectedChannelType(channel.type);
-                  setSelectedModMailConversation(null);
-                }}
-                selectedId={selectedChannelId}
-                canCreate={isUserModerator}
-              />
-              {isUserModerator && (
+              <div className="flex items-center border-b border-dark-200 dark:border-dark-700">
+                {(
+                  [
+                    ['channels', 'Channels'],
+                    ['calendar', 'Calendar'],
+                    ['tasks', 'Tasks'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setGroupPanel(key)}
+                    className={`px-md py-sm text-sm font-semibold ${
+                      groupPanel === key
+                        ? 'border-b-2 border-dark-900 text-dark-900 dark:border-white dark:text-white'
+                        : 'text-dark-500'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                {isCurrentMember && (
+                  <button
+                    type="button"
+                    onClick={handleLeaveGroup}
+                    className="ml-auto px-md py-sm text-xs font-semibold text-red-600"
+                  >
+                    Leave group
+                  </button>
+                )}
+              </div>
+              {groupPanel === 'channels' && (
                 <>
-                  <ModMailComposer 
-                    groupId={selectedGroupId} 
-                    onConversationCreated={handleModMailConversationCreated}
-                  />
-                  <ModMailConversationList
-                    key={modMailRefreshKey}
+                  <ChannelList
                     groupId={selectedGroupId}
-                    onSelectConversation={handleSelectModMailConversation}
-                    selectedId={selectedModMailConversation?.id}
+                    onSelectChannel={(channel) => {
+                      setSelectedChannelId(channel.id);
+                      setSelectedChannelType(channel.type);
+                      setSelectedModMailConversation(null);
+                    }}
+                    selectedId={selectedChannelId}
+                    canCreate={isUserModerator}
                   />
+                  {isUserModerator && (
+                    <>
+                      <ModMailComposer
+                        groupId={selectedGroupId}
+                        onConversationCreated={handleModMailConversationCreated}
+                      />
+                      <ModMailConversationList
+                        key={modMailRefreshKey}
+                        groupId={selectedGroupId}
+                        onSelectConversation={handleSelectModMailConversation}
+                        selectedId={selectedModMailConversation?.id}
+                      />
+                    </>
+                  )}
+                  <GroupMembers groupId={selectedGroupId} />
                 </>
               )}
-              <GroupMembers />
-              {isUserModerator && selectedGroupId && (
+              {groupPanel === 'calendar' && <GroupCalendar groupId={selectedGroupId} />}
+              {groupPanel === 'tasks' && <GroupTodoList groupId={selectedGroupId} />}
+              {isUserModerator && (
                 <GroupLockdownPanel groupId={selectedGroupId} />
               )}
             </div>

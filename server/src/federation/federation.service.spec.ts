@@ -65,6 +65,9 @@ type Harness = {
   outboxRows: any[];
   /** Rows the ledger lookup returns, in order. */
   outboxLookup: any[];
+  /** Dead-letter queue repository and the rows it has recorded. */
+  deliveryAttemptRepository: any;
+  deliveryRows: any[];
 };
 
 function createService(
@@ -158,6 +161,19 @@ function createService(
     find: jest.fn().mockResolvedValue([]),
   };
 
+  const deliveryRows: any[] = [];
+  const deliveryAttemptRepository = {
+    find: jest.fn().mockImplementation(async () => deliveryRows.slice()),
+    findOne: jest.fn().mockResolvedValue(null),
+    create: jest.fn((row: any) => ({ ...row })),
+    save: jest.fn(async (row: any) => {
+      const stored = { id: `dlq-${deliveryRows.length + 1}`, ...row };
+      deliveryRows.push(stored);
+      return stored;
+    }),
+    update: jest.fn(async () => ({ affected: 1 })),
+  };
+
   const configService = {
     get: (key: string, fallback?: any) => {
       if (key === 'FEDERATION_ENABLED') return federationEnabled ? 'true' : 'false';
@@ -190,6 +206,7 @@ function createService(
     moderationRepository,
     followRepository,
     outboxRepository,
+    deliveryAttemptRepository,
     configService,
     userService,
     postsService,
@@ -212,6 +229,8 @@ function createService(
     savedInstances,
     outboxRows,
     outboxLookup,
+    deliveryAttemptRepository,
+    deliveryRows,
   };
 }
 

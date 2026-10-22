@@ -16,6 +16,15 @@ class MediaDto {
 
   @IsString()
   type: 'image' | 'video' | 'audio';
+
+  /**
+   * E2EE attachment algorithm tag (e.g. "xchacha20poly1305"). Present when
+   * the bytes at `url` are client-side ciphertext; the decryption key never
+   * reaches the server — it travels inside the Signal envelope.
+   */
+  @IsOptional()
+  @IsString()
+  enc?: string;
 }
 
 class VoiceNoteDto {

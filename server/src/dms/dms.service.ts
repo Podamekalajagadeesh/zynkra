@@ -282,6 +282,24 @@ export class DmsService {
       );
     }
 
+    // Media on encrypted threads must be client-side ciphertext (Phase 3
+    // per-attachment encryption). The server stores the blob verbatim; the
+    // decryption key travels only inside the Signal envelope above.
+    if (conversation.isEncrypted && sendMessageDto.media?.length) {
+      const plaintextMedia = sendMessageDto.media.filter((m) => !m.enc);
+      if (plaintextMedia.length > 0) {
+        throw new BadRequestException(
+          'This conversation is end-to-end encrypted. Media must be uploaded as E2EE ciphertext (enc tag required).',
+        );
+      }
+      // An attachment key can only be delivered inside an envelope.
+      if (!isEnvelope) {
+        throw new BadRequestException(
+          'Encrypted media requires an encrypted envelope carrying the attachment keys.',
+        );
+      }
+    }
+
     // Progressively upgrade a legacy 1:1 thread to E2EE once both parties have
     // identity keys and the sender starts using the encrypted envelope. Plaintext
     // sends to a not-yet-upgraded thread keep working (backward compatible).

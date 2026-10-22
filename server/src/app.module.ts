@@ -267,20 +267,15 @@ import { DocumentationModule } from './documentation/documentation.module';
     SecurityAuditModule,
     LocalizationModule,
     DocumentationModule,
-    // Deliberately NOT registered here — code left on disk, per ROADMAP.md §2/§6:
-    //   TokenModule  (fake `$ZYNK` token stored as a Postgres row)
-    //   DaoModule    (DAO governance layered on a Group)
-    // Do not register them without first replacing them with real
-    // implementations. `archive-modules.sh` reports on this list.
-    //
-    // ⚠️  CORRECTION (this comment was previously wrong in the unsafe direction):
-    // It used to also list TokenGatedContentModule and SnapMapModule as
-    // "not wired". They are NOT unwired — they are registered transitively:
-    //   posts.module.ts and groups.module.ts import TokenGatedContentModule
-    //   feed.module.ts imports SnapMapModule
-    // So token-gated post access and the SnapMap location gateway ARE both
-    // reachable over HTTP/socket today, and `archive-modules.sh` is right to
-    // report them as WIRED. Unregister them there too if they should go.
+    // Cut per ROADMAP.md §2/§6 — deleted 2026-10-21 (was facade, never real):
+    //   TokenModule, DaoModule, TokenGatedContentModule, SnapMapModule
+    // (the last two were still reachable transitively via posts/groups/feed
+    // until now). Do not re-add without a real implementation.
+    // `archive-modules.sh` reports on this list.
+    // CORRECTION (2026-10-21): TokenGatedContentModule and SnapMapModule were
+    // previously still reachable transitively (posts.module, groups.module,
+    // feed.module). They have now been unwired and deleted, together with the
+    // token/ and dao/ directories — the cut per ROADMAP.md §6 is complete.
   ],
   controllers: [AppController, InfrastructureController],
   providers: [

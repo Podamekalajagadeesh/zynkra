@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 
@@ -100,12 +99,6 @@ export class FeedController {
       (user) => this.feedService.getSubscriptionsFeed(user),
       ['subscriptions', 'subscriptions.creator'],
     );
-  }
-
-  @Get('local')
-  @UseGuards(JwtAuthGuard)
-  getLocalFeed(@Request() req, @Query('radius') radius?: number) {
-    return this.withViewer(req, (user) => this.feedService.getLocalFeed(user, radius || 50));
   }
 
   @Get('trending')

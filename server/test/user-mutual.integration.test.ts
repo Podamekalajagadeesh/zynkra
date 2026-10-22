@@ -9,12 +9,15 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { AccountManagementService } from '../src/features/account-management/account-management.service';
+import { VisibilityService } from '../src/common/visibility/visibility.service';
 import request from 'supertest';
 import { UsersController } from '../src/users/users.controller';
 import { UsersService } from '../src/users/users.service';
 import { PagesService } from '../src/pages/pages.service';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
 
 function createModule(overrides: Record<string, jest.Mock> = {}) {
   const defaultService: Record<string, jest.Mock> = {
@@ -31,10 +34,13 @@ function createModule(overrides: Record<string, jest.Mock> = {}) {
     imports: [PassportModule.register({ defaultStrategy: 'jwt' }), JwtModule.register({ secret: 'test-secret' })],
     controllers: [UsersController],
     providers: [
+    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
+    { provide: AccountManagementService, useValue: {} },
       { provide: UsersService, useValue: { ...defaultService, ...overrides } },
       { provide: PagesService, useValue: {} },
       { provide: ConfigService, useValue: { get: (key: string) => key === 'JWT_SECRET' ? 'test-secret' : undefined } },
       { provide: getRepositoryToken(LoginSession), useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn() } },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue({ id: 'user-1', email: 'user-1@test.com', status: 'active', banned: false, role: 'user' }) } },
       JwtStrategy,
     ],
   }).compile();

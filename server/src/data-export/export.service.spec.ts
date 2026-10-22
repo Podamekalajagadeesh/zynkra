@@ -2,6 +2,8 @@ import { NotFoundException } from '@nestjs/common';
 import { ExportService } from './export.service';
 import { ConversationType } from '../dms/conversation-type.enum';
 
+const configStub = { get: jest.fn((key: string, fallback?: unknown) => fallback) };
+
 const emptyRepository = () => ({
   find: jest.fn().mockResolvedValue([]),
   findOne: jest.fn(),
@@ -49,7 +51,7 @@ describe('ExportService data permissions', () => {
       emptyRepository(),
       emptyRepository(),
     ];
-    const service = Reflect.construct(ExportService, repositories) as ExportService;
+    const service = Reflect.construct(ExportService, [...repositories, configStub]) as ExportService;
 
     const permitted = await service.exportUserData('user-1');
 
@@ -101,7 +103,7 @@ describe('ExportService data permissions', () => {
       emptyRepository(),
       emptyRepository(),
     ];
-    const service = Reflect.construct(ExportService, repositories) as ExportService;
+    const service = Reflect.construct(ExportService, [...repositories, configStub]) as ExportService;
 
     const restricted = await service.exportUserData('user-2');
 
@@ -153,7 +155,7 @@ const buildService = (overrides: Partial<Record<RepoKey, Record<string, any>>> =
     repos[key] = repository;
     return repository;
   });
-  return { service: Reflect.construct(ExportService, ordered) as ExportService, repos };
+  return { service: Reflect.construct(ExportService, [...ordered, configStub]) as ExportService, repos };
 };
 
 const buildImportManager = (

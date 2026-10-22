@@ -91,6 +91,11 @@ jobs:
       - name: Core loop tests
         working-directory: server
         run: npm run test:core
+      - name: HTTP integration suites (auth, posts, users, media, search, content formats)
+        working-directory: server
+        # The per-endpoint HTTP integration suites were previously executed by
+        # no script and no CI step; this is the Wave 1 exit gate for the Core loop.
+        run: npm run test:http
       - name: Core loop tests (real Postgres)
         working-directory: server
         run: npm run test:core-db

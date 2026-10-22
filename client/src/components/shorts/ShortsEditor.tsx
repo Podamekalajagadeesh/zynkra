@@ -550,8 +550,6 @@ const ShortsEditor = ({ postId }: { postId?: string }) => {
         mediaFiles,
         'public',
         '',
-        false,
-        '',
         '',
         [],
         null,

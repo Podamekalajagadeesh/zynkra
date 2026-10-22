@@ -1,12 +1,14 @@
 import { Injectable, Logger, HttpException, HttpStatus, OnModuleInit } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull, LessThanOrEqual, Not } from 'typeorm';
 import { RemoteInstance } from './entities/remote-instance.entity';
 import { RemoteUser } from './entities/remote-user.entity';
 import { RemotePost, ActivityType } from './entities/remote-post.entity';
 import { FederationModeration } from './entities/federation-moderation.entity';
 import { FederationFollow } from './entities/federation-follow.entity';
 import { FederationOutbox } from './entities/federation-outbox.entity';
+import { FederationDeliveryAttempt } from './entities/federation-delivery-attempt.entity';
 import { ConnectInstanceDto, RemoteInstanceDto } from './dto/remote-instance.dto';
 import { FederatePostDto, FederateFollowDto } from './dto/federate-post.dto';
 import { ConfigService } from '@nestjs/config';
@@ -72,6 +74,10 @@ export class FederationService implements OnModuleInit {
   private readonly defaultDeliveryRetries = 3;
   private readonly defaultDeliveryRetryDelayMs = 200;
   private readonly maxDeliveryRetryDelayMs = 30_000;
+  /** Dead-letter queue: redrive cycles after the in-request retries are spent. */
+  private readonly dlqMaxAttempts = 10;
+  private readonly dlqBaseDelayMs = 60_000;
+  private readonly dlqMaxDelayMs = 3_600_000;
 
   constructor(
     @InjectRepository(RemoteInstance)
@@ -86,6 +92,8 @@ export class FederationService implements OnModuleInit {
     private readonly followRepository: Repository<FederationFollow>,
     @InjectRepository(FederationOutbox)
     private readonly outboxRepository: Repository<FederationOutbox>,
+    @InjectRepository(FederationDeliveryAttempt)
+    private readonly deliveryAttemptRepository: Repository<FederationDeliveryAttempt>,
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly postsService: PostsService,
@@ -607,10 +615,19 @@ export class FederationService implements OnModuleInit {
 
         if (outcome.delivered) {
           this.logger.log(`Delivered ${activity.type} to ${instanceDomain}`);
+          await this.markDeliveryDelivered(activity.id, instanceDomain);
         } else {
           this.logger.warn(
             `${activity.type} to ${instanceDomain} not delivered: ${outcome.reason ?? 'unknown'}`,
           );
+          await this.enqueueFailedDelivery(activity, {
+            instanceDomain,
+            inboxUrl: instance.baseUrl ? `${instance.baseUrl}/inbox` : '',
+            actorUsername,
+            status: outcome.status ?? null,
+            reason: outcome.reason ?? 'not delivered',
+            retryable: outcome.retryable ?? false,
+          });
         }
       } catch (error) {
         this.logger.error(`Failed to deliver ${activity.type} to ${instanceDomain}:`, error);
@@ -618,6 +635,17 @@ export class FederationService implements OnModuleInit {
           domain: instanceDomain,
           delivered: false,
           reason: (error as Error).message,
+        });
+        // deliverToInbox only throws after exhausting its in-request retries on
+        // a retryable failure (5xx / 429 / transport) — exactly the case the
+        // dead-letter queue exists for.
+        await this.enqueueFailedDelivery(activity, {
+          instanceDomain,
+          inboxUrl: instance.baseUrl ? `${instance.baseUrl}/inbox` : '',
+          actorUsername,
+          status: null,
+          reason: (error as Error).message,
+          retryable: true,
         });
       }
     }
@@ -888,6 +916,21 @@ export class FederationService implements OnModuleInit {
         { actorUsername, inboxUrl: target.inboxUrl },
       );
 
+      const deliveryDomain =
+        target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown';
+      if (outcome.delivered) {
+        await this.markDeliveryDelivered(activity.id, deliveryDomain);
+      } else {
+        await this.enqueueFailedDelivery(activity, {
+          instanceDomain: deliveryDomain,
+          inboxUrl: target.inboxUrl,
+          actorUsername,
+          status: outcome.status ?? null,
+          reason: outcome.reason ?? 'not delivered',
+          retryable: outcome.retryable ?? false,
+        });
+      }
+
       return {
         activityId: activity.id,
         requested: 1,
@@ -897,6 +940,17 @@ export class FederationService implements OnModuleInit {
       } as FederationReport;
     } catch (error) {
       this.logger.error(`Failed to deliver ${activity.type} to ${target.actorActorId}:`, error);
+      if (target.inboxUrl) {
+        await this.enqueueFailedDelivery(activity, {
+          instanceDomain:
+            target.instanceDomain ?? this.hostnameOf(target.inboxUrl) ?? 'unknown',
+          inboxUrl: target.inboxUrl,
+          actorUsername,
+          status: null,
+          reason: (error as Error).message,
+          retryable: true,
+        });
+      }
       return {
         activityId: activity.id,
         requested: 1,
@@ -1088,6 +1142,264 @@ export class FederationService implements OnModuleInit {
     }
 
     throw lastError;
+  }
+
+  // ---------------------------------------------------------------------
+  // Dead-letter queue
+  //
+  // In-request retries (3 attempts, capped backoff) cannot outlive a request,
+  // and a peer that stays down longer — or recovers ten minutes later — used to
+  // have every activity fanned out during the outage silently dropped after the
+  // FederationReport was returned. These methods retain the failed delivery and
+  // drive the scheduled redrive.
+  // ---------------------------------------------------------------------
+
+  private hostnameOf(url: string | undefined | null): string | null {
+    if (!url) return null;
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Retain a failed delivery for redrive. Deterministic rejections (signature
+   * wrong, 4xx) are stored dead immediately: retrying identical bytes cannot
+   * succeed until the configuration changes, but the row is still worth keeping
+   * so an operator can see *why* and manually redrive after a fix.
+   */
+  private async enqueueFailedDelivery(
+    activity: any,
+    info: {
+      instanceDomain: string;
+      inboxUrl: string;
+      actorUsername?: string;
+      status: number | null;
+      reason: string;
+      retryable: boolean;
+    },
+  ): Promise<void> {
+    if (!activity?.id || !info.inboxUrl) return;
+    try {
+      const existing = await this.deliveryAttemptRepository.findOne({
+        where: {
+          activityId: String(activity.id),
+          inboxUrl: info.inboxUrl,
+          completedAt: IsNull(),
+          dead: false,
+        },
+      });
+      if (existing) {
+        existing.lastStatus = info.status;
+        existing.lastReason = info.reason;
+        // A fresh failure while a redrive is already scheduled means the peer
+        // is still down; push the next attempt out but do not reset the count.
+        await this.deliveryAttemptRepository.save(existing);
+        return;
+      }
+      const row = this.deliveryAttemptRepository.create({
+        activityId: String(activity.id),
+        activityType: String(activity.type ?? 'Unknown'),
+        payload: JSON.stringify(activity),
+        inboxUrl: info.inboxUrl,
+        instanceDomain: info.instanceDomain,
+        actorUsername: info.actorUsername ?? null,
+        attempts: 1,
+        lastStatus: info.status,
+        lastReason: info.reason,
+        retryable: info.retryable,
+        dead: !info.retryable,
+        nextRetryAt: info.retryable
+          ? new Date(Date.now() + this.dlqBaseDelayMs)
+          : null,
+        completedAt: null,
+      });
+      await this.deliveryAttemptRepository.save(row);
+    } catch (error) {
+      // The queue must never break the user-visible federation call.
+      this.logger.error('Failed to record federation delivery attempt', error);
+    }
+  }
+
+  private async markDeliveryDelivered(activityId: string, instanceDomain: string): Promise<void> {
+    try {
+      await this.deliveryAttemptRepository.update(
+        {
+          activityId: String(activityId),
+          instanceDomain,
+          completedAt: IsNull(),
+          dead: false,
+        },
+        { completedAt: new Date(), nextRetryAt: null },
+      );
+    } catch (error) {
+      this.logger.error('Failed to mark federation delivery as delivered', error);
+    }
+  }
+
+  /**
+   * Scheduled re-drive of the dead-letter queue. One delivery attempt per row
+   * per tick — the in-request retry loop still applies inside `deliverToInbox`
+   * only when maxAttempts > 1; here a single attempt keeps a stuck peer from
+   * monopolizing the tick.
+   */
+  @Cron(CronExpression.EVERY_MINUTE)
+  async redriveFailedDeliveries(): Promise<void> {
+    if (!this.federationEnabled) return;
+    let due: FederationDeliveryAttempt[];
+    try {
+      due = await this.deliveryAttemptRepository.find({
+        where: {
+          dead: false,
+          completedAt: IsNull(),
+          nextRetryAt: LessThanOrEqual(new Date()),
+        },
+        take: 20,
+        order: { nextRetryAt: 'ASC' },
+      });
+    } catch (error) {
+      this.logger.error('Federation redrive query failed', error);
+      return;
+    }
+    for (const attempt of due) {
+      await this.redriveDeliveryAttempt(attempt);
+    }
+  }
+
+  private async redriveDeliveryAttempt(attempt: FederationDeliveryAttempt): Promise<void> {
+    const instance = await this.instanceRepository.findOne({
+      where: { domain: attempt.instanceDomain, isBlocked: false },
+    });
+    if (!instance) {
+      await this.deliveryAttemptRepository.update(attempt.id, {
+        dead: true,
+        nextRetryAt: null,
+        lastReason: 'instance is no longer connected or is blocked',
+      });
+      return;
+    }
+
+    let payload: any;
+    try {
+      payload = JSON.parse(attempt.payload);
+    } catch {
+      await this.deliveryAttemptRepository.update(attempt.id, {
+        dead: true,
+        nextRetryAt: null,
+        lastReason: 'retained payload is not valid JSON',
+      });
+      return;
+    }
+
+    try {
+      const outcome = await this.deliverToInbox(instance, payload, {
+        actorUsername: attempt.actorUsername ?? undefined,
+        inboxUrl: attempt.inboxUrl,
+        maxAttempts: 1,
+        retryDelayMs: 0,
+      });
+      if (outcome.delivered) {
+        await this.deliveryAttemptRepository.update(attempt.id, {
+          completedAt: new Date(),
+          nextRetryAt: null,
+          attempts: attempt.attempts,
+          lastStatus: outcome.status ?? null,
+          lastReason: null,
+        });
+        this.logger.log(
+          `Redrove ${attempt.activityType} to ${attempt.instanceDomain} after ${attempt.attempts} prior attempt(s)`,
+        );
+        return;
+      }
+      await this.failRedrive(
+        attempt,
+        outcome.status ?? null,
+        outcome.reason ?? 'not delivered',
+        outcome.retryable ?? false,
+      );
+    } catch (error) {
+      await this.failRedrive(attempt, null, (error as Error).message, true);
+    }
+  }
+
+  private async failRedrive(
+    attempt: FederationDeliveryAttempt,
+    status: number | null,
+    reason: string,
+    retryable: boolean,
+  ): Promise<void> {
+    const attempts = attempt.attempts + 1;
+    if (!retryable || attempts >= this.dlqMaxAttempts) {
+      await this.deliveryAttemptRepository.update(attempt.id, {
+        attempts,
+        lastStatus: status,
+        lastReason: retryable ? `attempts exhausted: ${reason}` : reason,
+        dead: true,
+        nextRetryAt: null,
+      });
+      return;
+    }
+    const delay = Math.min(
+      this.dlqBaseDelayMs * 2 ** (attempts - 1),
+      this.dlqMaxDelayMs,
+    );
+    await this.deliveryAttemptRepository.update(attempt.id, {
+      attempts,
+      lastStatus: status,
+      lastReason: reason,
+      nextRetryAt: new Date(Date.now() + delay),
+    });
+  }
+
+  /** Operator view of the queue: `pending`, `dead`, `delivered`, or latest. */
+  async listDeliveryAttempts(
+    status?: 'pending' | 'dead' | 'delivered',
+  ): Promise<FederationDeliveryAttempt[]> {
+    const take = 50;
+    if (status === 'dead') {
+      return this.deliveryAttemptRepository.find({
+        where: { dead: true },
+        take,
+        order: { updatedAt: 'DESC' },
+      });
+    }
+    if (status === 'delivered') {
+      return this.deliveryAttemptRepository.find({
+        where: { completedAt: Not(IsNull()) },
+        take,
+        order: { completedAt: 'DESC' },
+      });
+    }
+    if (status === 'pending') {
+      return this.deliveryAttemptRepository.find({
+        where: { dead: false, completedAt: IsNull() },
+        take,
+        order: { nextRetryAt: 'ASC' },
+      });
+    }
+    return this.deliveryAttemptRepository.find({
+      take,
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  /** Manual redrive (operator). Works on dead rows too — after a config fix. */
+  async manuallyRedriveDelivery(id: string): Promise<{ redriven: boolean; delivered: boolean; reason?: string }> {
+    const attempt = await this.deliveryAttemptRepository.findOne({ where: { id } });
+    if (!attempt) {
+      throw new HttpException('Delivery attempt not found', HttpStatus.NOT_FOUND);
+    }
+    if (attempt.completedAt) {
+      return { redriven: false, delivered: true, reason: 'already delivered' };
+    }
+    await this.redriveDeliveryAttempt(attempt);
+    const updated = await this.deliveryAttemptRepository.findOne({ where: { id } });
+    return {
+      redriven: true,
+      delivered: Boolean(updated?.completedAt),
+      reason: updated?.lastReason ?? undefined,
+    };
   }
 
   async probeInteroperability(domain: string) {

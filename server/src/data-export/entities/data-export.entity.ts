@@ -26,8 +26,16 @@ export class DataExport {
   })
   status: DataExportStatus;
 
+  /** What produced this export: 'manual' (user clicked) or 'scheduled' (cron). */
+  @Column({ type: 'varchar', length: 16, default: 'manual' })
+  origin: string;
+
   @Column({ nullable: true })
   fileUrl: string;
+
+  /** Archive size in bytes once completed (null while pending/failed/expired). */
+  @Column({ type: 'bigint', nullable: true })
+  sizeBytes: number | null;
 
   @Column({ nullable: true, type: 'timestamp' })
   scheduledDeletionAt: Date;

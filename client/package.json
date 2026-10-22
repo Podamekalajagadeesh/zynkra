@@ -22,7 +22,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@mlc-ai/web-llm": "^0.2.84",
     "@mui/material": "^5.15.15",
-    "@privacyresearch/libsignal-protocol-typescript": "^0.0.3",
+    "@privacyresearch/libsignal-protocol-typescript": "^0.0.16",
     "@radix-ui/react-radio-group": "^1.4.3",
     "@radix-ui/react-slider": "^1.4.3",
     "@radix-ui/react-tabs": "^1.1.13",

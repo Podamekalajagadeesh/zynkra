@@ -34,6 +34,11 @@ export interface MediaUploadContext {
   userId?: string;
   /** Subdirectory under the upload root (e.g. "profiles"). Default per media type. */
   subdir?: string;
+  /**
+   * The bytes are client-side ciphertext (E2EE DM attachment). The server
+   * stores them verbatim: no sharp metadata, no thumbnails, no reading.
+   */
+  encrypted?: boolean;
 }
 
 @Injectable()
@@ -168,7 +173,9 @@ export class MediaService {
     let width: number | undefined;
     let height: number | undefined;
 
-    if (type === 'image') {
+    // Encrypted E2EE attachments are opaque ciphertext — never inspect or
+    // derive thumbnails from bytes the server cannot understand.
+    if (type === 'image' && !context.encrypted) {
       const sharp = this.loadSharp();
       if (sharp) {
         const metadata = await sharp(file.buffer).metadata();
@@ -185,6 +192,7 @@ export class MediaService {
       type,
       altText: file.originalname,
       userId: context.userId,
+      isEncrypted: context.encrypted === true,
     });
 
     const savedMedia = await this.mediaRepository.save(media);

@@ -59,7 +59,7 @@ describe('createPost with poll', () => {
       })
     );
 
-    await createPost('Vote now', [], 'public', '', false, false, '', '', [], { question: 'Fav?', options: ['A', 'B'] });
+    await createPost('Vote now', [], 'public', '', false, [], { question: 'Fav?', options: ['A', 'B'] });
 
     expect(capturedBody.poll).toBeDefined();
     expect(capturedBody.poll.question).toBe('Fav?');
@@ -88,7 +88,7 @@ describe('createPost with poll', () => {
     );
 
     await expect(
-      createPost('Fail', [], 'public', '', false, false, '', '', [], { question: 'Q?', options: ['X'] })
+      createPost('Fail', [], 'public', '', false, [], { question: 'Q?', options: ['X'] })
     ).rejects.toThrow();
   });
 });

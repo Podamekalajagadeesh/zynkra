@@ -53,6 +53,27 @@ export class GroupsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('discover')
+  async discoverGroups(@Request() req) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.getDiscoverableGroups(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':groupId/join')
+  async joinGroup(@Request() req, @Param('groupId') groupId: string) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.joinGroup(groupId, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':groupId/leave')
+  async leaveGroup(@Request() req, @Param('groupId') groupId: string) {
+    const user = await this.usersService.findOneById(req.user.userId);
+    return this.groupsService.leaveGroup(groupId, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createGroup(@Request() req, @Body() createGroupDto: CreateGroupDto) {
     const user = await this.usersService.findOneById(req.user.userId);
@@ -62,9 +83,6 @@ export class GroupsController {
       createGroupDto.privacy,
       createGroupDto.isDao,
       createGroupDto.votingSystem,
-      createGroupDto.tokenGated,
-      createGroupDto.contractAddress,
-      createGroupDto.requiredTokenBalance,
       createGroupDto.allowAnonymousPosting,
     );
   }
@@ -107,8 +125,8 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('channels/:channelId/messages')
-  async getMessages(@Param('channelId') channelId: string) {
-    return this.groupsService.getMessages(channelId);
+  async getMessages(@Request() req, @Param('channelId') channelId: string) {
+    return this.groupsService.getMessages(channelId, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

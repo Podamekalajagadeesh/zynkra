@@ -99,6 +99,11 @@ export const envValidationSchema = Joi.object({
   UPLOAD_DIR: Joi.string().optional().default('./uploads'),
   CDN_BASE_URL: Joi.string().uri().allow('').optional(),
 
+  // Data-export archives: private directory (never statically served) and
+  // retention window in days (0 disables pruning entirely).
+  EXPORT_DIR: Joi.string().optional().default('./exports'),
+  EXPORT_RETENTION_DAYS: Joi.number().integer().min(0).max(365).optional().default(30),
+
   // Observability (optional — features are off when unset)
   SENTRY_DSN: Joi.string().uri().allow('').optional(),
   SENTRY_TRACES_SAMPLE_RATE: Joi.number().min(0).max(1).optional(),

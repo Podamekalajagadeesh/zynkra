@@ -14,6 +14,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { VisibilityService } from '../src/common/visibility/visibility.service';
 import request from 'supertest';
 
 import { UsersController } from '../src/users/users.controller';
@@ -21,6 +22,8 @@ import { UsersService } from '../src/users/users.service';
 import { PagesService } from '../src/pages/pages.service';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
+import { User } from '../src/users/entities/user.entity';
+import { AccountManagementService } from '../src/features/account-management/account-management.service';
 
 function makeMockUser(overrides = {}) {
   return {
@@ -44,6 +47,8 @@ function createTestingModule() {
     ],
     controllers: [UsersController],
     providers: [
+    { provide: VisibilityService, useValue: { isBlocked: jest.fn(async () => false), canView: jest.fn(async () => true) } },
+    { provide: AccountManagementService, useValue: {} },
       {
         provide: UsersService,
         useValue: {
@@ -66,6 +71,7 @@ function createTestingModule() {
         provide: getRepositoryToken(LoginSession),
         useValue: { findOne: jest.fn().mockResolvedValue({ id: 's1', revokedAt: null }), update: jest.fn(), find: jest.fn(), save: jest.fn() },
       },
+      { provide: getRepositoryToken(User), useValue: { findOne: jest.fn().mockResolvedValue(makeMockUser()) } },
       JwtStrategy,
     ],
   }).compile();

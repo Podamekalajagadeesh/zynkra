@@ -10,7 +10,6 @@ import { User } from '../users/entities/user.entity';
 import { SponsoredPostsService } from '../sponsored-posts/sponsored-posts.service';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
 import { StoriesService } from '../stories/stories.service';
-import { LocationService } from '../snapmap/location.service';
 import { VisibilityService } from '../common/visibility/visibility.service';
 import { DataPermission } from '../features/account-management/dto/data-permissions.dto';
 import { DataPermissionsService } from '../common/data-permissions/data-permissions.service';
@@ -35,92 +34,11 @@ export class FeedService {
     private readonly sponsoredPostsService: SponsoredPostsService,
     private readonly bookmarksService: BookmarksService,
     private readonly storiesService: StoriesService,
-    private readonly locationService: LocationService,
     private readonly trendsService: TrendsService,
     private readonly visibilityService: VisibilityService,
     private readonly dataPermissions: DataPermissionsService,
     // private readonly adsService: AdsService, // AdsService commented out - broken imports
   ) {}
-
-  // Calculate distance between two coordinates using Haversine formula
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Earth's radius in km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2); 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    const distance = R * c; // Distance in km
-    return distance;
-  }
-
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI/180);
-  }
-
-  async getLocalFeed(user: User, radiusKm: number = 50): Promise<(Post & { distance?: number })[]> {
-    // Read the user's shared location through LocationService. This previously
-    // reached into `SnapMapGateway`'s private `userLocations` map via
-    // `@ts-expect-error`, so renaming or reshaping that private field would
-    // break the local feed at runtime with no compile-time signal.
-    const userLocation = this.locationService.getLocation(user.id);
-
-    if (!userLocation) {
-      // If user hasn't shared location, return empty or fallback to location from user profile
-      return [];
-    }
-
-    // Get all public posts with their places (locations) - exclude profile-only posts from local feed
-    const postsWithPlaces = await this.postsRepository.find({
-      where: { isDraft: false },
-      relations: ['user', 'reactions', 'comments', 'tags', 'place'],
-      order: { createdAt: 'DESC' },
-    }).then((posts) => this.visibilityService.filterVisiblePostsForViewer(user?.id ?? null, posts));
-
-    // Filter posts that are within the radius and calculate their distance from user
-    const blockedKeywords = user.blockedKeywords || [];
-    const blockedHashtags = user.blockedHashtags || [];
-    const blockedContentTypes = user.blockedContentTypes || [];
-    
-    const localPosts = postsWithPlaces
-      .filter(post => post.place?.latitude && post.place?.longitude)
-      .filter(post => {
-        // Check for blocked content types
-        const postType = post.postType.toLowerCase();
-        if (blockedContentTypes.includes(postType)) return false;
-
-        // Check for blocked hashtags
-        const postHashtags = post.tags ? post.tags.map(tag => tag.name.toLowerCase()) : [];
-        const hasBlockedHashtag = postHashtags.some(tag => blockedHashtags.includes(tag));
-        if (hasBlockedHashtag) return false;
-
-        // Check for blocked keywords in post content
-        if (post.content) {
-          const postContent = post.content.toLowerCase();
-          const hasBlockedKeyword = blockedKeywords.some(keyword => 
-            postContent.includes(keyword.toLowerCase())
-          );
-          if (hasBlockedKeyword) return false;
-        }
-
-        return true;
-      })
-      .map(post => {
-        const distance = this.calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          post.place.latitude,
-          post.place.longitude
-        );
-        return { ...post, distance };
-      })
-      .filter(post => post.distance <= radiusKm)
-      .sort((a, b) => a.distance - b.distance); // Sort by closest first
-
-    return localPosts;
-  }
 
   async getForYouFeed(user: User): Promise<(Post & { isAd?: boolean })[]> {
     if (user) {

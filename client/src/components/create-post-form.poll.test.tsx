@@ -112,7 +112,7 @@ describe('CreatePostForm poll creation', () => {
       expect(mockCreatePost).toHaveBeenCalled();
     });
 
-    const pollArg = mockCreatePost.mock.calls[0][9];
+    const pollArg = mockCreatePost.mock.calls[0][6];
     expect(pollArg).toEqual({ question: 'Color?', options: ['Red', 'Blue'] });
   });
 
@@ -130,7 +130,7 @@ describe('CreatePostForm poll creation', () => {
       expect(mockCreatePost).toHaveBeenCalled();
     });
 
-    const pollArg = mockCreatePost.mock.calls[0][9];
+    const pollArg = mockCreatePost.mock.calls[0][6];
     expect(pollArg).toBeNull();
   });
 

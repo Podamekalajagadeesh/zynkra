@@ -1180,4 +1180,106 @@ Env: `STRIPE_WEBHOOK_SECRET` (required for signature verification),
 
 ---
 
+## Data Export & Portability
+
+All routes require a Bearer JWT.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/data-export/info` | Export inventory (counts per category) |
+| GET | `/data-export/download` | Whole-account JSON export (`v2.1`) as a file download |
+| POST | `/data-export` | Request a full archive export (zip: `data.json` + `media/…`); returns the export row (`origin: manual`, `fileUrl`, `sizeBytes`) |
+| GET | `/data-export` | The caller's latest export row |
+| GET | `/data-export/archive/:id` | Download the zip of an export **you own** (owner-only; streams from the private exports directory, falling back to pre-upgrade `uploads/` archives) |
+| GET | `/data-export/schedule` | Automatic-backup schedule: `{ enabled, intervalDays, lastExportAt, nextExportAt }` |
+| POST | `/data-export/schedule` | Arm/pause automatic backups `{ enabled, intervalDays? }`; allowed intervals 7/14/30/90 days; (re-)arming starts counting from now, so the first scheduled run is one full interval out |
+| GET | `/data-export/history` | Last 20 exports: `{ id, status, origin, fileUrl, sizeBytes, createdAt }[]` (`origin` = `manual` \| `scheduled`; deletion-workflow rows excluded) |
+| POST | `/data-export/import` | Import a JSON export body (transactional; money/trust archived, never fabricated) |
+| POST | `/data-export/import-zip` | Import a zip export archive (multipart field `file`); re-hosts `media/` files into this instance's upload directory, then runs the JSON import |
+| DELETE | `/data-export/delete-all` | Delete all user data |
+| DELETE | `/data-deletion` | Schedule account deletion (30-day grace period; user soft-banned immediately) |
+
+The zip archive is the one produced by the export flow: `data.json` plus
+`media/<basename>`. Import re-hosts flat `media/` entries only (zip-slip
+sanitized; 256 MiB/entry and 1 GiB total uncompressed caps).
+
+**Scheduled exports & archive storage.** An hourly cron produces an archive for
+every schedule whose `nextExportAt` has passed (failures retry in one hour;
+banned users' schedules are switched off). Archives are written to `EXPORT_DIR`
+(default `./exports`) — deliberately *outside* the publicly served uploads
+directory — so `GET /data-export/archive/:id` (Bearer JWT, owner-only) is the
+only way to fetch one; `fileUrl` values must be fetched through the API client,
+not raw `<a href>`/`window.open` links, which carry no auth header. A nightly
+retention sweep (03:00) deletes archive files older than `EXPORT_RETENTION_DAYS`
+(default 30; `0` disables pruning) while keeping the history row with
+`fileUrl` cleared; orphaned files inside `EXPORT_DIR` are swept too.
+
+---
+
+## Federation (admin)
+
+Delivery dead-letter queue. All routes require a Bearer JWT with the `admin` role.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/federation/deliveries?status=pending\|dead\|delivered` | Latest 50 delivery-attempt rows (default: most recent) |
+| POST | `/federation/deliveries/:id/redrive` | Manually redrive one attempt (works on dead rows after a config fix) |
+
+A scheduled job also redrives pending attempts every minute while
+`FEDERATION_ENABLED=true` (10 redrive cycles, hour-capped backoff; deterministic
+4xx rejections are stored dead and only redriven manually).
+
+---
+
+## End-to-End Encryption Keys (Signal X3DH + Double Ratchet)
+
+The server stores **public key material only** — identity keys, signed pre-keys,
+and one-time pre-keys. Private keys never leave the device. Setup routes
+require a Bearer JWT; bundle/identity fetches require authentication too.
+
+### Setup (device bootstrap)
+
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| POST | `/keys/upload` | `{ publicKey }` | Legacy public-key upload (same storage as identity key) |
+| POST | `/keys/identity` | `{ identityKey }` | Publish/rotate the identity key (root of trust for all sessions); on rotation the user's stored signed + one-time pre-keys are **purged** (stale material can't be claimed) and the device re-uploads fresh keys |
+| POST | `/keys/signed-prekey` | `{ keyId, publicKey, signature }` | Publish a signed pre-key; a new `keyId` becomes current |
+| POST | `/keys/one-time-prekeys` | `{ preKeys: [{keyId, publicKey}] }` | Batch-upload one-time pre-keys; existing `keyId`s are skipped, never re-used |
+| POST | `/keys/bundle` | full bundle | One-shot setup: identity + signed pre-key + one-time pre-keys |
+
+### Session establishment (initiator side)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/keys/bundle/:userId` | Fetch a bundle; **atomically claims** one unused one-time pre-key (pessimistic lock — two concurrent fetches never receive the same key). Includes `identityRotatedAt` |
+| GET | `/keys/identity/:userId` | Current identity key + `rotatedAt` (compare to the key cached for an existing session) |
+| GET | `/keys/prekey-count` | Remaining unused one-time pre-keys for the caller (replenish when low) |
+
+### Rotation & recovery
+
+* **Identity key rotation** — uploading a *different* identity key replaces the old one
+  and records an `identity` event; re-uploading the same key is a no-op. Peers detect the
+  change via `GET /keys/identity/:userId` (or `identityRotatedAt` in the bundle) and
+  re-establish the session with X3DH instead of continuing to ratchet.
+* **Signed pre-key rotation** — a new `keyId` becomes current; the server keeps exactly
+  the current + previous signed pre-key (previous covers a handshake started moments
+  before rotation) and prunes older rows.
+* **One-time pre-key replenishment** — batch uploads, deduplicated by `keyId`; clients
+  poll `/keys/prekey-count` and top up.
+* **Audit feed** — `GET /keys/rotation-events?since=<ISO-8601>` returns the caller's own
+  rotation history (newest first, max 50) so a restored device can catch up on what
+  changed while it was offline.
+* **Device recovery backup** — client-side (no endpoint): Settings → "Encryption key
+  recovery" exports the full local key state (identity + session ratchet + pre-keys) as a
+  passphrase-encrypted `.zkebackup` file (PBKDF2-SHA256 600k → XChaCha20-Poly1305) and
+  restores it on a new device. The passphrase never leaves the device; the server holds
+  no escrow copy.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/keys/rotation-events?since=` | Own rotation events: `{ kind, keyId, detail, createdAt }[]` |
+| GET | `/keys/identity/:userId` | `{ publicKey, rotatedAt }` — peer-facing rotation detection |
+
+---
+
 **For questions or issues, open a GitHub issue or check discussions.**

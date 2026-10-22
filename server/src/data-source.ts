@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { readdirSync } from 'fs';
-import { join, sep } from 'path';
+import { join } from 'path';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 
@@ -9,26 +9,19 @@ import { config } from 'dotenv';
 config({ path: '.env' });
 
 /**
- * Every `*.entity.ts` under src/ except the `src/features/verification`
- * facade. That facade's `verification.module.ts` is imported by nothing —
- * app.module.ts wires `./verification/verification.module` instead — yet its
- * entities redeclare the real `verification_requests` / `verification_appeals`
- * tables with conflicting column definitions (e.g. a varchar requestId against
- * the real uuid one). Loading both poisons migration:generate with phantom
- * diffs and makes TypeORM's synchronize abort on a FK type mismatch, so the
- * CLI's entity discovery deliberately mirrors the runtime: registered modules
- * only. `src/features/account-management` IS registered (app.module.ts) and
- * its entities are kept. TypeORM resolves each returned path as a plain file
- * (no glob semantics needed), so a filesystem walk is enough.
+ * Every `*.entity.ts` under src/. The old `src/features/verification` facade
+ * (which redeclared the real verification tables with conflicting columns and
+ * poisoned migration:generate) was deleted in the 2026-10-21 facade cut; only
+ * `src/features/account-management` remains under features/ and it IS
+ * registered (app.module.ts). TypeORM resolves each returned path as a plain
+ * file (no glob semantics needed), so a filesystem walk is enough.
  */
 function sourceEntityFiles(): string[] {
   const entities: string[] = [];
-  const skip = `${join(__dirname, 'features', 'verification')}${sep}`;
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (full.startsWith(skip)) continue;
         walk(full);
       } else if (entry.name.endsWith('.entity.ts')) {
         entities.push(full);

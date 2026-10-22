@@ -4,12 +4,20 @@ import { PageShell } from '../components/PageShell';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
 import { useToast } from '../hooks/useToast';
-import { api, DEFAULT_PERSONALIZATION_CONTROLS, PersonalizationControls, requestAccountDeletion, confirmAccountDeletion, discoverContacts, getAgeVerificationStatus, resetPersonalizationControls, setBirthDate, updatePrivacy } from '../lib/api';
+import { api, DEFAULT_PERSONALIZATION_CONTROLS, PersonalizationControls, requestAccountDeletion, confirmAccountDeletion, discoverContacts, downloadApiFile, getAgeVerificationStatus, resetPersonalizationControls, setBirthDate, updatePrivacy } from '../lib/api';
 import { TagPrivacy } from '../lib/types';
 
 export default function DataPrivacyPage() {
   const [exportStatus, setExportStatus] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [schedule, setSchedule] = useState<{
+    enabled: boolean;
+    intervalDays: number;
+    lastExportAt: string | null;
+    nextExportAt: string | null;
+  }>({ enabled: false, intervalDays: 30, lastExportAt: null, nextExportAt: null });
+  const [savingSchedule, setSavingSchedule] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -40,6 +48,21 @@ export default function DataPrivacyPage() {
       try {
         const response = await api.get('/data-export');
         setExportStatus(response.data);
+      } catch {
+        // ignore
+      }
+
+      try {
+        const response = await api.get('/data-export/schedule');
+        const data = response.data;
+        if (data && typeof data.enabled === 'boolean') {
+          setSchedule({
+            enabled: data.enabled,
+            intervalDays: data.intervalDays ?? 30,
+            lastExportAt: data.lastExportAt ?? null,
+            nextExportAt: data.nextExportAt ?? null,
+          });
+        }
       } catch {
         // ignore
       }
@@ -194,6 +217,38 @@ export default function DataPrivacyPage() {
       addToast('Failed to start data export', 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDownloadExport = async () => {
+    if (!exportStatus?.fileUrl) return;
+    setDownloading(true);
+    try {
+      await downloadApiFile(exportStatus.fileUrl, `zynkra-export-${new Date().toISOString().split('T')[0]}.zip`);
+      addToast('Export downloaded', 'success');
+    } catch {
+      addToast('Download failed — request a fresh export', 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleScheduleChange = async (patch: { enabled?: boolean; intervalDays?: number }) => {
+    setSavingSchedule(true);
+    try {
+      const response = await api.post('/data-export/schedule', {
+        enabled: patch.enabled ?? schedule.enabled,
+        intervalDays: patch.intervalDays ?? schedule.intervalDays,
+      });
+      const data = response.data;
+      if (data) {
+        setSchedule((prev) => ({ ...prev, ...data }));
+      }
+      addToast('Automatic backup schedule updated', 'success');
+    } catch {
+      addToast('Failed to update automatic backup schedule', 'error');
+    } finally {
+      setSavingSchedule(false);
     }
   };
 
@@ -435,10 +490,10 @@ export default function DataPrivacyPage() {
               Export a copy of your personal data in a machine-readable JSON format. This includes your profile information, posts, comments, and connections.
             </p>
           </div>
-          {exportStatus && exportStatus.status === 'completed' ? (
-            <a href={exportStatus.fileUrl} download>
-              <Button>Download Export</Button>
-            </a>
+          {exportStatus && exportStatus.status === 'completed' && exportStatus.fileUrl ? (
+            <Button onClick={handleDownloadExport} disabled={downloading}>
+              {downloading ? 'Preparing download...' : 'Download Export'}
+            </Button>
           ) : (
             <Button
               onClick={handleExport}
@@ -449,6 +504,48 @@ export default function DataPrivacyPage() {
                 : 'Request Data Export'}
             </Button>
           )}
+
+          <div className="rounded-xl border border-dark-200 bg-white p-4 dark:border-dark-700 dark:bg-dark-900">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold">Automatic backups</div>
+                <p className="text-xs text-gray-500">
+                  Generate a fresh archive on a schedule so a portable copy of your account always exists.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                aria-label="Automatic backups"
+                checked={schedule.enabled}
+                disabled={savingSchedule}
+                onChange={(e) => handleScheduleChange({ enabled: e.target.checked })}
+                className="h-4 w-4"
+              />
+            </div>
+            {schedule.enabled && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                <label className="flex items-center gap-2">
+                  Every
+                  <select
+                    aria-label="Backup interval"
+                    value={schedule.intervalDays}
+                    disabled={savingSchedule}
+                    onChange={(e) => handleScheduleChange({ intervalDays: Number(e.target.value) })}
+                    className="rounded-lg border border-dark-200 bg-white px-2 py-1 dark:border-dark-700 dark:bg-dark-900"
+                  >
+                    <option value={7}>7 days</option>
+                    <option value={14}>14 days</option>
+                    <option value={30}>30 days</option>
+                    <option value={90}>90 days</option>
+                  </select>
+                </label>
+                <span className="text-xs text-gray-500">
+                  {schedule.nextExportAt ? `Next: ${new Date(schedule.nextExportAt).toLocaleDateString()}` : ''}
+                  {schedule.lastExportAt ? `${schedule.nextExportAt ? ' · ' : ''}Last: ${new Date(schedule.lastExportAt).toLocaleDateString()}` : ''}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4 border-t pt-8">

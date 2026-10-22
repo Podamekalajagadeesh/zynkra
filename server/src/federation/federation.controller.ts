@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Query,
   Req,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FederationService } from './federation.service';
 import { HttpSignaturesService } from './http-signatures.service';
@@ -60,6 +61,24 @@ export class FederationController {
   async unblockInstance(@Param('id') instanceId: string) {
     await this.federationService.unblockInstance(instanceId);
     return { success: true, message: 'Instance unblocked' };
+  }
+
+  @Get('deliveries')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async listDeliveries(@Query('status') status?: string) {
+    const normalized =
+      status === 'pending' || status === 'dead' || status === 'delivered'
+        ? status
+        : undefined;
+    return this.federationService.listDeliveryAttempts(normalized);
+  }
+
+  @Post('deliveries/:id/redrive')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async redriveDelivery(@Param('id', ParseUUIDPipe) id: string) {
+    return this.federationService.manuallyRedriveDelivery(id);
   }
 
   @Get('remote/users/:actorId')

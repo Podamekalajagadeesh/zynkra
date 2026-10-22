@@ -446,7 +446,8 @@ export interface Message {
   replies?: Comment[];
   readBy: ReadReceipt[];
   reactions?: { id: string; reaction: string; user: PostAuthor }[];
-  media?: { url: string; type: 'image' | 'video' | 'audio' }[];
+  /** `enc` marks E2EE ciphertext attachments (key travels only in the envelope). */
+  media?: { url: string; type: 'image' | 'video' | 'audio'; enc?: string }[];
   /** Voice note metadata: set when the message is a recorded voice message. */
   voiceNote?: { durationSeconds: number; waveform: number[] } | null;
   gift?: { id: string; name: string; imageUrl: string; message?: string };

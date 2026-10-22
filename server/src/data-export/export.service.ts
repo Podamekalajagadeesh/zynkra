@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import AdmZip from 'adm-zip';
+import * as fs from 'fs';
+import * as path from 'path';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Message } from '../dms/entities/message.entity';
@@ -96,6 +100,7 @@ export class ExportService {
     @InjectRepository(DataExport) private readonly dataExportsRepo: Repository<DataExport>,
     @InjectRepository(VerificationRequest) private readonly verificationRepo: Repository<VerificationRequest>,
     @InjectRepository(ConnectedAccount) private readonly connectedAccountsRepo: Repository<ConnectedAccount>,
+    private readonly configService: ConfigService,
   ) {}
 
   async exportUserData(userId: string): Promise<ExportData> {
@@ -442,6 +447,97 @@ export class ExportService {
   async exportAsJson(userId: string): Promise<string> {
     const data = await this.exportUserData(userId);
     return JSON.stringify(data, null, 2);
+  }
+
+  /**
+   * Import a full-account export *archive* (the zip produced by
+   * DataExportService: `data.json` + `media/<basename>`).
+   *
+   * The JSON import alone leaves media URLs pointing at the exporting
+   * instance (`/uploads/<file>`), which 404s on a fresh one. This endpoint
+   * re-hosts every file under `media/` into this instance's upload directory
+   * *before* running the JSON import, so posts, stories, DM attachments,
+   * podcasts, avatar and header resolve locally after the move.
+   *
+   * Safety: entry names are sanitized (no traversal, no absolute paths), a
+   * per-entry and total uncompressed-size cap rejects zip bombs, and only
+   * files directly under `media/` are written — nothing from the archive is
+   * executed or placed outside the upload directory.
+   */
+  async importFromZip(
+    userId: string,
+    zipBuffer: Buffer,
+  ): Promise<{ imported: boolean; mediaRehosted: number; posts: number; comments: number }> {
+    let zip: AdmZip;
+    try {
+      zip = new AdmZip(zipBuffer);
+    } catch {
+      throw new BadRequestException('Uploaded file is not a valid zip archive.');
+    }
+
+    const entries = zip.getEntries().filter((entry) => !entry.isDirectory);
+    if (entries.length === 0 || entries.length > 10_000) {
+      throw new BadRequestException('Archive is empty or has too many entries.');
+    }
+
+    const MAX_ENTRY_SIZE = 256 * 1024 * 1024; // 256 MiB per file
+    const MAX_TOTAL_SIZE = 1024 * 1024 * 1024; // 1 GiB uncompressed total
+    let totalUncompressed = 0;
+    for (const entry of entries) {
+      const size = entry.header?.size ?? 0;
+      if (size > MAX_ENTRY_SIZE) {
+        throw new BadRequestException(`Archive entry too large: ${entry.entryName}`);
+      }
+      totalUncompressed += size;
+      if (totalUncompressed > MAX_TOTAL_SIZE) {
+        throw new BadRequestException('Archive exceeds the maximum uncompressed size.');
+      }
+    }
+
+    const dataEntry = entries.find(
+      (entry) => entry.entryName === 'data.json' || entry.entryName.endsWith('/data.json'),
+    );
+    if (!dataEntry) {
+      throw new BadRequestException('Archive does not contain data.json.');
+    }
+
+    let userData: ExportData;
+    try {
+      userData = JSON.parse(dataEntry.getData().toString('utf8')) as ExportData;
+    } catch {
+      throw new BadRequestException('data.json in the archive is not valid JSON.');
+    }
+
+    const uploadDir = path.resolve(this.configService.get('UPLOAD_DIR', './uploads'));
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+
+    let mediaRehosted = 0;
+    for (const entry of entries) {
+      // Only flat files directly under media/ — the export writes
+      // media/<basename> and URLs are /uploads/<basename>.
+      if (!entry.entryName.startsWith('media/')) continue;
+      const rest = entry.entryName.slice('media/'.length);
+      if (!rest || rest.includes('/') || rest.includes('\\') || rest.startsWith('.')) {
+        continue;
+      }
+      const destination = path.join(uploadDir, rest);
+      if (!destination.startsWith(uploadDir + path.sep)) {
+        continue; // defence in depth against any sanitization miss
+      }
+      await fs.promises.writeFile(destination, entry.getData());
+      mediaRehosted += 1;
+    }
+
+    this.logger.log(
+      `Zip import for ${userId}: re-hosted ${mediaRehosted} media file(s), running JSON import.`,
+    );
+    const result = await this.importFromJson(userId, userData);
+    return {
+      imported: result.imported,
+      mediaRehosted,
+      posts: result.posts,
+      comments: result.comments,
+    };
   }
 
   // Recreates profile, posts, follows, DMs (where the peer exists), and stores

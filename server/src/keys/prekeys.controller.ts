@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Param,
+  Query,
   UseGuards,
   Req,
   HttpCode,
@@ -93,5 +94,35 @@ export class PreKeysController {
   ): Promise<{ count: number }> {
     const count = await this.preKeysService.getOneTimePreKeyCount(req.user.userId);
     return { count };
+  }
+
+  /**
+   * The caller's own key-rotation history. Clients poll with `?since=` after
+   * their last sync instant to learn whether their keys changed while they
+   * were offline (needed after a device restore or a multi-device story).
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('rotation-events')
+  async getRotationEvents(
+    @Req() req,
+    @Query('since') since?: string,
+  ): Promise<Array<{ kind: string; keyId: number | null; detail: string | null; createdAt: string }>> {
+    const parsed = since ? new Date(since) : undefined;
+    const sinceDate =
+      parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
+    return this.preKeysService.getRotationEvents(req.user.userId, sinceDate);
+  }
+
+  /**
+   * A peer's current identity key and when it last changed. Compare against
+   * the key cached for an existing session; a change means re-establish via
+   * X3DH rather than keep ratcheting.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('identity/:userId')
+  async getIdentityKeyStatus(
+    @Param('userId') userId: string,
+  ): Promise<{ publicKey: string; rotatedAt: string | null }> {
+    return this.preKeysService.getIdentityKeyStatus(userId);
   }
 }

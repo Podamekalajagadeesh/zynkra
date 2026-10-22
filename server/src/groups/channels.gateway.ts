@@ -9,6 +9,12 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Channel } from './entities/channel.entity';
+import { Group } from './entities/group.entity';
+import { GroupMember } from './entities/group-member.entity';
+import { GroupPrivacy } from './enums/group-privacy.enum';
 import { WsAuthService } from '../common/ws-auth/ws-auth.service';
 import { WsRateLimiter } from '../common/ws-auth/ws-rate-limiter';
 import { applyWsCors } from '../common/ws-auth/ws-cors';
@@ -27,6 +33,12 @@ export class ChannelsGateway
     private readonly wsAuth: WsAuthService,
     private readonly configService: ConfigService,
     private readonly rateLimiter: WsRateLimiter,
+    @InjectRepository(Channel)
+    private readonly channelsRepository: Repository<Channel>,
+    @InjectRepository(Group)
+    private readonly groupsRepository: Repository<Group>,
+    @InjectRepository(GroupMember)
+    private readonly groupMembersRepository: Repository<GroupMember>,
   ) {}
 
   afterInit(server: Server) {
@@ -52,9 +64,25 @@ export class ChannelsGateway
     return this.rateLimiter.allow(client, client.data.userId as string);
   }
 
+  // Mirrors GroupsService.assertCanReadChannel — the socket path must not
+  // be a hole around the REST access checks.
+  private async canRead(channelId: string, userId: string): Promise<boolean> {
+    const channel = await this.channelsRepository.findOne({
+      where: { id: channelId },
+      relations: ['group'],
+    });
+    if (!channel || !channel.group) return false;
+    if (channel.group.privacy === GroupPrivacy.PUBLIC) return true;
+    const member = await this.groupMembersRepository.findOne({
+      where: { group: { id: channel.group.id }, user: { id: userId } },
+    });
+    return !!member;
+  }
+
   @SubscribeMessage('joinChannel')
-  handleJoinChannel(client: Socket, channelId: string) {
+  async handleJoinChannel(client: Socket, channelId: string) {
     if (!this.mayAct(client, channelId)) return;
+    if (!(await this.canRead(channelId, client.data.userId as string))) return;
     client.join(channelId);
     client.emit('joinedChannel', channelId);
   }

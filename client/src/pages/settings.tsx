@@ -32,6 +32,7 @@ import { AppIconSettings } from '../components/settings/app-icon-settings';
 import { ActivityStatusSettings } from '../components/settings/ActivityStatusSettings';
 import { NeuralEthicalGuardrails } from '../components/ethical-ai-guardrails/NeuralEthicalGuardrails';
 import { AccountPermissionsSettings } from '../components/settings/account-permissions-settings';
+import { E2eeRecoverySettings } from '../components/e2ee-recovery-settings';
 import { LANGUAGE_METADATA, translateTextKey } from '../lib/i18n';
 
 export function SettingsPage() {
@@ -373,8 +374,9 @@ export function SettingsPage() {
                 Encryption — Preview
               </p>
               <p className="text-sm text-dark-500 dark:text-dark-400">
-                All messages are encrypted in transit (TLS). Full end-to-end encryption is in progress —
-                see the roadmap for details.
+                Direct messages are end-to-end encrypted (the server stores ciphertext only);
+                other content is protected in transit with TLS. Back up or restore your
+                encryption keys below.
               </p>
 
             <div className="space-y-3 rounded-2xl border border-dark-200 bg-white/85 p-4 dark:border-dark-700 dark:bg-dark-900/70">
@@ -425,6 +427,8 @@ export function SettingsPage() {
             </div>
           </div>
         </div>
+
+        <E2eeRecoverySettings />
 
         <div className="surface-soft rounded-2xl p-5">
           <div className="mb-4 flex items-start justify-between gap-4">
@@ -864,17 +868,6 @@ export function SettingsPage() {
           action={
             <Link to="/settings/2fa">
               <Button variant="secondary">Manage 2FA</Button>
-            </Link>
-          }
-        />
-
-        <SettingItem
-          icon={<Shield size={20} className="text-blue-600 dark:text-blue-400" />}
-          title="Blockchain 4.0 Identity"
-          description="Manage your self-sovereign digital identity, verify content ownership, and view your immutable proof of ownership records."
-          action={
-            <Link to="/blockchain-identity">
-              <Button variant="secondary">Manage Identity</Button>
             </Link>
           }
         />
