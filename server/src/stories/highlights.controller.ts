@@ -30,8 +30,8 @@ export class HighlightsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.highlightsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.highlightsService.findOne(id, req.user.userId);
   }
 
   @Patch(':id')

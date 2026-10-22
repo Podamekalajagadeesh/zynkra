@@ -16,6 +16,7 @@ import { StoriesService } from './stories.service';
 import { MediaService } from '../media/media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
+import { TrackViewDto } from './dto/track-view.dto';
 
 @Controller('stories')
 export class StoriesController {
@@ -74,8 +75,8 @@ export class StoriesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/view')
-  trackView(@Param('id') id: string, @Request() req, @Body() body: { isAnonymous?: boolean }) {
-    return this.storiesService.trackView(id, req.user.userId, body.isAnonymous || false);
+  trackView(@Param('id') id: string, @Request() req, @Body() dto: TrackViewDto) {
+    return this.storiesService.trackView(id, req.user.userId, dto.isAnonymous ?? false);
   }
 
   @UseGuards(JwtAuthGuard)

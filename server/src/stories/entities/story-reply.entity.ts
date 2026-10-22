@@ -13,7 +13,7 @@ export class StoryReply {
   @ManyToOne(() => User)
   user: User;
 
-  @ManyToOne(() => Story, (story) => story.replies)
+  @ManyToOne(() => Story, (story) => story.replies, { onDelete: 'CASCADE' })
   story: Story;
 
   @CreateDateColumn()

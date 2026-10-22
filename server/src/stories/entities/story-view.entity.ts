@@ -22,6 +22,6 @@ export class StoryView {
   @ManyToOne(() => User)
   user: User;
 
-  @ManyToOne(() => Story)
+  @ManyToOne(() => Story, { onDelete: 'CASCADE' })
   story: Story;
 }

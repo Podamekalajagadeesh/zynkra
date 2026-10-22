@@ -1,6 +1,7 @@
 import { Controller, Post, UseGuards, Request, Param, Body } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { StoriesReactionService } from './stories-reaction.service';
+import { StoryReactionDto } from './dto/story-reaction.dto';
 
 @Controller('stories/:id/react')
 export class StoriesReactionController {
@@ -8,7 +9,7 @@ export class StoriesReactionController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  addReaction(@Request() req, @Param('id') storyId: string, @Body('reaction') reaction: string) {
-    return this.storiesReactionService.addReaction(req.user.id, storyId, reaction);
+  addReaction(@Request() req, @Param('id') storyId: string, @Body() dto: StoryReactionDto) {
+    return this.storiesReactionService.addReaction(req.user.id, storyId, dto.reaction);
   }
 }

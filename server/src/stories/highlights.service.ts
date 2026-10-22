@@ -16,11 +16,9 @@ export class HighlightsService {
   ) {}
 
   async create(createHighlightDto: CreateHighlightDto, user: User): Promise<StoryHighlight> {
-    const stories = await this.storiesService.findMultipleByIds(
-      createHighlightDto.storyIds,
-      user.id
-    );
-    if (stories.length !== createHighlightDto.storyIds.length) {
+    const storyIds = [...new Set(createHighlightDto.storyIds)];
+    const stories = await this.storiesService.findMultipleByIds(storyIds, user.id);
+    if (stories.length !== storyIds.length) {
       throw new NotFoundException('One or more stories not found or do not belong to the user.');
     }
 
@@ -38,10 +36,13 @@ export class HighlightsService {
     return this.highlightsRepository.find({ where: { user: { id: userId } } });
   }
 
-  async findOne(id: string): Promise<StoryHighlight> {
+  async findOne(id: string, viewerId?: string): Promise<StoryHighlight> {
     const highlight = await this.highlightsRepository.findOne({ where: { id } });
     if (!highlight) {
       throw new NotFoundException(`Highlight with ID "${id}" not found`);
+    }
+    if (viewerId !== undefined && highlight.user.id !== viewerId) {
+      throw new UnauthorizedException();
     }
     return highlight;
   }
@@ -56,18 +57,17 @@ export class HighlightsService {
       throw new UnauthorizedException();
     }
 
-    if (updateHighlightDto.storyIds) {
-      const stories = await this.storiesService.findMultipleByIds(
-        updateHighlightDto.storyIds,
-        user.id
-      );
-      if (stories.length !== updateHighlightDto.storyIds.length) {
+    const { storyIds, ...rest } = updateHighlightDto;
+    if (storyIds) {
+      const uniqueIds = [...new Set(storyIds)];
+      const stories = await this.storiesService.findMultipleByIds(uniqueIds, user.id);
+      if (stories.length !== uniqueIds.length) {
         throw new NotFoundException('One or more stories not found or do not belong to the user.');
       }
       highlight.stories = stories;
     }
 
-    Object.assign(highlight, updateHighlightDto);
+    Object.assign(highlight, rest);
     return this.highlightsRepository.save(highlight);
   }
 

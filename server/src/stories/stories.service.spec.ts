@@ -362,6 +362,7 @@ describe('StoriesService', () => {
 
       await service.trackView('story-1', 'user-2', false);
       expect(storyViewRepo.create).toHaveBeenCalled();
+      expect(subRepo.findOne).not.toHaveBeenCalled();
     });
 
     it('increments rewatchCount for existing view', async () => {
@@ -374,6 +375,34 @@ describe('StoriesService', () => {
       await service.trackView('story-1', 'user-2', false);
       expect(existingView.rewatchCount).toBe(2);
       expect(storyViewRepo.save).toHaveBeenCalled();
+    });
+
+    it('allows an anonymous view when the user has an active subscription', async () => {
+      storyRepo.findOne.mockResolvedValue(makeStory() as any);
+      usersService.findOneById.mockResolvedValue(makeUser() as any);
+      subRepo.findOne.mockResolvedValue({ id: 'sub-1' } as any);
+      storyViewRepo.findOne.mockResolvedValue(null);
+      storyViewRepo.create.mockImplementation((data) => data as any);
+      storyViewRepo.save.mockImplementation(async (view) => view as any);
+
+      const result = await service.trackView('story-1', 'user-2', true);
+
+      expect(subRepo.findOne).toHaveBeenCalled();
+      expect(storyViewRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ isAnonymous: true })
+      );
+      expect(result.isAnonymous).toBe(true);
+    });
+
+    it('rejects an anonymous view without an active subscription', async () => {
+      storyRepo.findOne.mockResolvedValue(makeStory() as any);
+      usersService.findOneById.mockResolvedValue(makeUser() as any);
+      subRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.trackView('story-1', 'user-2', true)).rejects.toThrow(
+        ForbiddenException
+      );
+      expect(storyViewRepo.create).not.toHaveBeenCalled();
     });
   });
 
@@ -388,6 +417,19 @@ describe('StoriesService', () => {
       expect(result).toHaveLength(1);
     });
 
+    it('excludes anonymous views from the owner list', async () => {
+      storyRepo.findOne.mockResolvedValue(makeStory() as any);
+      storyViewRepo.find.mockResolvedValue([] as any);
+
+      await service.getViews('story-1', 'user-1');
+
+      expect(storyViewRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { story: { id: 'story-1' }, isAnonymous: false },
+        })
+      );
+    });
+
     it('throws UnauthorizedException for non-owner', async () => {
       storyRepo.findOne.mockResolvedValue(makeStory() as any);
       await expect(service.getViews('story-1', 'other-user')).rejects.toThrow();
@@ -397,14 +439,14 @@ describe('StoriesService', () => {
   // ─── delete ───────────────────────────────────────────────────────────
 
   describe('delete', () => {
-    it('deletes a story when owner', async () => {
+    it('deletes a story when owner (children cascade at the FK level)', async () => {
       usersService.findOneById.mockResolvedValue(makeUser() as any);
       storyRepo.findOne.mockResolvedValue(makeStory() as any);
-      storyViewRepo.delete.mockResolvedValue({ affected: 0 } as any);
       storyRepo.delete.mockResolvedValue(undefined as any);
 
       await service.delete('story-1', 'user-1');
       expect(storyRepo.delete).toHaveBeenCalledWith('story-1');
+      expect(storyViewRepo.delete).not.toHaveBeenCalled();
     });
 
     it('throws when user not found', async () => {

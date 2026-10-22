@@ -9,6 +9,7 @@ import {
   ValidationPipe,
   NotFoundException,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
@@ -22,6 +23,8 @@ import { StoriesReactionController } from '../src/stories/stories-reaction.contr
 import { StoriesReactionService } from '../src/stories/stories-reaction.service';
 import { StoriesReplyController } from '../src/stories/stories-reply.controller';
 import { StoriesReplyService } from '../src/stories/stories-reply.service';
+import { HighlightsController } from '../src/stories/highlights.controller';
+import { HighlightsService } from '../src/stories/highlights.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
 import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
@@ -43,7 +46,12 @@ function createModule(overrides: Record<string, any> = {}) {
       PassportModule.register({ defaultStrategy: 'jwt' }),
       JwtModule.register({ secret: 'test-secret' }),
     ],
-    controllers: [StoriesController, StoriesReactionController, StoriesReplyController],
+    controllers: [
+      StoriesController,
+      StoriesReactionController,
+      StoriesReplyController,
+      HighlightsController,
+    ],
     providers: [
       { provide: StoriesService, useValue: { ...defaults, ...overrides.stories } },
       {
@@ -63,6 +71,17 @@ function createModule(overrides: Record<string, any> = {}) {
         useValue: { addReaction: overrides.addReaction || jest.fn() },
       },
       { provide: StoriesReplyService, useValue: { addReply: overrides.addReply || jest.fn() } },
+      {
+        provide: HighlightsService,
+        useValue: {
+          create: jest.fn(),
+          findAll: jest.fn(),
+          findOne: jest.fn(),
+          update: jest.fn(),
+          remove: jest.fn(),
+          ...overrides.highlights,
+        },
+      },
       {
         provide: ConfigService,
         useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
@@ -285,6 +304,195 @@ describe('POST /stories (multipart, elements wire contract)', () => {
 
     expect(r.status).toBe(201);
     expect(storiesService.create.mock.calls[0][0].elements).toBeUndefined();
+    await app.close();
+  });
+});
+
+describe('story input validation (DTO pipe)', () => {
+  it('rejects a reaction body without a reaction field', async () => {
+    const addReaction = jest.fn();
+    const { app, token } = await buildApp({ addReaction });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/react')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(r.status).toBe(400);
+    expect(addReaction).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('rejects an over-long reaction', async () => {
+    const addReaction = jest.fn();
+    const { app, token } = await buildApp({ addReaction });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/react')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ reaction: 'x'.repeat(33) });
+
+    expect(r.status).toBe(400);
+    expect(addReaction).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('rejects a reply body without text', async () => {
+    const addReply = jest.fn();
+    const { app, token } = await buildApp({ addReply });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/reply')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(r.status).toBe(400);
+    expect(addReply).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('rejects an over-long reply', async () => {
+    const addReply = jest.fn();
+    const { app, token } = await buildApp({ addReply });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/reply')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ text: 'y'.repeat(1001) });
+
+    expect(r.status).toBe(400);
+    expect(addReply).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('rejects a non-boolean isAnonymous flag', async () => {
+    const { app, storiesService, token } = await buildApp();
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/view')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isAnonymous: 'yes' });
+
+    expect(r.status).toBe(400);
+    expect(storiesService.trackView).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('defaults isAnonymous to false for an empty JSON body', async () => {
+    const { app, storiesService, token } = await buildApp();
+    storiesService.trackView.mockResolvedValue(undefined as any);
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/view')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(r.status).toBe(201);
+    expect(storiesService.trackView).toHaveBeenCalledWith('story-1', 'user-1', false);
+    await app.close();
+  });
+});
+
+describe('stories highlights', () => {
+  const validHighlight = {
+    title: 'Best moments',
+    coverUrl: '/uploads/cover.jpg',
+    storyIds: ['story-1'],
+  };
+
+  it('creates a highlight once the decorated DTO validates', async () => {
+    const create = jest.fn().mockResolvedValue({ id: 'h1', ...validHighlight });
+    const { app, token } = await buildApp({ highlights: { create } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/highlights')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validHighlight);
+
+    expect(r.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Best moments', storyIds: ['story-1'] }),
+      expect.objectContaining({ userId: 'user-1' })
+    );
+    await app.close();
+  });
+
+  it('rejects an empty storyIds list', async () => {
+    const create = jest.fn();
+    const { app, token } = await buildApp({ highlights: { create } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/highlights')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...validHighlight, storyIds: [] });
+
+    expect(r.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('rejects a highlight without a coverUrl', async () => {
+    const create = jest.fn();
+    const { app, token } = await buildApp({ highlights: { create } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/highlights')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Best moments', storyIds: ['story-1'] });
+
+    expect(r.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('accepts a partial update (optional fields stay optional)', async () => {
+    const update = jest.fn().mockResolvedValue({ id: 'h1', title: 'Renamed' });
+    const { app, token } = await buildApp({ highlights: { update } });
+
+    const r = await request(app.getHttpServer())
+      .patch('/stories/highlights/h1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Renamed' });
+
+    expect(r.status).toBe(200);
+    expect(update).toHaveBeenCalledWith('h1', { title: 'Renamed' }, expect.anything());
+    await app.close();
+  });
+
+  it('passes the caller as viewer to findOne (owner-scoped reads)', async () => {
+    const findOne = jest.fn().mockResolvedValue({ id: 'h1', title: 'Mine' });
+    const { app, token } = await buildApp({ highlights: { findOne } });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/highlights/h1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(findOne).toHaveBeenCalledWith('h1', 'user-1');
+    await app.close();
+  });
+
+  it('returns 401 when the viewer is not the highlight owner', async () => {
+    const findOne = jest.fn().mockRejectedValue(new UnauthorizedException());
+    const { app, token } = await buildApp({ highlights: { findOne } });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/highlights/h1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+
+  it('returns 404 for a missing highlight', async () => {
+    const findOne = jest.fn().mockRejectedValue(new NotFoundException('Highlight not found'));
+    const { app, token } = await buildApp({ highlights: { findOne } });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/highlights/missing')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(404);
     await app.close();
   });
 });

@@ -13,6 +13,7 @@ import { addStoryReaction, addStoryReply, trackStoryView, getStoryViews } from '
 import { useScreenshotProtection } from '../hooks/useScreenshotProtection';
 import { ScreenshotProtectionLevel } from '../lib/types';
 import { useIsPremium } from '../hooks/useIsPremium';
+import { useUser } from '../hooks/useUser';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
 
@@ -41,10 +42,13 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const [viewerSearchQuery, setViewerSearchQuery] = useState('');
   const activeStory = stories[currentIndex];
   const isPremium = useIsPremium();
+  const { user: currentUser } = useUser();
+  // The viewers endpoint is owner-only; non-owners must not call it.
+  const isOwner = Boolean(activeStory && currentUser && activeStory.user.id === currentUser.id);
 
-  // Fetch story viewers when active story changes
+  // Fetch story viewers when active story changes (owner only)
   useEffect(() => {
-    if (activeStory) {
+    if (activeStory && isOwner) {
       getStoryViews(activeStory.id)
         .then((views) => {
           setStoryViewers(views || []);
@@ -53,8 +57,10 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
           console.error('Failed to fetch story viewers:', error);
           setStoryViewers([]);
         });
+    } else {
+      setStoryViewers([]);
     }
-  }, [activeStory?.id]);
+  }, [activeStory?.id, isOwner]);
 
   // Filter viewers based on search query
   const filteredViewers = storyViewers.filter((viewer) => {
@@ -164,15 +170,10 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   }
 
   const pollElement = activeStory.elements?.find((e) => e.type === 'poll');
-  // The shared `StoryElement` type does not model 'mention' elements, but the
-  // API returns them with a `username` field. Widen locally to read them.
-  type MentionElement = Omit<StoryElement, 'type' | 'data'> & {
-    type: 'mention';
-    data: { username: string };
-  };
-  const mentionElement = (
-    activeStory.elements as Array<StoryElement | MentionElement> | undefined
-  )?.find((e): e is MentionElement => e.type === 'mention');
+  const mentionElement = activeStory.elements?.find(
+    (e): e is StoryElement & { type: 'mention'; data: { username: string } } =>
+      e.type === 'mention' && 'username' in e.data
+  );
 
   return (
     <div
@@ -230,60 +231,65 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
             <EyeOff size={24} />
           </button>
         )}
-        {/* Viewers list dialog with search */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <button className="absolute top-4 right-28 text-white flex items-center gap-1 hover:bg-white/10 px-2 py-1 rounded-md transition-colors">
-              <Users size={20} />
-              <span className="text-sm">{storyViewers.length}</span>
-            </button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Story Viewers ({storyViewers.length})</DialogTitle>
-            </DialogHeader>
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                size={18}
-              />
-              <Input
-                placeholder="Search viewers..."
-                value={viewerSearchQuery}
-                onChange={(e) => setViewerSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="max-h-80 overflow-y-auto space-y-2">
-              {filteredViewers.length > 0 ? (
-                filteredViewers.map((viewer) => (
-                  <div
-                    key={viewer.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                  >
-                    <img
-                      src={viewer.pfp || `https://i.pravatar.cc/150?u=${viewer.id}`}
-                      alt={viewer.username || viewer.displayName || 'User'}
-                      className="h-10 w-10 rounded-full"
-                    />
-                    <div>
-                      <p className="font-medium">
-                        {viewer.displayName || viewer.username || viewer.email || 'Anonymous User'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        @{viewer.username || viewer.walletAddress?.slice(0, 8) || 'unknown'}
-                      </p>
+        {/* Viewers list dialog with search (owner only — endpoint is owner-gated) */}
+        {isOwner && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="absolute top-4 right-28 text-white flex items-center gap-1 hover:bg-white/10 px-2 py-1 rounded-md transition-colors">
+                <Users size={20} />
+                <span className="text-sm">{storyViewers.length}</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Story Viewers ({storyViewers.length})</DialogTitle>
+              </DialogHeader>
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  size={18}
+                />
+                <Input
+                  placeholder="Search viewers..."
+                  value={viewerSearchQuery}
+                  onChange={(e) => setViewerSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {filteredViewers.length > 0 ? (
+                  filteredViewers.map((viewer) => (
+                    <div
+                      key={viewer.id}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <img
+                        src={viewer.pfp || `https://i.pravatar.cc/150?u=${viewer.id}`}
+                        alt={viewer.username || viewer.displayName || 'User'}
+                        className="h-10 w-10 rounded-full"
+                      />
+                      <div>
+                        <p className="font-medium">
+                          {viewer.displayName ||
+                            viewer.username ||
+                            viewer.email ||
+                            'Anonymous User'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          @{viewer.username || viewer.walletAddress?.slice(0, 8) || 'unknown'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-4">
-                  {viewerSearchQuery ? 'No viewers match your search' : 'No viewers yet'}
-                </p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">
+                    {viewerSearchQuery ? 'No viewers match your search' : 'No viewers yet'}
+                  </p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
         {pollElement && 'question' in pollElement.data && 'options' in pollElement.data && (
           <Poll question={pollElement.data.question} options={pollElement.data.options} />
         )}

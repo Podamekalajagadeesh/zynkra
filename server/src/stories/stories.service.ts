@@ -297,6 +297,23 @@ export class StoriesService {
       throw new NotFoundException('User not found');
     }
 
+    // Anonymous viewing is premium-only (mirrors the client gate and the boost
+    // subscription check in create()); otherwise isAnonymous would be a lie.
+    if (isAnonymous) {
+      const activeSubscription = await this.subscriptionsRepository.findOne({
+        where: {
+          subscriber: { id: userId },
+          status: SubscriptionStatus.ACTIVE,
+          expiresAt: MoreThan(new Date()),
+        },
+      });
+      if (!activeSubscription) {
+        throw new ForbiddenException(
+          'You need an active premium subscription to view stories anonymously.'
+        );
+      }
+    }
+
     // Check if user already viewed this story to track rewatches
     const existingView = await this.storyViewsRepository.findOne({
       where: { story: { id: storyId }, user: { id: userId } },
@@ -336,8 +353,9 @@ export class StoriesService {
       throw new UnauthorizedException("You are not authorized to view this story's viewers");
     }
 
+    // Anonymous viewers must stay anonymous: hide those rows from the list.
     return this.storyViewsRepository.find({
-      where: { story: { id: storyId } },
+      where: { story: { id: storyId }, isAnonymous: false },
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
@@ -363,7 +381,8 @@ export class StoriesService {
       throw new UnauthorizedException('You are not the owner of this story');
     }
 
-    await this.storyViewsRepository.delete({ story: { id: storyId } });
+    // Children (views, reactions, replies) are removed by the FKs'
+    // ON DELETE CASCADE, which handleCron() cleanup relies on too.
     await this.storiesRepository.delete(storyId);
   }
 }

@@ -448,3 +448,162 @@ describe('Story elements lifecycle over real Postgres', () => {
     expect(orphanRows[0].count).toBe(0);
   });
 });
+
+describe('Story children (views, reactions, replies, highlights) over real Postgres', () => {
+  it('enforces reaction replace, view privacy, premium anonymity, highlight ownership, and cascade delete', async () => {
+    const http = () => request(app.getHttpServer());
+    const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const countIn = async (table: string, storyId: string): Promise<number> => {
+      const rows: Array<{ count: number }> = await dataSource.query(
+        `SELECT COUNT(*)::int AS count FROM ${table} WHERE "storyId" = $1`,
+        [storyId]
+      );
+      return rows[0].count;
+    };
+    const signUp = async (username: string, email: string): Promise<string> => {
+      const captchaRes = await http().get('/auth/captcha').expect(200);
+      const { id: captchaId, expression } = captchaRes.body;
+      const [a, b] = String(expression)
+        .split(' + ')
+        .map((part: string) => parseInt(part.trim(), 10));
+      await http()
+        .post('/auth/signup')
+        .send({
+          username,
+          email,
+          password: PASSWORD,
+          birthDate: '2000-01-01',
+          captchaId,
+          captchaAnswer: String(a + b),
+        })
+        .expect(201);
+      const user = await dataSource.getRepository(User).findOneByOrFail({ username });
+      const verify = await http()
+        .post('/auth/verify-code')
+        .send({ email, code: user.emailVerificationToken })
+        .expect(200);
+      return verify.body.access_token as string;
+    };
+
+    const ownerToken = await signUp('storykids_owner', 'storykids_owner@example.com');
+    const viewerToken = await signUp('storykids_viewer', 'storykids_viewer@example.com');
+    // New accounts default to storyVisibility 'friends'; make the owner's
+    // stories world-viewable so the non-following viewer passes canViewStory.
+    await dataSource.query(
+      `UPDATE users SET "storyVisibility" = 'public' WHERE username = $1`,
+      ['storykids_owner']
+    );
+
+    const createRes = await http()
+      .post('/stories')
+      .set(bearer(ownerToken))
+      .field('textContent', 'children lifecycle')
+      .expect(201);
+    const storyId = createRes.body.id as string;
+    expect(storyId).toBeTruthy();
+
+    // ── views: one row per (story, viewer), rewatch updates it in place ──
+    await http()
+      .post(`/stories/${storyId}/view`)
+      .set(bearer(viewerToken))
+      .send({ isAnonymous: false })
+      .expect(201);
+    await http()
+      .post(`/stories/${storyId}/view`)
+      .set(bearer(viewerToken))
+      .send({ isAnonymous: false })
+      .expect(201);
+    expect(await countIn('story_views', storyId)).toBe(1);
+
+    // Anonymous viewing is premium-only: rejected without an active subscription.
+    await http()
+      .post(`/stories/${storyId}/view`)
+      .set(bearer(viewerToken))
+      .send({ isAnonymous: true })
+      .expect(403);
+    expect(await countIn('story_views', storyId)).toBe(1);
+
+    // Owner sees the viewer; non-owners are rejected.
+    const ownerViews = await http()
+      .get(`/stories/${storyId}/views`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(ownerViews.body).toHaveLength(1);
+    await http().get(`/stories/${storyId}/views`).set(bearer(viewerToken)).expect(401);
+
+    // Anonymized rows are hidden from the owner's list.
+    await dataSource.query(`UPDATE story_views SET "isAnonymous" = true WHERE "storyId" = $1`, [
+      storyId,
+    ]);
+    const hiddenViews = await http()
+      .get(`/stories/${storyId}/views`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(hiddenViews.body).toHaveLength(0);
+
+    // ── reactions: one row per (story, user); a re-tap replaces ──────────
+    await http()
+      .post(`/stories/${storyId}/react`)
+      .set(bearer(viewerToken))
+      .send({ reaction: '👍' })
+      .expect(201);
+    await http()
+      .post(`/stories/${storyId}/react`)
+      .set(bearer(viewerToken))
+      .send({ reaction: '❤️' })
+      .expect(201);
+    expect(await countIn('story_reactions', storyId)).toBe(1);
+    const reactionRows: Array<{ reaction: string }> = await dataSource.query(
+      'SELECT "reaction" FROM story_reactions WHERE "storyId" = $1',
+      [storyId]
+    );
+    expect(reactionRows[0].reaction).toBe('❤️');
+    await http()
+      .post(`/stories/${storyId}/react`)
+      .set(bearer(ownerToken))
+      .send({ reaction: '😂' })
+      .expect(201);
+    expect(await countIn('story_reactions', storyId)).toBe(2);
+
+    // ── replies accumulate ───────────────────────────────────────────────
+    await http()
+      .post(`/stories/${storyId}/reply`)
+      .set(bearer(viewerToken))
+      .send({ text: 'First!' })
+      .expect(201);
+    await http()
+      .post(`/stories/${storyId}/reply`)
+      .set(bearer(viewerToken))
+      .send({ text: 'Second!' })
+      .expect(201);
+    expect(await countIn('story_replies', storyId)).toBe(2);
+
+    // ── highlights: duplicate storyIds dedupe; reads are owner-only ─────
+    const highlightRes = await http()
+      .post('/stories/highlights')
+      .set(bearer(ownerToken))
+      .send({ title: 'Faves', coverUrl: '/covers/f.jpg', storyIds: [storyId, storyId] })
+      .expect(201);
+    expect(highlightRes.body.stories).toHaveLength(1);
+    const highlightId = highlightRes.body.id as string;
+    await http().get(`/stories/highlights/${highlightId}`).set(bearer(ownerToken)).expect(200);
+    await http().get(`/stories/highlights/${highlightId}`).set(bearer(viewerToken)).expect(401);
+
+    // ── delete: every child table cascades, highlight join rows included ─
+    await http().delete(`/stories/${storyId}`).set(bearer(ownerToken)).expect(200);
+    expect(await countIn('story_elements', storyId)).toBe(0);
+    expect(await countIn('story_views', storyId)).toBe(0);
+    expect(await countIn('story_reactions', storyId)).toBe(0);
+    expect(await countIn('story_replies', storyId)).toBe(0);
+    const joinRows: Array<{ count: number }> = await dataSource.query(
+      'SELECT COUNT(*)::int AS count FROM story_highlight_stories WHERE "storyId" = $1',
+      [storyId]
+    );
+    expect(joinRows[0].count).toBe(0);
+    const storyRows: Array<{ count: number }> = await dataSource.query(
+      'SELECT COUNT(*)::int AS count FROM stories WHERE id = $1',
+      [storyId]
+    );
+    expect(storyRows[0].count).toBe(0);
+  });
+});
