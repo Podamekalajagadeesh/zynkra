@@ -16,6 +16,9 @@ import { StoriesReplyController } from './stories-reply.controller';
 import { StoriesReactionService } from './stories-reaction.service';
 import { StoriesReplyService } from './stories-reply.service';
 import { StoryView } from './entities/story-view.entity';
+import { StoryPollVote } from './entities/story-poll-vote.entity';
+import { StoriesPollController } from './stories-poll.controller';
+import { StoriesPollService } from './stories-poll.service';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
@@ -28,6 +31,7 @@ import { CustomAudience } from '../custom-audiences/entities/custom-audience.ent
       StoryReaction,
       StoryReply,
       StoryView,
+      StoryPollVote,
       Subscription,
       CustomAudience,
     ]),
@@ -39,8 +43,15 @@ import { CustomAudience } from '../custom-audiences/entities/custom-audience.ent
     HighlightsController,
     StoriesReactionController,
     StoriesReplyController,
+    StoriesPollController,
   ],
-  providers: [StoriesService, HighlightsService, StoriesReactionService, StoriesReplyService],
+  providers: [
+    StoriesService,
+    HighlightsService,
+    StoriesReactionService,
+    StoriesReplyService,
+    StoriesPollService,
+  ],
   exports: [StoriesService],
 })
 export class StoriesModule {}

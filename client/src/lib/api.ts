@@ -2118,6 +2118,18 @@ export const getStoryViews = async (storyId: string) => {
   return response.data;
 };
 
+export const getStoryPollResults = async (storyId: string, elementId: string) => {
+  const response = await api.get(`/stories/${storyId}/elements/${elementId}/poll-results`);
+  return response.data;
+};
+
+export const voteStoryPoll = async (storyId: string, elementId: string, optionIndex: number) => {
+  const response = await api.post(`/stories/${storyId}/elements/${elementId}/poll-vote`, {
+    optionIndex,
+  });
+  return response.data;
+};
+
 export const getNfts = async (walletAddress: string) => {
   const response = await api.get(`/wallet/nfts/${walletAddress}`);
   return response.data;

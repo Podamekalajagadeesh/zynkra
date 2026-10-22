@@ -554,6 +554,13 @@ export interface StoryReply {
   createdAt: string;
 }
 
+/** Server-computed poll tallies for a story poll element. */
+export interface StoryPollResults {
+  optionCounts: number[];
+  totalVotes: number;
+  myVote: number | null;
+}
+
 export interface Tag {
   id: string;
   name: string;

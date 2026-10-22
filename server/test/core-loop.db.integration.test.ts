@@ -607,3 +607,122 @@ describe('Story children (views, reactions, replies, highlights) over real Postg
     expect(storyRows[0].count).toBe(0);
   });
 });
+
+describe('Story poll voting over real Postgres', () => {
+  it('upserts one vote per user, aggregates counts, and cascades on story delete', async () => {
+    const http = () => request(app.getHttpServer());
+    const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const votesFor = async (elementId: string): Promise<Array<{ optionIndex: number }>> =>
+      dataSource.query('SELECT "optionIndex" FROM story_poll_votes WHERE "elementId" = $1', [
+        elementId,
+      ]);
+    const signUp = async (username: string, email: string): Promise<string> => {
+      const captchaRes = await http().get('/auth/captcha').expect(200);
+      const { id: captchaId, expression } = captchaRes.body;
+      const [a, b] = String(expression)
+        .split(' + ')
+        .map((part: string) => parseInt(part.trim(), 10));
+      await http()
+        .post('/auth/signup')
+        .send({
+          username,
+          email,
+          password: PASSWORD,
+          birthDate: '2000-01-01',
+          captchaId,
+          captchaAnswer: String(a + b),
+        })
+        .expect(201);
+      const user = await dataSource.getRepository(User).findOneByOrFail({ username });
+      const verify = await http()
+        .post('/auth/verify-code')
+        .send({ email, code: user.emailVerificationToken })
+        .expect(200);
+      return verify.body.access_token as string;
+    };
+
+    const ownerToken = await signUp('storypoll_owner', 'storypoll_owner@example.com');
+    const viewerToken = await signUp('storypoll_viewer', 'storypoll_viewer@example.com');
+    await dataSource.query(`UPDATE users SET "storyVisibility" = 'public' WHERE username = $1`, [
+      'storypoll_owner',
+    ]);
+
+    const wireElements = [
+      { type: 'poll', data: { question: 'Best?', options: ['A', 'B'] } },
+      { type: 'mention', data: { username: 'friend' } },
+    ];
+    const createRes = await http()
+      .post('/stories')
+      .set(bearer(ownerToken))
+      .field('textContent', 'poll lifecycle')
+      .field('elements', JSON.stringify(wireElements))
+      .expect(201);
+    const storyId = createRes.body.id as string;
+    const pollElementId = createRes.body.elements[0].id as string;
+    const mentionElementId = createRes.body.elements[1].id as string;
+    expect(pollElementId).toBeTruthy();
+
+    // ── viewer's first vote lands as one row ────────────────────────────
+    const first = await http()
+      .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
+      .set(bearer(viewerToken))
+      .send({ optionIndex: 1 })
+      .expect(201);
+    expect(first.body).toEqual({ optionCounts: [0, 1], totalVotes: 1, myVote: 1 });
+    let rows = await votesFor(pollElementId);
+    expect(rows).toHaveLength(1);
+
+    // ── re-vote replaces the choice instead of adding a row ─────────────
+    const switched = await http()
+      .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
+      .set(bearer(viewerToken))
+      .send({ optionIndex: 0 })
+      .expect(201);
+    expect(switched.body).toEqual({ optionCounts: [1, 0], totalVotes: 1, myVote: 0 });
+    rows = await votesFor(pollElementId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].optionIndex).toBe(0);
+
+    // ── a second user contributes to the aggregate ──────────────────────
+    const ownerVote = await http()
+      .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
+      .set(bearer(ownerToken))
+      .send({ optionIndex: 0 })
+      .expect(201);
+    expect(ownerVote.body).toEqual({ optionCounts: [2, 0], totalVotes: 2, myVote: 0 });
+
+    const viewerResults = await http()
+      .get(`/stories/${storyId}/elements/${pollElementId}/poll-results`)
+      .set(bearer(viewerToken))
+      .expect(200);
+    expect(viewerResults.body).toEqual({ optionCounts: [2, 0], totalVotes: 2, myVote: 0 });
+
+    // ── guards: out-of-range index, non-poll element, expired story ─────
+    await http()
+      .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
+      .set(bearer(viewerToken))
+      .send({ optionIndex: 2 })
+      .expect(400);
+    await http()
+      .post(`/stories/${storyId}/elements/${mentionElementId}/poll-vote`)
+      .set(bearer(viewerToken))
+      .send({ optionIndex: 0 })
+      .expect(404);
+    await dataSource.query(`UPDATE stories SET "expiresAt" = now() - interval '1 hour' WHERE id = $1`, [storyId]);
+    await http()
+      .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
+      .set(bearer(viewerToken))
+      .send({ optionIndex: 1 })
+      .expect(400);
+    expect(await votesFor(pollElementId)).toHaveLength(2);
+
+    // ── deleting the story cascades elements → votes ────────────────────
+    await http().delete(`/stories/${storyId}`).set(bearer(ownerToken)).expect(200);
+    expect(await votesFor(pollElementId)).toHaveLength(0);
+    const elementRows: Array<{ count: number }> = await dataSource.query(
+      'SELECT COUNT(*)::int AS count FROM story_elements WHERE "storyId" = $1',
+      [storyId]
+    );
+    expect(elementRows[0].count).toBe(0);
+  });
+});

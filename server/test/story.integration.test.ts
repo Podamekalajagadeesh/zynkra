@@ -25,6 +25,8 @@ import { StoriesReplyController } from '../src/stories/stories-reply.controller'
 import { StoriesReplyService } from '../src/stories/stories-reply.service';
 import { HighlightsController } from '../src/stories/highlights.controller';
 import { HighlightsService } from '../src/stories/highlights.service';
+import { StoriesPollController } from '../src/stories/stories-poll.controller';
+import { StoriesPollService } from '../src/stories/stories-poll.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
 import { User } from '../src/users/entities/user.entity';
 import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
@@ -51,6 +53,7 @@ function createModule(overrides: Record<string, any> = {}) {
       StoriesReactionController,
       StoriesReplyController,
       HighlightsController,
+      StoriesPollController,
     ],
     providers: [
       { provide: StoriesService, useValue: { ...defaults, ...overrides.stories } },
@@ -81,6 +84,10 @@ function createModule(overrides: Record<string, any> = {}) {
           remove: jest.fn(),
           ...overrides.highlights,
         },
+      },
+      {
+        provide: StoriesPollService,
+        useValue: { vote: jest.fn(), getResults: jest.fn(), ...overrides.poll },
       },
       {
         provide: ConfigService,
@@ -493,6 +500,105 @@ describe('stories highlights', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(r.status).toBe(404);
+    await app.close();
+  });
+});
+
+describe('POST /stories/:id/elements/:elementId/poll-vote', () => {
+  it('returns 201 and forwards the vote', async () => {
+    const vote = jest.fn().mockResolvedValue({ optionCounts: [1, 2], totalVotes: 3, myVote: 1 });
+    const { app, token } = await buildApp({ poll: { vote } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/elements/el-1/poll-vote')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ optionIndex: 1 });
+
+    expect(r.status).toBe(201);
+    expect(vote).toHaveBeenCalledWith('story-1', 'el-1', 'user-1', 1);
+    expect(r.body).toEqual({ optionCounts: [1, 2], totalVotes: 3, myVote: 1 });
+    await app.close();
+  });
+
+  it('returns 401 without auth', async () => {
+    const { app } = await buildApp();
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/elements/el-1/poll-vote')
+      .send({ optionIndex: 0 });
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+
+  it('returns 400 when optionIndex is missing', async () => {
+    const vote = jest.fn();
+    const { app, token } = await buildApp({ poll: { vote } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/elements/el-1/poll-vote')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(r.status).toBe(400);
+    expect(vote).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('returns 400 for a negative optionIndex', async () => {
+    const vote = jest.fn();
+    const { app, token } = await buildApp({ poll: { vote } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/elements/el-1/poll-vote')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ optionIndex: -1 });
+
+    expect(r.status).toBe(400);
+    expect(vote).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('returns 400 for a non-integer optionIndex', async () => {
+    const vote = jest.fn();
+    const { app, token } = await buildApp({ poll: { vote } });
+
+    const r = await request(app.getHttpServer())
+      .post('/stories/story-1/elements/el-1/poll-vote')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ optionIndex: 1.5 });
+
+    expect(r.status).toBe(400);
+    expect(vote).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('GET /stories/:id/elements/:elementId/poll-results', () => {
+  it('returns 200 and forwards the caller', async () => {
+    const getResults = jest
+      .fn()
+      .mockResolvedValue({ optionCounts: [4, 1], totalVotes: 5, myVote: 0 });
+    const { app, token } = await buildApp({ poll: { getResults } });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/story-1/elements/el-1/poll-results')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(getResults).toHaveBeenCalledWith('story-1', 'el-1', 'user-1');
+    expect(r.body).toEqual({ optionCounts: [4, 1], totalVotes: 5, myVote: 0 });
+    await app.close();
+  });
+
+  it('returns 401 without auth', async () => {
+    const { app } = await buildApp();
+
+    const r = await request(app.getHttpServer()).get(
+      '/stories/story-1/elements/el-1/poll-results'
+    );
+
+    expect(r.status).toBe(401);
     await app.close();
   });
 });

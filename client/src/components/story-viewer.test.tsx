@@ -2,10 +2,12 @@
  * Story viewer: `GET /stories/:id/views` is owner-only, so only the owner may
  * fetch and render the viewers list — non-owners must not call it at all (it
  * used to 401/403 for everyone else). Also pins the shared 'mention' element
- * type path (the local widening workaround is gone).
+ * type path (the local widening workaround is gone) and the poll wiring
+ * (viewer passes storyId + elementId so Poll can fetch/cast tallies).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import type { Story } from '../lib/types';
 import { StoryViewer } from './story-viewer';
 
@@ -16,6 +18,16 @@ const mocks = vi.hoisted(() => ({
   trackStoryView: vi.fn(async () => ({})),
   addStoryReaction: vi.fn(async () => ({})),
   addStoryReply: vi.fn(async () => ({})),
+  getStoryPollResults: vi.fn(async () => ({
+    optionCounts: [0, 0],
+    totalVotes: 0,
+    myVote: null,
+  })),
+  voteStoryPoll: vi.fn(async () => ({
+    optionCounts: [1, 0],
+    totalVotes: 1,
+    myVote: 0,
+  })),
   currentUser: null as { id: string } | null,
 }));
 
@@ -24,6 +36,8 @@ vi.mock('../lib/api', () => ({
   trackStoryView: mocks.trackStoryView,
   addStoryReaction: mocks.addStoryReaction,
   addStoryReply: mocks.addStoryReply,
+  getStoryPollResults: mocks.getStoryPollResults,
+  voteStoryPoll: mocks.voteStoryPoll,
 }));
 
 vi.mock('../hooks/useUser', () => ({
@@ -51,7 +65,11 @@ function makeStory(overrides: Partial<Story> = {}): Story {
 
 function renderViewer(stories: Story[]) {
   const onClose = vi.fn();
-  render(<StoryViewer stories={stories} initialStoryIndex={0} onClose={onClose} />);
+  render(
+    <MemoryRouter>
+      <StoryViewer stories={stories} initialStoryIndex={0} onClose={onClose} />
+    </MemoryRouter>
+  );
   return { onClose };
 }
 
@@ -85,5 +103,29 @@ describe('StoryViewer mention element', () => {
     ]);
 
     expect(await screen.findByText('@friend')).toBeTruthy();
+  });
+});
+
+describe('StoryViewer poll wiring', () => {
+  it('mounts the poll with the story and element ids and fetches tallies', async () => {
+    mocks.currentUser = { id: 'someone-else' };
+    renderViewer([
+      makeStory({
+        id: 'story-9',
+        elements: [
+          {
+            id: 'el-poll',
+            type: 'poll',
+            data: { question: 'Best?', options: ['A', 'B'] },
+          },
+        ],
+      }),
+    ]);
+
+    expect(await screen.findByText('Best?')).toBeTruthy();
+    await waitFor(() =>
+      expect(mocks.getStoryPollResults).toHaveBeenCalledWith('story-9', 'el-poll')
+    );
+    expect(mocks.getStoryViews).not.toHaveBeenCalled();
   });
 });

@@ -291,7 +291,12 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
           </Dialog>
         )}
         {pollElement && 'question' in pollElement.data && 'options' in pollElement.data && (
-          <Poll question={pollElement.data.question} options={pollElement.data.options} />
+          <Poll
+            storyId={activeStory.id}
+            elementId={pollElement.id}
+            question={pollElement.data.question}
+            options={pollElement.data.options}
+          />
         )}
         {mentionElement && 'username' in mentionElement.data && (
           <Mention username={mentionElement.data.username} />
