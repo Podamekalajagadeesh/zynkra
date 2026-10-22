@@ -181,7 +181,14 @@ export const OAuthAppsPage = () => {
                     <code className="text-xs bg-dark-100 dark:bg-dark-800 px-2 py-0.5 rounded break-all">
                       {app.clientSecret}
                     </code>
-                    <button onClick={() => copy(app.clientSecret)} aria-label="Copy client secret">
+                    <button
+                      onClick={() => {
+                        // `clientSecret` is optional; the render guard above does
+                        // not narrow inside this closure.
+                        if (app.clientSecret) copy(app.clientSecret);
+                      }}
+                      aria-label="Copy client secret"
+                    >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                   </div>

@@ -69,7 +69,9 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   // `Story.user` is typed as the minimal `PostAuthor`; the API also returns
   // screenshot-protection settings on it, so widen locally to read them.
   const storyUser = activeStory.user as PostAuthor & { screenshotProtection?: ScreenshotProtectionSettings };
-  const shouldApplyProtection = storyUser.screenshotProtection?.enabled && storyUser.screenshotProtection?.applyToStories;
+  const shouldApplyProtection = Boolean(
+    storyUser.screenshotProtection?.enabled && storyUser.screenshotProtection?.applyToStories,
+  );
 
   const { protectionRef } = useScreenshotProtection({
     enabled: shouldApplyProtection,

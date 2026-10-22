@@ -4,19 +4,37 @@ import { api } from '../lib/api';
 
 const KEY_PAIR_STORAGE_KEY_PREFIX = 'e2ee_key_pair_';
 
+export interface StoredKeyPair {
+  publicKey: string;
+  privateKey: string;
+}
+
 const getStorageKey = (userId: string) => `${KEY_PAIR_STORAGE_KEY_PREFIX}${userId}`;
 
-const getStoredKeyPair = (userId: string) => {
+// localStorage holds untyped JSON — narrow it before trusting the shape.
+const isStoredKeyPair = (value: unknown): value is StoredKeyPair =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as StoredKeyPair).publicKey === 'string' &&
+  typeof (value as StoredKeyPair).privateKey === 'string';
+
+const getStoredKeyPair = (userId: string): StoredKeyPair | null => {
   if (!userId) return null;
   const raw = localStorage.getItem(getStorageKey(userId));
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return isStoredKeyPair(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
-export const useKeys = (user) => {
-  const [keys, setKeys] = useState(null);
+export const useKeys = (user?: { id?: string } | null) => {
+  const [keys, setKeys] = useState<StoredKeyPair | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const loadKeys = useCallback(async (userId: string) => {
+  const loadKeys = useCallback(async (userId?: string) => {
     if (!userId) {
       setKeys(null);
       setIsInitialized(true);
@@ -30,7 +48,7 @@ export const useKeys = (user) => {
     return keyPair;
   }, []);
 
-  const saveKeys = useCallback(async (userId: string, keyPair) => {
+  const saveKeys = useCallback(async (userId: string, keyPair: StoredKeyPair) => {
     if (!userId || !keyPair) return;
 
     localStorage.setItem(getStorageKey(userId), JSON.stringify(keyPair));

@@ -1011,6 +1011,10 @@ export function PostCard({
   };
 
 
+  // `post.media` is optional in the API payload; normalise once for the
+  // render paths that iterate or read the first item unconditionally.
+  const media = post.media ?? [];
+
   return (
     <div className="card-hover mb-lg p-5 animate-fade-in sm:p-6" role="article" aria-labelledby={`post-content-${post.id}`}>
       {post.repostedFrom && (
@@ -1558,11 +1562,11 @@ export function PostCard({
           )}
         </button>
 
-        {post.media.some(m => m.type === 'video') && (
+        {media.some(m => m.type === 'video') && (
           <button
             onClick={() => {
               // Navigate to shorts editor with this video imported as a clip
-              window.location.href = `/shorts/editor?import=${encodeURIComponent(post.media[0].url)}`;
+              window.location.href = `/shorts/editor?import=${encodeURIComponent(media[0].url)}`;
             }}
             className="flex items-center gap-2 rounded-xl px-3 py-2 text-dark-600 hover:bg-dark-100 dark:text-dark-300 dark:hover:bg-dark-700"
             aria-label="Stitch this video"
@@ -1612,7 +1616,7 @@ export function PostCard({
                     <p className="text-sm text-gray-500">Save to watchlist</p>
                   </div>
                 </button>
-                {post.media.some(m => m.type === 'video') && (
+                {media.some(m => m.type === 'video') && (
                   <button
                     onClick={handleAddToWatchLater}
                     className={`w-full text-left p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded flex items-center gap-3 ${isInWatchLater ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}

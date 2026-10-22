@@ -32,7 +32,7 @@ const FundraisersDiscoveryPage = () => {
         {fundraisers.map((fundraiser) => (
           <Link to={`/fundraisers/${fundraiser.id}`} key={fundraiser.id}>
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <img src={fundraiser.coverImageUrl} alt={fundraiser.title} className="w-full h-48 object-cover" />
+              <img src={fundraiser.coverImageUrl ?? undefined} alt={fundraiser.title} className="w-full h-48 object-cover" />
               <div className="p-4">
                 <h3 className="font-semibold">{fundraiser.title}</h3>
                 <p className="text-sm text-gray-600">

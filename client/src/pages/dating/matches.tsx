@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../../hooks/useApi';
-import MatchCard from '../../components/dating/MatchCard';
+import MatchCard, { MatchCardProps } from '../../components/dating/MatchCard';
 
 const DatingMatchesPage = () => {
-  const [matches, setMatches] = useState([]);
+  const [matches, setMatches] = useState<MatchCardProps['match'][]>([]);
   const { get } = useApi();
 
   useEffect(() => {

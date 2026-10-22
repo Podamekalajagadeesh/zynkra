@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNotifications } from '../providers/notifications-provider';
+import type { NotificationItem as NotificationData } from '../providers/notifications-provider';
 import { NotificationItem } from '../components/notifications/notification-item';
 import { PageShell } from '../components/PageShell';
 import { getAiNotificationDigest, getAiPrioritizedNotifications } from '../lib/api';
 
 type PriorityBucket = {
-  critical: Array<Record<string, unknown>>;
-  high: Array<Record<string, unknown>>;
-  medium: Array<Record<string, unknown>>;
-  low: Array<Record<string, unknown>>;
-  muted: Array<Record<string, unknown>>;
+  critical: NotificationData[];
+  high: NotificationData[];
+  medium: NotificationData[];
+  low: NotificationData[];
+  muted: NotificationData[];
 };
 
 const PRIORITY_GROUPS: Array<{ key: keyof PriorityBucket; label: string; color: string }> = [

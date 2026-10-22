@@ -2,7 +2,7 @@ import { useNotifications } from '../../providers/notifications-provider';
 import { NotificationItem } from './notification-item';
 import { Link } from 'react-router-dom';
 
-export const NotificationDropdown = ({ isOpen }) => {
+export const NotificationDropdown = ({ isOpen }: { isOpen: boolean }) => {
   const { notifications, unreadCount, markAllAsRead } = useNotifications();
 
   if (!isOpen) {

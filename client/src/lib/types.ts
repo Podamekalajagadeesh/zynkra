@@ -505,6 +505,26 @@ export interface StoryElement {
   data: PollData | QAData | StickerData;
 }
 
+// What a client sends when creating a story element: the server assigns `id`
+// (uuid PK) on insert and accepts the full StoryElementType enum.
+export interface StoryElementInput {
+  id?: string;
+  type:
+    | 'location'
+    | 'mention'
+    | 'hashtag'
+    | 'poll'
+    | 'quiz'
+    | 'slider'
+    | 'countdown'
+    | 'donation'
+    | 'qa'
+    | 'music'
+    | 'link'
+    | 'sticker';
+  data: unknown;
+}
+
 export interface Story {
   id: string;
   mediaUrl: string;

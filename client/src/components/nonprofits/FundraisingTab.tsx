@@ -33,7 +33,7 @@ const FundraisingTab = () => {
           <Link to={`/fundraisers/${fundraiser.id}`} key={fundraiser.id}>
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <img
-                src={fundraiser.coverImageUrl}
+                src={fundraiser.coverImageUrl ?? undefined}
                 alt={fundraiser.title}
                 className="w-full h-48 object-cover"
               />

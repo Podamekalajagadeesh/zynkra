@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { createStory, setAuthToken, api } from '../lib/api';
+import type { StoryElementInput } from '../lib/types';
 import { Button } from './ui/button';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
@@ -151,7 +152,7 @@ export function CreateStoryForm({ onClose, onStoryCreated }: CreateStoryFormProp
 
     setIsUploading(true);
     try {
-      const elements = [];
+      const elements: StoryElementInput[] = [];
       if (poll && poll.question && poll.options.every((o) => o)) {
         elements.push({
           type: 'poll',

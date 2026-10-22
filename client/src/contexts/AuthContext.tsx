@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode, useCallback } from 'react';
 import { getProfile, setAuthToken, uploadPublicKey, logoutFromServer } from '../lib/api';
+import { UserProfile } from '../lib/types';
 import { Account, AuthContext } from './AuthContextDef';
 import {
   generateAndStoreKeys,
@@ -142,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [accounts, activeAccount]);
 
   const setUser = useCallback(
-    (user) => {
+    (user: UserProfile) => {
       if (activeAccount) {
         const updatedAccount = { ...activeAccount, user };
         const updatedAccounts = accounts.map((acc) =>

@@ -1,7 +1,8 @@
+import type { MouseEventHandler } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../../providers/notifications-provider';
 
-export const NotificationIcon = ({ onClick }) => {
+export const NotificationIcon = ({ onClick }: { onClick: MouseEventHandler<HTMLButtonElement> }) => {
   const { unreadCount } = useNotifications();
 
   return (

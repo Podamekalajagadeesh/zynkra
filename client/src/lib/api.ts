@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { getAuthToken, setAuthTokenStorage } from './auth-storage';
 import { enqueueOfflineOperation } from './offlineSync';
-import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, StoryElement, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
+import { AuthData, CrossRealityPort, Post, PostVisibility, RealityContext, FriendRequestPrivacy, Story, StoryElementInput, UserProfile, EmailSearchPrivacy, CommentPrivacy, TagPrivacy, MessagePrivacy, MarketplaceListing, SavedListing, ThemeDefinition } from './types';
+import type { NotificationItem as NotificationData } from '../providers/notifications-provider';
 
 export type PersonalizationControls = {
   feedPersonalization: boolean;
@@ -519,12 +520,14 @@ export const getAiNotificationDigest = async () => {
 
 export const getAiPrioritizedNotifications = async () => {
   const response = await api.get('/notifications/ai/prioritized');
+  // The prioritized feed returns the same notification objects the realtime
+  // channel pushes, so type the buckets with the shared NotificationItem shape.
   return response.data as {
-    critical: Array<Record<string, unknown>>;
-    high: Array<Record<string, unknown>>;
-    medium: Array<Record<string, unknown>>;
-    low: Array<Record<string, unknown>>;
-    muted: Array<Record<string, unknown>>;
+    critical: NotificationData[];
+    high: NotificationData[];
+    medium: NotificationData[];
+    low: NotificationData[];
+    muted: NotificationData[];
   };
 };
 
@@ -1914,8 +1917,8 @@ export const getPasskeys = async () => {
   return response.data;
 };
 
-export const getStories = async () => {
-  const response = await api.get('/stories');
+export const getStories = async (): Promise<Story[]> => {
+  const response = await api.get<Story[]>('/stories');
   return response.data;
 };
 
@@ -1924,7 +1927,7 @@ export const deletePasskey = async (id: string) => {
   return response.data;
 };
 
-export const createStory = async (file: File, elements?: StoryElement[], audience?: string, isBoosted?: boolean, isExtendedDuration?: boolean) => {
+export const createStory = async (file: File, elements?: StoryElementInput[], audience?: string, isBoosted?: boolean, isExtendedDuration?: boolean) => {
   const formData = new FormData();
   formData.append('file', file);
   if (elements) {

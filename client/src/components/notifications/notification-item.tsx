@@ -1,9 +1,10 @@
 import { useNotifications } from '../../providers/notifications-provider';
+import type { NotificationItem as NotificationData } from '../../providers/notifications-provider';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { formatDateTime } from '../../lib/preferences';
 
-const getNotificationLink = (notification) => {
+const getNotificationLink = (notification: NotificationData) => {
   const senderUsername = notification?.sender?.username;
 
   switch (notification?.type) {
@@ -19,7 +20,7 @@ const getNotificationLink = (notification) => {
   }
 };
 
-const getNotificationText = (notification) => {
+const getNotificationText = (notification: NotificationData) => {
   switch (notification?.type) {
     case 'like':
       return <>liked your post</>;
@@ -27,19 +28,29 @@ const getNotificationText = (notification) => {
       return <>commented on your post</>;
     case 'follow':
       return <>started following you</>;
-    case 'login_alert':
+    case 'login_alert': {
+      const metadata = notification.metadata;
+      const deviceName =
+        typeof metadata?.deviceName === 'string' && metadata.deviceName
+          ? metadata.deviceName
+          : 'a new device';
+      const ipAddress =
+        typeof metadata?.ipAddress === 'string' && metadata.ipAddress
+          ? metadata.ipAddress
+          : '';
       return (
         <>
-          signed in from {notification.metadata?.deviceName || 'a new device'}
-          {notification.metadata?.ipAddress ? ` (${notification.metadata.ipAddress})` : ''}
+          signed in from {deviceName}
+          {ipAddress ? ` (${ipAddress})` : ''}
         </>
       );
+    }
     default:
       return 'sent you a notification';
   }
 };
 
-export const NotificationItem = ({ notification }) => {
+export const NotificationItem = ({ notification }: { notification: NotificationData }) => {
   const { markAsRead } = useNotifications();
   const sender = notification?.sender ?? { username: 'System', profile: null };
   const senderUsername = sender.username || 'System';

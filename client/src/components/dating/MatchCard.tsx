@@ -4,7 +4,7 @@ import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { startConversation } from '../../lib/api';
 
-interface MatchCardProps {
+export interface MatchCardProps {
   match: {
     id: string;
     createdAt: string;

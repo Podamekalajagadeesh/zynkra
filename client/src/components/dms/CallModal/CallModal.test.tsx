@@ -31,7 +31,16 @@ describe('CallModal Picture-in-Picture', () => {
   it('requests Picture-in-Picture for the remote video', async () => {
     const { container } = render(<CallModal {...props} />);
     const remoteVideo = container.querySelectorAll('video')[1] as HTMLVideoElement;
-    remoteVideo.requestPictureInPicture = vi.fn(async () => undefined);
+    // PictureInPictureWindow extends EventTarget, so build one from the real
+    // prototype rather than a bare object literal.
+    const pipWindow = Object.assign(new EventTarget(), {
+      document,
+      onresize: null,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      resizeTo: () => {},
+    }) as PictureInPictureWindow;
+    remoteVideo.requestPictureInPicture = vi.fn(async () => pipWindow);
     fireEvent.click(screen.getByRole('button', { name: 'Open remote video in picture-in-picture' }));
 
     expect(remoteVideo.requestPictureInPicture).toHaveBeenCalled();

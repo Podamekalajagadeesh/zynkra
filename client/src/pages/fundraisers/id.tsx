@@ -32,7 +32,7 @@ const FundraiserPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <img src={fundraiser.coverImageUrl} alt={fundraiser.title} className="w-full h-96 object-cover rounded-lg mb-4" />
+      <img src={fundraiser.coverImageUrl ?? undefined} alt={fundraiser.title} className="w-full h-96 object-cover rounded-lg mb-4" />
       <h1 className="text-3xl font-bold mb-2">{fundraiser.title}</h1>
       <p className="text-gray-600 mb-4">Organized by {fundraiser.organizer.displayName}</p>
 

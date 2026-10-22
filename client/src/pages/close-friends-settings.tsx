@@ -65,7 +65,7 @@ export function CloseFriendsSettings() {
         {followers.map((user) => (
           <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
             <div className="flex items-center gap-4">
-              <img src={user.avatar} alt={user.username} className="w-10 h-10 rounded-full" />
+              <img src={user.avatar ?? undefined} alt={user.username} className="w-10 h-10 rounded-full" />
               <div>
                 <p className="font-semibold">{user.username}</p>
                 <p className="text-sm text-dark-500 dark:text-dark-400">{user.displayName}</p>
