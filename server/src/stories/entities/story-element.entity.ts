@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Story } from './story.entity';
 
 export enum StoryElementType {
@@ -27,6 +27,7 @@ export class StoryElement {
   @Column({ type: 'jsonb' })
   data: any;
 
-  @ManyToOne(() => Story, (story) => story.elements, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Story, (story) => story.elements, { onDelete: 'CASCADE', nullable: false })
+  @Index('IDX_story_elements_storyId')
   story: Story;
 }

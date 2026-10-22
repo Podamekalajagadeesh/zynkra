@@ -56,7 +56,11 @@ export class StoriesController {
     }
 
     if (typeof createStoryDto.backgroundOptions === 'string') {
-      createStoryDto.backgroundOptions = JSON.parse(createStoryDto.backgroundOptions);
+      try {
+        createStoryDto.backgroundOptions = JSON.parse(createStoryDto.backgroundOptions);
+      } catch {
+        throw new BadRequestException('Invalid story background options payload');
+      }
     }
 
     return this.storiesService.create(createStoryDto, req.user.userId);

@@ -44,6 +44,7 @@ import { DmsModule } from '../src/dms/dms.module';
 import { NotificationsModule } from '../src/notifications/notifications.module';
 import { CommonModule } from '../src/common/common.module';
 import { VisibilityModule } from '../src/common/visibility/visibility.module';
+import { StoriesModule } from '../src/stories/stories.module';
 
 import { User } from '../src/users/entities/user.entity';
 import { Post } from '../src/posts/entities/post.entity';
@@ -165,6 +166,7 @@ beforeAll(async () => {
       CommentsModule,
       ReactionsModule,
       DmsModule,
+      StoriesModule,
     ],
   }).compile();
 
@@ -356,5 +358,93 @@ describe('Full core loop over real Postgres', () => {
     expect(persistedTypes).toContain(NotificationType.LOGIN_ALERT);
     expect(persistedTypes).toContain(NotificationType.COMMENT);
     expect(persistedTypes).toContain(NotificationType.FOLLOW);
+  });
+});
+
+describe('Story elements lifecycle over real Postgres', () => {
+  it('creates DB-uuid elements, round-trips them over GET /stories, and cascades on delete', async () => {
+    const http = () => request(app.getHttpServer());
+    const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    interface WireStory {
+      id: string;
+      elements: Array<{ id: string; type: string; data: unknown }>;
+    }
+
+    const captchaRes = await http().get('/auth/captcha').expect(200);
+    const { id: captchaId, expression } = captchaRes.body;
+    const [a, b] = String(expression)
+      .split(' + ')
+      .map((part: string) => parseInt(part.trim(), 10));
+    await http()
+      .post('/auth/signup')
+      .send({
+        username: 'storyelem_user1',
+        email: 'storyelem1@example.com',
+        password: PASSWORD,
+        birthDate: '2000-01-01',
+        captchaId,
+        captchaAnswer: String(a + b),
+      })
+      .expect(201);
+
+    const user = await dataSource
+      .getRepository(User)
+      .findOneByOrFail({ username: 'storyelem_user1' });
+    const verify = await http()
+      .post('/auth/verify-code')
+      .send({ email: 'storyelem1@example.com', code: user.emailVerificationToken })
+      .expect(200);
+    const token: string = verify.body.access_token;
+    expect(token).toBeTruthy();
+
+    const wireElements = [
+      { type: 'poll', data: { question: 'Best?', options: ['a', 'b'] } },
+      { type: 'mention', data: { username: 'friend' } },
+      { type: 'countdown', data: { label: 'Launch', target: '2026-11-01T00:00:00Z' } },
+      { type: 'sticker', data: { stickerId: 'party-1' } },
+    ];
+
+    const createRes = await http()
+      .post('/stories')
+      .set(bearer(token))
+      .field('textContent', 'elements lifecycle')
+      .field('elements', JSON.stringify(wireElements))
+      .expect(201);
+    const created = createRes.body as WireStory;
+    expect(created.id).toBeTruthy();
+
+    // DB assigned every UUID; the client sent none.
+    const createdIds = created.elements.map((element) => element.id);
+    expect(createdIds).toHaveLength(4);
+    for (const id of createdIds) {
+      expect(id).toMatch(UUID_RE);
+    }
+    expect(new Set(createdIds).size).toBe(4);
+    expect(created.elements.map((element) => element.type)).toEqual([
+      'poll',
+      'mention',
+      'countdown',
+      'sticker',
+    ]);
+
+    // GET /stories round-trips the persisted rows (ids, types, data).
+    const listRes = await http().get('/stories').set(bearer(token)).expect(200);
+    const listed = (listRes.body as WireStory[]).find((story) => story.id === created.id);
+    expect(listed).toBeDefined();
+    expect(listed!.elements.map((element) => element.id)).toEqual(createdIds);
+    expect(listed!.elements[0].data).toEqual(wireElements[0].data);
+    expect(listed!.elements[1].data).toEqual(wireElements[1].data);
+
+    // DELETE removes the story and cascades the element rows (FK ON DELETE CASCADE).
+    await http().delete(`/stories/${created.id}`).set(bearer(token)).expect(200);
+    const afterDelete = await http().get('/stories').set(bearer(token)).expect(200);
+    expect((afterDelete.body as WireStory[]).find((story) => story.id === created.id)).toBeUndefined();
+    const orphanRows: Array<{ count: number }> = await dataSource.query(
+      'SELECT COUNT(*)::int AS count FROM story_elements WHERE "storyId" = $1',
+      [created.id]
+    );
+    expect(orphanRows[0].count).toBe(0);
   });
 });

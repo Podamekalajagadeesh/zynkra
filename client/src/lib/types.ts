@@ -499,10 +499,14 @@ interface StickerData {
   position: { x: number; y: number };
 }
 
+interface MentionData {
+  username: string;
+}
+
 export interface StoryElement {
   id: string;
-  type: 'poll' | 'qa' | 'sticker';
-  data: PollData | QAData | StickerData;
+  type: 'poll' | 'qa' | 'sticker' | 'mention';
+  data: PollData | QAData | StickerData | MentionData;
 }
 
 // What a client sends when creating a story element: the server assigns `id`

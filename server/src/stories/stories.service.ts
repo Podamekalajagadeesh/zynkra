@@ -106,9 +106,21 @@ export class StoriesService {
     });
 
     if (createStoryDto.elements && createStoryDto.elements.length > 0) {
+      const validTypes = new Set<string>(Object.values(StoryElementType));
+      for (const element of createStoryDto.elements) {
+        if (!element || !validTypes.has(element.type)) {
+          throw new BadRequestException(`Invalid story element type: ${element?.type}`);
+        }
+        if (!element.data || typeof element.data !== 'object' || Array.isArray(element.data)) {
+          throw new BadRequestException('Story element data must be an object');
+        }
+      }
+      // Only type + data cross the wire: the DB owns the PK, so a client-sent
+      // `id` (or any stray field) must never reach the insert.
       story.elements = createStoryDto.elements.map((element) =>
         Object.assign(new StoryElement(), {
-          ...element,
+          type: element.type,
+          data: element.data,
           story,
         })
       );
@@ -117,7 +129,17 @@ export class StoriesService {
     const savedStory = await this.storiesRepository.save(story);
 
     if (createStoryDto.elements && createStoryDto.elements.length > 0) {
-      savedStory.elements = story.elements;
+      // The cascade insert needs the `story` back-reference on each element,
+      // but the HTTP response must not carry it: story.elements[].story ===
+      // story serializes as circular JSON and 500s. Rebuild clean copies
+      // (with the DB-assigned UUIDs TypeORM wrote back) for the response.
+      savedStory.elements = story.elements.map((element) => {
+        const clean = new StoryElement();
+        clean.id = element.id;
+        clean.type = element.type;
+        clean.data = element.data;
+        return clean;
+      });
     }
 
     return savedStory;

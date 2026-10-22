@@ -112,6 +112,99 @@ describe('StoriesService', () => {
     it('throws BadRequestException when no media and no text', async () => {
       await expect(service.create({} as any, 'user-1')).rejects.toThrow(BadRequestException);
     });
+
+    describe('story elements', () => {
+      const validElements = [
+        { type: 'poll', data: { question: 'Best?', options: ['a', 'b'] } },
+        { type: 'mention', data: { username: 'friend' } },
+        { type: 'countdown', data: { label: 'Launch', target: '2026-11-01' } },
+        { type: 'sticker', data: { stickerId: 'party-1' } },
+      ];
+
+      beforeEach(() => {
+        usersService.findOneById.mockResolvedValue(makeUser());
+        (storyRepo.create as jest.Mock).mockImplementation((data) => ({ ...data }));
+        (storyRepo.save as jest.Mock).mockImplementation(async (story) => {
+          story.elements?.forEach((element, index) => {
+            element.id = `00000000-0000-4000-8000-00000000000${index + 1}`;
+          });
+          return story;
+        });
+      });
+
+      it('persists typed elements and returns them without the story back-reference', async () => {
+        const result = await service.create(
+          { textContent: 'hi', elements: validElements } as any,
+          'user-1'
+        );
+
+        expect(result.elements).toHaveLength(4);
+        expect(result.elements.map((element) => element.type)).toEqual([
+          'poll',
+          'mention',
+          'countdown',
+          'sticker',
+        ]);
+        expect(result.elements.map((element) => element.id)).toEqual([
+          '00000000-0000-4000-8000-000000000001',
+          '00000000-0000-4000-8000-000000000002',
+          '00000000-0000-4000-8000-000000000003',
+          '00000000-0000-4000-8000-000000000004',
+        ]);
+        for (const element of result.elements) {
+          expect((element as { story?: unknown }).story).toBeUndefined();
+        }
+        expect(() => JSON.stringify(result)).not.toThrow();
+      });
+
+      it('keeps element data intact through the save round trip', async () => {
+        const result = await service.create(
+          { textContent: 'hi', elements: validElements } as any,
+          'user-1'
+        );
+
+        expect(result.elements[0].data).toEqual({ question: 'Best?', options: ['a', 'b'] });
+        expect(result.elements[1].data).toEqual({ username: 'friend' });
+        expect(result.elements[3].data).toEqual({ stickerId: 'party-1' });
+      });
+
+      it('ignores a client-supplied element id (the DB owns the PK)', async () => {
+        const result = await service.create(
+          {
+            textContent: 'hi',
+            elements: [
+              { id: 'client-uuid', type: 'poll', data: { question: 'Q', options: ['a'] } },
+            ],
+          } as any,
+          'user-1'
+        );
+
+        expect(result.elements[0].id).toBe('00000000-0000-4000-8000-000000000001');
+      });
+
+      it('rejects an element with an unknown type', async () => {
+        await expect(
+          service.create(
+            { textContent: 'hi', elements: [{ type: 'text', data: {} }] } as any,
+            'user-1'
+          )
+        ).rejects.toThrow('Invalid story element type: text');
+      });
+
+      it('rejects element data that is not an object', async () => {
+        await expect(
+          service.create(
+            { textContent: 'hi', elements: [{ type: 'poll', data: 'nope' }] } as any,
+            'user-1'
+          )
+        ).rejects.toThrow('Story element data must be an object');
+      });
+
+      it('creates a story without an elements field untouched', async () => {
+        const result = await service.create({ textContent: 'plain' } as any, 'user-1');
+        expect(result.elements).toBeUndefined();
+      });
+    });
   });
 
   // ─── findOne ──────────────────────────────────────────────────────────

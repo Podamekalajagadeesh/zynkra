@@ -199,3 +199,92 @@ describe('POST /stories/:id/reply', () => {
     await app.close();
   });
 });
+
+describe('POST /stories (multipart, elements wire contract)', () => {
+  const wireElements = [
+    { type: 'poll', data: { question: 'Best?', options: ['a', 'b'] } },
+    { type: 'mention', data: { username: 'friend' } },
+    { type: 'countdown', data: { label: 'Launch', target: '2026-11-01T00:00:00Z' } },
+    { type: 'sticker', data: { stickerId: 'party-1' } },
+  ];
+
+  it('parses multipart elements into typed objects without inventing ids', async () => {
+    const { app, storiesService, token } = await buildApp();
+    (storiesService.create as jest.Mock).mockImplementation(async (dto) => ({
+      id: 'story-1',
+      textContent: dto.textContent,
+      elements: dto.elements.map((element, index) => ({
+        id: `00000000-0000-4000-8000-00000000000${index + 1}`,
+        type: element.type,
+        data: element.data,
+      })),
+    }));
+
+    const r = await request(app.getHttpServer())
+      .post('/stories')
+      .set('Authorization', `Bearer ${token}`)
+      .field('textContent', 'hello story')
+      .field('elements', JSON.stringify(wireElements));
+
+    expect(r.status).toBe(201);
+    const [dto, userId] = storiesService.create.mock.calls[0];
+    expect(userId).toBe('user-1');
+    expect(dto.textContent).toBe('hello story');
+    expect(dto.elements).toEqual(wireElements);
+    for (const element of dto.elements) {
+      expect((element as { id?: string }).id).toBeUndefined();
+    }
+    // The response stays JSON-serializable and echoes DB-shaped elements.
+    expect(r.body.elements).toHaveLength(4);
+    expect(r.body.elements.map((element) => element.type)).toEqual([
+      'poll',
+      'mention',
+      'countdown',
+      'sticker',
+    ]);
+    expect(r.body.elements[0].id).toMatch(/^[0-9a-f-]{36}$/);
+    await app.close();
+  });
+
+  it('returns 400 for a malformed elements payload', async () => {
+    const { app, storiesService, token } = await buildApp();
+
+    const r = await request(app.getHttpServer())
+      .post('/stories')
+      .set('Authorization', `Bearer ${token}`)
+      .field('textContent', 'hi')
+      .field('elements', '{not json');
+
+    expect(r.status).toBe(400);
+    expect(storiesService.create).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('returns 400 for a malformed backgroundOptions payload', async () => {
+    const { app, storiesService, token } = await buildApp();
+
+    const r = await request(app.getHttpServer())
+      .post('/stories')
+      .set('Authorization', `Bearer ${token}`)
+      .field('textContent', 'hi')
+      .field('backgroundOptions', '{not json');
+
+    expect(r.status).toBe(400);
+    expect(storiesService.create).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('creates a text-only story when no elements field is sent', async () => {
+    const { app, storiesService, token } = await buildApp();
+    storiesService.create.mockResolvedValue({ id: 'story-1', textContent: 'hi' } as any);
+
+    const r = await request(app.getHttpServer())
+      .post('/stories')
+      .set('Authorization', `Bearer ${token}`)
+      .field('textContent', 'hi');
+
+    expect(r.status).toBe(201);
+    expect(storiesService.create.mock.calls[0][0].elements).toBeUndefined();
+    await app.close();
+  });
+});

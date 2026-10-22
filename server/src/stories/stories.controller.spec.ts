@@ -70,12 +70,16 @@ describe('StoriesController', () => {
     });
 
     it('parses a JSON-encoded elements string from multipart clients', async () => {
-      const dto = { elements: '[{"type":"text","id":"e1"}]' } as never;
+      const dto = {
+        elements: '[{"type":"poll","data":{"question":"Best?","options":["a","b"]}}]',
+      } as never;
       storiesService.create.mockResolvedValue({ id: 's1' });
 
       await controller.create(undefined, req, dto);
 
-      expect((dto as { elements?: unknown }).elements).toEqual([{ type: 'text', id: 'e1' }]);
+      expect((dto as { elements?: unknown }).elements).toEqual([
+        { type: 'poll', data: { question: 'Best?', options: ['a', 'b'] } },
+      ]);
       expect(storiesService.create).toHaveBeenCalledWith(dto, 'u1');
     });
 
