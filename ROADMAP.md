@@ -126,9 +126,15 @@ Goal: signup → profile → post → feed → follow → comment → react → 
   `allowScripts`; `npm ci` requires a regenerated `server/package-lock.json`).
   Wired into Server CI (`test:core-db` step in the `test-unit` job).
 - **Exit:** a new user can complete the full Core loop on a clean DB with zero console errors,
-  and it's covered by CI-run integration tests. ⏳ Covered by CI-run HTTP integration suite
-  (in-memory store + embedded-Postgres `test:core-db`); the real-DB e2e was written blind and
-  still needs a green CI run to confirm before the Phase-1 exit lock is sealed.
+  and it's covered by CI-run integration tests. ✅ **Sealed 2026-10-23.** The embedded-Postgres
+  suite (`npm run test:core-db`) runs inside Server CI (`server-ci.yml`, `test-unit` job,
+  "Core loop tests (real Postgres)") and has passed cleanly on every recent commit —
+  `e036478d9`, `a09c11915`, `08a0f089f`, `344217213` — including its full 6/6 real-PG set:
+  the core loop walk, story elements, story children cascade (views/reactions/replies/highlights
+  wiped on delete), live poll voting, the highlights visibility matrix, and the new owner replies
+  inbox. The HTTP integration suite (`test:core` in-memory + `test:http`) is likewise green in CI.
+  The "written blind, still needs a green CI run" condition is satisfied — **Phase-1 exit lock is
+  closed.**
 
 ### Phase 2 — Creator monetization to production (M) · _the differentiator, already closest_
 

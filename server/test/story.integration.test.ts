@@ -309,9 +309,7 @@ describe('GET /stories/:id/replies', () => {
   });
 
   it('maps UnauthorizedException from the service to 401', async () => {
-    const mockGetReplies = jest
-      .fn()
-      .mockRejectedValue(new UnauthorizedException('not your story'));
+    const mockGetReplies = jest.fn().mockRejectedValue(new UnauthorizedException('not your story'));
     const { app, token } = await buildApp({ getReplies: mockGetReplies });
 
     const r = await request(app.getHttpServer())
@@ -359,9 +357,7 @@ describe('DELETE /stories/:id/replies/:replyId', () => {
   });
 
   it('maps UnauthorizedException from the service to 401', async () => {
-    const mockDeleteReply = jest
-      .fn()
-      .mockRejectedValue(new UnauthorizedException('not yours'));
+    const mockDeleteReply = jest.fn().mockRejectedValue(new UnauthorizedException('not yours'));
     const { app, token } = await buildApp({ deleteReply: mockDeleteReply });
 
     const r = await request(app.getHttpServer())
@@ -787,9 +783,7 @@ describe('GET /stories/:id/elements/:elementId/poll-results', () => {
   it('returns 401 without auth', async () => {
     const { app } = await buildApp();
 
-    const r = await request(app.getHttpServer()).get(
-      '/stories/story-1/elements/el-1/poll-results'
-    );
+    const r = await request(app.getHttpServer()).get('/stories/story-1/elements/el-1/poll-results');
 
     expect(r.status).toBe(401);
     await app.close();

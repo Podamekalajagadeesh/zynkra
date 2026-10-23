@@ -74,13 +74,20 @@ beta is parallel and demand-driven.
 
 `ROADMAP.md` Phase 0. CI, commit lint, facade deleted, docs relabeled. _Exit met 2026-10-21._
 
-### Wave 1 — Core loop hardened
+### Wave 1 — Core loop hardened · **DONE (exit sealed 2026-10-23)**
 
 `ROADMAP.md` Phase 1. Covers **systems 01–05, 13 (FTS), 19 (notifications), 06 (media pipeline)**.
 
 - Goal: signup → profile → post → feed → follow → comment → react → DM → notify is flawless.
 - Exit: full Core loop on clean DB, CI-run integration suite green, zero console errors.
-- Open: HTTP integration suite in CI; real-DB core suite as merge gate.
+  ✅ **Met and sealed 2026-10-23** — `npm run test:core-db` (embedded PostgreSQL, real modules,
+  HTTP walk) runs as a Server CI step (`server-ci.yml`, `test-unit` job) and is green on every
+  recent commit (`e036478d9`, `a09c11915`, `08a0f089f`, `344217213`), including all 6 real-PG
+  describes: core loop, story elements, story children cascades, poll voting, highlights
+  visibility matrix, and the owner replies inbox; the HTTP integration suites (`test:core`,
+  `test:http`) are green in the same workflows.
+- Open items: none — the previously open "HTTP integration suite in CI; real-DB core suite as
+  merge gate" items are both shipped and green.
 
 ### Wave 2 — Monetization to production
 

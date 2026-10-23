@@ -440,7 +440,9 @@ describe('Story elements lifecycle over real Postgres', () => {
     // DELETE removes the story and cascades the element rows (FK ON DELETE CASCADE).
     await http().delete(`/stories/${created.id}`).set(bearer(token)).expect(200);
     const afterDelete = await http().get('/stories').set(bearer(token)).expect(200);
-    expect((afterDelete.body as WireStory[]).find((story) => story.id === created.id)).toBeUndefined();
+    expect(
+      (afterDelete.body as WireStory[]).find((story) => story.id === created.id)
+    ).toBeUndefined();
     const orphanRows: Array<{ count: number }> = await dataSource.query(
       'SELECT COUNT(*)::int AS count FROM story_elements WHERE "storyId" = $1',
       [created.id]
@@ -489,10 +491,9 @@ describe('Story children (views, reactions, replies, highlights) over real Postg
     const viewerToken = await signUp('storykids_viewer', 'storykids_viewer@example.com');
     // New accounts default to storyVisibility 'friends'; make the owner's
     // stories world-viewable so the non-following viewer passes canViewStory.
-    await dataSource.query(
-      `UPDATE users SET "storyVisibility" = 'public' WHERE username = $1`,
-      ['storykids_owner']
-    );
+    await dataSource.query(`UPDATE users SET "storyVisibility" = 'public' WHERE username = $1`, [
+      'storykids_owner',
+    ]);
 
     const createRes = await http()
       .post('/stories')
@@ -708,7 +709,10 @@ describe('Story poll voting over real Postgres', () => {
       .set(bearer(viewerToken))
       .send({ optionIndex: 0 })
       .expect(404);
-    await dataSource.query(`UPDATE stories SET "expiresAt" = now() - interval '1 hour' WHERE id = $1`, [storyId]);
+    await dataSource.query(
+      `UPDATE stories SET "expiresAt" = now() - interval '1 hour' WHERE id = $1`,
+      [storyId]
+    );
     await http()
       .post(`/stories/${storyId}/elements/${pollElementId}/poll-vote`)
       .set(bearer(viewerToken))
@@ -799,9 +803,10 @@ describe('Profile highlights (visibility-scoped read) over real Postgres', () =>
     expect(h2.body.user).not.toHaveProperty('userId');
     expect(h2.body.user).not.toHaveProperty('sessionId');
 
-    await dataSource.query(`UPDATE story_highlights SET "createdAt" = now() - interval '1 day' WHERE id = $1`, [
-      h1.body.id,
-    ]);
+    await dataSource.query(
+      `UPDATE story_highlights SET "createdAt" = now() - interval '1 day' WHERE id = $1`,
+      [h1.body.id]
+    );
 
     // ── public: stranger sees both, newest first ───────────────────────────
     const publicList = await http()
