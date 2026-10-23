@@ -257,8 +257,8 @@ Overall completeness toward a trustworthy product: **~25%** (breadth looks highe
 | Metric                                      | Count                                           |
 | ------------------------------------------- | ----------------------------------------------- |
 | Backend module directories                  | ~98 (facade stubs deleted 2026-10-21)           |
-| ...of which load-bearing (works end-to-end) | ~20                                             |
-| ...of which Preview (visible, shallow)      | ~12                                             |
+| ...of which load-bearing (works end-to-end) | ~21 (+stories, promoted 2026-10-23)             |
+| ...of which Preview (visible, shallow)      | ~11 (stories graduated to Real — Wave 6 #1)     |
 | ...of which facade stubs                    | 0 — the old `src/features/*` stubs were deleted |
 | Frontend page files/dirs                    | 126                                             |
 | Frontend Components                         | 100+                                            |

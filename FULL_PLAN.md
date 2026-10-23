@@ -141,6 +141,17 @@ tipping paths).
 Each promotion = E2E audit + tests + remove the "Preview" tag. Budget **2 promotions per quarter**.
 
 - Exit (per feature): works E2E, has tests, no "Preview" tag.
+- **Promoted (1 of budget):** ✅ **Stories → Real, 2026-10-23, commit `08a0f089f`** — first
+  promotion; shipped order diverged from the guess above (stories first, not groups).
+  Evidence: real-PG cascade verification (story delete wipes views/reactions/replies/highlights
+  children), live poll voting (atomic upsert + tallies + expiry guards), public highlights
+  (visibility-scoped `GET /users/:username/highlights` + owner create/edit/delete, sanitized
+  responses), owner replies inbox (paginated `GET /stories/:id/replies` with sender profiles +
+  author-or-owner `DELETE`, `("storyId","createdAt")` index migration), manual UX checks of the
+  story viewer loop. Suites: 1870 server unit / 198 HTTP / 6 real-PG / 76.6% coverage;
+  429 client tests on Node 20 and 26; Server CI + Client CI success. "Preview" tag removed
+  from `ROADMAP.md` §2 tier list, the maturity table, and Phase 6 ledger recorded.
+- Next candidates: groups → reels (still budgeted 2/quarter).
 
 ### Wave 7 — Mobile & offline-first
 
@@ -153,7 +164,7 @@ Each promotion = E2E audit + tests + remove the "Preview" tag. Budget **2 promot
 **Systems 07 Stories · 08 Short video · 09 Long video & live · 10 Articles · 11 Audio & voice ·
 12 Creation studio** (237 modules-worth of features; ~372 features).
 
-- Depends on: Wave 1 (media pipeline), Wave 6 (stories/reels promoted first).
+- Depends on: Wave 1 (media pipeline), Wave 6 (stories ✅ promoted to Real 2026-10-23; reels/groups still Preview).
 - Highlights: stories E2EE-optional & archiving, reels feed + duets/stitches, live
   streaming infra (WebRTC/HLS) + super-chat, long-form editor v2, podcast distribution
   (RSS/Apple/Spotify), voice rooms, studio (templates, scheduling, cross-posting, drafts).
@@ -328,72 +339,79 @@ Evidence = % of that system's blueprint features with any code occurrence (lower
 name-matching undercounts rebranded features). Wave = where the system is _finished_;
 earlier waves may touch it partially.
 
-| #   | System                               | Feats | Evidence        | Finished in                         |
-| --- | ------------------------------------ | ----- | --------------- | ----------------------------------- |
-| 01  | Identity & Authentication            | 60    | 83%             | Wave 1                              |
-| 02  | User Profiles                        | 63    | 32%             | Wave 1                              |
-| 03  | Social Graph                         | 62    | 19%             | Wave 1 (+4 federation)              |
-| 04  | Home & Feed                          | 63    | 17%             | Wave 1                              |
-| 05  | Posts & Publishing                   | 63    | 48%             | Wave 1                              |
-| 06  | Photos & Albums                      | 64    | 39%             | Wave 1 (pipeline) → Wave 12 (depth) |
-| 07  | Stories                              | 61    | 10%             | Wave 6 → Wave 8                     |
-| 08  | Short Video                          | 59    | 53%             | Wave 6 → Wave 8                     |
-| 09  | Long Video & Live                    | 60    | 20%             | Wave 8                              |
-| 10  | Articles & Text Media                | 64    | 39%             | Wave 6 → Wave 8                     |
-| 11  | Audio & Voice Content                | 62    | 26%             | Wave 8                              |
-| 12  | Content Creation Studio              | 62    | 32%             | Wave 8                              |
-| 13  | Universal Search                     | 60    | 12%             | Wave 1 (FTS) → Wave 12              |
-| 14  | Discover & Explore                   | 63    | 29%             | Wave 12                             |
-| 15  | Messaging                            | 62    | 29%             | Wave 3                              |
-| 16  | Channels                             | 60    | 50%             | Wave 11                             |
-| 17  | Voice & Video Calls                  | 59    | 29%             | Wave 11                             |
-| 18  | Collaboration                        | 60    | 28%             | Wave 11                             |
-| 19  | Notifications                        | 62    | 32%             | Wave 1 (depth)                      |
-| 20  | Groups                               | 63    | 30%             | Wave 6 → Wave 9                     |
-| 21  | Forums                               | 63    | 56%             | Wave 9                              |
-| 22  | Clubs & Interest Communities         | 64    | 3%              | Wave 9                              |
-| 23  | Local Communities                    | 60    | 25%             | Wave 9                              |
-| 24  | Learning Communities                 | 56    | 32%             | Wave 9                              |
-| 25  | Business Communities                 | 62    | 13%             | Wave 9                              |
-| 26  | Community Economy                    | 63    | 35%             | Wave 2 (paths) → Wave 9/10          |
-| 27  | Community Moderation                 | 64    | 30%             | Wave 9                              |
-| 28  | Reputation & Trust                   | 64    | 23%             | Wave 9                              |
-| 29  | Creator Profiles                     | 61    | 23%             | Wave 10                             |
-| 30  | Creator Studio                       | 62    | 50%             | Wave 10                             |
-| 31  | Creator Analytics                    | 64    | 41%             | Wave 10                             |
-| 32  | Creator Monetization                 | 64    | 12%             | Wave 2                              |
-| 33  | Sponsorships                         | 55    | 45%             | Wave 10                             |
-| 34  | Brand Marketplace                    | 64    | 27%             | Wave 10                             |
-| 35  | Revenue Tools                        | 62    | 6%              | Wave 10                             |
-| 36  | AI Personal Assistant                | 64    | 38%             | Wave 13                             |
-| 37  | AI Feed Ranking                      | 63    | 8%              | Wave 13                             |
-| 38  | AI Moderator                         | 64    | 11%             | Wave 13                             |
-| 39  | AI Search                            | 64    | 11%             | Wave 13                             |
-| 40  | AI Creation                          | 61    | 11%             | Wave 13                             |
-| 41  | AI Translation                       | 55    | 2%              | Wave 13                             |
-| 42  | AI Memory                            | 58    | 12%             | Wave 13                             |
-| 43  | AI Recommendations                   | 59    | 8%              | Wave 13                             |
-| 44  | AI Creator Coach                     | 63    | 0%              | Wave 13                             |
-| 45  | AI Business Assistant                | 61    | 15%             | Wave 13                             |
-| 46  | AI Shopping Assistant                | 64    | 12%             | Wave 13                             |
-| 47  | AI Scheduling                        | 63    | 10%             | Wave 13                             |
-| 48  | AI Voice Assistant                   | 58    | 43%             | Wave 13                             |
-| 49  | AI Comment Intelligence              | 64    | 3%              | Wave 13                             |
-| 50  | AI Safety & Personalization          | 64    | 17%             | Wave 13                             |
-| 51  | Business Pages                       | 61    | 44%             | Wave 14                             |
-| 52  | CRM                                  | 63    | 25%             | Wave 14                             |
-| 53  | Customer Inbox                       | 62    | 35%             | Wave 14                             |
-| 54  | Products & Services                  | 51    | 55%             | Wave 15                             |
-| 55  | Booking                              | 64    | 22%             | Wave 15                             |
-| 56  | Appointments                         | 62    | 32%             | Wave 15                             |
-| 57  | Marketplace                          | 56    | 45%             | Wave 6 → Wave 15                    |
-| 58  | Freelancers & Services               | 59    | 41%             | Wave 15                             |
-| 59  | Auctions & Rentals                   | 55    | 33%             | Wave 15                             |
-| 60  | Commerce, Payments & Trust           | 183   | 27%             | Wave 2 (rails) → Wave 15 (trust)    |
-| —   | **Federation** (platform)            | —     | works, unproven | Wave 4                              |
-| —   | **Data Portability** (platform)      | —     | export done     | Wave 5                              |
-| —   | **Offline & Mobile** (platform)      | —     | queue only      | Wave 7                              |
-| —   | **Security & Compliance** (platform) | —     | ongoing         | Continuous                          |
+| #   | System                               | Feats | Evidence        | Finished in                                                      |
+| --- | ------------------------------------ | ----- | --------------- | ---------------------------------------------------------------- |
+| 01  | Identity & Authentication            | 60    | 83%             | Wave 1                                                           |
+| 02  | User Profiles                        | 63    | 32%             | Wave 1                                                           |
+| 03  | Social Graph                         | 62    | 19%             | Wave 1 (+4 federation)                                           |
+| 04  | Home & Feed                          | 63    | 17%             | Wave 1                                                           |
+| 05  | Posts & Publishing                   | 63    | 48%             | Wave 1                                                           |
+| 06  | Photos & Albums                      | 64    | 39%             | Wave 1 (pipeline) → Wave 12 (depth)                              |
+| 07  | Stories                              | 61    | 10%†            | Wave 6 (core promoted → **Real** ✅ 2026-10-23) → Wave 8 (depth) |
+| 08  | Short Video                          | 59    | 53%             | Wave 6 → Wave 8                                                  |
+| 09  | Long Video & Live                    | 60    | 20%             | Wave 8                                                           |
+| 10  | Articles & Text Media                | 64    | 39%             | Wave 6 → Wave 8                                                  |
+| 11  | Audio & Voice Content                | 62    | 26%             | Wave 8                                                           |
+| 12  | Content Creation Studio              | 62    | 32%             | Wave 8                                                           |
+| 13  | Universal Search                     | 60    | 12%             | Wave 1 (FTS) → Wave 12                                           |
+| 14  | Discover & Explore                   | 63    | 29%             | Wave 12                                                          |
+| 15  | Messaging                            | 62    | 29%             | Wave 3                                                           |
+| 16  | Channels                             | 60    | 50%             | Wave 11                                                          |
+| 17  | Voice & Video Calls                  | 59    | 29%             | Wave 11                                                          |
+| 18  | Collaboration                        | 60    | 28%             | Wave 11                                                          |
+| 19  | Notifications                        | 62    | 32%             | Wave 1 (depth)                                                   |
+| 20  | Groups                               | 63    | 30%             | Wave 6 → Wave 9                                                  |
+| 21  | Forums                               | 63    | 56%             | Wave 9                                                           |
+| 22  | Clubs & Interest Communities         | 64    | 3%              | Wave 9                                                           |
+| 23  | Local Communities                    | 60    | 25%             | Wave 9                                                           |
+| 24  | Learning Communities                 | 56    | 32%             | Wave 9                                                           |
+| 25  | Business Communities                 | 62    | 13%             | Wave 9                                                           |
+| 26  | Community Economy                    | 63    | 35%             | Wave 2 (paths) → Wave 9/10                                       |
+| 27  | Community Moderation                 | 64    | 30%             | Wave 9                                                           |
+| 28  | Reputation & Trust                   | 64    | 23%             | Wave 9                                                           |
+| 29  | Creator Profiles                     | 61    | 23%             | Wave 10                                                          |
+| 30  | Creator Studio                       | 62    | 50%             | Wave 10                                                          |
+| 31  | Creator Analytics                    | 64    | 41%             | Wave 10                                                          |
+| 32  | Creator Monetization                 | 64    | 12%             | Wave 2                                                           |
+| 33  | Sponsorships                         | 55    | 45%             | Wave 10                                                          |
+| 34  | Brand Marketplace                    | 64    | 27%             | Wave 10                                                          |
+| 35  | Revenue Tools                        | 62    | 6%              | Wave 10                                                          |
+| 36  | AI Personal Assistant                | 64    | 38%             | Wave 13                                                          |
+| 37  | AI Feed Ranking                      | 63    | 8%              | Wave 13                                                          |
+| 38  | AI Moderator                         | 64    | 11%             | Wave 13                                                          |
+| 39  | AI Search                            | 64    | 11%             | Wave 13                                                          |
+| 40  | AI Creation                          | 61    | 11%             | Wave 13                                                          |
+| 41  | AI Translation                       | 55    | 2%              | Wave 13                                                          |
+| 42  | AI Memory                            | 58    | 12%             | Wave 13                                                          |
+| 43  | AI Recommendations                   | 59    | 8%              | Wave 13                                                          |
+| 44  | AI Creator Coach                     | 63    | 0%              | Wave 13                                                          |
+| 45  | AI Business Assistant                | 61    | 15%             | Wave 13                                                          |
+| 46  | AI Shopping Assistant                | 64    | 12%             | Wave 13                                                          |
+| 47  | AI Scheduling                        | 63    | 10%             | Wave 13                                                          |
+| 48  | AI Voice Assistant                   | 58    | 43%             | Wave 13                                                          |
+| 49  | AI Comment Intelligence              | 64    | 3%              | Wave 13                                                          |
+| 50  | AI Safety & Personalization          | 64    | 17%             | Wave 13                                                          |
+| 51  | Business Pages                       | 61    | 44%             | Wave 14                                                          |
+| 52  | CRM                                  | 63    | 25%             | Wave 14                                                          |
+| 53  | Customer Inbox                       | 62    | 35%             | Wave 14                                                          |
+| 54  | Products & Services                  | 51    | 55%             | Wave 15                                                          |
+| 55  | Booking                              | 64    | 22%             | Wave 15                                                          |
+| 56  | Appointments                         | 62    | 32%             | Wave 15                                                          |
+| 57  | Marketplace                          | 56    | 45%             | Wave 6 → Wave 15                                                 |
+| 58  | Freelancers & Services               | 59    | 41%             | Wave 15                                                          |
+| 59  | Auctions & Rentals                   | 55    | 33%             | Wave 15                                                          |
+| 60  | Commerce, Payments & Trust           | 183   | 27%             | Wave 2 (rails) → Wave 15 (trust)                                 |
+| —   | **Federation** (platform)            | —     | works, unproven | Wave 4                                                           |
+| —   | **Data Portability** (platform)      | —     | export done     | Wave 5                                                           |
+| —   | **Offline & Mobile** (platform)      | —     | queue only      | Wave 7                                                           |
+| —   | **Security & Compliance** (platform) | —     | ongoing         | Continuous                                                       |
+
+† **Evidence %s are planning-time snapshots** (name-matching lower bounds; the blueprint
+feature list is not in-repo, so they are deliberately _not_ recomputed per promotion — a
+promotion must not launder itself into a bigger number). Status changes are recorded in the
+wave sections instead: **07 Stories was promoted Preview → Real on 2026-10-23** as Wave 6's
+first promotion — evidence in the **Wave 6** section above (cascade-verified real-PG tests, live
+poll voting, public highlights, replies inbox, both CI workflows green).
 
 **Totals:** 240 modules · 3,801 system-scoped features · 16 waves · 12 quarters ·
 public beta Y1-Q3 · full blueprint GA target end of Y3.
