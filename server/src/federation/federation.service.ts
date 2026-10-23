@@ -43,6 +43,16 @@ export interface FederationReport {
   reason?: string;
 }
 
+/**
+ * A remote delivery address resolved for a direct (non-follower) target —
+ * the author of a replied-to post, or a mentioned `@user@domain` actor.
+ */
+type DeliveryActorTarget = {
+  actorActorId: string;
+  inboxUrl?: string;
+  instanceDomain?: string;
+};
+
 /** One remote post rendered for display, normalized away from the storage shape. */
 export interface FederatedTimelineItem {
   id: string;
@@ -385,27 +395,59 @@ export class FederationService implements OnModuleInit {
   ): Promise<FederationReport> {
     this.assertFederationEnabled();
 
+    // Reply and mention targets resolve to the *owning actor's* inbox, so a
+    // reply to a Mastodon user who does not follow back is still delivered.
+    // Resolved before anything is minted: with no follower domains and no
+    // actor targets there is nothing to send, and no activity id to record.
+    const { targets: actorTargets, mentionTags } =
+      await this.resolveOutboundActorTargets(federateDto);
+
+    if (!targetInstances.length && !actorTargets.length) {
+      return this.skippedReport(
+        'no remote followers, reply target, or mention targets to deliver to'
+      );
+    }
+
     const noteId = `${this.instanceBaseUrl}/federation/posts/${federateDto.activityId}`;
 
-    const activity = await this.buildActivity(
-      'Create',
-      localUserId,
-      {
-        ...federateDto,
-        type: 'Note',
-        // The Note needs its own stable id, and it must match what
-        // `federateDelete` and `federateUpdate` later reference. Both look the
-        // Note up through the outbox, which indexes on this value.
-        id: noteId,
-        content: federateDto.content,
-        published: federateDto.publishedAt?.toISOString?.() || new Date().toISOString(),
-        to: federateDto.to || ['https://www.w3.org/ns/activitystreams#Public'],
-        cc: federateDto.cc || [],
-      },
-      { to: federateDto.to, cc: federateDto.cc }
-    );
+    const noteObject: any = {
+      ...federateDto,
+      type: 'Note',
+      // The Note needs its own stable id, and it must match what
+      // `federateDelete` and `federateUpdate` later reference. Both look the
+      // Note up through the outbox, which indexes on this value.
+      id: noteId,
+      content: federateDto.content,
+      published: federateDto.publishedAt?.toISOString?.() || new Date().toISOString(),
+      to: federateDto.to || ['https://www.w3.org/ns/activitystreams#Public'],
+      cc: federateDto.cc || [],
+    };
+    // ActivityPub's reply and mention shapes — `inReplyTo` (not the storage
+    // field `inReplyToId`) and `tag` entries of type `Mention` — are what a
+    // peer threads and notifies on. Both are only set when the target resolved.
+    if (federateDto.inReplyToId) {
+      noteObject.inReplyTo = federateDto.inReplyToId;
+    }
+    if (mentionTags.length) {
+      noteObject.tag = [...(noteObject.tag ?? []), ...mentionTags];
+    }
 
-    const report = await this.fanOut(localUserId, activity, targetInstances);
+    const activity = await this.buildActivity('Create', localUserId, noteObject, {
+      to: federateDto.to,
+      cc: federateDto.cc,
+    });
+
+    // Address the actors reached directly (reply target, mentioned accounts)
+    // on the activity and the Note. A peer's shared-inbox processing drops
+    // activities with no recipient on its own server, and the mentioned actor
+    // must be in the audience for their server to attribute the reply/mention.
+    const directAudience = actorTargets.map((target) => target.actorActorId);
+    if (directAudience.length) {
+      activity.cc = [...new Set([...(activity.cc ?? []), ...directAudience])];
+      noteObject.cc = [...new Set([...(noteObject.cc ?? []), ...directAudience])];
+    }
+
+    const report = await this.fanOut(localUserId, activity, targetInstances, actorTargets);
 
     // Record what we sent. A failure here only costs us the ability to
     // retract or edit later; it must not fail the delivery that already
@@ -419,6 +461,111 @@ export class FederationService implements OnModuleInit {
     });
 
     return report;
+  }
+
+  /**
+   * Resolve the direct delivery targets for an outbound Create: the author of
+   * the post being replied to, and every `@user@domain` mention (from the DTO
+   * or parsed out of the content) that points at another instance.
+   *
+   * Every URL that leaves this method has been through `assertSafeRemoteUrl` —
+   * mention handles and reply ids are attacker-controlled content, and fetching
+   * them unchecked would make the Create path an SSRF primitive.
+   */
+  private async resolveOutboundActorTargets(federateDto: FederatePostDto): Promise<{
+    targets: DeliveryActorTarget[];
+    mentionTags: { type: 'Mention'; href: string; name: string }[];
+  }> {
+    const targets: DeliveryActorTarget[] = [];
+    const mentionTags: { type: 'Mention'; href: string; name: string }[] = [];
+    const seenInboxes = new Set<string>();
+
+    const push = (target: DeliveryActorTarget | null | undefined) => {
+      if (!target?.inboxUrl || seenInboxes.has(target.inboxUrl)) return;
+      seenInboxes.add(target.inboxUrl);
+      targets.push(target);
+    };
+
+    if (federateDto.inReplyToId) {
+      try {
+        const safe = await this.httpSignaturesService.assertSafeRemoteUrl(federateDto.inReplyToId);
+        if (safe) {
+          const target = await this.resolveRemoteObject(safe);
+          if (target?.inboxUrl) push(target);
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Unable to resolve reply target ${federateDto.inReplyToId}; falling back to follower delivery`,
+          error
+        );
+      }
+    }
+
+    const contentHandles =
+      (federateDto.content ?? '').match(
+        /@[A-Za-z0-9_]+@[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}/g
+      ) ?? [];
+    const handles = new Set<string>();
+    for (const raw of [...(federateDto.mentions ?? []), ...contentHandles]) {
+      const handle = raw.trim().replace(/^@/, '');
+      if (!handle.includes('@')) continue;
+      handles.add(handle);
+    }
+
+    for (const handle of handles) {
+      const resolved = await this.resolveRemoteHandleTarget(handle);
+      if (!resolved) continue;
+      push(resolved.target);
+      mentionTags.push(resolved.tag);
+    }
+
+    return { targets, mentionTags };
+  }
+
+  /**
+   * Webfinger a `user@domain` handle and resolve it to the actor's inbox,
+   * persisting the remote user (and its instance) so the row is reusable.
+   * Local-domain handles and unresolvable handles are skipped silently — a
+   * mention that cannot be routed still federates to the follower set.
+   */
+  private async resolveRemoteHandleTarget(handle: string): Promise<{
+    target: DeliveryActorTarget;
+    tag: { type: 'Mention'; href: string; name: string };
+  } | null> {
+    const [username, domain] = handle.split('@');
+    if (!username || !domain || domain === this.instanceDomain) return null;
+
+    try {
+      const webfingerUrl = `https://${domain}/.well-known/webfinger?resource=acct:${encodeURIComponent(
+        `${username}@${domain}`
+      )}`;
+      const safeWebfinger = await this.httpSignaturesService.assertSafeRemoteUrl(webfingerUrl);
+      if (!safeWebfinger) return null;
+
+      const wf = await this.fetchRemoteJson<any>(safeWebfinger);
+      const selfHref = Array.isArray(wf?.links)
+        ? wf.links.find((link: any) => link?.rel === 'self' && typeof link?.href === 'string')?.href
+        : undefined;
+      if (!selfHref) return null;
+
+      const safeActor = await this.httpSignaturesService.assertSafeRemoteUrl(selfHref);
+      if (!safeActor) return null;
+
+      const remoteUser = await this.fetchRemoteUser(safeActor);
+      if (!remoteUser?.inboxUrl) return null;
+
+      return {
+        target: {
+          actorActorId: remoteUser.actorId,
+          inboxUrl: remoteUser.inboxUrl,
+          instanceDomain: remoteUser.instance?.domain ?? domain,
+        },
+        tag: { type: 'Mention', href: remoteUser.actorId, name: `@${username}@${domain}` },
+      };
+    } catch (error) {
+      this.logger.warn(`Unable to resolve mention @${handle}: ${(error as Error).message}`);
+      return null;
+    }
   }
 
   /**
@@ -601,10 +748,23 @@ export class FederationService implements OnModuleInit {
    * fanning them out to follower instances would tell every peer something that
    * was not addressed to them.
    */
+  /**
+   * Shared instance fan-out, used by the activities whose audience is this
+   * user's remote followers: `Create`, `Update`, and `Delete` — plus, for
+   * `Create`, the direct reply/mention actor inboxes (`actorTargets`), which
+   * are delivered to even when the author has no remote followers at all.
+   *
+   * `Like` and its `Undo` deliberately do **not** come through here — those
+   * are addressed to the author of the object they act on, and fanning them
+   * out to follower instances would tell every peer something that was not
+   * addressed to them. `Announce` *does* fan out here (a boost belongs in the
+   * followers' timelines) in addition to its owner delivery.
+   */
   private async fanOut(
     localUserId: string,
     activity: any,
-    targetInstances: string[]
+    targetInstances: string[],
+    actorTargets: DeliveryActorTarget[] = []
   ): Promise<FederationReport> {
     const results: DeliveryResult[] = [];
     const actorUsername = (await this.getLocalActorUsername(localUserId)) ?? undefined;
@@ -665,10 +825,23 @@ export class FederationService implements OnModuleInit {
       }
     }
 
+    // Direct actor inboxes (reply target, mentions). Skipped when the actor's
+    // instance already received this activity through the follower fan-out —
+    // the shared inbox got the same activity id, and a peer should not receive
+    // the identical activity twice.
+    let requested = targetInstances.length;
+    const fanOutDomains = new Set(targetInstances);
+    for (const target of actorTargets) {
+      if (target.instanceDomain && fanOutDomains.has(target.instanceDomain)) continue;
+      requested += 1;
+      const ownerReport = await this.deliverToObjectOwner(localUserId, activity, target);
+      results.push(...ownerReport.results);
+    }
+
     const delivered = results.filter((r) => r.delivered).length;
     return {
       activityId: activity.id,
-      requested: targetInstances.length,
+      requested,
       delivered,
       failed: results.length - delivered,
       results,
@@ -676,15 +849,18 @@ export class FederationService implements OnModuleInit {
   }
 
   /**
-   * Boost a remote post to this instance's followers.
+   * Boost a remote post.
    *
    * `Announce` is how a boost crosses instances: the announcing actor is the
    * *local* user, and the object is the original remote activity id. Sending the
    * remote Note itself would duplicate it as a new post rather than a boost.
    *
-   * An `Announce` is addressed to the original author — that is who needs to
-   * know their post was boosted — so unlike `Create` it does not go to the
-   * local user's follower instances.
+   * The activity is delivered to two audiences: the original author (who needs
+   * to know their post was boosted — `to: [owner]`) *and* this user's remote
+   * follower instances (a boost belongs in the followers' timelines — the
+   * default `cc` already carries the local followers collection, and Mastodon's
+   * own Announces are addressed exactly this way). Previously only the owner
+   * was served, so a Zynkra boost was invisible to every Mastodon follower.
    */
   async federateAnnounce(localUserId: string, remoteActivityId: string): Promise<FederationReport> {
     this.assertFederationEnabled();
@@ -698,7 +874,12 @@ export class FederationService implements OnModuleInit {
       to: [target.actorActorId],
     });
 
-    const report = await this.deliverToObjectOwner(localUserId, activity, target);
+    const followerDomains = await this.getFollowerInstanceDomains(localUserId);
+    const ownerReport = await this.deliverToObjectOwner(localUserId, activity, target);
+    const followerReport = followerDomains.length
+      ? await this.fanOut(localUserId, activity, followerDomains)
+      : null;
+    const report = this.combineReports(ownerReport, followerReport);
 
     await this.recordOutboundActivity({
       activityId: activity.id,
@@ -716,7 +897,10 @@ export class FederationService implements OnModuleInit {
    *
    * `Undo` must wrap the `Announce` the peer actually received, so this looks
    * the recorded activity up rather than minting a fresh object — a peer that
-   * cannot match the id simply ignores the Undo and the boost stays.
+   * cannot match the id simply ignores the Undo and the boost stays. The Undo
+   * re-targets `deliveredTo` from the ledger: exactly the instances that got
+   * the Announce (owner *and* followers) receive the retraction, not today's
+   * follower list, which may have changed since the boost.
    */
   async federateUndoAnnounce(
     localUserId: string,
@@ -741,7 +925,30 @@ export class FederationService implements OnModuleInit {
       { to: [target.actorActorId] }
     );
 
-    return this.deliverToObjectOwner(localUserId, activity, target);
+    const retractionDomains = (sent.deliveredTo ?? []).filter(
+      (domain) => !!domain && domain !== target.instanceDomain
+    );
+    const ownerReport = await this.deliverToObjectOwner(localUserId, activity, target);
+    const followerReport = retractionDomains.length
+      ? await this.fanOut(localUserId, activity, retractionDomains)
+      : null;
+
+    return this.combineReports(ownerReport, followerReport);
+  }
+
+  /** Merge two delivery reports for one activity sent to two audiences. */
+  private combineReports(
+    primary: FederationReport,
+    secondary: FederationReport | null
+  ): FederationReport {
+    if (!secondary) return primary;
+    return {
+      ...primary,
+      requested: primary.requested + secondary.requested,
+      delivered: primary.delivered + secondary.delivered,
+      failed: primary.failed + secondary.failed,
+      results: [...primary.results, ...secondary.results],
+    };
   }
 
   /**
@@ -1022,11 +1229,99 @@ export class FederationService implements OnModuleInit {
       );
     }
 
+    // Ledger the Follow so a later `Undo` can wrap the exact activity id the
+    // peer received. Without this, an unfollow has nothing to reference and the
+    // remote side stays subscribed forever.
+    await this.recordOutboundActivity({
+      activityId: followActivity.id,
+      objectId: followDto.objectId,
+      activityType: 'Follow',
+      localUserId,
+      deliveredTo: [
+        targetUser.instance?.domain ?? this.hostnameOf(targetUser.inboxUrl) ?? '',
+      ].filter(Boolean),
+    });
+
     this.logger.log(`Follow sent to ${targetUser.username}@${targetUser.instance.domain}`);
     return {
       success: true,
       attempts: outcome.attempts,
       message: `Following ${targetUser.username}@${targetUser.instance.domain}`,
+    };
+  }
+
+  /**
+   * Unfollow a remote user.
+   *
+   * ActivityPub models this as `Undo` wrapping the *original* `Follow` activity
+   * — the same ledger rule as `Undo(Like)` and `Undo(Announce)`: a peer that
+   * cannot match the id ignores the Undo and the follow stays. The recorded row
+   * is deleted only after the peer confirms delivery, so a failed Undo remains
+   * retryable and a re-follow mints a fresh Follow.
+   */
+  async undoFollow(followDto: FederateFollowDto, localUserId: string) {
+    this.assertFederationEnabled();
+
+    const sent = await this.findOutboundActivity(followDto.objectId, 'Follow');
+    if (!sent) {
+      return this.skippedReport('this follow was never federated, so there is nothing to undo');
+    }
+
+    const targetUser = await this.fetchRemoteUser(followDto.objectId);
+    if (!targetUser?.inboxUrl) {
+      throw new HttpException(
+        'Cannot unfollow this user: no inbox URL found',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    const undoActivity = await this.buildActivity(
+      'Undo',
+      localUserId,
+      { id: sent.activityId, type: 'Follow', object: followDto.objectId },
+      { to: [followDto.objectId] }
+    );
+
+    let outcome;
+    try {
+      outcome = await this.deliverToInbox(
+        { baseUrl: new URL(targetUser.inboxUrl).origin },
+        undoActivity,
+        {
+          actorUsername: (await this.getLocalActorUsername(localUserId)) || undefined,
+          inboxUrl: targetUser.inboxUrl,
+        }
+      );
+    } catch (error) {
+      this.logger.error(
+        `Undo(Follow) to ${targetUser.username} not delivered: ${(error as Error).message}`
+      );
+      throw new HttpException(
+        `Failed to unfollow remote user: ${(error as Error).message ?? 'delivery failed'}`,
+        HttpStatus.BAD_GATEWAY
+      );
+    }
+
+    if (!outcome.delivered) {
+      this.logger.error(
+        `Undo(Follow) to ${targetUser.username} not delivered: ${outcome.reason ?? 'unknown'}`
+      );
+      throw new HttpException(
+        `Failed to unfollow remote user: ${outcome.reason ?? 'delivery failed'}`,
+        HttpStatus.BAD_GATEWAY
+      );
+    }
+
+    // The peer has confirmed the unfollow — the ledger row has served its
+    // purpose. Deleting it here is the local-tracking cleanup: a later re-follow
+    // records a new Follow with a new activity id.
+    await this.outboxRepository.delete({ id: sent.id });
+
+    this.logger.log(`Unfollow sent to ${targetUser.username}@${targetUser.instance?.domain}`);
+    return {
+      success: true,
+      attempts: outcome.attempts,
+      message: `Unfollowed ${targetUser.username}@${targetUser.instance?.domain ?? ''}`.trim(),
     };
   }
 

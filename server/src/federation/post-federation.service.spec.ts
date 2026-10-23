@@ -142,14 +142,19 @@ describe('federateNewPost — eligibility', () => {
     expect(federationService.federatePost).not.toHaveBeenCalled();
   });
 
-  it('does not call federatePost when the author has no remote followers', async () => {
+  it('delegates to federatePost with an empty follower list when the author has no remote followers', async () => {
     federationService.getFollowerInstanceDomains.mockResolvedValue([]);
     const service = makeService({ FEDERATION_ENABLED: 'true' }, federationService);
 
     service.federateNewPost(makePost(), 'user-1');
     await settle();
 
-    expect(federationService.federatePost).not.toHaveBeenCalled();
+    // Empty targets must still reach federatePost: reply and mention targets
+    // resolve downstream from the content, and an early return here would drop
+    // a reply to a Mastodon user who does not follow back.
+    expect(federationService.federatePost).toHaveBeenCalledTimes(1);
+    const [, , targets] = federationService.federatePost.mock.calls[0];
+    expect(targets).toEqual([]);
   });
 });
 
@@ -195,14 +200,17 @@ describe('federatePostDeletion', () => {
     ]);
   });
 
-  it('skips silently when the author has no remote followers', async () => {
+  it('delegates the Delete even when the author has no remote followers', async () => {
     federationService.getFollowerInstanceDomains.mockResolvedValue([]);
     const service = makeService({ FEDERATION_ENABLED: 'true' }, federationService);
 
     service.federatePostDeletion('post-1', 'user-1');
     await settle();
 
-    expect(federationService.federateDelete).not.toHaveBeenCalled();
+    // The outbox's recorded deliveredTo for the original Create now includes
+    // reply/mention targets the author never followed — federateDelete reads
+    // them, so an empty follower list must not short-circuit the retraction.
+    expect(federationService.federateDelete).toHaveBeenCalledWith('user-1', 'post-1', []);
   });
 
   it('tolerates a Delete that reports it was never federated', async () => {
@@ -388,13 +396,23 @@ describe('federateNewPost — failure isolation', () => {
   it('tolerates a follower lookup that returns a non-array', async () => {
     const federationService = {
       getFollowerInstanceDomains: jest.fn().mockResolvedValue(undefined),
-      federatePost: jest.fn(),
+      federatePost: jest.fn().mockResolvedValue({
+        activityId: 'a1',
+        requested: 0,
+        delivered: 0,
+        failed: 0,
+        results: [],
+      }),
     };
     const service = makeService({ FEDERATION_ENABLED: 'true' }, federationService);
 
     service.federateNewPost(makePost(), 'user-1');
     await settle();
 
-    expect(federationService.federatePost).not.toHaveBeenCalled();
+    // Normalized to [] rather than swallowed: a broken follower lookup must
+    // not block reply/mention resolution for this post.
+    expect(federationService.federatePost).toHaveBeenCalledTimes(1);
+    const [, , targets] = federationService.federatePost.mock.calls[0];
+    expect(targets).toEqual([]);
   });
 });

@@ -110,6 +110,9 @@ function createService(options: { federationEnabled?: boolean; remotePost?: any 
     })),
     getSignedGetHeaders: jest.fn(() => ({ Accept: 'application/activity+json' })),
     getPublicKeyPem: jest.fn(() => 'PEM'),
+    // SSRF guard for outbound reply/mention resolution — allow by default so
+    // the round-trip tests exercise the fetch path when they use it.
+    assertSafeRemoteUrl: jest.fn(async (url: string) => url),
   };
 
   const service = new (FederationService as any)(

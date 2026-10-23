@@ -159,6 +159,7 @@ function createService(
       return match ?? null;
     }),
     find: jest.fn().mockResolvedValue([]),
+    delete: jest.fn(async ({ id }: any) => ({ affected: 1, id })),
   };
 
   const deliveryRows: any[] = [];
@@ -197,6 +198,10 @@ function createService(
     })),
     getSignedGetHeaders: jest.fn(() => ({ Accept: 'application/activity+json' })),
     getPublicKeyPem: jest.fn(() => 'PEM'),
+    // SSRF guard: by default allow the URL through so outbound-resolution
+    // tests exercise the fetch path; specific tests can reject a URL to prove
+    // the guard is consulted.
+    assertSafeRemoteUrl: jest.fn(async (url: string) => url),
   };
 
   const service = new (FederationService as any)(
@@ -1018,6 +1023,38 @@ describe('federateAnnounce', () => {
     expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
   });
 
+  it('also fans the Announce out to the author remote follower instances', async () => {
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service, remotePostRepository, followRepository } = createService({
+      federationEnabled: true,
+    });
+    remotePostRepository.findOne.mockResolvedValue({
+      activityId: 'https://example.com/posts/1',
+      author: {
+        actorId: 'https://example.com/users/alice',
+        inboxUrl: 'https://example.com/users/alice/inbox',
+      },
+      instance: { domain: 'example.com' },
+    });
+    followRepository.find.mockResolvedValue([
+      { remoteUser: { instance: { domain: 'example.com' } } },
+    ]);
+
+    const report = await service.federateAnnounce('user-1', 'https://example.com/posts/1');
+
+    // A boost belongs in the followers' timelines; delivering only to the
+    // object owner meant no Mastodon follower ever saw a Zynkra boost.
+    expect(report.requested).toBe(2);
+    expect(report.delivered).toBe(2);
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    // Owner first, then the follower shared inbox.
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
+    expect(postSpy.mock.calls[1][0]).toBe('https://example.com/inbox');
+    const followerCall = JSON.parse(postSpy.mock.calls[1][1]);
+    expect(followerCall.type).toBe('Announce');
+    expect(followerCall.to).toEqual(['https://example.com/users/alice']);
+  });
+
   it('records the Announce so it can be undone', async () => {
     postSpy.mockResolvedValue({ status: 202 });
     const { service, remotePostRepository, outboxRows } = createService({
@@ -1048,6 +1085,68 @@ describe('federateAnnounce', () => {
 
     expect(postSpy).not.toHaveBeenCalled();
     expect(report.skipped).toBe(true);
+  });
+});
+
+describe('federateUndoAnnounce', () => {
+  const OWNER = {
+    activityId: 'https://example.com/posts/1',
+    author: {
+      actorId: 'https://example.com/users/alice',
+      inboxUrl: 'https://example.com/users/alice/inbox',
+    },
+    instance: { domain: 'example.com' },
+  };
+
+  it('wraps the recorded Announce and retracts from every delivered instance', async () => {
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service, remotePostRepository, outboxLookup, instanceRepository } = createService({
+      federationEnabled: true,
+    });
+    remotePostRepository.findOne.mockResolvedValue(OWNER);
+    outboxLookup.push({
+      id: 'outbox-1',
+      activityId: 'http://localhost:3001/federation/activities/announce-abc',
+      objectId: 'https://example.com/posts/1',
+      activityType: 'Announce',
+      // The boost went to the owner *and* a follower instance; the current
+      // follower list is irrelevant to where the Undo must go.
+      deliveredTo: ['fediverse.example', 'example.com'],
+    });
+    // Both domains resolve to a connected instance — the owner path and the
+    // follower path each look theirs up before delivering.
+    instanceRepository.findOne.mockResolvedValue(INSTANCE);
+
+    const report = await service.federateUndoAnnounce('user-1', 'https://example.com/posts/1');
+
+    expect(report.delivered).toBe(2);
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    // Owner first (already-fetched target), then the other delivered instance
+    // from the ledger — not today's follower list.
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
+    expect(postSpy.mock.calls[1][0]).toBe('https://example.com/inbox');
+
+    const activity = JSON.parse(postSpy.mock.calls[0][1]);
+    expect(activity.type).toBe('Undo');
+    expect(activity.object).toEqual({
+      id: 'http://localhost:3001/federation/activities/announce-abc',
+      type: 'Announce',
+      object: 'https://example.com/posts/1',
+    });
+    // Both deliveries must carry the identical Undo body — a peer that saw the
+    // Announce but receives a differently-shaped Undo ignores it.
+    expect(postSpy.mock.calls[1][1]).toBe(postSpy.mock.calls[0][1]);
+  });
+
+  it('skips when the boost was never federated', async () => {
+    const { service, remotePostRepository } = createService({ federationEnabled: true });
+    remotePostRepository.findOne.mockResolvedValue(OWNER);
+
+    const report = await service.federateUndoAnnounce('user-1', 'https://example.com/posts/1');
+
+    expect(report.skipped).toBe(true);
+    expect(report.reason).toContain('never federated');
+    expect(postSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -1288,6 +1387,96 @@ describe('sendFollow', () => {
       service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')
     ).rejects.toThrow(/signature rejected/);
   });
+
+  it('records the Follow in the outbox so it can be undone', async () => {
+    mockGet({ '/users/alice': ACTOR_JSON });
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service, outboxRows } = createService({ federationEnabled: true });
+
+    await service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1');
+
+    // Without the recorded activity id, a later Undo has nothing to wrap and the
+    // remote side stays subscribed forever.
+    expect(outboxRows).toHaveLength(1);
+    expect(outboxRows[0].activityType).toBe('Follow');
+    expect(outboxRows[0].objectId).toBe('https://example.com/users/alice');
+    expect(outboxRows[0].activityId).toContain('/federation/activities/');
+    expect(outboxRows[0].deliveredTo).toEqual(['example.com']);
+  });
+});
+
+describe('undoFollow', () => {
+  const FOLLOW_OBJECT_ID = 'https://example.com/users/alice';
+
+  function recordFollow(outboxLookup: any[]) {
+    outboxLookup.push({
+      id: 'outbox-1',
+      activityId: 'http://localhost:3001/federation/activities/follow-abc',
+      objectId: FOLLOW_OBJECT_ID,
+      activityType: 'Follow',
+      deliveredTo: ['example.com'],
+    });
+  }
+
+  it('wraps the recorded Follow in a signed Undo and clears the ledger row', async () => {
+    mockGet({ '/users/alice': ACTOR_JSON });
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service, outboxLookup, outboxRepository, httpSignaturesService } = createService({
+      federationEnabled: true,
+    });
+    recordFollow(outboxLookup);
+
+    const result = await service.undoFollow({ objectId: FOLLOW_OBJECT_ID } as any, 'user-1');
+
+    expect(result.success).toBe(true);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
+
+    const activity = JSON.parse(postSpy.mock.calls[0][1]);
+    expect(activity.type).toBe('Undo');
+    // A peer matches the Undo against the Follow it actually received — the id
+    // must be the recorded one, not a fresh mint.
+    expect(activity.object).toEqual({
+      id: 'http://localhost:3001/federation/activities/follow-abc',
+      type: 'Follow',
+      object: FOLLOW_OBJECT_ID,
+    });
+
+    expect(httpSignaturesService.getSignedPostHeaders).toHaveBeenCalledWith(
+      'http://localhost:3001/federation/users/localuser',
+      expect.any(String),
+      'https://example.com/users/alice/inbox'
+    );
+    expect(outboxRepository.delete).toHaveBeenCalledWith({ id: 'outbox-1' });
+  });
+
+  it('skips without sending when the follow was never federated', async () => {
+    const { service, outboxRepository } = createService({ federationEnabled: true });
+
+    const report = await service.undoFollow({ objectId: FOLLOW_OBJECT_ID } as any, 'user-1');
+
+    expect(report.skipped).toBe(true);
+    expect(report.reason).toContain('never federated');
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(outboxRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it('keeps the ledger row when the Undo is refused', async () => {
+    mockGet({ '/users/alice': ACTOR_JSON });
+    postSpy.mockRejectedValue({ response: { status: 401 } });
+    const { service, outboxLookup, outboxRepository } = createService({
+      federationEnabled: true,
+    });
+    recordFollow(outboxLookup);
+
+    await expect(
+      service.undoFollow({ objectId: FOLLOW_OBJECT_ID } as any, 'user-1')
+    ).rejects.toThrow(/signature rejected/);
+
+    // The remote side is still following after a failed Undo — dropping the row
+    // would lose the only activity id a retry could reference.
+    expect(outboxRepository.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe('federation guard', () => {
@@ -1302,6 +1491,13 @@ describe('federation guard', () => {
     const { service } = createService({ federationEnabled: false });
     await expect(
       service.sendFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')
+    ).rejects.toThrow('Outbound federation is disabled');
+  });
+
+  it('refuses to undo a follow when outbound federation is disabled', async () => {
+    const { service } = createService({ federationEnabled: false });
+    await expect(
+      service.undoFollow({ objectId: 'https://example.com/users/alice' } as any, 'user-1')
     ).rejects.toThrow('Outbound federation is disabled');
   });
 
@@ -1465,6 +1661,135 @@ describe('federation guard', () => {
     expect(report.failed).toBe(1);
     expect(report.results.map((r: any) => r.domain)).toEqual(['up.example', 'down.example']);
     expect(report.activityId).toContain('/federation/activities/');
+  });
+});
+
+describe('federatePost — reply and mention targeting', () => {
+  const ALICE_POST = {
+    activityId: 'https://example.com/posts/1',
+    author: {
+      actorId: 'https://example.com/users/alice',
+      inboxUrl: 'https://example.com/users/alice/inbox',
+    },
+    instance: { domain: 'example.com' },
+  };
+
+  const WEBFINGER = {
+    subject: 'acct:alice@example.com',
+    links: [{ rel: 'self', href: 'https://example.com/users/alice' }],
+  };
+
+  it('delivers a reply to the replied-to author even with no remote followers', async () => {
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service, remotePostRepository } = createService({ federationEnabled: true });
+    remotePostRepository.findOne.mockResolvedValue(ALICE_POST);
+
+    const report = await service.federatePost(
+      'user-1',
+      {
+        activityId: 'post-9',
+        content: 'agreed',
+        inReplyToId: 'https://example.com/posts/1',
+      } as any,
+      []
+    );
+
+    expect(report.requested).toBe(1);
+    expect(report.delivered).toBe(1);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
+
+    const activity = JSON.parse(postSpy.mock.calls[0][1]);
+    // ActivityPub's reply field is `inReplyTo` on the Note — the storage field
+    // `inReplyToId` means nothing to a peer trying to thread the reply.
+    expect(activity.object.inReplyTo).toBe('https://example.com/posts/1');
+    // The replied-to actor must be in the audience, or the peer's shared-inbox
+    // processing drops an activity with no recipient on its own server.
+    expect(activity.cc).toContain('https://example.com/users/alice');
+    expect(activity.object.cc).toContain('https://example.com/users/alice');
+  });
+
+  it('webfingers a mention and delivers to the mentioned actor', async () => {
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service } = createService({ federationEnabled: true });
+    mockGet({
+      '/.well-known/webfinger': WEBFINGER,
+      '/users/alice': ACTOR_JSON,
+    });
+
+    const report = await service.federatePost(
+      'user-1',
+      { activityId: 'post-10', content: 'hello @alice@example.com' } as any,
+      []
+    );
+
+    expect(report.requested).toBe(1);
+    expect(report.delivered).toBe(1);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/users/alice/inbox');
+
+    const activity = JSON.parse(postSpy.mock.calls[0][1]);
+    expect(activity.object.tag).toEqual([
+      { type: 'Mention', href: 'https://example.com/users/alice', name: '@alice@example.com' },
+    ]);
+    expect(activity.cc).toContain('https://example.com/users/alice');
+  });
+
+  it('sends a mention at a follower instance exactly once', async () => {
+    postSpy.mockResolvedValue({ status: 202 });
+    const { service } = createService({ federationEnabled: true });
+    mockGet({
+      '/.well-known/webfinger': WEBFINGER,
+      '/users/alice': ACTOR_JSON,
+    });
+
+    const report = await service.federatePost(
+      'user-1',
+      { activityId: 'post-11', content: 'hi @alice@example.com' } as any,
+      ['example.com']
+    );
+
+    // The follower loop already delivered to the shared inbox; a second post to
+    // the actor's own inbox would hand the peer the same activity id twice.
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy.mock.calls[0][0]).toBe('https://example.com/inbox');
+    expect(report.requested).toBe(1);
+    expect(report.delivered).toBe(1);
+    // The mention still rides the Note even though the second delivery was skipped.
+    expect(JSON.parse(postSpy.mock.calls[0][1]).object.tag).toEqual([
+      { type: 'Mention', href: 'https://example.com/users/alice', name: '@alice@example.com' },
+    ]);
+  });
+
+  it('skips a local-domain mention without touching the network', async () => {
+    const { service, outboxRows } = createService({ federationEnabled: true });
+
+    const report = await service.federatePost(
+      'user-1',
+      { activityId: 'post-12', content: 'hi @bob@zynkra.local' } as any,
+      []
+    );
+
+    // A local mention is delivered by the local timeline, not the wire — and
+    // with no followers and no remote targets there is nothing to mint.
+    expect(report.skipped).toBe(true);
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(getSpy).not.toHaveBeenCalled();
+    expect(outboxRows).toHaveLength(0);
+  });
+
+  it('treats a bare local mention as no target', async () => {
+    const { service, outboxRows } = createService({ federationEnabled: true });
+
+    const report = await service.federatePost(
+      'user-1',
+      { activityId: 'post-13', content: 'hi @bob' } as any,
+      []
+    );
+
+    expect(report.skipped).toBe(true);
+    expect(postSpy).not.toHaveBeenCalled();
+    expect(outboxRows).toHaveLength(0);
   });
 });
 

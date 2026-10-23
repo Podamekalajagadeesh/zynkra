@@ -103,6 +103,18 @@ export class FederationController {
     return this.federationService.sendFollow(followDto, userId(user));
   }
 
+  /**
+   * Unfollow a remote user: `Undo(Follow)` wrapping the recorded Follow
+   * activity id, signed and delivered the same way the Follow was. The route
+   * is `follow/undo` (not a `DELETE` on `follow`) so the body DTO and the
+   * existing follow handler stay untouched.
+   */
+  @Post('follow/undo')
+  @UseGuards(JwtAuthGuard)
+  async undoFollowRemoteUser(@Body() followDto: FederateFollowDto, @CurrentUser() user: any) {
+    return this.federationService.undoFollow(followDto, userId(user));
+  }
+
   @Post('posts/federate')
   @UseGuards(JwtAuthGuard)
   async federatePost(@Body() body: FederatePostRequestDto, @CurrentUser() user: any) {

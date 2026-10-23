@@ -58,9 +58,16 @@ export class PostFederationService {
     }
 
     const targets = await federationService.getFollowerInstanceDomains(authorId);
-    if (!Array.isArray(targets) || targets.length === 0) return;
-
-    const report = await federationService.federateDelete(authorId, postId, targets);
+    // Always delegated, even with an empty follower list: `federateDelete`
+    // prefers the instances recorded in the outbox for the original Create —
+    // which now include reply/mention targets the author never followed — so a
+    // follower-only early return would leave those peers holding a copy we can
+    // no longer retract. The "never federated" skip lives in `federateDelete`.
+    const report = await federationService.federateDelete(
+      authorId,
+      postId,
+      Array.isArray(targets) ? targets : []
+    );
 
     if (report.skipped) {
       this.logger.log(`Post ${postId} was never federated — no Delete emitted (${report.reason})`);
@@ -155,11 +162,11 @@ export class PostFederationService {
     }
 
     const targets = await federationService.getFollowerInstanceDomains(authorId);
-    if (!Array.isArray(targets) || targets.length === 0) {
-      this.logger.log(`No remote followers for author ${authorId} — nothing to federate`);
-      return;
-    }
-
+    // Called even when the author has no remote followers: `federatePost`
+    // resolves reply and mention targets from the content and delivers to
+    // those actors' own inboxes. A reply to a Mastodon user who does not
+    // follow this author must still reach them — an empty-targets early
+    // return here would silently drop exactly the interactions interop needs.
     const report = await federationService.federatePost(
       authorId,
       {
@@ -167,8 +174,13 @@ export class PostFederationService {
         content: post.content,
         publishedAt: post.createdAt ?? new Date(),
       } as any,
-      targets
+      Array.isArray(targets) ? targets : []
     );
+
+    if (report.skipped) {
+      this.logger.log(`Post ${post.id} not federated: ${report.reason ?? 'no targets'}`);
+      return;
+    }
 
     this.logger.log(
       `Federated post ${post.id} to ${report.delivered}/${report.requested} instance(s)` +
