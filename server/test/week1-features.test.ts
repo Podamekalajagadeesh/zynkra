@@ -152,7 +152,9 @@ describe('Week 1 readiness checks', () => {
         findByUsername: jest.fn(async () => ({ id: 'user-1', username: 'localuser' })),
       } as any,
       { findPostsByUserId: jest.fn(async () => []) } as any,
-      { initialize: jest.fn(async () => undefined) } as any
+      { initialize: jest.fn(async () => undefined) } as any,
+      // Constructor arg 12: the inbound-boost ledger (see FederationService).
+      { findOne: jest.fn(async () => null) } as any
     );
 
     try {
