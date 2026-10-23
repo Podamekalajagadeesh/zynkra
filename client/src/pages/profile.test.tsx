@@ -72,6 +72,14 @@ vi.mock('../lib/api', () => ({
     totalVotes: 0,
     myVote: null,
   }),
+  getStoryReplies: vi.fn().mockResolvedValue({
+    data: [],
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
+  deleteStoryReply: vi.fn().mockResolvedValue(undefined),
   api: {
     defaults: { headers: { common: {} } },
     interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },

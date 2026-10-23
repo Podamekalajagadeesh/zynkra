@@ -6,7 +6,7 @@
  * (viewer passes storyId + elementId so Poll can fetch/cast tallies).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Story } from '../lib/types';
 import { StoryViewer } from './story-viewer';
@@ -39,6 +39,26 @@ const mocks = vi.hoisted(() => ({
   ]),
   createHighlight: vi.fn(async () => ({})),
   updateHighlight: vi.fn(async () => ({})),
+  getStoryReplies: vi.fn(
+    async (
+      _storyId: string,
+      _page?: number,
+      _limit?: number
+    ): Promise<{
+      data: unknown[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }> => ({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 0,
+    })
+  ),
+  deleteStoryReply: vi.fn(async (_storyId: string, _replyId: string) => undefined),
   currentUser: null as { id: string; username?: string } | null,
 }));
 
@@ -52,6 +72,8 @@ vi.mock('../lib/api', () => ({
   getUserHighlights: mocks.getUserHighlights,
   createHighlight: mocks.createHighlight,
   updateHighlight: mocks.updateHighlight,
+  getStoryReplies: mocks.getStoryReplies,
+  deleteStoryReply: mocks.deleteStoryReply,
 }));
 
 vi.mock('../hooks/useToast', () => ({
@@ -197,5 +219,128 @@ describe('StoryViewer highlight save', () => {
       })
     );
     expect(mocks.updateHighlight).not.toHaveBeenCalled();
+  });
+});
+
+describe('StoryViewer replies inbox (owner-only endpoint)', () => {
+  const makeReply = (overrides: Record<string, unknown> = {}) => ({
+    id: 'reply-1',
+    text: 'Nice!',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    user: {
+      id: 'u2',
+      email: null,
+      walletAddress: null,
+      username: 'fan',
+      displayName: 'Fan',
+      profile: {},
+    },
+    ...overrides,
+  });
+
+  it('fetches the owner inbox eagerly and shows the total on the trigger', async () => {
+    mocks.getStoryReplies.mockResolvedValue({
+      data: [makeReply()],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    const trigger = await screen.findByRole('button', { name: 'Replies' });
+    await waitFor(() => expect(mocks.getStoryReplies).toHaveBeenCalledWith('story-1'));
+    expect(within(trigger).getByText('1')).toBeTruthy();
+  });
+
+  it('never fetches the inbox or shows the entry for non-owners', async () => {
+    mocks.getStoryReplies.mockResolvedValue({
+      data: [makeReply()],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+    mocks.currentUser = { id: 'someone-else', username: 'fan' };
+    renderViewer([makeStory()]);
+
+    await waitFor(() => expect(mocks.trackStoryView).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'Replies' })).toBeNull();
+    expect(mocks.getStoryReplies).not.toHaveBeenCalled();
+  });
+
+  it('opens the dialog with sender info and deletes a reply through the API', async () => {
+    mocks.getStoryReplies.mockResolvedValue({
+      data: [makeReply()],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Replies' }));
+
+    expect(await screen.findByText('Nice!')).toBeTruthy();
+    expect(screen.getByText('Fan')).toBeTruthy();
+    expect(screen.getByText('@fan')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete reply' }));
+
+    await waitFor(() => expect(mocks.deleteStoryReply).toHaveBeenCalledWith('story-1', 'reply-1'));
+    await waitFor(() => expect(screen.queryByText('Nice!')).toBeNull());
+    expect(screen.getByText('No replies yet')).toBeTruthy();
+  });
+
+  it('shows an empty state when the story has no replies', async () => {
+    mocks.getStoryReplies.mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 0,
+    });
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Replies' }));
+
+    expect(await screen.findByText('No replies yet')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Load more replies' })).toBeNull();
+  });
+
+  it('loads the next page on "Load more" and appends replies', async () => {
+    mocks.getStoryReplies
+      .mockResolvedValueOnce({
+        data: [makeReply()],
+        total: 2,
+        page: 1,
+        limit: 20,
+        totalPages: 2,
+      })
+      .mockResolvedValueOnce({
+        data: [makeReply({ id: 'reply-2', text: 'Second one' })],
+        total: 2,
+        page: 2,
+        limit: 20,
+        totalPages: 2,
+      });
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Replies' }));
+    expect(await screen.findByText('Nice!')).toBeTruthy();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Load more replies' }));
+
+    await waitFor(() => expect(mocks.getStoryReplies).toHaveBeenLastCalledWith('story-1', 2));
+    expect(await screen.findByText('Second one')).toBeTruthy();
+    expect(screen.getByText('Nice!')).toBeTruthy();
+    // Page 2 was the last one: the loader retires itself.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Load more replies' })).toBeNull()
+    );
   });
 });

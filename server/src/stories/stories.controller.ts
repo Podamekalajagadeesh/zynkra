@@ -7,12 +7,14 @@ import {
   Request,
   Body,
   Param,
+  Query,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StoriesService } from './stories.service';
+import { StoriesReplyService } from './stories-reply.service';
 import { MediaService } from '../media/media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
@@ -22,6 +24,7 @@ import { TrackViewDto } from './dto/track-view.dto';
 export class StoriesController {
   constructor(
     private readonly storiesService: StoriesService,
+    private readonly storiesReplyService: StoriesReplyService,
     private readonly mediaService: MediaService
   ) {}
 
@@ -83,6 +86,25 @@ export class StoriesController {
   @Get(':id/views')
   getViews(@Param('id') id: string, @Request() req) {
     return this.storiesService.getViews(id, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/replies')
+  getReplies(
+    @Param('id') id: string,
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    const parsedPage = Number(page) || 1;
+    const parsedLimit = Number(limit) || 20;
+    return this.storiesReplyService.getReplies(id, req.user.userId, parsedPage, parsedLimit);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/replies/:replyId')
+  deleteReply(@Param('id') id: string, @Param('replyId') replyId: string, @Request() req) {
+    return this.storiesReplyService.deleteReply(id, replyId, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

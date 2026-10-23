@@ -17,6 +17,7 @@ import {
   MessagePrivacy,
   MarketplaceListing,
   SavedListing,
+  StoryReply,
   ThemeDefinition,
 } from './types';
 import type { NotificationItem as NotificationData } from '../providers/notifications-provider';
@@ -2116,6 +2117,27 @@ export const trackStoryView = async (storyId: string, isAnonymous: boolean = fal
 export const getStoryViews = async (storyId: string) => {
   const response = await api.get(`/stories/${storyId}/views`);
   return response.data;
+};
+
+export interface StoryRepliesPage {
+  data: StoryReply[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const getStoryReplies = async (
+  storyId: string,
+  page = 1,
+  limit = 20
+): Promise<StoryRepliesPage> => {
+  const response = await api.get(`/stories/${storyId}/replies?page=${page}&limit=${limit}`);
+  return response.data;
+};
+
+export const deleteStoryReply = async (storyId: string, replyId: string): Promise<void> => {
+  await api.delete(`/stories/${storyId}/replies/${replyId}`);
 };
 
 export const getStoryPollResults = async (storyId: string, elementId: string) => {

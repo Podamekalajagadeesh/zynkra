@@ -75,7 +75,14 @@ function createModule(overrides: Record<string, any> = {}) {
         provide: StoriesReactionService,
         useValue: { addReaction: overrides.addReaction || jest.fn() },
       },
-      { provide: StoriesReplyService, useValue: { addReply: overrides.addReply || jest.fn() } },
+      {
+        provide: StoriesReplyService,
+        useValue: {
+          addReply: overrides.addReply || jest.fn(),
+          getReplies: overrides.getReplies || jest.fn(),
+          deleteReply: overrides.deleteReply || jest.fn(),
+        },
+      },
       {
         provide: HighlightsService,
         useValue: {
@@ -225,6 +232,152 @@ describe('POST /stories/:id/reply', () => {
 
     expect(r.status).toBe(201);
     expect(mockAddReply).toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('GET /stories/:id/replies', () => {
+  it('returns 200 with the paginated envelope and default paging forwarded', async () => {
+    const mockGetReplies = jest.fn().mockResolvedValue({
+      data: [{ id: 'reply-1', text: 'Nice', user: { id: 'user-2', username: 'fan' } }],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+    const { app, token } = await buildApp({ getReplies: mockGetReplies });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/story-1/replies')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(r.body.total).toBe(1);
+    expect(r.body.data[0].user.username).toBe('fan');
+    expect(mockGetReplies).toHaveBeenCalledWith('story-1', 'user-1', 1, 20);
+    await app.close();
+  });
+
+  it('forwards explicit page and limit as numbers', async () => {
+    const mockGetReplies = jest.fn().mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 2,
+      limit: 5,
+      totalPages: 0,
+    });
+    const { app, token } = await buildApp({ getReplies: mockGetReplies });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/story-1/replies?page=2&limit=5')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(mockGetReplies).toHaveBeenCalledWith('story-1', 'user-1', 2, 5);
+    await app.close();
+  });
+
+  it('falls back to defaults for garbage paging params', async () => {
+    const mockGetReplies = jest.fn().mockResolvedValue({
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 0,
+    });
+    const { app, token } = await buildApp({ getReplies: mockGetReplies });
+
+    await request(app.getHttpServer())
+      .get('/stories/story-1/replies?page=abc&limit=')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(mockGetReplies).toHaveBeenCalledWith('story-1', 'user-1', 1, 20);
+    await app.close();
+  });
+
+  it('maps NotFoundException from the service to 404', async () => {
+    const mockGetReplies = jest.fn().mockRejectedValue(new NotFoundException('Story not found'));
+    const { app, token } = await buildApp({ getReplies: mockGetReplies });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/story-1/replies')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(404);
+    await app.close();
+  });
+
+  it('maps UnauthorizedException from the service to 401', async () => {
+    const mockGetReplies = jest
+      .fn()
+      .mockRejectedValue(new UnauthorizedException('not your story'));
+    const { app, token } = await buildApp({ getReplies: mockGetReplies });
+
+    const r = await request(app.getHttpServer())
+      .get('/stories/story-1/replies')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+
+  it('returns 401 without auth', async () => {
+    const { app } = await buildApp();
+
+    const r = await request(app.getHttpServer()).get('/stories/story-1/replies');
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+});
+
+describe('DELETE /stories/:id/replies/:replyId', () => {
+  it('returns 200 when the reply is removed', async () => {
+    const mockDeleteReply = jest.fn().mockResolvedValue(undefined);
+    const { app, token } = await buildApp({ deleteReply: mockDeleteReply });
+
+    const r = await request(app.getHttpServer())
+      .delete('/stories/story-1/replies/reply-1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(mockDeleteReply).toHaveBeenCalledWith('story-1', 'reply-1', 'user-1');
+    await app.close();
+  });
+
+  it('maps NotFoundException from the service to 404', async () => {
+    const mockDeleteReply = jest.fn().mockRejectedValue(new NotFoundException('Reply not found'));
+    const { app, token } = await buildApp({ deleteReply: mockDeleteReply });
+
+    const r = await request(app.getHttpServer())
+      .delete('/stories/story-1/replies/reply-1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(404);
+    await app.close();
+  });
+
+  it('maps UnauthorizedException from the service to 401', async () => {
+    const mockDeleteReply = jest
+      .fn()
+      .mockRejectedValue(new UnauthorizedException('not yours'));
+    const { app, token } = await buildApp({ deleteReply: mockDeleteReply });
+
+    const r = await request(app.getHttpServer())
+      .delete('/stories/story-1/replies/reply-1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+
+  it('returns 401 without auth', async () => {
+    const { app } = await buildApp();
+
+    const r = await request(app.getHttpServer()).delete('/stories/story-1/replies/reply-1');
+
+    expect(r.status).toBe(401);
     await app.close();
   });
 });

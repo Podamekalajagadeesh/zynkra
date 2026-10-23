@@ -873,3 +873,141 @@ describe('Profile highlights (visibility-scoped read) over real Postgres', () =>
     await http().get('/users/hlv_ghost/highlights').set(bearer(strangerToken)).expect(404);
   });
 });
+
+describe('Story replies inbox over real Postgres', () => {
+  it('lists owner-only replies newest-first with pagination; author or owner may delete', async () => {
+    const http = () => request(app.getHttpServer());
+    const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const countIn = async (table: string, storyId: string): Promise<number> => {
+      const rows: Array<{ count: number }> = await dataSource.query(
+        `SELECT COUNT(*)::int AS count FROM ${table} WHERE "storyId" = $1`,
+        [storyId]
+      );
+      return rows[0].count;
+    };
+    const signUp = async (username: string, email: string): Promise<string> => {
+      const captchaRes = await http().get('/auth/captcha').expect(200);
+      const { id: captchaId, expression } = captchaRes.body;
+      const [a, b] = String(expression)
+        .split(' + ')
+        .map((part: string) => parseInt(part.trim(), 10));
+      await http()
+        .post('/auth/signup')
+        .send({
+          username,
+          email,
+          password: PASSWORD,
+          birthDate: '2000-01-01',
+          captchaId,
+          captchaAnswer: String(a + b),
+        })
+        .expect(201);
+      const user = await dataSource.getRepository(User).findOneByOrFail({ username });
+      const verify = await http()
+        .post('/auth/verify-code')
+        .send({ email, code: user.emailVerificationToken })
+        .expect(200);
+      return verify.body.access_token as string;
+    };
+
+    // The (storyId, createdAt) inbox index must survive entity-driven sync.
+    const indexRows: Array<{ indexname: string }> = await dataSource.query(
+      `SELECT indexname FROM pg_indexes WHERE tablename = 'story_replies'`
+    );
+    expect(indexRows.map((r) => r.indexname)).toContain('IDX_story_replies_story_createdAt');
+
+    const ownerToken = await signUp('storyreply_owner', 'storyreply_owner@example.com');
+    const fan1Token = await signUp('storyreply_fan1', 'storyreply_fan1@example.com');
+    const fan2Token = await signUp('storyreply_fan2', 'storyreply_fan2@example.com');
+    const strangerToken = await signUp('storyreply_stranger', 'storyreply_stranger@example.com');
+    await dataSource.query(`UPDATE users SET "storyVisibility" = 'public' WHERE username = $1`, [
+      'storyreply_owner',
+    ]);
+
+    const createRes = await http()
+      .post('/stories')
+      .set(bearer(ownerToken))
+      .field('textContent', 'inbox lifecycle')
+      .expect(201);
+    const storyId = createRes.body.id as string;
+
+    await http()
+      .post(`/stories/${storyId}/reply`)
+      .set(bearer(fan1Token))
+      .send({ text: 'From fan one' })
+      .expect(201);
+    await http()
+      .post(`/stories/${storyId}/reply`)
+      .set(bearer(fan2Token))
+      .send({ text: 'From fan two' })
+      .expect(201);
+    expect(await countIn('story_replies', storyId)).toBe(2);
+
+    // ── owner inbox: newest first, sender profile embedded ────────────────
+    const inbox = await http()
+      .get(`/stories/${storyId}/replies`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(inbox.body.total).toBe(2);
+    expect(inbox.body.totalPages).toBe(1);
+    expect(inbox.body.data).toHaveLength(2);
+    expect(inbox.body.data.map((r: { text: string }) => r.text)).toEqual([
+      'From fan two',
+      'From fan one',
+    ]);
+    expect(inbox.body.data[0].user.username).toBe('storyreply_fan2');
+    expect(inbox.body.data[1].user.username).toBe('storyreply_fan1');
+    // Reply rows must not carry JWT-principal keys.
+    expect(inbox.body.data[0]).not.toHaveProperty('userId');
+    expect(inbox.body.data[0]).not.toHaveProperty('sessionId');
+    const fan1ReplyId = inbox.body.data[1].id as string;
+    const fan2ReplyId = inbox.body.data[0].id as string;
+
+    // ── pagination: limit=1 splits the two rows across pages ──────────────
+    const page1 = await http()
+      .get(`/stories/${storyId}/replies?page=1&limit=1`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(page1.body.data.map((r: { text: string }) => r.text)).toEqual(['From fan two']);
+    expect(page1.body).toMatchObject({ total: 2, totalPages: 2, page: 1, limit: 1 });
+    const page2 = await http()
+      .get(`/stories/${storyId}/replies?page=2&limit=1`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(page2.body.data.map((r: { text: string }) => r.text)).toEqual(['From fan one']);
+
+    // ── guards: non-owner, unknown story ──────────────────────────────────
+    await http().get(`/stories/${storyId}/replies`).set(bearer(fan1Token)).expect(401);
+    await http()
+      .get('/stories/00000000-4000-8000-0000-000000000000/replies')
+      .set(bearer(ownerToken))
+      .expect(404);
+
+    // ── author deletes their own reply ────────────────────────────────────
+    await http()
+      .delete(`/stories/${storyId}/replies/${fan1ReplyId}`)
+      .set(bearer(fan1Token))
+      .expect(200);
+    expect(await countIn('story_replies', storyId)).toBe(1);
+
+    // ── a stranger can touch neither delete nor list ───────────────────────
+    await http()
+      .delete(`/stories/${storyId}/replies/${fan2ReplyId}`)
+      .set(bearer(strangerToken))
+      .expect(401);
+    expect(await countIn('story_replies', storyId)).toBe(1);
+
+    // ── owner moderates the remaining reply ───────────────────────────────
+    await http()
+      .delete(`/stories/${storyId}/replies/${fan2ReplyId}`)
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(await countIn('story_replies', storyId)).toBe(0);
+
+    // ── unknown reply id → 404 ────────────────────────────────────────────
+    await http()
+      .delete(`/stories/${storyId}/replies/00000000-4000-8000-0000-000000000000`)
+      .set(bearer(ownerToken))
+      .expect(404);
+  });
+});

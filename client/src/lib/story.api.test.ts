@@ -8,6 +8,8 @@ import {
   addStoryReply,
   trackStoryView,
   getStoryViews,
+  getStoryReplies,
+  deleteStoryReply,
   createStory,
   api,
 } from './api';
@@ -172,5 +174,96 @@ describe('createStory API helper', () => {
     expect(body.get('audience')).toBeNull();
     expect(body.get('isBoosted')).toBeNull();
     expect(body.get('isExtendedDuration')).toBeNull();
+  });
+});
+
+describe('getStoryReplies API helper', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('fetches the paginated replies envelope with explicit paging params', async () => {
+    let capturedSearch = '';
+    server.use(
+      http.get('*/stories/story-1/replies', ({ request }) => {
+        capturedSearch = new URL(request.url).search;
+        return HttpResponse.json({
+          data: [
+            {
+              id: 'reply-1',
+              text: 'Nice!',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              user: { id: 'u2', username: 'fan', displayName: 'Fan', pfp: '/p.jpg' },
+            },
+          ],
+          total: 1,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+        });
+      })
+    );
+
+    const result = await getStoryReplies('story-1', 1, 20);
+
+    expect(result.total).toBe(1);
+    expect(result.data[0].user.username).toBe('fan');
+    expect(capturedSearch).toContain('page=1');
+    expect(capturedSearch).toContain('limit=20');
+  });
+
+  it('defaults to page=1 and limit=20 when no paging args are given', async () => {
+    let capturedSearch = '';
+    server.use(
+      http.get('*/stories/story-1/replies', ({ request }) => {
+        capturedSearch = new URL(request.url).search;
+        return HttpResponse.json({ data: [], total: 0, page: 1, limit: 20, totalPages: 0 });
+      })
+    );
+
+    const result = await getStoryReplies('story-1');
+
+    expect(result.data).toEqual([]);
+    expect(capturedSearch).toBe('?page=1&limit=20');
+  });
+
+  it('throws on error', async () => {
+    server.use(
+      http.get('*/stories/story-1/replies', () =>
+        HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
+      )
+    );
+
+    await expect(getStoryReplies('story-1')).rejects.toThrow();
+  });
+});
+
+describe('deleteStoryReply API helper', () => {
+  beforeAll(() => server.listen());
+  afterEach(() => server.resetHandlers());
+  afterAll(() => server.close());
+
+  it('sends DELETE to /stories/:id/replies/:replyId', async () => {
+    let capturedParams: Record<string, unknown> = {};
+    server.use(
+      http.delete('*/stories/story-1/replies/:replyId', ({ params }) => {
+        capturedParams = params;
+        return new HttpResponse(null, { status: 200 });
+      })
+    );
+
+    await deleteStoryReply('story-1', 'reply-9');
+
+    expect(capturedParams.replyId).toBe('reply-9');
+  });
+
+  it('propagates errors', async () => {
+    server.use(
+      http.delete('*/stories/story-1/replies/:replyId', () =>
+        HttpResponse.json({ message: 'Forbidden' }, { status: 401 })
+      )
+    );
+
+    await expect(deleteStoryReply('story-1', 'reply-9')).rejects.toThrow();
   });
 });

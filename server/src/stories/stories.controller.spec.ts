@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
+import { StoriesReplyService } from './stories-reply.service';
 import { MediaService } from '../media/media.service';
 
 describe('StoriesController', () => {
@@ -13,6 +14,7 @@ describe('StoriesController', () => {
     getViews: jest.Mock;
     delete: jest.Mock;
   };
+  let storiesReplyService: { getReplies: jest.Mock; deleteReply: jest.Mock };
   let mediaService: { uploadFile: jest.Mock };
 
   beforeEach(async () => {
@@ -23,6 +25,10 @@ describe('StoriesController', () => {
       getViews: jest.fn(),
       delete: jest.fn(),
     };
+    storiesReplyService = {
+      getReplies: jest.fn(),
+      deleteReply: jest.fn(),
+    };
     mediaService = {
       uploadFile: jest.fn(),
     };
@@ -30,6 +36,7 @@ describe('StoriesController', () => {
       controllers: [StoriesController],
       providers: [
         { provide: StoriesService, useValue: storiesService },
+        { provide: StoriesReplyService, useValue: storiesReplyService },
         { provide: MediaService, useValue: mediaService },
       ],
     }).compile();
@@ -124,6 +131,30 @@ describe('StoriesController', () => {
       controller.remove('s1', { user: { userId: 'u1' } });
       expect(storiesService.getViews).toHaveBeenCalledWith('s1', 'u1');
       expect(storiesService.delete).toHaveBeenCalledWith('s1', 'u1');
+    });
+  });
+
+  describe('replies inbox routes', () => {
+    const req = { user: { userId: 'u1' } };
+
+    it('defaults paging to page 1 / limit 20 when query params are absent', () => {
+      controller.getReplies('s1', req, undefined, undefined);
+      expect(storiesReplyService.getReplies).toHaveBeenCalledWith('s1', 'u1', 1, 20);
+    });
+
+    it('parses explicit numeric query params', () => {
+      controller.getReplies('s1', req, '2', '5');
+      expect(storiesReplyService.getReplies).toHaveBeenCalledWith('s1', 'u1', 2, 5);
+    });
+
+    it('falls back to defaults for garbage query params', () => {
+      controller.getReplies('s1', req, 'abc', '');
+      expect(storiesReplyService.getReplies).toHaveBeenCalledWith('s1', 'u1', 1, 20);
+    });
+
+    it('scopes reply deletion to the route story and requester', () => {
+      controller.deleteReply('s1', 'r1', req);
+      expect(storiesReplyService.deleteReply).toHaveBeenCalledWith('s1', 'r1', 'u1');
     });
   });
 });

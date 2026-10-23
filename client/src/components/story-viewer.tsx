@@ -2,12 +2,24 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Story,
   StoryHighlight,
+  StoryReply,
   UserProfile,
   PostAuthor,
   ScreenshotProtectionSettings,
   StoryElement,
 } from '../lib/types';
-import { X, Send, Crown, EyeOff, Users, Search, Star, Plus } from 'lucide-react';
+import {
+  X,
+  Send,
+  Crown,
+  EyeOff,
+  Users,
+  Search,
+  Star,
+  Plus,
+  MessageSquare,
+  Trash2,
+} from 'lucide-react';
 import { Mention } from './Mention';
 import { Poll } from './poll';
 import {
@@ -15,6 +27,8 @@ import {
   addStoryReply,
   trackStoryView,
   getStoryViews,
+  getStoryReplies,
+  deleteStoryReply,
   getUserHighlights,
   createHighlight,
   updateHighlight,
@@ -51,6 +65,11 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const [isAnonymousView, setIsAnonymousView] = useState(false);
   const [storyViewers, setStoryViewers] = useState<UserProfile[]>([]);
   const [viewerSearchQuery, setViewerSearchQuery] = useState('');
+  const [storyReplies, setStoryReplies] = useState<StoryReply[]>([]);
+  const [repliesTotal, setRepliesTotal] = useState(0);
+  const [repliesPage, setRepliesPage] = useState(1);
+  const [repliesTotalPages, setRepliesTotalPages] = useState(0);
+  const [isLoadingMoreReplies, setIsLoadingMoreReplies] = useState(false);
   const [isHighlightOpen, setIsHighlightOpen] = useState(false);
   const [myHighlights, setMyHighlights] = useState<StoryHighlight[]>([]);
   const [newHighlightTitle, setNewHighlightTitle] = useState('');
@@ -77,6 +96,32 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       setStoryViewers([]);
     }
   }, [activeStory?.id, isOwner]);
+
+  // Fetch the owner's replies inbox when active story changes (owner only)
+  const activeStoryId = activeStory?.id;
+  useEffect(() => {
+    if (activeStoryId && isOwner) {
+      getStoryReplies(activeStoryId)
+        .then((page) => {
+          setStoryReplies(page.data || []);
+          setRepliesTotal(page.total || 0);
+          setRepliesPage(page.page || 1);
+          setRepliesTotalPages(page.totalPages || 0);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch story replies:', error);
+          setStoryReplies([]);
+          setRepliesTotal(0);
+          setRepliesPage(1);
+          setRepliesTotalPages(0);
+        });
+    } else {
+      setStoryReplies([]);
+      setRepliesTotal(0);
+      setRepliesPage(1);
+      setRepliesTotalPages(0);
+    }
+  }, [activeStoryId, isOwner]);
 
   // Load the owner's highlight list when the save dialog opens.
   useEffect(() => {
@@ -195,6 +240,36 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       setReplyText('');
     } catch (error) {
       console.error('Failed to add reply', error);
+    }
+  };
+
+  const loadMoreReplies = async () => {
+    if (!activeStory || isLoadingMoreReplies || repliesPage >= repliesTotalPages) return;
+    setIsLoadingMoreReplies(true);
+    try {
+      const nextPage = repliesPage + 1;
+      const page = await getStoryReplies(activeStory.id, nextPage);
+      setStoryReplies((prev) => [...prev, ...(page.data || [])]);
+      setRepliesPage(nextPage);
+      setRepliesTotal(page.total || 0);
+      setRepliesTotalPages(page.totalPages || 0);
+    } catch (error) {
+      console.error('Failed to load more replies:', error);
+    } finally {
+      setIsLoadingMoreReplies(false);
+    }
+  };
+
+  const handleDeleteReply = async (replyId: string) => {
+    if (!activeStory) return;
+    try {
+      await deleteStoryReply(activeStory.id, replyId);
+      setStoryReplies((prev) => prev.filter((reply) => reply.id !== replyId));
+      setRepliesTotal((prev) => Math.max(0, prev - 1));
+      addToast('Reply deleted', 'success');
+    } catch (error) {
+      console.error('Failed to delete reply:', error);
+      addToast('Failed to delete reply', 'error');
     }
   };
 
@@ -358,6 +433,83 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
                   </p>
                 )}
               </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        {/* Replies inbox dialog (owner only — endpoint is owner-gated) */}
+        {isOwner && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                aria-label="Replies"
+                title="Replies"
+                className="absolute top-4 right-44 text-white flex items-center gap-1 hover:bg-white/10 px-2 py-1 rounded-md transition-colors"
+              >
+                <MessageSquare size={20} />
+                <span className="text-sm">{repliesTotal}</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Replies ({repliesTotal})</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {storyReplies.length > 0 ? (
+                  storyReplies.map((reply) => (
+                    <div
+                      key={reply.id}
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <img
+                        src={
+                          reply.user.profile?.avatarUrl ||
+                          `https://i.pravatar.cc/150?u=${reply.user.id}`
+                        }
+                        alt={reply.user.displayName || reply.user.username || 'User'}
+                        className="h-8 w-8 rounded-full shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <p className="truncate font-medium">
+                            {reply.user.displayName || reply.user.username || 'Unknown'}
+                          </p>
+                          <span className="truncate text-xs text-gray-500">
+                            @{reply.user.username || 'unknown'}
+                          </span>
+                          <span className="ml-auto shrink-0 text-xs text-gray-500">
+                            {new Date(reply.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="break-words text-sm">{reply.text}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReply(reply.id)}
+                        aria-label="Delete reply"
+                        title="Delete reply"
+                        className="shrink-0 text-gray-400 transition-colors hover:text-red-500"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-4 text-center text-gray-500">No replies yet</p>
+                )}
+              </div>
+              {repliesPage < repliesTotalPages && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={loadMoreReplies}
+                  disabled={isLoadingMoreReplies}
+                  aria-label="Load more replies"
+                  className="w-full"
+                >
+                  Load more
+                </Button>
+              )}
             </DialogContent>
           </Dialog>
         )}
