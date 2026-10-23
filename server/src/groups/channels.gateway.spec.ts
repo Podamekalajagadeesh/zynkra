@@ -63,12 +63,7 @@ describe('ChannelsGateway serialization', () => {
       'sender',
       'voiceNote',
     ]);
-    expect(Object.keys(payload.sender).sort()).toEqual([
-      'avatar',
-      'displayName',
-      'id',
-      'username',
-    ]);
+    expect(Object.keys(payload.sender).sort()).toEqual(['avatar', 'displayName', 'id', 'username']);
 
     const wire = JSON.stringify(payload);
     expect(wire).not.toContain('passwordHash');
