@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpException,
   HttpStatus,
+  Header,
   Query,
   Req,
   ParseUUIDPipe,
@@ -344,22 +345,30 @@ export class FederationController {
     return this.federationService.processSharedInbox(activity);
   }
 
+  // The four documents below are ActivityPub resources, not app API
+  // responses. Nest answers every handler with `application/json` unless told
+  // otherwise, and a peer that honours content negotiation sees the right type
+  // only when we say `application/activity+json` ourselves.
   @Get('users/:username')
+  @Header('Content-Type', 'application/activity+json')
   async getUserActor(@Param('username') username: string) {
     return this.federationService.getLocalActor(username);
   }
 
   @Get('users/:username/followers')
+  @Header('Content-Type', 'application/activity+json')
   async getUserFollowers(@Param('username') username: string) {
     return this.federationService.getLocalFollowers(username);
   }
 
   @Get('users/:username/following')
+  @Header('Content-Type', 'application/activity+json')
   async getUserFollowing(@Param('username') username: string) {
     return this.federationService.getLocalFollowing(username);
   }
 
   @Get('users/:username/outbox')
+  @Header('Content-Type', 'application/activity+json')
   async getUserOutbox(@Param('username') username: string) {
     return this.federationService.getLocalOutbox(username);
   }

@@ -12,6 +12,7 @@ import { FederationModeration } from './entities/federation-moderation.entity';
 import { FederationFollow } from './entities/federation-follow.entity';
 import { FederationOutbox } from './entities/federation-outbox.entity';
 import { FederationDeliveryAttempt } from './entities/federation-delivery-attempt.entity';
+import { FederationReshare } from './entities/federation-reshare.entity';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { PostsModule } from '../posts/posts.module';
@@ -28,6 +29,7 @@ import { PostFederationService } from './post-federation.service';
       FederationFollow,
       FederationOutbox,
       FederationDeliveryAttempt,
+      FederationReshare,
     ]),
     UsersModule,
     // forwardRef mirrors the PostsModule -> FederationModule edge. Federation

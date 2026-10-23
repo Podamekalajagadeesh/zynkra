@@ -126,7 +126,8 @@ function createService(options: { federationEnabled?: boolean; remotePost?: any 
     configService,
     userService,
     { findPostsByUserId: jest.fn().mockResolvedValue([]) },
-    httpSignaturesService
+    httpSignaturesService,
+    { findOne: jest.fn().mockResolvedValue(null) }
   );
 
   return {

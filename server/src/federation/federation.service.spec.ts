@@ -58,6 +58,8 @@ type Harness = {
   userService: any;
   postsService: any;
   httpSignaturesService: any;
+  /** Ledger of inbound remote boosts of local posts. */
+  federationReshareRepository: any;
   createdPosts: any[];
   savedUsers: any[];
   savedInstances: any[];
@@ -189,6 +191,20 @@ function createService(
 
   const postsService = {
     findPostsByUserId: jest.fn().mockResolvedValue([]),
+    // Local-post engagement (inbound Like/Announce/Undo). Null/false defaults
+    // keep tests that never touch inbound engagement on the "target is not
+    // ours" path.
+    findOne: jest.fn().mockResolvedValue(null),
+    recordRemoteLike: jest.fn().mockResolvedValue(false),
+    removeRemoteLike: jest.fn().mockResolvedValue(false),
+    adjustShareCount: jest.fn().mockResolvedValue(undefined),
+  };
+
+  const federationReshareRepository = {
+    findOne: jest.fn().mockResolvedValue(null),
+    create: jest.fn((data: any) => data),
+    save: jest.fn(async (data: any) => ({ id: 'reshare-1', ...data })),
+    remove: jest.fn(async (data: any) => data),
   };
 
   const httpSignaturesService = {
@@ -215,7 +231,8 @@ function createService(
     configService,
     userService,
     postsService,
-    httpSignaturesService
+    httpSignaturesService,
+    federationReshareRepository
   );
 
   return {
@@ -229,6 +246,7 @@ function createService(
     userService,
     postsService,
     httpSignaturesService,
+    federationReshareRepository,
     createdPosts,
     savedUsers,
     savedInstances,
@@ -610,6 +628,189 @@ describe('processSharedInbox — other activity types', () => {
     expect(remotePostRepository.save).not.toHaveBeenCalled();
     expect(remotePostRepository.remove).not.toHaveBeenCalled();
     expect(followRepository.remove).not.toHaveBeenCalled();
+  });
+});
+
+describe('processSharedInbox — inbound engagement on local posts', () => {
+  const LOCAL_ID = '11111111-1111-4111-8111-111111111111';
+  // Both id shapes are published for the same note: `${base}/posts/:id` from
+  // the outbox and `${base}/federation/posts/:id` from outbound Creates. Each
+  // test uses a different one so neither can silently stop resolving.
+  const OUTBOX_NOTE_URL = `http://localhost:3001/posts/${LOCAL_ID}`;
+  const FEDERATED_NOTE_URL = `http://localhost:3001/federation/posts/${LOCAL_ID}`;
+  const REMOTE_ACTOR = 'https://example.com/users/alice';
+  const localPost = { id: LOCAL_ID, visibility: 'PUBLIC' };
+
+  it('records a Like whose target is one of our posts', async () => {
+    const { service, postsService, remotePostRepository } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+    postsService.recordRemoteLike.mockResolvedValue(true);
+
+    const result = await service.processSharedInbox({
+      type: 'Like',
+      actor: REMOTE_ACTOR,
+      object: OUTBOX_NOTE_URL,
+    });
+
+    // The remote-post lookup still runs first — a Like can target either
+    // universe — and only falls through to the local path when it misses.
+    expect(remotePostRepository.findOne).toHaveBeenCalledWith({
+      where: { activityId: OUTBOX_NOTE_URL },
+    });
+    expect(result.status).toBe('like-recorded');
+    expect(postsService.recordRemoteLike).toHaveBeenCalledWith(localPost, REMOTE_ACTOR);
+  });
+
+  it('reports a re-delivered Like as already recorded instead of double-counting', async () => {
+    const { service, postsService } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+    postsService.recordRemoteLike.mockResolvedValue(false);
+
+    const result = await service.processSharedInbox({
+      type: 'Like',
+      actor: REMOTE_ACTOR,
+      object: OUTBOX_NOTE_URL,
+    });
+
+    expect(result.status).toBe('like-already-recorded');
+  });
+
+  it('does not claim a Like was recorded when nothing matched', async () => {
+    const { service, postsService } = createService();
+    // findOne stays null: the uuid-shaped target names no post we hold.
+    const result = await service.processSharedInbox({
+      type: 'Like',
+      actor: REMOTE_ACTOR,
+      object: OUTBOX_NOTE_URL,
+    });
+
+    expect(result.status).toBe('like-unmatched');
+    expect(postsService.recordRemoteLike).not.toHaveBeenCalled();
+  });
+
+  it('records an Announce on a local post and bumps the share counter once', async () => {
+    const { service, postsService, federationReshareRepository } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+
+    const result = await service.processSharedInbox({
+      id: 'https://example.com/activities/announce-1',
+      type: 'Announce',
+      actor: REMOTE_ACTOR,
+      object: FEDERATED_NOTE_URL,
+    });
+
+    expect(result.status).toBe('announce-recorded');
+    expect(federationReshareRepository.save).toHaveBeenCalledWith({
+      localPostId: LOCAL_ID,
+      remoteActorUrl: REMOTE_ACTOR,
+      activityId: 'https://example.com/activities/announce-1',
+    });
+    expect(postsService.adjustShareCount).toHaveBeenCalledWith(LOCAL_ID, 1);
+  });
+
+  it('does not bump the share counter for a re-delivered Announce', async () => {
+    const { service, postsService, federationReshareRepository } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+    federationReshareRepository.findOne.mockResolvedValue({ id: 'reshare-1' });
+
+    const result = await service.processSharedInbox({
+      type: 'Announce',
+      actor: REMOTE_ACTOR,
+      object: FEDERATED_NOTE_URL,
+    });
+
+    expect(result.status).toBe('announce-already-recorded');
+    expect(federationReshareRepository.save).not.toHaveBeenCalled();
+    expect(postsService.adjustShareCount).not.toHaveBeenCalled();
+  });
+
+  it('does not claim an Announce was recorded when nothing matched', async () => {
+    const { service } = createService();
+
+    const result = await service.processSharedInbox({
+      type: 'Announce',
+      actor: REMOTE_ACTOR,
+      object: OUTBOX_NOTE_URL,
+    });
+
+    expect(result.status).toBe('announce-unmatched');
+  });
+
+  it('removes an inbound Like on Undo', async () => {
+    const { service, postsService } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+    postsService.removeRemoteLike.mockResolvedValue(true);
+
+    const result = await service.processSharedInbox({
+      type: 'Undo',
+      actor: REMOTE_ACTOR,
+      object: { type: 'Like', actor: REMOTE_ACTOR, object: OUTBOX_NOTE_URL },
+    });
+
+    expect(result.status).toBe('like-undo-processed');
+    expect(postsService.removeRemoteLike).toHaveBeenCalledWith(LOCAL_ID, REMOTE_ACTOR);
+  });
+
+  it('reports an Undo(Like) no-op when that actor never liked here', async () => {
+    const { service, postsService } = createService();
+    postsService.findOne.mockResolvedValue(localPost);
+    postsService.removeRemoteLike.mockResolvedValue(false);
+
+    // A bare uuid target must resolve too — peers strip origins.
+    const result = await service.processSharedInbox({
+      type: 'Undo',
+      object: { type: 'Like', actor: REMOTE_ACTOR, object: LOCAL_ID },
+    });
+
+    expect(result.status).toBe('like-undo-noop');
+    expect(postsService.removeRemoteLike).toHaveBeenCalledWith(LOCAL_ID, REMOTE_ACTOR);
+  });
+
+  it('removes the reshare row and decrements the counter on Undo(Announce)', async () => {
+    const { service, federationReshareRepository, postsService } = createService();
+    const reshare = { id: 'reshare-1', localPostId: LOCAL_ID, remoteActorUrl: REMOTE_ACTOR };
+    federationReshareRepository.findOne.mockResolvedValue(reshare);
+
+    const result = await service.processSharedInbox({
+      type: 'Undo',
+      actor: REMOTE_ACTOR,
+      object: { type: 'Announce', actor: REMOTE_ACTOR, object: OUTBOX_NOTE_URL },
+    });
+
+    expect(result.status).toBe('announce-undo-processed');
+    expect(federationReshareRepository.remove).toHaveBeenCalledWith(reshare);
+    // Only a row this instance inserted may be decremented: an Undo for a
+    // boost we never counted must not shrink the counter.
+    expect(postsService.adjustShareCount).toHaveBeenCalledWith(LOCAL_ID, -1);
+  });
+
+  it('leaves the counter alone on an Undo(Announce) with no reshare row', async () => {
+    const { service, federationReshareRepository, postsService } = createService();
+
+    const result = await service.processSharedInbox({
+      type: 'Undo',
+      actor: REMOTE_ACTOR,
+      object: { type: 'Announce', actor: REMOTE_ACTOR, object: OUTBOX_NOTE_URL },
+    });
+
+    expect(result.status).toBe('announce-undo-noop');
+    expect(federationReshareRepository.remove).not.toHaveBeenCalled();
+    expect(postsService.adjustShareCount).not.toHaveBeenCalled();
+  });
+
+  it('keeps the historical no-op status for an Undo targeting a remote post', async () => {
+    const { service, postsService } = createService();
+
+    const result = await service.processSharedInbox({
+      type: 'Undo',
+      object: { type: 'Like', object: 'https://example.com/posts/1' },
+    });
+
+    // Remote-target Undo bookkeeping (remote likeCount) is out of scope here;
+    // what must not happen is a local-path write for a foreign target.
+    expect(result.status).toBe('undo-processed');
+    expect(postsService.recordRemoteLike).not.toHaveBeenCalled();
+    expect(postsService.removeRemoteLike).not.toHaveBeenCalled();
   });
 });
 
@@ -1957,6 +2158,9 @@ describe('local actor and collection endpoints', () => {
     expect(actor.outbox).toBe('http://localhost:3001/federation/users/localuser/outbox');
     expect(actor.followers).toBe('http://localhost:3001/federation/users/localuser/followers');
     expect(actor.following).toBe('http://localhost:3001/federation/users/localuser/following');
+    // Shared-inbox discovery: peers route all activity for this actor to one
+    // endpoint instead of the per-user inbox.
+    expect(actor.endpoints).toEqual({ sharedInbox: 'http://localhost:3001/federation/inbox' });
     expect(actor.publicKey.id).toBe('http://localhost:3001/federation/users/localuser#main-key');
     expect(actor.publicKey.owner).toBe('http://localhost:3001/federation/users/localuser');
     expect(actor.publicKey.publicKeyPem).toBe('PEM');

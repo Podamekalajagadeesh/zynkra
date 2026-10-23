@@ -9,11 +9,13 @@ import { FederationModeration } from './entities/federation-moderation.entity';
 import { FederationFollow } from './entities/federation-follow.entity';
 import { FederationOutbox } from './entities/federation-outbox.entity';
 import { FederationDeliveryAttempt } from './entities/federation-delivery-attempt.entity';
+import { FederationReshare } from './entities/federation-reshare.entity';
 import { ConnectInstanceDto, RemoteInstanceDto } from './dto/remote-instance.dto';
 import { FederatePostDto, FederateFollowDto } from './dto/federate-post.dto';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';
+import { Post } from '../posts/entities/post.entity';
 import { User } from '../users/entities/user.entity';
 import { HttpSignaturesService } from './http-signatures.service';
 import { randomUUID } from 'crypto';
@@ -107,7 +109,9 @@ export class FederationService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly postsService: PostsService,
-    private readonly httpSignaturesService: HttpSignaturesService
+    private readonly httpSignaturesService: HttpSignaturesService,
+    @InjectRepository(FederationReshare)
+    private readonly federationReshareRepository: Repository<FederationReshare>
   ) {
     this.instanceDomain = this.configService.get<string>('INSTANCE_DOMAIN', 'zynkra.local');
     this.instanceBaseUrl = this.configService.get<string>(
@@ -2153,6 +2157,13 @@ export class FederationService implements OnModuleInit {
       outbox: `${this.instanceBaseUrl}/federation/users/${username}/outbox`,
       followers: `${this.instanceBaseUrl}/federation/users/${username}/followers`,
       following: `${this.instanceBaseUrl}/federation/users/${username}/following`,
+      // Shared-inbox discovery: a peer that reads this delivers every activity
+      // addressed to this actor to one endpoint instead of fanning out to the
+      // per-user inboxes. It is part of the ActivityPub spec's discovery flow —
+      // without it, some servers silently degrade to per-inbox delivery.
+      endpoints: {
+        sharedInbox: `${this.instanceBaseUrl}/federation/inbox`,
+      },
       publicKey: {
         id: `${this.instanceBaseUrl}/federation/users/${username}#main-key`,
         owner: `${this.instanceBaseUrl}/federation/users/${username}`,
@@ -2349,9 +2360,17 @@ export class FederationService implements OnModuleInit {
         if (existingPost) {
           existingPost.likeCount = (existingPost.likeCount || 0) + 1;
           await this.remotePostRepository.save(existingPost);
+          return { success: true, received: true, type: activity.type, status: 'like-recorded' };
+        }
+        const localStatus = await this.recordLocalLike(targetId, activity.actor);
+        if (localStatus) {
+          return { success: true, received: true, type: activity.type, status: localStatus };
         }
       }
-      return { success: true, received: true, type: activity.type, status: 'like-recorded' };
+      // Naming what happened matters: reporting `like-recorded` for a target
+      // that matched nothing told the sender its activity counted when it did
+      // not.
+      return { success: true, received: true, type: activity.type, status: 'like-unmatched' };
     }
 
     if (activity.type === 'Announce') {
@@ -2364,9 +2383,19 @@ export class FederationService implements OnModuleInit {
         if (existingPost) {
           existingPost.shareCount = (existingPost.shareCount || 0) + 1;
           await this.remotePostRepository.save(existingPost);
+          return {
+            success: true,
+            received: true,
+            type: activity.type,
+            status: 'announce-recorded',
+          };
+        }
+        const localStatus = await this.recordLocalAnnounce(targetId, activity.actor, activity.id);
+        if (localStatus) {
+          return { success: true, received: true, type: activity.type, status: localStatus };
         }
       }
-      return { success: true, received: true, type: activity.type, status: 'announce-recorded' };
+      return { success: true, received: true, type: activity.type, status: 'announce-unmatched' };
     }
 
     if (activity.type === 'Delete') {
@@ -2414,10 +2443,171 @@ export class FederationService implements OnModuleInit {
           status: removed ? 'follow-undo-processed' : 'follow-undo-noop',
         };
       }
+      if (object.type === 'Like') {
+        const status = await this.undoLocalLike(object, activity.actor);
+        if (status) {
+          return { success: true, received: true, type: activity.type, status };
+        }
+      }
+      if (object.type === 'Announce') {
+        const status = await this.undoLocalAnnounce(object, activity.actor);
+        if (status) {
+          return { success: true, received: true, type: activity.type, status };
+        }
+      }
       return { success: true, received: true, type: activity.type, status: 'undo-processed' };
     }
 
     return { success: true, received: true, type: activity.type };
+  }
+
+  /**
+   * The local post id inside an inbound Like/Announce/Undo target, or null
+   * when the target is not one of ours.
+   *
+   * We publish two id shapes for the same note — `${base}/posts/:id` from the
+   * outbox and `${base}/federation/posts/:activityId` from outbound Creates —
+   * so a peer may legitimately reference either; a bare uuid is accepted for
+   * peers that strip the origin. Locality is ultimately proven by the row
+   * existing, so the path is only a candidate filter, not the check itself.
+   */
+  private resolveLocalPostId(targetId: string | null | undefined): string | null {
+    if (!targetId) {
+      return null;
+    }
+    const uuidPattern = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+    const pathMatch = targetId.match(new RegExp(`/posts/(${uuidPattern})$`, 'i'));
+    if (pathMatch) {
+      return pathMatch[1];
+    }
+    if (new RegExp(`^${uuidPattern}$`, 'i').test(targetId)) {
+      return targetId;
+    }
+    return null;
+  }
+
+  /**
+   * Load a candidate local post for inbound engagement without leaking
+   * visibility outcomes: the guards in `PostsService.findOne` throw for gated
+   * posts, and "gated" means "not a legitimate federated target" — the same
+   * outcome as "missing".
+   */
+  private async findLocalPostForEngagement(localPostId: string): Promise<Post | null> {
+    try {
+      return (await this.postsService.findOne(localPostId)) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Inbound Like on a local post. Null when the target is not ours. */
+  private async recordLocalLike(targetId: string, actorUrl: string): Promise<string | null> {
+    const localPostId = this.resolveLocalPostId(targetId);
+    if (!localPostId || !actorUrl) {
+      return null;
+    }
+    const post = await this.findLocalPostForEngagement(localPostId);
+    if (!post) {
+      return null;
+    }
+    const recorded = await this.postsService.recordRemoteLike(post, actorUrl);
+    return recorded ? 'like-recorded' : 'like-already-recorded';
+  }
+
+  /**
+   * Inbound Announce on a local post. Null when the target is not ours.
+   *
+   * The `federation_reshares` row is written before the counter moves: it is
+   * the only evidence Undo(Like) can later trust when deciding whether this
+   * instance ever incremented the share in the first place.
+   */
+  private async recordLocalAnnounce(
+    targetId: string,
+    actorUrl: string,
+    activityId?: string
+  ): Promise<string | null> {
+    const localPostId = this.resolveLocalPostId(targetId);
+    if (!localPostId || !actorUrl) {
+      return null;
+    }
+    const post = await this.findLocalPostForEngagement(localPostId);
+    if (!post) {
+      return null;
+    }
+
+    const existing = await this.federationReshareRepository.findOne({
+      where: { localPostId: post.id, remoteActorUrl: actorUrl },
+    });
+    if (existing) {
+      return 'announce-already-recorded';
+    }
+
+    try {
+      await this.federationReshareRepository.save(
+        this.federationReshareRepository.create({
+          localPostId: post.id,
+          remoteActorUrl: actorUrl,
+          activityId: activityId ?? null,
+        })
+      );
+    } catch (error) {
+      if ((error as { code?: string })?.code === '23505') {
+        return 'announce-already-recorded';
+      }
+      throw error;
+    }
+
+    await this.postsService.adjustShareCount(post.id, 1);
+    return 'announce-recorded';
+  }
+
+  /** Undo(Like) on a local post. Null when the target is not ours. */
+  private async undoLocalLike(object: any, activityActor?: string): Promise<string | null> {
+    const targetId = typeof object.object === 'string' ? object.object : object.object?.id;
+    const localPostId = this.resolveLocalPostId(targetId);
+    if (!localPostId) {
+      return null;
+    }
+    const actorUrl = object.actor || activityActor;
+    if (!actorUrl) {
+      return 'like-undo-noop';
+    }
+    const post = await this.findLocalPostForEngagement(localPostId);
+    if (!post) {
+      return 'like-undo-noop';
+    }
+    const removed = await this.postsService.removeRemoteLike(post.id, actorUrl);
+    return removed ? 'like-undo-processed' : 'like-undo-noop';
+  }
+
+  /**
+   * Undo(Announce) on a local post. Null when the target is not ours.
+   *
+   * The counter is only decremented when the reshare row this instance
+   * inserted is actually removed — a boost we never counted cannot be
+   * un-counted.
+   */
+  private async undoLocalAnnounce(object: any, activityActor?: string): Promise<string | null> {
+    const targetId = typeof object.object === 'string' ? object.object : object.object?.id;
+    const localPostId = this.resolveLocalPostId(targetId);
+    if (!localPostId) {
+      return null;
+    }
+    const actorUrl = object.actor || activityActor;
+    if (!actorUrl) {
+      return 'announce-undo-noop';
+    }
+
+    const reshare = await this.federationReshareRepository.findOne({
+      where: { localPostId, remoteActorUrl: actorUrl },
+    });
+    if (!reshare) {
+      return 'announce-undo-noop';
+    }
+
+    await this.federationReshareRepository.remove(reshare);
+    await this.postsService.adjustShareCount(localPostId, -1);
+    return 'announce-undo-processed';
   }
 
   private async handleCreateActivity(activity: any) {

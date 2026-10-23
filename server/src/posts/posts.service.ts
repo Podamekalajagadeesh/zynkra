@@ -842,6 +842,74 @@ export class PostsService {
     return this.findOne(postId, userId);
   }
 
+  /**
+   * Record an inbound federated Like on a local post.
+   *
+   * The row carries no `user` — the liker lives in `remoteActorUrl` — because
+   * remote actors have no account here and `likes` are served as
+   * `reactions.length`, which counts rows regardless of who owns them. The
+   * partial unique index (postId, remoteActorUrl, reaction) makes a
+   * re-delivered activity a no-op; the 23505 catch closes the race between the
+   * findOne below and the insert.
+   *
+   * @returns true when a new like row was created, false when it already
+   * existed.
+   */
+  async recordRemoteLike(post: Post, remoteActorUrl: string): Promise<boolean> {
+    const existing = await this.postReactionsRepository.findOne({
+      where: { post: { id: post.id }, reaction: 'like', remoteActorUrl },
+    });
+
+    if (existing) {
+      return false;
+    }
+
+    try {
+      await this.postReactionsRepository.save(
+        this.postReactionsRepository.create({
+          post,
+          reaction: 'like',
+          remoteActorUrl,
+        })
+      );
+    } catch (error) {
+      if ((error as { code?: string })?.code === '23505') {
+        return false;
+      }
+      throw error;
+    }
+
+    return true;
+  }
+
+  /**
+   * Remove an inbound federated Like (Undo(Like) from the actor that sent it).
+   *
+   * @returns true when a row was actually removed — the distinction is what
+   * lets the inbox answer `*-processed` vs `*-noop` honestly.
+   */
+  async removeRemoteLike(postId: string, remoteActorUrl: string): Promise<boolean> {
+    const result = await this.postReactionsRepository.delete({
+      post: { id: postId },
+      reaction: 'like',
+      remoteActorUrl,
+    });
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * Adjust `shareCount` for a federated boost, which has no local user row to
+   * hang `share()` on. Callers own the idempotency record (a `federation_reshares`
+   * row) so increments and decrements pair up exactly once.
+   */
+  async adjustShareCount(postId: string, delta: number): Promise<void> {
+    if (delta >= 0) {
+      await this.postsRepository.increment({ id: postId }, 'shareCount', delta);
+    } else {
+      await this.postsRepository.decrement({ id: postId }, 'shareCount', Math.abs(delta));
+    }
+  }
+
   async update(id: string, content: string, userPayload: { userId: string }): Promise<Post> {
     await this.dataPermissions.require(userPayload.userId, DataPermission.POSTS);
     const post = await this.findOne(id, userPayload.userId);

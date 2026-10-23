@@ -145,7 +145,8 @@ function createHarness(overrides: { federationEnabled?: boolean } = {}) {
     configService,
     userService,
     { findPostsByUserId: jest.fn().mockResolvedValue([]) },
-    httpSignaturesService
+    httpSignaturesService,
+    { findOne: jest.fn().mockResolvedValue(null) }
   ) as FederationService;
 
   return { service: service as any, rows, deliveryAttemptRepository, instanceRepository };
