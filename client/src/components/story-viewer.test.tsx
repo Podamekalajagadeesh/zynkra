@@ -6,7 +6,7 @@
  * (viewer passes storyId + elementId so Poll can fetch/cast tallies).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { Story } from '../lib/types';
 import { StoryViewer } from './story-viewer';
@@ -28,7 +28,18 @@ const mocks = vi.hoisted(() => ({
     totalVotes: 1,
     myVote: 0,
   })),
-  currentUser: null as { id: string } | null,
+  getUserHighlights: vi.fn(async () => [
+    {
+      id: 'h1',
+      title: 'Best moments',
+      coverUrl: '/covers/best.jpg',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      stories: [{ id: 's0', mediaUrl: '/old.jpg' }],
+    },
+  ]),
+  createHighlight: vi.fn(async () => ({})),
+  updateHighlight: vi.fn(async () => ({})),
+  currentUser: null as { id: string; username?: string } | null,
 }));
 
 vi.mock('../lib/api', () => ({
@@ -38,6 +49,13 @@ vi.mock('../lib/api', () => ({
   addStoryReply: mocks.addStoryReply,
   getStoryPollResults: mocks.getStoryPollResults,
   voteStoryPoll: mocks.voteStoryPoll,
+  getUserHighlights: mocks.getUserHighlights,
+  createHighlight: mocks.createHighlight,
+  updateHighlight: mocks.updateHighlight,
+}));
+
+vi.mock('../hooks/useToast', () => ({
+  useToast: () => ({ addToast: vi.fn() }),
 }));
 
 vi.mock('../hooks/useUser', () => ({
@@ -127,5 +145,57 @@ describe('StoryViewer poll wiring', () => {
       expect(mocks.getStoryPollResults).toHaveBeenCalledWith('story-9', 'el-poll')
     );
     expect(mocks.getStoryViews).not.toHaveBeenCalled();
+  });
+});
+
+describe('StoryViewer highlight save', () => {
+  it('shows the Highlight action to the owner', async () => {
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+    expect(await screen.findByRole('button', { name: 'Highlight' })).toBeTruthy();
+  });
+
+  it('hides the Highlight action from non-owners', async () => {
+    mocks.currentUser = { id: 'someone-else', username: 'fan' };
+    renderViewer([makeStory()]);
+    await waitFor(() => expect(mocks.trackStoryView).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'Highlight' })).toBeNull();
+  });
+
+  it('saves the current story into an existing highlight (append, not replace)', async () => {
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Highlight' }));
+    await waitFor(() => expect(mocks.getUserHighlights).toHaveBeenCalledWith('owner'));
+
+    fireEvent.click(await screen.findByRole('button', { name: /Best moments/ }));
+
+    await waitFor(() =>
+      expect(mocks.updateHighlight).toHaveBeenCalledWith('h1', {
+        storyIds: ['s0', 'story-1'],
+      })
+    );
+    expect(mocks.createHighlight).not.toHaveBeenCalled();
+  });
+
+  it('creates a new highlight from the current story', async () => {
+    mocks.currentUser = { id: 'user-1', username: 'owner' };
+    renderViewer([makeStory()]);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Highlight' }));
+    fireEvent.change(await screen.findByLabelText('New highlight title'), {
+      target: { value: 'Favorites' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create highlight' }));
+
+    await waitFor(() =>
+      expect(mocks.createHighlight).toHaveBeenCalledWith({
+        title: 'Favorites',
+        coverUrl: '/story.jpg',
+        storyIds: ['story-1'],
+      })
+    );
+    expect(mocks.updateHighlight).not.toHaveBeenCalled();
   });
 });

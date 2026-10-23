@@ -19,6 +19,7 @@ import { StoryView } from './entities/story-view.entity';
 import { StoryPollVote } from './entities/story-poll-vote.entity';
 import { StoriesPollController } from './stories-poll.controller';
 import { StoriesPollService } from './stories-poll.service';
+import { UserHighlightsController } from './user-highlights.controller';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CustomAudience } from '../custom-audiences/entities/custom-audience.entity';
 
@@ -41,6 +42,7 @@ import { CustomAudience } from '../custom-audiences/entities/custom-audience.ent
   controllers: [
     StoriesController,
     HighlightsController,
+    UserHighlightsController,
     StoriesReactionController,
     StoriesReplyController,
     StoriesPollController,

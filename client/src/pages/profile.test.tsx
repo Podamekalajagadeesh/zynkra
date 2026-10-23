@@ -50,6 +50,28 @@ vi.mock('../lib/api', () => ({
   setNftPfp: vi.fn().mockResolvedValue(undefined),
   getNfts: vi.fn().mockResolvedValue({ ownedNfts: [] }),
   getThemes: vi.fn().mockResolvedValue([]),
+  // Highlight UI graph (strip → form modal → story viewer)
+  getUserHighlights: vi.fn().mockResolvedValue([]),
+  getHighlight: vi.fn().mockResolvedValue(null),
+  createHighlight: vi.fn().mockResolvedValue({}),
+  updateHighlight: vi.fn().mockResolvedValue({}),
+  deleteHighlight: vi.fn().mockResolvedValue(undefined),
+  getStories: vi.fn().mockResolvedValue([]),
+  // StoryViewer graph
+  addStoryReaction: vi.fn().mockResolvedValue({}),
+  addStoryReply: vi.fn().mockResolvedValue({}),
+  trackStoryView: vi.fn().mockResolvedValue({}),
+  getStoryViews: vi.fn().mockResolvedValue([]),
+  getStoryPollResults: vi.fn().mockResolvedValue({
+    optionCounts: [],
+    totalVotes: 0,
+    myVote: null,
+  }),
+  voteStoryPoll: vi.fn().mockResolvedValue({
+    optionCounts: [],
+    totalVotes: 0,
+    myVote: null,
+  }),
   api: {
     defaults: { headers: { common: {} } },
     interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },

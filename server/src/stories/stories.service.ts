@@ -167,7 +167,7 @@ export class StoriesService {
     return story;
   }
 
-  private async canViewStory(
+  async canViewStory(
     story: Story,
     viewer: Pick<User, 'id' | 'following' | 'followers' | 'closeFriendsWith'>
   ): Promise<boolean> {

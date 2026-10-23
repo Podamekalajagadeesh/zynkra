@@ -1,21 +1,32 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Story,
+  StoryHighlight,
   UserProfile,
   PostAuthor,
   ScreenshotProtectionSettings,
   StoryElement,
 } from '../lib/types';
-import { X, Send, Crown, EyeOff, Users, Search } from 'lucide-react';
+import { X, Send, Crown, EyeOff, Users, Search, Star, Plus } from 'lucide-react';
 import { Mention } from './Mention';
 import { Poll } from './poll';
-import { addStoryReaction, addStoryReply, trackStoryView, getStoryViews } from '../lib/api';
+import {
+  addStoryReaction,
+  addStoryReply,
+  trackStoryView,
+  getStoryViews,
+  getUserHighlights,
+  createHighlight,
+  updateHighlight,
+} from '../lib/api';
 import { useScreenshotProtection } from '../hooks/useScreenshotProtection';
 import { ScreenshotProtectionLevel } from '../lib/types';
 import { useIsPremium } from '../hooks/useIsPremium';
 import { useUser } from '../hooks/useUser';
+import { useToast } from '../hooks/useToast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
+import { Button } from './ui/button';
 
 const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡'];
 const ANIMATED_REACTIONS = ['🎉', '🎊', '✨', '💥', '🔥', '💖'];
@@ -40,9 +51,14 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const [isAnonymousView, setIsAnonymousView] = useState(false);
   const [storyViewers, setStoryViewers] = useState<UserProfile[]>([]);
   const [viewerSearchQuery, setViewerSearchQuery] = useState('');
+  const [isHighlightOpen, setIsHighlightOpen] = useState(false);
+  const [myHighlights, setMyHighlights] = useState<StoryHighlight[]>([]);
+  const [newHighlightTitle, setNewHighlightTitle] = useState('');
+  const [isSavingHighlight, setIsSavingHighlight] = useState(false);
   const activeStory = stories[currentIndex];
   const isPremium = useIsPremium();
   const { user: currentUser } = useUser();
+  const { addToast } = useToast();
   // The viewers endpoint is owner-only; non-owners must not call it.
   const isOwner = Boolean(activeStory && currentUser && activeStory.user.id === currentUser.id);
 
@@ -61,6 +77,23 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       setStoryViewers([]);
     }
   }, [activeStory?.id, isOwner]);
+
+  // Load the owner's highlight list when the save dialog opens.
+  useEffect(() => {
+    if (!isHighlightOpen || !isOwner || !currentUser?.username) return;
+    let cancelled = false;
+    getUserHighlights(currentUser.username)
+      .then((list) => {
+        if (!cancelled) setMyHighlights(list);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch highlights:', error);
+        if (!cancelled) setMyHighlights([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isHighlightOpen, isOwner, currentUser?.username]);
 
   // Filter viewers based on search query
   const filteredViewers = storyViewers.filter((viewer) => {
@@ -162,6 +195,44 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       setReplyText('');
     } catch (error) {
       console.error('Failed to add reply', error);
+    }
+  };
+
+  const handleSaveToExisting = async (highlight: StoryHighlight) => {
+    if (!activeStory || isSavingHighlight) return;
+    setIsSavingHighlight(true);
+    try {
+      const storyIds = [...new Set([...highlight.stories.map((s) => s.id), activeStory.id])];
+      await updateHighlight(highlight.id, { storyIds });
+      addToast(`Saved to "${highlight.title}"`, 'success');
+      setIsHighlightOpen(false);
+    } catch (error) {
+      console.error('Failed to save to highlight:', error);
+      addToast('Failed to save to highlight', 'error');
+    } finally {
+      setIsSavingHighlight(false);
+    }
+  };
+
+  const handleCreateHighlight = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmed = newHighlightTitle.trim();
+    if (!activeStory || !trimmed || isSavingHighlight) return;
+    setIsSavingHighlight(true);
+    try {
+      await createHighlight({
+        title: trimmed,
+        coverUrl: activeStory.mediaUrl,
+        storyIds: [activeStory.id],
+      });
+      addToast(`Highlight "${trimmed}" created`, 'success');
+      setNewHighlightTitle('');
+      setIsHighlightOpen(false);
+    } catch (error) {
+      console.error('Failed to create highlight:', error);
+      addToast('Failed to create highlight', 'error');
+    } finally {
+      setIsSavingHighlight(false);
     }
   };
 
@@ -301,7 +372,79 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
         {mentionElement && 'username' in mentionElement.data && (
           <Mention username={mentionElement.data.username} />
         )}
+        {/* Save-to-highlight dialog (owner only) */}
+        {isOwner && (
+          <Dialog open={isHighlightOpen} onOpenChange={setIsHighlightOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Save to highlight</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-52 space-y-1 overflow-y-auto">
+                {myHighlights.length === 0 ? (
+                  <p className="py-2 text-sm text-dark-500">
+                    No highlights yet — create your first one below.
+                  </p>
+                ) : (
+                  myHighlights.map((highlight) => (
+                    <button
+                      key={highlight.id}
+                      type="button"
+                      onClick={() => handleSaveToExisting(highlight)}
+                      disabled={isSavingHighlight}
+                      className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-dark-100 disabled:opacity-60 dark:hover:bg-dark-800"
+                    >
+                      <img
+                        src={highlight.coverUrl}
+                        alt=""
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                      <span className="min-w-0 flex-1 truncate font-medium">{highlight.title}</span>
+                      <span className="text-xs text-dark-500">
+                        {highlight.stories.length}{' '}
+                        {highlight.stories.length === 1 ? 'story' : 'stories'}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+              <form
+                onSubmit={handleCreateHighlight}
+                className="flex items-center gap-2 border-t pt-3"
+              >
+                <Input
+                  value={newHighlightTitle}
+                  onChange={(event) => setNewHighlightTitle(event.target.value)}
+                  placeholder="New highlight title"
+                  maxLength={100}
+                  aria-label="New highlight title"
+                  className="flex-1"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!newHighlightTitle.trim() || isSavingHighlight}
+                  aria-label="Create highlight"
+                >
+                  <Plus size={14} className="mr-1" />
+                  Create
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
         <div className="absolute bottom-4 left-4 right-4">
+          {/* Owner-only: save this story into a highlight */}
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => setIsHighlightOpen(true)}
+              aria-label="Highlight"
+              className="mb-2 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-black/60"
+            >
+              <Star size={14} />
+              Highlight
+            </button>
+          )}
           {/* Standard reactions */}
           <div className="flex justify-center space-x-2 mb-2">
             {REACTIONS.map((reaction) => (

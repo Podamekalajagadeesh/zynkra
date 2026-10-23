@@ -25,6 +25,7 @@ import { StoriesReplyController } from '../src/stories/stories-reply.controller'
 import { StoriesReplyService } from '../src/stories/stories-reply.service';
 import { HighlightsController } from '../src/stories/highlights.controller';
 import { HighlightsService } from '../src/stories/highlights.service';
+import { UserHighlightsController } from '../src/stories/user-highlights.controller';
 import { StoriesPollController } from '../src/stories/stories-poll.controller';
 import { StoriesPollService } from '../src/stories/stories-poll.service';
 import { LoginSession } from '../src/auth/entities/login-session.entity';
@@ -53,6 +54,7 @@ function createModule(overrides: Record<string, any> = {}) {
       StoriesReactionController,
       StoriesReplyController,
       HighlightsController,
+      UserHighlightsController,
       StoriesPollController,
     ],
     providers: [
@@ -80,6 +82,7 @@ function createModule(overrides: Record<string, any> = {}) {
           create: jest.fn(),
           findAll: jest.fn(),
           findOne: jest.fn(),
+          findForUser: jest.fn(),
           update: jest.fn(),
           remove: jest.fn(),
           ...overrides.highlights,
@@ -419,7 +422,7 @@ describe('stories highlights', () => {
     expect(r.status).toBe(201);
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Best moments', storyIds: ['story-1'] }),
-      expect.objectContaining({ userId: 'user-1' })
+      'user-1'
     );
     await app.close();
   });
@@ -462,7 +465,7 @@ describe('stories highlights', () => {
       .send({ title: 'Renamed' });
 
     expect(r.status).toBe(200);
-    expect(update).toHaveBeenCalledWith('h1', { title: 'Renamed' }, expect.anything());
+    expect(update).toHaveBeenCalledWith('h1', { title: 'Renamed' }, 'user-1');
     await app.close();
   });
 
@@ -497,6 +500,43 @@ describe('stories highlights', () => {
 
     const r = await request(app.getHttpServer())
       .get('/stories/highlights/missing')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(404);
+    await app.close();
+  });
+});
+
+describe('GET /users/:username/highlights', () => {
+  it('forwards the username and caller to the visibility-scoped list', async () => {
+    const findForUser = jest.fn().mockResolvedValue([{ id: 'h1', title: 'Best' }]);
+    const { app, token } = await buildApp({ highlights: { findForUser } });
+
+    const r = await request(app.getHttpServer())
+      .get('/users/bob/highlights')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(r.status).toBe(200);
+    expect(findForUser).toHaveBeenCalledWith('bob', 'user-1');
+    expect(r.body).toEqual([{ id: 'h1', title: 'Best' }]);
+    await app.close();
+  });
+
+  it('returns 401 without auth', async () => {
+    const { app } = await buildApp();
+
+    const r = await request(app.getHttpServer()).get('/users/bob/highlights');
+
+    expect(r.status).toBe(401);
+    await app.close();
+  });
+
+  it('returns 404 for an unknown username', async () => {
+    const findForUser = jest.fn().mockRejectedValue(new NotFoundException('User not found'));
+    const { app, token } = await buildApp({ highlights: { findForUser } });
+
+    const r = await request(app.getHttpServer())
+      .get('/users/ghost/highlights')
       .set('Authorization', `Bearer ${token}`);
 
     expect(r.status).toBe(404);

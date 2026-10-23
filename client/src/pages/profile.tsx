@@ -42,6 +42,8 @@ import {
 } from '../lib/api';
 import { PageShell } from '../components/PageShell';
 import { RichText } from '../components/RichText';
+import { HighlightsStrip } from '../components/highlights-strip';
+import { StoryViewer } from '../components/story-viewer';
 import { useAuth } from '../hooks/useAuth';
 import { useAccount, useBalance, useSignMessage } from 'wagmi';
 import { ConnectButton } from '../components/wallet/ConnectButton';
@@ -51,7 +53,7 @@ import { PostList } from '../components/post-list';
 import { ProfileQrModal } from '../components/ProfileQrModal';
 import { useEnsName } from '../hooks/useEnsName';
 import { VerificationBadge } from '../components/VerificationBadge';
-import type { Post, UserProfile, ThemeDefinition } from '../lib/types';
+import type { Post, UserProfile, ThemeDefinition, Story } from '../lib/types';
 
 interface ExtendedUserProfile extends UserProfile {
   profileAccentColor?: string | null;
@@ -107,6 +109,7 @@ export function ProfilePage() {
   const [nfts, setNfts] = useState<Nft[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
   const [isSettingPfp, setIsSettingPfp] = useState<string | null>(null);
+  const [highlightViewerStories, setHighlightViewerStories] = useState<Story[] | null>(null);
 
   useEffect(() => {
     getThemes()
@@ -664,6 +667,21 @@ export function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {user && (
+            <HighlightsStrip
+              username={user.username}
+              isOwnProfile={Boolean(currentUserId && user.id === currentUserId)}
+              onOpenStories={(stories) => setHighlightViewerStories(stories)}
+            />
+          )}
+          {highlightViewerStories && (
+            <StoryViewer
+              stories={highlightViewerStories}
+              initialStoryIndex={0}
+              onClose={() => setHighlightViewerStories(null)}
+            />
+          )}
 
           {featuredPosts.length > 0 && (
             <div className="space-y-4">

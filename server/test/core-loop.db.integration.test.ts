@@ -726,3 +726,150 @@ describe('Story poll voting over real Postgres', () => {
     expect(elementRows[0].count).toBe(0);
   });
 });
+
+describe('Profile highlights (visibility-scoped read) over real Postgres', () => {
+  it('filters other users highlights by story visibility, blocks, and order; sanitizes create', async () => {
+    const http = () => request(app.getHttpServer());
+    const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
+    const signUp = async (username: string, email: string): Promise<string> => {
+      const captchaRes = await http().get('/auth/captcha').expect(200);
+      const { id: captchaId, expression } = captchaRes.body;
+      const [a, b] = String(expression)
+        .split(' + ')
+        .map((part: string) => parseInt(part.trim(), 10));
+      await http()
+        .post('/auth/signup')
+        .send({
+          username,
+          email,
+          password: PASSWORD,
+          birthDate: '2000-01-01',
+          captchaId,
+          captchaAnswer: String(a + b),
+        })
+        .expect(201);
+      const user = await dataSource.getRepository(User).findOneByOrFail({ username });
+      const verify = await http()
+        .post('/auth/verify-code')
+        .send({ email, code: user.emailVerificationToken })
+        .expect(200);
+      return verify.body.access_token as string;
+    };
+    const userIdOf = async (username: string): Promise<string> =>
+      (await dataSource.getRepository(User).findOneByOrFail({ username })).id;
+    const setVisibility = async (username: string, value: string): Promise<void> => {
+      await dataSource.query(`UPDATE users SET "storyVisibility" = $1 WHERE username = $2`, [
+        value,
+        username,
+      ]);
+    };
+
+    const ownerToken = await signUp('hlv_owner', 'hlv_owner@example.com');
+    const strangerToken = await signUp('hlv_stranger', 'hlv_stranger@example.com');
+    const ownerId = await userIdOf('hlv_owner');
+    const strangerId = await userIdOf('hlv_stranger');
+    await setVisibility('hlv_owner', 'public');
+
+    // Owner creates two stories and two highlights; backdate h1 so order is pinned.
+    const storyA = await http()
+      .post('/stories')
+      .set(bearer(ownerToken))
+      .field('textContent', 'story A')
+      .expect(201);
+    const storyB = await http()
+      .post('/stories')
+      .set(bearer(ownerToken))
+      .field('textContent', 'story B')
+      .expect(201);
+    const h1 = await http()
+      .post('/stories/highlights')
+      .set(bearer(ownerToken))
+      .send({ title: 'First', coverUrl: '/c1.jpg', storyIds: [storyA.body.id] })
+      .expect(201);
+    const h2 = await http()
+      .post('/stories/highlights')
+      .set(bearer(ownerToken))
+      .send({ title: 'Second', coverUrl: '/c2.jpg', storyIds: [storyB.body.id] })
+      .expect(201);
+
+    // ── sanitized create response: real User entity, not the JWT principal ──
+    // (This harness has no ClassSerializerInterceptor, so entity columns are
+    // visible; the structural fix is that principal-only keys are gone.)
+    expect(h2.body.user).toMatchObject({ id: ownerId, username: 'hlv_owner' });
+    expect(h2.body.user).not.toHaveProperty('userId');
+    expect(h2.body.user).not.toHaveProperty('sessionId');
+
+    await dataSource.query(`UPDATE story_highlights SET "createdAt" = now() - interval '1 day' WHERE id = $1`, [
+      h1.body.id,
+    ]);
+
+    // ── public: stranger sees both, newest first ───────────────────────────
+    const publicList = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(publicList.body.map((h: { id: string }) => h.id)).toEqual([h2.body.id, h1.body.id]);
+    expect(publicList.body[0].stories).toHaveLength(1);
+
+    // Owner sees their own list regardless of visibility setting.
+    await setVisibility('hlv_owner', 'only_me');
+    const ownList = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(ownerToken))
+      .expect(200);
+    expect(ownList.body).toHaveLength(2);
+
+    // only_me: the stranger's view collapses to an empty list.
+    const hidden = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(hidden.body).toEqual([]);
+
+    // ── followers: needs the viewer to follow the owner ────────────────────
+    await setVisibility('hlv_owner', 'followers');
+    const notFollowing = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(notFollowing.body).toEqual([]);
+    await http().post(`/users/${ownerId}/follow`).set(bearer(strangerToken)).expect(204);
+    const following = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(following.body).toHaveLength(2);
+
+    // ── friends: needs a mutual follow ─────────────────────────────────────
+    await setVisibility('hlv_owner', 'friends');
+    const notMutual = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(notMutual.body).toEqual([]);
+    await http().post(`/users/${strangerId}/follow`).set(bearer(ownerToken)).expect(204);
+    const mutual = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(mutual.body).toHaveLength(2);
+
+    // ── blocks hide the list from either side ──────────────────────────────
+    await http().post(`/users/${strangerId}/block`).set(bearer(ownerToken)).expect(204);
+    const blockedByOwner = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(blockedByOwner.body).toEqual([]);
+    await http().delete(`/users/${strangerId}/block`).set(bearer(ownerToken)).expect(204);
+    await http().post(`/users/${ownerId}/block`).set(bearer(strangerToken)).expect(204);
+    const blockerView = await http()
+      .get('/users/hlv_owner/highlights')
+      .set(bearer(strangerToken))
+      .expect(200);
+    expect(blockerView.body).toEqual([]);
+
+    // ── unknown username → 404 ─────────────────────────────────────────────
+    await http().get('/users/hlv_ghost/highlights').set(bearer(strangerToken)).expect(404);
+  });
+});

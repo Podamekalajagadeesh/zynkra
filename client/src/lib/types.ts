@@ -561,6 +561,15 @@ export interface StoryPollResults {
   myVote: number | null;
 }
 
+/** A curated collection of a user's stories shown on their profile. */
+export interface StoryHighlight {
+  id: string;
+  title: string;
+  coverUrl: string;
+  createdAt: string;
+  stories: Story[];
+}
+
 export interface Tag {
   id: string;
   name: string;

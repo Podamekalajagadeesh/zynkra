@@ -21,7 +21,7 @@ export class HighlightsController {
 
   @Post()
   create(@Body() createHighlightDto: CreateHighlightDto, @Request() req) {
-    return this.highlightsService.create(createHighlightDto, req.user);
+    return this.highlightsService.create(createHighlightDto, req.user.userId);
   }
 
   @Get()
@@ -36,11 +36,11 @@ export class HighlightsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateHighlightDto: UpdateHighlightDto, @Request() req) {
-    return this.highlightsService.update(id, updateHighlightDto, req.user);
+    return this.highlightsService.update(id, updateHighlightDto, req.user.userId);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
-    return this.highlightsService.remove(id, req.user);
+    return this.highlightsService.remove(id, req.user.userId);
   }
 }

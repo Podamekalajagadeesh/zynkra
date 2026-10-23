@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Story } from './story.entity';
 
@@ -12,6 +20,9 @@ export class StoryHighlight {
 
   @Column()
   coverUrl: string;
+
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  createdAt: Date;
 
   @ManyToOne(() => User, { eager: true })
   user: User;

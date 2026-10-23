@@ -2130,6 +2130,37 @@ export const voteStoryPoll = async (storyId: string, elementId: string, optionIn
   return response.data;
 };
 
+export const getUserHighlights = async (username: string) => {
+  const response = await api.get(`/users/${encodeURIComponent(username)}/highlights`);
+  return response.data;
+};
+
+export const getHighlight = async (highlightId: string) => {
+  const response = await api.get(`/stories/highlights/${highlightId}`);
+  return response.data;
+};
+
+export const createHighlight = async (data: {
+  title: string;
+  coverUrl: string;
+  storyIds: string[];
+}) => {
+  const response = await api.post('/stories/highlights', data);
+  return response.data;
+};
+
+export const updateHighlight = async (
+  highlightId: string,
+  data: { title?: string; coverUrl?: string; storyIds?: string[] }
+) => {
+  const response = await api.patch(`/stories/highlights/${highlightId}`, data);
+  return response.data;
+};
+
+export const deleteHighlight = async (highlightId: string) => {
+  await api.delete(`/stories/highlights/${highlightId}`);
+};
+
 export const getNfts = async (walletAddress: string) => {
   const response = await api.get(`/wallet/nfts/${walletAddress}`);
   return response.data;
