@@ -122,9 +122,30 @@ tipping paths).
 
 `ROADMAP.md` Phase 4. Platform system (**Federation**) + graph effects in **system 03**.
 
-- Remaining: real-Mastodon interop test (follow, post, boost, reply, both directions),
-  outbound `Update`, key caching, remote posts in the main read model. Delivery
-  dead-letter queue ✅ (retained attempts + scheduled redrive + admin redrive API).
+- **Section A (functional gaps) complete — three passes, 2026-10-23:**
+  - outbound `Follow` & `Undo(Follow)` recorded on the `federation_outbox` ledger
+    (`d4dd0d3a8`);
+  - direct reply/mention delivery to the addressed actor's inbox across instance
+    domains, SSRF-guarded and deduped against follower fan-out (`d4dd0d3a8`);
+  - Announce (boost) fan-out to followers + `Undo(Announce)` retargeting the ledger's
+    `deliveredTo` (`d4dd0d3a8`);
+  - actor key LRU caching (10 min positive / 45 s negative TTL, single-flight) with
+    one-shot rotation recovery (`70b535c66`);
+  - inbound inbox rate limiting — per-IP/per-actor/key-fetch budgets, 429 +
+    `Retry-After`, before any outbound key work (`70b535c66`);
+  - inbound `Like`/`Announce`/`Undo` engagement on **local** posts persisted
+    (`post_reactions.remoteActorUrl` + `federation_reshares`, idempotent, Undo
+    decrements only what was counted) (`5bd4132c0`);
+  - `endpoints.sharedInbox` advertised on the actor document and
+    `application/activity+json` served by actor/followers/following/outbox
+    (`5bd4132c0`).
+  - Also previously closed: outbound `Like`/`Undo(Like)`, `Update`, retraction,
+    delivery report + dead-letter queue, inbound follow persistence, signed+verified
+    inbox, federated timeline.
+- Remaining: **only the live network interop verification run (Sections C/D)** — a real
+  external/tunneled Mastodon instance proving follow/post/boost/reply both directions.
+  Non-blocking note: remote posts still render from a separate read model rather than
+  the local `posts` table.
 - Exit: a Mastodon user follows a Zynkra user and sees their posts, and vice versa.
 
 ### Wave 5 — Data ownership & portability
@@ -269,7 +290,7 @@ platform + skills**, not 15 separate products.
 | **Security & compliance** | Platform squad | quarterly pen-test, SOC2-ready audit logs, GDPR export/delete SLAs, age/child safety gates, moderation transparency reports |
 | **SRE / scale**           | Platform squad | p95 budgets per surface, load tests per wave exit, on-call runbooks, cost/feature dashboards                                |
 | **Mobile parity**         | Mobile squad   | every wave's features ship with mobile parity checklist; Wave 7 establishes the sync engine                                 |
-| **Federation expansion**  | Platform squad | after Wave 4 exit: Like/Update, shared-inbox scaling, key caching, dead-letter UI                                           |
+| **Federation expansion**  | Platform squad | after Wave 4 exit: shared-inbox load scaling, dead-letter admin UI, remote posts in the main read model                     |
 | **Docs & API**            | Each squad     | API_DOCUMENTATION.md updated in the same PR as any endpoint change                                                          |
 
 ---
