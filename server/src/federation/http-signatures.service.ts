@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InstanceKey } from './entities/instance-key.entity';
@@ -53,6 +53,42 @@ function isPrivateAddress(address: string): boolean {
 }
 
 /**
+ * Inbox budget exhausted for a remote IP, actor, or key-fetch allowance.
+ *
+ * A subclass of `HttpException` (so callers can still `instanceof` and
+ * `getStatus() === 429`), carrying the `Retry-After` delay that the
+ * federation exception filter writes as a response header — Nest's stock
+ * `HttpException` cannot attach headers, and a peer that receives a bare 429
+ * has no idea how long to back off.
+ */
+export class InboxRateLimitException extends HttpException {
+  constructor(
+    readonly retryAfterSeconds: number,
+    message: string
+  ) {
+    super(
+      {
+        statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        error: 'Too Many Requests',
+        message,
+      },
+      HttpStatus.TOO_MANY_REQUESTS
+    );
+  }
+}
+
+interface ActorKeyCacheEntry {
+  /** Cached PEM, or null for a negative entry (the fetch failed). */
+  pem: string | null;
+  expiresAt: number;
+}
+
+interface RateWindow {
+  windowStart: number;
+  count: number;
+}
+
+/**
  * HTTP Signatures service (draft-cavage-http-signatures-10).
  *
  * Mastodon, Pixelfed, and most ActivityPub implementations require
@@ -63,6 +99,9 @@ function isPrivateAddress(address: string): boolean {
  *  2. Signs outgoing requests with RSA-SHA256
  *  3. Adds the required Digest header for POST bodies
  *  4. Verifies *inbound* signatures (added when the signed-inbox gap was closed)
+ *  5. Caches remote actor keys (LRU + TTL + negative cache) and enforces
+ *     inbound inbox rate budgets (added when the per-request key fetch and
+ *     unbounded inbox became an amplification vector)
  */
 @Injectable()
 export class HttpSignaturesService {
@@ -70,11 +109,58 @@ export class HttpSignaturesService {
   private cachedPrivateKey: string | null = null;
   private cachedPublicKey: string | null = null;
 
+  /**
+   * Remote actor key cache: bounded LRU keyed by actor URL. Insertion order
+   * doubles as recency order — a hit or a store re-inserts the entry, so
+   * `keys().next()` is always the least recently used. Entries are public keys,
+   * so a per-process map needs no cross-instance coherence.
+   */
+  private readonly actorKeyCache = new Map<string, ActorKeyCacheEntry>();
+  /** Single-flight: concurrent misses for one actor share one fetch promise. */
+  private readonly actorKeyInflight = new Map<string, Promise<string | null>>();
+  /** Fixed 60s windows for the inbox budgets, keyed `scope:subject`. */
+  private readonly rateWindows = new Map<string, RateWindow>();
+
   constructor(
     @InjectRepository(InstanceKey)
     private readonly instanceKeyRepository: Repository<InstanceKey>,
     private readonly configService?: ConfigService
   ) {}
+
+  /** Positive remote-key TTL in ms (default 10 min). */
+  private get keyCacheTtlMs(): number {
+    return this.numericConfig('FEDERATION_KEY_CACHE_TTL_SECONDS', 600) * 1000;
+  }
+
+  /** Negative (failed-fetch) TTL in ms (default 45 s). */
+  private get keyCacheNegativeTtlMs(): number {
+    return this.numericConfig('FEDERATION_KEY_CACHE_NEGATIVE_TTL_SECONDS', 45) * 1000;
+  }
+
+  /** LRU capacity (default 1000). */
+  private get keyCacheMax(): number {
+    return this.numericConfig('FEDERATION_KEY_CACHE_MAX', 1000);
+  }
+
+  private get inboxIpPerMinute(): number {
+    return this.numericConfig('FEDERATION_INBOX_IP_PER_MIN', 240);
+  }
+
+  private get inboxActorPerMinute(): number {
+    return this.numericConfig('FEDERATION_INBOX_ACTOR_PER_MIN', 120);
+  }
+
+  private get keyFetchPerMinute(): number {
+    return this.numericConfig('FEDERATION_KEY_FETCH_IP_PER_MIN', 30);
+  }
+
+  /** Read a positive-integer config value, falling back on absent/invalid input. */
+  private numericConfig(key: string, fallback: number): number {
+    const raw = this.configService?.get<string | number>(key);
+    if (raw === undefined || raw === null || raw === '') return fallback;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : fallback;
+  }
 
   /**
    * Whether inbound activities must carry a valid HTTP Signature.
@@ -390,6 +476,212 @@ export class HttpSignaturesService {
     } catch (error) {
       this.logger.warn(`Failed to fetch public key for ${actorUrl}: ${(error as Error).message}`);
       return null;
+    }
+  }
+
+  /**
+   * Resolve an actor's public key through the local LRU cache.
+   *
+   * The inbox takes one full SSRF-guarded network round trip per request when
+   * this is a plain `fetchActorPublicKey` — on a busy feed that is thousands of
+   * outbound GETs a minute for keys that change only on rotation. Cache layers:
+   *
+   *  - fresh positive entry → return the PEM, zero network
+   *  - fresh negative entry → return null, zero network (a dead actor is not
+   *    worth re-querying on every post it sends)
+   *  - miss/expired → single-flight fetch shared by concurrent callers, then
+   *    store positive for 10 min / negative for 45 s
+   *  - `refresh: true` → bypass and overwrite; used for key rotation
+   */
+  async getActorPublicKey(
+    actorUrl: string,
+    options: { refresh?: boolean } = {}
+  ): Promise<string | null> {
+    if (!options.refresh) {
+      const entry = this.actorKeyCache.get(actorUrl);
+      if (entry && entry.expiresAt > Date.now()) {
+        // LRU touch: re-insert so this entry becomes the most recently used.
+        this.actorKeyCache.delete(actorUrl);
+        this.actorKeyCache.set(actorUrl, entry);
+        return entry.pem;
+      }
+    }
+
+    const inflight = this.actorKeyInflight.get(actorUrl);
+    if (inflight) return inflight;
+
+    const fetchPromise = (async () => {
+      // `fetchActorPublicKey` handles its own failures, but the catch keeps a
+      // surprise throw from poisoning the single-flight waiters with a rejection
+      // nobody turns into a negative entry.
+      const pem = await this.fetchActorPublicKey(actorUrl, actorUrl).catch(() => null);
+      const ttlMs = pem ? this.keyCacheTtlMs : this.keyCacheNegativeTtlMs;
+      this.storeActorKey(actorUrl, pem, Date.now() + ttlMs);
+      return pem;
+    })();
+    this.actorKeyInflight.set(actorUrl, fetchPromise);
+
+    try {
+      return await fetchPromise;
+    } finally {
+      this.actorKeyInflight.delete(actorUrl);
+    }
+  }
+
+  /** Store (or overwrite) an entry, evicting least-recently-used beyond capacity. */
+  private storeActorKey(actorUrl: string, pem: string | null, expiresAt: number): void {
+    this.actorKeyCache.delete(actorUrl);
+    while (this.actorKeyCache.size >= this.keyCacheMax) {
+      const oldest = this.actorKeyCache.keys().next().value;
+      if (oldest === undefined) break;
+      this.actorKeyCache.delete(oldest);
+    }
+    this.actorKeyCache.set(actorUrl, { pem, expiresAt });
+  }
+
+  /**
+   * Verify an inbound inbox request end to end: rate budgets, signature parse,
+   * actor match, key resolution (cached), and verification with a single
+   * rotation re-fetch.
+   *
+   * Everything lives here rather than in the controller because the expensive
+   * and abusable parts — outbound key fetches and unauthenticated inbox POSTs —
+   * must be budgeted before they run, and only this service sees the cache.
+   *
+   * Budget order (cheap checks first, network last):
+   *   1. per-IP inbox verifications — always, even when verification is off
+   *   2. per-actor verifications — one actor cannot starve the inbox
+   *   3. per-IP key-fetch misses — hard cap on outbound amplification from
+   *      rotating keyIds (cache hits consume none of this)
+   *
+   * Throws `InboxRateLimitException` (429 + Retry-After) on budget breaches and
+   * `HttpException` (401) on verification failures — identical messages to the
+   * ones the controller used before this moved in.
+   */
+  async verifyInboundRequest(params: {
+    method: string;
+    path: string;
+    headers: Record<string, string | string[] | undefined>;
+    rawBody: Buffer | string | null;
+    activity: any;
+    remoteIp?: string | null;
+  }): Promise<void> {
+    const remoteIp = params.remoteIp || 'unknown';
+    this.consumeBudget('inbox:ip', remoteIp, this.inboxIpPerMinute);
+
+    if (!this.isInboundVerificationRequired()) return;
+
+    // Multiple Signature headers are not a thing; a non-string value (e.g. an
+    // array) is treated as absent, exactly as the controller's parse did.
+    const rawSignature = params.headers?.signature;
+    const parsed = this.parseSignatureHeader(
+      typeof rawSignature === 'string' ? rawSignature : undefined
+    );
+    if (!parsed) {
+      throw new HttpException(
+        'Missing or malformed HTTP Signature header',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    // The keyId identifies the signing actor: `https://host/users/alice#main-key`.
+    // The fragment is not part of the fetchable URL.
+    const actorUrl = parsed.keyId.split('#')[0];
+    if (!actorUrl) {
+      throw new HttpException('Signature keyId is not a valid actor URL', HttpStatus.UNAUTHORIZED);
+    }
+
+    // A signature proves control of the key, not that the activity came from that
+    // actor. Without this check, any server with a valid key could attribute its
+    // activity to a third party by setting `actor` to someone else's URL.
+    if (params.activity?.actor && params.activity.actor !== actorUrl) {
+      throw new HttpException(
+        'Activity actor does not match the signing keyId',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    this.consumeBudget('inbox:actor', actorUrl, this.inboxActorPerMinute);
+
+    const cachedEntry = this.actorKeyCache.get(actorUrl);
+    const fromFreshCache = !!cachedEntry && cachedEntry.expiresAt > Date.now();
+    if (!fromFreshCache) {
+      this.consumeBudget('keyfetch:ip', remoteIp, this.keyFetchPerMinute);
+    }
+
+    const publicKeyPem = await this.getActorPublicKey(actorUrl);
+    if (!publicKeyPem) {
+      throw new HttpException(
+        'Could not resolve the signing actor public key',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+
+    const attempt = (pem: string) =>
+      this.verifyRequestSignature({
+        method: params.method,
+        path: params.path,
+        headers: params.headers,
+        rawBody: params.rawBody,
+        publicKeyPem: pem,
+        parsed,
+      });
+
+    let result = attempt(publicKeyPem);
+
+    // Key rotation: the cached PEM is stale and no longer matches what the peer
+    // signs with. Re-fetch once (bypassing the cache) and re-verify against the
+    // published key before rejecting — without this, every peer breaks for a
+    // full positive TTL the moment they rotate. Only worth trying when the key
+    // came from cache: a just-fetched key is already the published one.
+    if (!result.valid && fromFreshCache) {
+      this.consumeBudget('keyfetch:ip', remoteIp, this.keyFetchPerMinute);
+      const refreshed = await this.getActorPublicKey(actorUrl, { refresh: true });
+      if (refreshed && refreshed !== publicKeyPem) {
+        result = attempt(refreshed);
+      }
+    }
+
+    if (!result.valid) {
+      throw new HttpException(`Invalid HTTP Signature: ${result.reason}`, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  /**
+   * Fixed 60s-window budget check. First call in a window opens it; breaching
+   * the limit throws 429 with the seconds remaining in the window.
+   *
+   * The window map is bounded by a sweep of expired windows once it grows past
+   * a few thousand keys (many distinct remote IPs), so a flood of unique
+   * subjects cannot grow it without limit.
+   */
+  private consumeBudget(scope: string, subject: string, limit: number): void {
+    const now = Date.now();
+    const windowMs = 60_000;
+    const key = `${scope}:${subject}`;
+
+    if (this.rateWindows.size > 5_000) {
+      for (const [k, w] of this.rateWindows) {
+        if (now - w.windowStart >= windowMs) this.rateWindows.delete(k);
+      }
+    }
+
+    let window = this.rateWindows.get(key);
+    if (!window || now - window.windowStart >= windowMs) {
+      window = { windowStart: now, count: 0 };
+      this.rateWindows.set(key, window);
+    }
+
+    window.count += 1;
+    if (window.count > limit) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((window.windowStart + windowMs - now) / 1000)
+      );
+      throw new InboxRateLimitException(
+        retryAfterSeconds,
+        `Rate limit exceeded for ${scope.replace(':', ' ')} — retry in ${retryAfterSeconds}s`
+      );
     }
   }
 

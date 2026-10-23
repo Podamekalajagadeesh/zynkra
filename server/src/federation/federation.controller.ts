@@ -11,9 +11,11 @@ import {
   Query,
   Req,
   ParseUUIDPipe,
+  UseFilters,
 } from '@nestjs/common';
 import { FederationService } from './federation.service';
 import { HttpSignaturesService } from './http-signatures.service';
+import { FederationExceptionFilter } from './federation-exception.filter';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 // Canonical path. `auth/guards/optional-jwt-auth.guard.ts` re-exports this, so
 // both import paths resolve to one implementation — two classes with the same
@@ -32,6 +34,10 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('federation')
+// Bound at controller level so inbox 429s get their `Retry-After` header
+// written (see the filter). Everything else is response-identical to Nest's
+// default handler.
+@UseFilters(FederationExceptionFilter)
 export class FederationController {
   constructor(
     private readonly federationService: FederationService,
@@ -334,7 +340,7 @@ export class FederationController {
 
   @Post('/inbox')
   async sharedInbox(@Body() activity: any, @Req() req: any) {
-    await this.assertSignedInbound(req, activity);
+    await this.verifyInbound(req, activity);
     return this.federationService.processSharedInbox(activity);
   }
 
@@ -360,70 +366,32 @@ export class FederationController {
 
   @Post('users/:username/inbox')
   async userInbox(@Param('username') username: string, @Body() activity: any, @Req() req: any) {
-    await this.assertSignedInbound(req, activity);
+    await this.verifyInbound(req, activity);
     return this.federationService.processUserInbox(username, activity);
   }
 
   /**
-   * Reject inbound activities that do not carry a verifiable HTTP Signature.
+   * Delegate inbound signature verification to `HttpSignaturesService`.
    *
    * Both inbox endpoints are unauthenticated by design — ActivityPub has no
    * bearer tokens — so before this existed, *anyone* could POST a `Follow` or
    * `Create` and have it persisted and answered with an `Accept`. The signature
    * is the only thing that distinguishes a real remote server from a forged
-   * request, so it is verified here rather than trusted.
+   * request. Rate budgets, key caching, and rotation re-fetch all live with the
+   * keys in the service; this stays a one-liner on purpose.
    *
    * `rawBody` is used, never the parsed object: re-serializing would not
    * reproduce the exact bytes that were signed.
    */
-  private async assertSignedInbound(req: any, activity: any): Promise<void> {
-    if (!this.httpSignaturesService.isInboundVerificationRequired()) return;
-
-    const parsed = this.httpSignaturesService.parseSignatureHeader(req?.headers?.signature);
-    if (!parsed) {
-      throw new HttpException(
-        'Missing or malformed HTTP Signature header',
-        HttpStatus.UNAUTHORIZED
-      );
-    }
-
-    // The keyId identifies the signing actor: `https://host/users/alice#main-key`.
-    // The fragment is not part of the fetchable URL.
-    const actorUrl = parsed.keyId.split('#')[0];
-    if (!actorUrl) {
-      throw new HttpException('Signature keyId is not a valid actor URL', HttpStatus.UNAUTHORIZED);
-    }
-
-    // A signature proves control of the key, not that the activity came from that
-    // actor. Without this check, any server with a valid key could attribute its
-    // activity to a third party by setting `actor` to someone else's URL.
-    if (activity?.actor && activity.actor !== actorUrl) {
-      throw new HttpException(
-        'Activity actor does not match the signing keyId',
-        HttpStatus.UNAUTHORIZED
-      );
-    }
-
-    const publicKeyPem = await this.httpSignaturesService.fetchActorPublicKey(actorUrl, actorUrl);
-    if (!publicKeyPem) {
-      throw new HttpException(
-        'Could not resolve the signing actor public key',
-        HttpStatus.UNAUTHORIZED
-      );
-    }
-
-    const result = this.httpSignaturesService.verifyRequestSignature({
+  private verifyInbound(req: any, activity: any): Promise<void> {
+    return this.httpSignaturesService.verifyInboundRequest({
       method: req.method,
       path: req.originalUrl || req.url,
       headers: req.headers || {},
       rawBody: req.rawBody ?? null,
-      publicKeyPem,
-      parsed,
+      activity,
+      remoteIp: req.ip ?? req.socket?.remoteAddress ?? null,
     });
-
-    if (!result.valid) {
-      throw new HttpException(`Invalid HTTP Signature: ${result.reason}`, HttpStatus.UNAUTHORIZED);
-    }
   }
 }
 

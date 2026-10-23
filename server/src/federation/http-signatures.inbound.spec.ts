@@ -1,7 +1,8 @@
 import * as crypto from 'crypto';
-import { Logger } from '@nestjs/common';
+import { HttpException, Logger } from '@nestjs/common';
 import axios from 'axios';
-import { HttpSignaturesService } from './http-signatures.service';
+import { HttpSignaturesService, InboxRateLimitException } from './http-signatures.service';
+import { FederationExceptionFilter } from './federation-exception.filter';
 
 let service: any;
 let publicKeyPem: string;
@@ -25,6 +26,68 @@ function makeService(configOverrides: Record<string, string> = {}) {
     get: (key: string, fallback?: any) =>
       config[key] !== undefined ? config[key] : (fallback ?? null),
   });
+}
+
+function generateRemotePair() {
+  return crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+}
+
+/**
+ * Build the full `verifyInboundRequest` parameter set for a *valid* signed
+ * POST /inbox from `actorUrl`, signed with `remotePrivateKey`.
+ */
+function inboxRequest(
+  actorUrl: string,
+  remotePrivateKey: string,
+  options: { remoteIp?: string; activity?: any } = {}
+) {
+  const body = JSON.stringify(
+    options.activity ?? { type: 'Follow', actor: actorUrl, object: 'https://zynkra.test/x' }
+  );
+  const date = new Date().toUTCString();
+  const digest = digestOf(body);
+  const signingString = [
+    '(request-target): post /inbox',
+    'host: zynkra.test',
+    `date: ${date}`,
+    `digest: ${digest}`,
+  ].join('\n');
+  const signature = crypto
+    .createSign('rsa-sha256')
+    .update(signingString, 'utf8')
+    .sign(remotePrivateKey, 'base64');
+  const signatureHeader =
+    `keyId="${actorUrl}#main-key",algorithm="rsa-sha256",` +
+    `headers="(request-target) host date digest",signature="${signature}"`;
+
+  return {
+    method: 'POST',
+    path: '/inbox',
+    headers: { host: 'zynkra.test', date, digest, signature: signatureHeader },
+    rawBody: Buffer.from(body, 'utf8'),
+    activity: JSON.parse(body),
+    remoteIp: options.remoteIp ?? '198.51.100.10',
+  };
+}
+
+/** A syntactically parseable but cryptographically bogus signed request. */
+function garbageSignatureRequest(actorUrl: string, remoteIp = '198.51.100.10') {
+  return {
+    method: 'POST',
+    path: '/inbox',
+    headers: {
+      host: 'zynkra.test',
+      date: new Date().toUTCString(),
+      signature: `keyId="${actorUrl}#main-key",algorithm="rsa-sha256",headers="date",signature="AAAA"`,
+    },
+    rawBody: null,
+    activity: { type: 'Create', actor: actorUrl },
+    remoteIp,
+  };
 }
 
 beforeAll(() => {
@@ -579,5 +642,365 @@ describe('full inbound round trip', () => {
         parsed,
       })
     ).toEqual({ valid: true });
+  });
+});
+
+describe('getActorPublicKey — remote key cache', () => {
+  const ACTOR = 'https://mastodon.example/users/alice';
+
+  beforeEach(() => {
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  function keyFetchReturning(pem: string) {
+    return jest
+      .spyOn(axios as any, 'get')
+      .mockResolvedValue({ data: { publicKey: { publicKeyPem: pem } } });
+  }
+
+  it('serves a fresh key from cache without a second fetch', async () => {
+    const svc = await initialized();
+    const getSpy = keyFetchReturning(publicKeyPem);
+
+    expect(await svc.getActorPublicKey(ACTOR)).toBe(publicKeyPem);
+    expect(await svc.getActorPublicKey(ACTOR)).toBe(publicKeyPem);
+
+    // One live round trip per key, not one per inbox request.
+    expect(getSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetches after the positive TTL expires', async () => {
+    jest.useFakeTimers();
+    const svc = await initialized();
+    const getSpy = keyFetchReturning(publicKeyPem);
+
+    await svc.getActorPublicKey(ACTOR);
+    jest.advanceTimersByTime(601_000); // past the 600s positive TTL
+    await svc.getActorPublicKey(ACTOR);
+
+    expect(getSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('evicts the least recently used entry at capacity', async () => {
+    const svc = makeService({ FEDERATION_KEY_CACHE_MAX: '2' });
+    await svc.initialize();
+    const getSpy = keyFetchReturning(publicKeyPem);
+    const a = 'https://a.example/users/a';
+    const b = 'https://b.example/users/b';
+    const c = 'https://c.example/users/c';
+
+    await svc.getActorPublicKey(a); // fetch 1 — cache: a
+    await svc.getActorPublicKey(b); // fetch 2 — cache: a, b
+    await svc.getActorPublicKey(a); // hit — recency touch — cache: b, a
+    await svc.getActorPublicKey(c); // fetch 3 — evicts b (LRU), cache: a, c
+    expect(getSpy).toHaveBeenCalledTimes(3);
+
+    await svc.getActorPublicKey(a); // still resident
+    expect(getSpy).toHaveBeenCalledTimes(3);
+
+    await svc.getActorPublicKey(b); // was evicted — fetch 4
+    expect(getSpy).toHaveBeenCalledTimes(4);
+  });
+
+  it('negative-caches a failed fetch and retries after the negative TTL', async () => {
+    const svc = await initialized();
+    const getSpy = jest.spyOn(axios as any, 'get').mockRejectedValue(new Error('ETIMEDOUT'));
+
+    expect(await svc.getActorPublicKey(ACTOR)).toBeNull();
+    // Within the negative TTL a dead actor costs zero network — this is what
+    // stops every request from a broken peer re-triggering a doomed fetch.
+    expect(await svc.getActorPublicKey(ACTOR)).toBeNull();
+    expect(getSpy).toHaveBeenCalledTimes(1);
+
+    jest.useFakeTimers();
+    jest.advanceTimersByTime(46_000); // past the 45s negative TTL
+    expect(await svc.getActorPublicKey(ACTOR)).toBeNull();
+    expect(getSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('deduplicates concurrent misses into a single fetch', async () => {
+    const svc = await initialized();
+    let resolveFetch: (value: any) => void = () => undefined;
+    const getSpy = jest.spyOn(axios as any, 'get').mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    const first = svc.getActorPublicKey(ACTOR);
+    const second = svc.getActorPublicKey(ACTOR);
+    // Let the async SSRF-guard chain reach axios.get before resolving it.
+    await new Promise((resolve) => setImmediate(resolve));
+    resolveFetch({ data: { publicKey: { publicKeyPem } } });
+
+    expect(await first).toBe(publicKeyPem);
+    expect(await second).toBe(publicKeyPem);
+    expect(getSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('refresh bypasses the cache', async () => {
+    const svc = await initialized();
+    const getSpy = keyFetchReturning(publicKeyPem);
+
+    await svc.getActorPublicKey(ACTOR);
+    await svc.getActorPublicKey(ACTOR, { refresh: true });
+
+    expect(getSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('verifyInboundRequest — rate limits', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const request = (svc: any, remoteIp: string) =>
+    svc.verifyInboundRequest({
+      method: 'POST',
+      path: '/inbox',
+      headers: {},
+      rawBody: null,
+      activity: {},
+      remoteIp,
+    });
+
+  it('throws 429 with a Retry-After delay once the per-IP budget is exceeded', async () => {
+    const svc = makeService({ FEDERATION_INBOX_IP_PER_MIN: '3' });
+    await svc.initialize();
+
+    await request(svc, '203.0.113.1');
+    await request(svc, '203.0.113.1');
+    await request(svc, '203.0.113.1');
+
+    const error = await request(svc, '203.0.113.1').catch((e: unknown) => e);
+    // A subclass of HttpException: guards and filters keep matching on 429,
+    // and the filter writes `retryAfterSeconds` as the Retry-After header.
+    expect(error).toBeInstanceOf(InboxRateLimitException);
+    expect(error).toBeInstanceOf(HttpException);
+    expect((error as HttpException).getStatus()).toBe(429);
+    expect((error as InboxRateLimitException).retryAfterSeconds).toBeGreaterThanOrEqual(1);
+  });
+
+  it('isolates the per-IP budget across remotes', async () => {
+    const svc = makeService({ FEDERATION_INBOX_IP_PER_MIN: '2' });
+    await svc.initialize();
+
+    await request(svc, '203.0.113.1');
+    await request(svc, '203.0.113.1');
+    await expect(request(svc, '203.0.113.1')).rejects.toBeInstanceOf(InboxRateLimitException);
+
+    // A different remote starts on its own allowance — one noisy neighbour
+    // must not close the inbox for everyone behind other addresses.
+    await expect(request(svc, '203.0.113.2')).resolves.toBeUndefined();
+  });
+
+  it('resets budgets when the window rolls over', async () => {
+    jest.useFakeTimers();
+    const svc = makeService({ FEDERATION_INBOX_IP_PER_MIN: '2' });
+    await svc.initialize();
+
+    await request(svc, '203.0.113.1');
+    await request(svc, '203.0.113.1');
+    await expect(request(svc, '203.0.113.1')).rejects.toBeInstanceOf(InboxRateLimitException);
+
+    jest.advanceTimersByTime(60_001);
+    await expect(request(svc, '203.0.113.1')).resolves.toBeUndefined();
+  });
+
+  it('caps outbound key fetches per IP while cached traffic stays free', async () => {
+    const remote = generateRemotePair();
+    const svc = makeService({
+      FEDERATION_VERIFY_INBOUND: 'true',
+      FEDERATION_INBOX_IP_PER_MIN: '1000',
+      FEDERATION_INBOX_ACTOR_PER_MIN: '1000',
+      FEDERATION_KEY_FETCH_IP_PER_MIN: '3',
+    });
+    await svc.initialize();
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
+    const getSpy = jest
+      .spyOn(axios as any, 'get')
+      .mockResolvedValue({ data: { publicKey: { publicKeyPem: remote.publicKey } } });
+
+    const validActor = 'https://one.example/users/a';
+    const ip = '198.51.100.55';
+    const valid = inboxRequest(validActor, remote.privateKey, { remoteIp: ip });
+
+    await expect(svc.verifyInboundRequest(valid)).resolves.toBeUndefined(); // fetch 1
+    await expect(svc.verifyInboundRequest(valid)).resolves.toBeUndefined(); // cache — no fetch
+
+    // Each *new* actor from the same IP costs one outbound fetch; garbage
+    // signatures still spend the miss budget, because the fetch happens before
+    // verification. The valid fetch already consumed one of the three.
+    await expect(
+      svc.verifyInboundRequest(garbageSignatureRequest('https://g1.example/users/g', ip))
+    ).rejects.toThrow('Invalid HTTP Signature'); // fetch 2
+    await expect(
+      svc.verifyInboundRequest(garbageSignatureRequest('https://g2.example/users/g', ip))
+    ).rejects.toThrow('Invalid HTTP Signature'); // fetch 3 — budget now exhausted
+    const error = await svc
+      .verifyInboundRequest(garbageSignatureRequest('https://g3.example/users/g', ip))
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(InboxRateLimitException);
+    expect(getSpy).toHaveBeenCalledTimes(3);
+
+    // Cached, already-resolved actors never touch the miss budget: the valid
+    // request verifies straight from the cache with no additional fetch.
+    await expect(svc.verifyInboundRequest(valid)).resolves.toBeUndefined();
+    expect(getSpy).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('verifyInboundRequest — signature verification and rotation', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(require('dns').promises, 'lookup')
+      .mockResolvedValue([{ address: '93.184.216.34', family: 4 }] as any);
+  });
+
+  const ACTOR = 'https://mastodon.example/users/bob';
+
+  it('rejects a request with no signature header', async () => {
+    const svc = makeService({ FEDERATION_VERIFY_INBOUND: 'true' });
+    await svc.initialize();
+
+    await expect(
+      svc.verifyInboundRequest({
+        method: 'POST',
+        path: '/inbox',
+        headers: {},
+        rawBody: null,
+        activity: {},
+        remoteIp: '198.51.100.9',
+      })
+    ).rejects.toThrow('Missing or malformed HTTP Signature header');
+  });
+
+  it('rejects an activity whose actor does not match the signing keyId', async () => {
+    const remote = generateRemotePair();
+    const svc = makeService({ FEDERATION_VERIFY_INBOUND: 'true' });
+    await svc.initialize();
+    jest
+      .spyOn(axios as any, 'get')
+      .mockResolvedValue({ data: { publicKey: { publicKeyPem: remote.publicKey } } });
+
+    const request = inboxRequest(ACTOR, remote.privateKey);
+    request.activity = { ...request.activity, actor: 'https://mastodon.example/users/mallory' };
+
+    await expect(svc.verifyInboundRequest(request)).rejects.toThrow(
+      'Activity actor does not match the signing keyId'
+    );
+  });
+
+  it('rejects when the signing actor key cannot be resolved', async () => {
+    const remote = generateRemotePair();
+    const svc = makeService({ FEDERATION_VERIFY_INBOUND: 'true' });
+    await svc.initialize();
+    jest.spyOn(axios as any, 'get').mockResolvedValue({ data: { publicKey: {} } });
+
+    await expect(svc.verifyInboundRequest(inboxRequest(ACTOR, remote.privateKey))).rejects.toThrow(
+      'Could not resolve the signing actor public key'
+    );
+  });
+
+  it('re-fetches a stale cached key once and accepts a rotated signature', async () => {
+    const oldPair = generateRemotePair();
+    const newPair = generateRemotePair();
+    const svc = makeService({ FEDERATION_VERIFY_INBOUND: 'true' });
+    await svc.initialize();
+    jest
+      .spyOn(axios as any, 'get')
+      .mockResolvedValueOnce({ data: { publicKey: { publicKeyPem: oldPair.publicKey } } })
+      .mockResolvedValueOnce({ data: { publicKey: { publicKeyPem: newPair.publicKey } } });
+
+    // The peer signs with its *new* key; our (cold) fetch still returns the old
+    // one. There is nothing cached to refresh, so this first delivery fails.
+    const request = inboxRequest(ACTOR, newPair.privateKey);
+    await expect(svc.verifyInboundRequest(request)).rejects.toThrow('Invalid HTTP Signature');
+    expect((axios.get as jest.Mock).mock.calls).toHaveLength(1);
+
+    // Second delivery: the stale key is served from cache, verification fails,
+    // and exactly one refresh re-fetches the published (rotated) key — which
+    // then verifies. Without this, peers would401 until the positive TTL aged out.
+    await expect(svc.verifyInboundRequest(request)).resolves.toBeUndefined();
+    expect((axios.get as jest.Mock).mock.calls).toHaveLength(2);
+  });
+
+  it('keeps rejecting when the refreshed key still does not verify', async () => {
+    const oldPair = generateRemotePair();
+    const newPair = generateRemotePair();
+    const svc = makeService({ FEDERATION_VERIFY_INBOUND: 'true' });
+    await svc.initialize();
+    jest
+      .spyOn(axios as any, 'get')
+      .mockResolvedValue({ data: { publicKey: { publicKeyPem: oldPair.publicKey } } });
+
+    const request = inboxRequest(ACTOR, newPair.privateKey);
+    await expect(svc.verifyInboundRequest(request)).rejects.toThrow(
+      'Invalid HTTP Signature: signature does not match'
+    );
+    await expect(svc.verifyInboundRequest(request)).rejects.toThrow(
+      'Invalid HTTP Signature: signature does not match'
+    );
+    // The rotation attempt still cost exactly one extra fetch...
+    expect((axios.get as jest.Mock).mock.calls).toHaveLength(2);
+  });
+});
+
+describe('FederationExceptionFilter', () => {
+  function makeHost() {
+    const response = {
+      set: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const host = {
+      switchToHttp: () => ({ getResponse: () => response }),
+    } as any;
+    return { host, response };
+  }
+
+  it('writes Retry-After on inbox rate-limit rejections', () => {
+    const { host, response } = makeHost();
+    const filter = new FederationExceptionFilter();
+
+    filter.catch(new InboxRateLimitException(37, 'Rate limit exceeded'), host);
+
+    expect(response.set).toHaveBeenCalledWith('Retry-After', '37');
+    expect(response.status).toHaveBeenCalledWith(429);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 429, message: 'Rate limit exceeded' })
+    );
+  });
+
+  it('leaves ordinary HttpExceptions exactly as Nest would write them', () => {
+    const { host, response } = makeHost();
+    const filter = new FederationExceptionFilter();
+
+    filter.catch(new HttpException('nope', 401), host);
+
+    expect(response.set).not.toHaveBeenCalled();
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.json).toHaveBeenCalledWith('nope');
+  });
+
+  it('answers unknown errors with a 500', () => {
+    const { host, response } = makeHost();
+    const filter = new FederationExceptionFilter();
+
+    filter.catch(new Error('boom'), host);
+
+    expect(response.status).toHaveBeenCalledWith(500);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 500, message: 'Internal server error' })
+    );
   });
 });
