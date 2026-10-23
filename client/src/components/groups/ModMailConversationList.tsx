@@ -19,18 +19,35 @@ export function ModMailConversationList({
 }: ModMailConversationListProps) {
   const [conversations, setConversations] = useState<ModMailThread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (groupId) {
-      getModMailConversations(groupId).then((data) => {
+    if (!groupId) return;
+    let cancelled = false;
+    getModMailConversations(groupId)
+      .then((data) => {
+        if (cancelled) return;
         setConversations(data);
-        setLoading(false);
+        setLoadError(null);
+      })
+      .catch((error: any) => {
+        if (cancelled) return;
+        setLoadError(error?.response?.data?.message || 'Failed to load modmail');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [groupId]);
 
   if (loading) {
     return <div className="p-4">Loading modmail...</div>;
+  }
+
+  if (loadError) {
+    return <div className="p-4 text-sm text-red-600">{loadError}</div>;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { io } from 'socket.io-client';
 import { useToast } from '../../contexts/ToastContext';
 import { Skeleton } from '../ui/skeleton';
 import Avatar from '../ui/avatar';
@@ -9,7 +10,9 @@ import {
   getProfile,
   getConversations,
   forwardMessage,
+  API_BASE_URL,
 } from '../../lib/api';
+import { getAuthToken } from '../../lib/auth-storage';
 import { Smile, CornerUpLeft, CheckCheck, Send } from 'lucide-react';
 import { Message, Conversation, ScreenshotProtectionLevel } from '../../lib/types';
 import { formatDateTime } from '../../lib/preferences';
@@ -119,6 +122,35 @@ export const MessageList = ({ conversationId, channelId, onReply }: MessageListP
     return () => window.clearInterval(refreshMessages);
   }, [conversationId, channelId, fetchMessages]);
 
+  // Channel realtime: /channels namespace socket, plus a slow poll as a
+  // fallback that only fires while the socket is disconnected.
+  useEffect(() => {
+    if (!channelId || !user) return;
+
+    const socket = io(`${API_BASE_URL}/channels`, {
+      auth: { token: getAuthToken() ?? undefined },
+      transports: ['websocket', 'polling'],
+    });
+    const joinChannel = () => socket.emit('joinChannel', channelId);
+    const onNewMessage = (incoming: Message) => {
+      setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
+    };
+    socket.on('connect', joinChannel);
+    socket.on('newMessage', onNewMessage);
+    if (socket.connected) joinChannel();
+
+    const fallbackPoll = window.setInterval(() => {
+      if (socket.disconnected) fetchMessages();
+    }, 15000);
+
+    return () => {
+      window.clearInterval(fallbackPoll);
+      socket.off('connect', joinChannel);
+      socket.off('newMessage', onNewMessage);
+      socket.disconnect();
+    };
+  }, [channelId, user, fetchMessages]);
+
   useEffect(() => {
     getConversations().then(setConversations);
   }, []);
@@ -158,7 +190,7 @@ export const MessageList = ({ conversationId, channelId, onReply }: MessageListP
           </div>
         ) : (
           messages.map((msg) => {
-            const isOwn = msg.sender.id === user?.id;
+            const isOwn = msg.sender?.id === user?.id;
             const reactions = (msg.reactions ?? []).reduce(
               (acc, reaction) => {
                 acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
@@ -166,7 +198,8 @@ export const MessageList = ({ conversationId, channelId, onReply }: MessageListP
               },
               {} as Record<string, number>
             );
-            const isRead = msg.readBy.length > 0 && msg.readBy.some((r) => r.user.id !== user?.id);
+            const readBy = msg.readBy ?? [];
+            const isRead = readBy.length > 0 && readBy.some((r) => r.user.id !== user?.id);
 
             return (
               <div
@@ -180,7 +213,7 @@ export const MessageList = ({ conversationId, channelId, onReply }: MessageListP
                 className={`flex gap-sm group ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 {!isOwn && (
-                  <Avatar name={msg.sender.username || msg.sender.email || 'U'} size={32} />
+                  <Avatar name={msg.sender?.username || msg.sender?.email || 'U'} size={32} />
                 )}
                 <div
                   className={`relative max-w-xs lg:max-w-md px-md py-sm rounded-lg ${
@@ -245,14 +278,16 @@ export const MessageList = ({ conversationId, channelId, onReply }: MessageListP
                   {msg.replyTo && (
                     <div className="text-xs bg-gray-200 p-2 rounded-lg mb-2">
                       <p className="font-semibold">
-                        {msg.replyTo.sender.username || msg.replyTo.sender.email}
+                        {msg.replyTo.sender?.username ||
+                          msg.replyTo.sender?.email ||
+                          'Deleted user'}
                       </p>
                       <p>{msg.replyTo.content}</p>
                     </div>
                   )}
                   {!isOwn && (
                     <p className="text-xs font-semibold mb-xs opacity-70">
-                      {msg.sender.username || msg.sender.email}
+                      {msg.sender?.username || msg.sender?.email || 'Unknown sender'}
                     </p>
                   )}
                   <MessageContent message={msg} />

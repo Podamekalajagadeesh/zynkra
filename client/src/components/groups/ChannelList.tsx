@@ -45,6 +45,7 @@ export const ChannelList = ({
 
   useEffect(() => {
     refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
   const handleCreate = async () => {
@@ -69,20 +70,8 @@ export const ChannelList = ({
   };
 
   useEffect(() => {
-    const fetchChannels = async () => {
-      try {
-        const data = await getChannels(groupId);
-        setChannels(data);
-      } catch (error) {
-        console.error('Failed to fetch channels', error);
-        addToast('Failed to load channels', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChannels();
-  }, [groupId, addToast]);
+    setIsLoading(true);
+  }, [groupId]);
 
   if (isLoading) {
     return (

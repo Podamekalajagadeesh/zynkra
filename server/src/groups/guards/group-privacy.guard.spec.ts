@@ -15,6 +15,15 @@ function makeContext(request: unknown): ExecutionContext {
 describe('GroupPrivacyGuard', () => {
   function guardFor(group: unknown, isMember = jest.fn()) {
     const groupsService = {
+      resolveGroupIdFromParams: jest.fn(async (params: Record<string, string | undefined>) => {
+        if (params.groupId) return params.groupId;
+        if (params.challengeId) return params.groupId ?? 'g-challenge';
+        if (params.proposalId) return 'g-proposal';
+        if (params.channelId) return 'g-channel';
+        if (params.eventId) return 'g-event';
+        if (params.todoId) return 'g-todo';
+        return null;
+      }),
       getGroupById: jest.fn().mockResolvedValue(group),
       isMember,
     } as unknown as GroupsService;
@@ -22,12 +31,37 @@ describe('GroupPrivacyGuard', () => {
     return { guard, groupsService, isMember };
   }
 
-  it('passes when the route carries no groupId', async () => {
+  it('passes when the route carries no group context', async () => {
     const { guard, groupsService } = guardFor(null);
     await expect(
       guard.canActivate(makeContext({ params: {}, user: { userId: 'u1' } }))
     ).resolves.toBe(true);
     expect(groupsService.getGroupById).not.toHaveBeenCalled();
+  });
+
+  it('applies privacy checks to entity-param routes (challenge detail)', async () => {
+    const { guard, isMember } = guardFor({ id: 'g1', privacy: GroupPrivacy.SECRET });
+    isMember.mockResolvedValue(false);
+    await expect(
+      guard.canActivate(makeContext({ params: { challengeId: 'ch1' }, user: { userId: 'u1' } }))
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(isMember).toHaveBeenCalledWith('u1', 'g-challenge');
+  });
+
+  it('lets the resolver surface 404 for a missing route entity', async () => {
+    const groupsService = {
+      resolveGroupIdFromParams: jest
+        .fn()
+        .mockRejectedValue(new NotFoundException('Proposal not found')),
+      getGroupById: jest.fn(),
+      isMember: jest.fn(),
+    } as unknown as GroupsService;
+    const guard = new GroupPrivacyGuard({} as Reflector, groupsService);
+    await expect(
+      guard.canActivate(
+        makeContext({ params: { proposalId: 'p-missing' }, user: { userId: 'u1' } })
+      )
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('rejects with 404 when the group does not exist', async () => {

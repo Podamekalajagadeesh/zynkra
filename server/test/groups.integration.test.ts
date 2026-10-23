@@ -1,7 +1,10 @@
 /**
  * Integration tests for the groups surface: discovery, join/leave (incl.
- * lockdown enforcement), and the channel read/post access matrix —
- * exercising the real controller + service through HTTP with JWT auth.
+ * lockdown enforcement), the channel read/post access matrix, the privacy
+ * matrix (member/non-member × public/private/secret), the role matrix
+ * (member/moderator/admin), DTO validation through the production pipe
+ * config, and ParseUUIDPipe handling — exercising the real controller +
+ * service through HTTP with JWT auth.
  */
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
@@ -40,6 +43,7 @@ const mockRepo = () => ({
   create: jest.fn((input: unknown) => input),
   save: jest.fn(async (input: unknown) => input),
   remove: jest.fn(async (input: unknown) => input),
+  delete: jest.fn(async () => ({ affected: 0 })),
   count: jest.fn(async () => 0),
   update: jest.fn(async () => undefined),
   query: jest.fn(async () => []),
@@ -69,7 +73,10 @@ function createModule() {
         },
       },
       { provide: ReputationService, useValue: { addReputation: jest.fn() } },
-      { provide: ChannelsGateway, useValue: { sendMessageToChannel: jest.fn() } },
+      {
+        provide: ChannelsGateway,
+        useValue: { sendMessageToChannel: jest.fn(), kickUserFromGroupRooms: jest.fn() },
+      },
       {
         provide: ConfigService,
         useValue: { get: (key: string) => (key === 'JWT_SECRET' ? 'test-secret' : undefined) },
@@ -119,13 +126,18 @@ describe('Groups (HTTP integration)', () => {
   let groupMembersRepo: ReturnType<typeof mockRepo>;
   let lockdownsRepo: ReturnType<typeof mockRepo>;
   let messagesRepo: ReturnType<typeof mockRepo>;
+  let proposalsRepo: ReturnType<typeof mockRepo>;
+  let challengesRepo: ReturnType<typeof mockRepo>;
   let tokenU1: string;
   let tokenU2: string;
 
   beforeAll(async () => {
     const ref = await createModule();
     app = ref.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    // Same options as the global pipe in main.ts.
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true })
+    );
     await app.init();
     const jwt = app.get(JwtService);
     tokenU1 = jwt.sign({ sub: 'u1', sid: 's1' });
@@ -136,6 +148,8 @@ describe('Groups (HTTP integration)', () => {
     groupMembersRepo = app.get(getRepositoryToken(GroupMember));
     lockdownsRepo = app.get(getRepositoryToken(GroupLockdown));
     messagesRepo = app.get(getRepositoryToken(Message));
+    proposalsRepo = app.get(getRepositoryToken(Proposal));
+    challengesRepo = app.get(getRepositoryToken(CommunityChallenge));
   });
 
   afterAll(async () => {
@@ -171,7 +185,9 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
       lockdownsRepo.findOne.mockResolvedValue(null);
 
-      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
+      const r = await request(app.getHttpServer())
+        .post('/groups/11111111-1111-4111-8111-111111111111/join')
+        .set(auth(tokenU2));
       expect(r.status).toBe(201);
       expect(r.body).toMatchObject({ role: 'member' });
       expect(groupMembersRepo.save).toHaveBeenCalled();
@@ -181,7 +197,9 @@ describe('Groups (HTTP integration)', () => {
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET });
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
+      const r = await request(app.getHttpServer())
+        .post('/groups/11111111-1111-4111-8111-111111111111/join')
+        .set(auth(tokenU2));
       expect(r.status).toBe(404);
     });
 
@@ -193,7 +211,9 @@ describe('Groups (HTTP integration)', () => {
         activeUntil: new Date(Date.now() + 60_000),
       });
 
-      const r = await request(app.getHttpServer()).post('/groups/g1/join').set(auth(tokenU2));
+      const r = await request(app.getHttpServer())
+        .post('/groups/11111111-1111-4111-8111-111111111111/join')
+        .set(auth(tokenU2));
       expect(r.status).toBe(403);
       expect(groupMembersRepo.save).not.toHaveBeenCalled();
     });
@@ -202,7 +222,9 @@ describe('Groups (HTTP integration)', () => {
   describe('POST /groups/:groupId/leave', () => {
     it('404s for non-members', async () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
-      const r = await request(app.getHttpServer()).post('/groups/g1/leave').set(auth(tokenU2));
+      const r = await request(app.getHttpServer())
+        .post('/groups/11111111-1111-4111-8111-111111111111/leave')
+        .set(auth(tokenU2));
       expect(r.status).toBe(404);
     });
 
@@ -210,7 +232,9 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'admin' });
       groupsRepo.findOne.mockResolvedValue({ id: 'g1', owner: { id: 'u1' } });
 
-      const r = await request(app.getHttpServer()).post('/groups/g1/leave').set(auth(tokenU1));
+      const r = await request(app.getHttpServer())
+        .post('/groups/11111111-1111-4111-8111-111111111111/leave')
+        .set(auth(tokenU1));
       expect(r.status).toBe(403);
       expect(groupMembersRepo.remove).not.toHaveBeenCalled();
     });
@@ -226,7 +250,7 @@ describe('Groups (HTTP integration)', () => {
       messagesRepo.find.mockResolvedValue([]);
 
       const r = await request(app.getHttpServer())
-        .get('/groups/channels/c1/messages')
+        .get('/groups/channels/22222222-2222-4222-8222-222222222222/messages')
         .set(auth(tokenU2));
       expect(r.status).toBe(200);
       expect(groupMembersRepo.findOne).not.toHaveBeenCalled();
@@ -241,7 +265,7 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
 
       const r = await request(app.getHttpServer())
-        .get('/groups/channels/c1/messages')
+        .get('/groups/channels/22222222-2222-4222-8222-222222222222/messages')
         .set(auth(tokenU2));
       expect(r.status).toBe(403);
       expect(messagesRepo.find).not.toHaveBeenCalled();
@@ -256,7 +280,7 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
 
       const r = await request(app.getHttpServer())
-        .get('/groups/channels/c1/messages')
+        .get('/groups/channels/22222222-2222-4222-8222-222222222222/messages')
         .set(auth(tokenU2));
       expect(r.status).toBe(404);
     });
@@ -270,7 +294,7 @@ describe('Groups (HTTP integration)', () => {
       groupMembersRepo.findOne.mockResolvedValue(null);
 
       const r = await request(app.getHttpServer())
-        .post('/groups/channels/c1/messages')
+        .post('/groups/channels/22222222-2222-4222-8222-222222222222/messages')
         .set(auth(tokenU2))
         .send({ content: 'hello' });
       expect(r.status).toBe(403);
@@ -288,7 +312,7 @@ describe('Groups (HTTP integration)', () => {
       messagesRepo.save.mockResolvedValue({ id: 'msg1', content: 'hello' });
 
       const r = await request(app.getHttpServer())
-        .post('/groups/channels/c1/messages')
+        .post('/groups/channels/22222222-2222-4222-8222-222222222222/messages')
         .set(auth(tokenU1))
         .send({ content: 'hello' });
       expect(r.status).toBe(201);
@@ -298,25 +322,423 @@ describe('Groups (HTTP integration)', () => {
       );
     });
 
-    it('401s broadcast posts from non-admin channel members', async () => {
+    it('403s broadcast posts from non-admin channel members', async () => {
       channelsRepo.findOne.mockResolvedValue({
         id: 'c2',
         type: 'broadcast',
         group: { id: 'g1', privacy: GroupPrivacy.PUBLIC },
       });
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'member' });
       channelMembersRepo.findOne.mockResolvedValue({ id: 'cm1', role: 'member' });
 
       const r = await request(app.getHttpServer())
-        .post('/groups/channels/c2/messages')
+        .post('/groups/channels/33333333-3333-4333-8333-333333333333/messages')
         .set(auth(tokenU1))
         .send({ content: 'announcement' });
-      expect(r.status).toBe(401);
+      expect(r.status).toBe(403);
       expect(messagesRepo.save).not.toHaveBeenCalled();
     });
 
+    it('lets group admins post in broadcast channels', async () => {
+      channelsRepo.findOne.mockResolvedValue({
+        id: 'c2',
+        type: 'broadcast',
+        group: { id: 'g1', privacy: GroupPrivacy.PUBLIC },
+      });
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'admin' });
+      channelMembersRepo.findOne.mockResolvedValue(null);
+      messagesRepo.save.mockResolvedValue({ id: 'msg2', content: 'announcement' });
+
+      const r = await request(app.getHttpServer())
+        .post('/groups/channels/33333333-3333-4333-8333-333333333333/messages')
+        .set(auth(tokenU1))
+        .send({ content: 'announcement' });
+      expect(r.status).toBe(201);
+    });
+
     it('requires a JWT on message reads', async () => {
-      const r = await request(app.getHttpServer()).get('/groups/channels/c1/messages');
+      const r = await request(app.getHttpServer()).get(
+        '/groups/channels/22222222-2222-4222-8222-222222222222/messages'
+      );
       expect(r.status).toBe(401);
+    });
+  });
+
+  describe('privacy matrix (member × public/private/secret)', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+
+    it('403s a private-group lockdown read for non-members', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PRIVATE });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .get(`/groups/${G}/lockdown`)
+        .set(auth(tokenU2));
+      expect(r.status).toBe(403);
+      expect(lockdownsRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('allows a private-group lockdown read for members', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PRIVATE });
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm2', user: { id: 'u2' }, role: 'member' });
+      lockdownsRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .get(`/groups/${G}/lockdown`)
+        .set(auth(tokenU2));
+      expect(r.status).toBe(200);
+    });
+
+    it('404s secret-group proposal creation for non-members (no existence leak)', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/proposals`)
+        .set(auth(tokenU2))
+        .send({ title: 'T', description: 'D' });
+      expect(r.status).toBe(404);
+      expect(proposalsRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('lets members create proposals in secret groups', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET, isDao: true });
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm2', user: { id: 'u2' }, role: 'member' });
+      proposalsRepo.save.mockImplementation(async (input: unknown) => input);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/proposals`)
+        .set(auth(tokenU2))
+        .send({ title: 'T', description: 'D' });
+      expect(r.status).toBe(201);
+    });
+
+    it('403s private-group proposal reads for non-members', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PRIVATE });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .get(`/groups/${G}/proposals`)
+        .set(auth(tokenU2));
+      expect(r.status).toBe(403);
+    });
+
+    it('404s secret-group calendar creation for non-members', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/calendar-events`)
+        .set(auth(tokenU2))
+        .send({ title: 'Standup', startTime: '2026-11-02T09:00:00.000Z', endTime: '2026-11-02T09:30:00.000Z' });
+      expect(r.status).toBe(404);
+    });
+
+    it('403s private-group todo creation for non-members', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PRIVATE });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/todo-items`)
+        .set(auth(tokenU2))
+        .send({ title: 'Write brief' });
+      expect(r.status).toBe(403);
+    });
+
+    it('applies privacy to vote routes through proposal resolution', async () => {
+      proposalsRepo.findOne.mockResolvedValue({ id: 'p1', group: { id: 'g1' } });
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PRIVATE });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .post('/groups/proposals/33333333-3333-4333-8333-333333333333/votes')
+        .set(auth(tokenU2))
+        .send({ choice: true });
+      expect(r.status).toBe(403);
+    });
+
+    it('404s role-gated routes on secret groups for outsiders', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.SECRET });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/66666666-6666-4666-8666-666666666666`)
+        .set(auth(tokenU2))
+        .send({ role: 'moderator' });
+      expect(r.status).toBe(404);
+    });
+  });
+
+  describe('role matrix (member/moderator/admin)', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+    const U2 = '66666666-6666-4666-8666-666666666666';
+
+    // Membership lookups serve both the guard (caller `u1` from the JWT) and
+    // the service (target = the :userId route UUID) through one repository —
+    // key them apart by user id.
+    const TARGET_USER_ID = '66666666-6666-4666-8666-666666666666';
+    const mockMemberships = (callerRole: string | null, targetRole = 'member') => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', owner: { id: 'u9' } });
+      groupMembersRepo.findOne.mockImplementation((async (opts: any) => {
+        const uid = opts?.where?.user?.id;
+        if (uid === 'u1') {
+          return callerRole ? { id: 'm1', user: { id: 'u1' }, role: callerRole } : null;
+        }
+        if (uid === TARGET_USER_ID || uid === 'u2') {
+          return { id: 'm2', user: { id: uid }, role: targetRole };
+        }
+        return null;
+      }) as any);
+    };
+
+    it('401s role changes without a token', async () => {
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/${U2}`)
+        .send({ role: 'moderator' });
+      expect(r.status).toBe(401);
+    });
+
+    it('403s role changes from plain members', async () => {
+      mockMemberships('member');
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/${U2}`)
+        .set(auth(tokenU1))
+        .send({ role: 'moderator' });
+      expect(r.status).toBe(403);
+      expect(groupMembersRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('403s role changes from moderators (route is admin-only)', async () => {
+      mockMemberships('moderator');
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/${U2}`)
+        .set(auth(tokenU1))
+        .send({ role: 'admin' });
+      expect(r.status).toBe(403);
+    });
+
+    it('lets admins change roles', async () => {
+      mockMemberships('admin');
+      groupMembersRepo.save.mockImplementation(async (input: any) => input);
+
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/${U2}`)
+        .set(auth(tokenU1))
+        .send({ role: 'moderator' });
+      expect(r.status).toBe(200);
+      expect(r.body).toMatchObject({ role: 'moderator' });
+    });
+
+    it('403s changing the group owner’s role', async () => {
+      mockMemberships('admin');
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', owner: { id: TARGET_USER_ID } });
+
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/${U2}`)
+        .set(auth(tokenU1))
+        .send({ role: 'member' });
+      expect(r.status).toBe(403);
+      expect(groupMembersRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('403s demoting the last remaining admin', async () => {
+      mockMemberships('admin', 'admin');
+      groupMembersRepo.count.mockResolvedValue(1);
+
+      const r = await request(app.getHttpServer())
+        .put(`/groups/${G}/members/66666666-6666-4666-8666-666666666666`)
+        .set(auth(tokenU1))
+        .send({ role: 'member' });
+      expect(r.status).toBe(403);
+      expect(groupMembersRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('403s lockdown enables from moderators', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+      groupMembersRepo.findOne.mockResolvedValue({
+        id: 'm1',
+        user: { id: 'u1' },
+        role: 'moderator',
+      });
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/lockdown`)
+        .set(auth(tokenU1))
+        .send({ mode: 'full', durationHours: 24 });
+      expect(r.status).toBe(403);
+      expect(lockdownsRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('lets admins enable lockdown', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'admin' });
+      lockdownsRepo.findOne.mockResolvedValue(null);
+      lockdownsRepo.save.mockImplementation(async (input: any) => input);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/lockdown`)
+        .set(auth(tokenU1))
+        .send({ mode: 'full', durationHours: 24 });
+      expect(r.status).toBe(201);
+      expect(r.body).toMatchObject({ mode: 'full' });
+    });
+
+    it('403s challenge updates from plain members (contributions stay open)', async () => {
+      challengesRepo.findOne.mockResolvedValue({
+        id: 'ch1',
+        group: { id: 'g1' },
+      });
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+      groupMembersRepo.findOne.mockResolvedValue({
+        id: 'm1',
+        user: { id: 'u1' },
+        role: 'member',
+      });
+
+      const r = await request(app.getHttpServer())
+        .put('/groups/challenges/44444444-4444-4444-8444-444444444444')
+        .set(auth(tokenU1))
+        .send({ title: 'Renamed by a random member' });
+      expect(r.status).toBe(403);
+    });
+  });
+
+  describe('lockdown modes on join', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+
+    it('lets joins through during MUTE_NEW (newcomers are muted instead)', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+      lockdownsRepo.findOne.mockResolvedValue({
+        id: 'l1',
+        mode: 'mute_new',
+        activeUntil: new Date(Date.now() + 60_000),
+      });
+      groupMembersRepo.save.mockImplementation(async (input: any) => input);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/join`)
+        .set(auth(tokenU2));
+      expect(r.status).toBe(201);
+      expect(groupMembersRepo.save).toHaveBeenCalled();
+    });
+
+    it('still blocks joins during FULL lockdown', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+      groupMembersRepo.findOne.mockResolvedValue(null);
+      lockdownsRepo.findOne.mockResolvedValue({
+        id: 'l1',
+        mode: 'full',
+        activeUntil: new Date(Date.now() + 60_000),
+      });
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/join`)
+        .set(auth(tokenU2));
+      expect(r.status).toBe(403);
+      expect(groupMembersRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('leaving drops channel rooms (E14)', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+
+    it('kicks the leaver out of every channel room', async () => {
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user: { id: 'u1' }, role: 'member' });
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', owner: { id: 'u9' } });
+      channelsRepo.find.mockResolvedValue([{ id: 'c1' }, { id: 'c2' }]);
+      const gateway = app.get(ChannelsGateway);
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/leave`)
+        .set(auth(tokenU1));
+      expect(r.status).toBe(201);
+      expect(gateway.kickUserFromGroupRooms).toHaveBeenCalledWith('u1', ['c1', 'c2']);
+      expect(channelMembersRepo.delete).toHaveBeenCalled();
+    });
+  });
+
+  describe('broadcast widening', () => {
+    it('lets group moderators post in broadcast channels', async () => {
+      channelsRepo.findOne.mockResolvedValue({
+        id: 'c2',
+        type: 'broadcast',
+        group: { id: 'g1', privacy: GroupPrivacy.PUBLIC },
+      });
+      groupMembersRepo.findOne.mockResolvedValue({
+        id: 'm1',
+        user: { id: 'u1' },
+        role: 'moderator',
+      });
+      channelMembersRepo.findOne.mockResolvedValue(null);
+      messagesRepo.save.mockResolvedValue({ id: 'msg3', content: 'announcement' });
+
+      const r = await request(app.getHttpServer())
+        .post('/groups/channels/33333333-3333-4333-8333-333333333333/messages')
+        .set(auth(tokenU1))
+        .send({ content: 'announcement' });
+      expect(r.status).toBe(201);
+    });
+  });
+
+  describe('DTO validation through the production pipe', () => {
+    const G = '11111111-1111-4111-8111-111111111111';
+
+    it('400s a non-ISO calendar startTime', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/calendar-events`)
+        .set(auth(tokenU1))
+        .send({ title: 'Standup', startTime: 'tomorrow morning', endTime: '2026-11-02T09:30:00.000Z' });
+      expect(r.status).toBe(400);
+    });
+
+    it('400s an empty assigneeId on todo creation', async () => {
+      groupsRepo.findOne.mockResolvedValue({ id: 'g1', privacy: GroupPrivacy.PUBLIC });
+
+      const r = await request(app.getHttpServer())
+        .post(`/groups/${G}/todo-items`)
+        .set(auth(tokenU1))
+        .send({ title: 'Task', assigneeId: '' });
+      expect(r.status).toBe(400);
+    });
+
+    it('strips unknown body fields on group creation instead of failing', async () => {
+      groupsRepo.save.mockImplementation(async (input: unknown) => input);
+      groupMembersRepo.save.mockImplementation(async (input: unknown) => input);
+
+      const r = await request(app.getHttpServer())
+        .post('/groups')
+        .set(auth(tokenU1))
+        .send({ name: 'Fresh Group', injected: 'should be stripped' });
+      expect(r.status).toBe(201);
+      expect(groupsRepo.save).toHaveBeenCalledWith(
+        expect.not.objectContaining({ injected: expect.anything() })
+      );
+    });
+  });
+
+  describe('ParseUUIDPipe rejects malformed ids with 400', () => {
+    it('on join/leave routes', async () => {
+      const r = await request(app.getHttpServer())
+        .post('/groups/not-a-uuid/join')
+        .set(auth(tokenU1));
+      expect(r.status).toBe(400);
+    });
+
+    it('on channel message reads', async () => {
+      const r = await request(app.getHttpServer())
+        .get('/groups/channels/not-a-uuid/messages')
+        .set(auth(tokenU1));
+      expect(r.status).toBe(400);
+    });
+
+    it('on channel membership routes', async () => {
+      const r = await request(app.getHttpServer())
+        .post('/groups/channels/not-a-uuid/join')
+        .set(auth(tokenU1));
+      expect(r.status).toBe(400);
     });
   });
 });

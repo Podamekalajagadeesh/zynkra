@@ -6,6 +6,7 @@ import {
   IsNumber,
   Max,
   Min,
+  MaxLength,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -41,6 +42,7 @@ class VoiceNoteDto {
 export class SendMessageDto {
   @IsOptional()
   @IsString()
+  @MaxLength(4000)
   content?: string;
 
   @IsOptional()
@@ -60,5 +62,6 @@ export class SendMessageDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(512)
   senderPublicKey?: string;
 }

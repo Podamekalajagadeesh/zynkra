@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { useToast } from '../../hooks/useToast';
 import { Button } from '../ui/button';
 import { createGroup } from '../../lib/api';
@@ -29,7 +30,11 @@ export function CreateGroupForm() {
       addToast('Group created successfully!', 'success');
     } catch (error) {
       console.error('Failed to create group:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Failed to create group';
+      const errorMsg = axios.isAxiosError(error)
+        ? error.response?.data?.message || 'Failed to create group'
+        : error instanceof Error
+          ? error.message
+          : 'Failed to create group';
       setError(errorMsg);
       addToast(errorMsg, 'error');
     } finally {

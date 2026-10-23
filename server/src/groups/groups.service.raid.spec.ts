@@ -63,17 +63,13 @@ describe('GroupsService (raid protection)', () => {
 
   describe('detectPotentialRaid', () => {
     it('returns 0 when recent joins are below the threshold', async () => {
-      groupMembersRepo.find.mockResolvedValue([
-        { createdAt: new Date() },
-        { createdAt: new Date() },
-      ]);
+      groupMembersRepo.count.mockResolvedValue(2);
 
       expect(await service.detectPotentialRaid('group-1')).toBe(0);
     });
 
     it('returns the count when the threshold is crossed', async () => {
-      const recent = Array.from({ length: 12 }, () => ({ createdAt: new Date() }));
-      groupMembersRepo.find.mockResolvedValue(recent);
+      groupMembersRepo.count.mockResolvedValue(12);
 
       expect(await service.detectPotentialRaid('group-1')).toBe(12);
     });

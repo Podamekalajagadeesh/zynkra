@@ -7,10 +7,17 @@ import { useToast } from '../../hooks/useToast';
 
 interface ModMailComposerProps {
   groupId: string;
+  /** When set (plain members), the thread is opened to this user and the
+   * recipient field is hidden — members can only modmail themselves. */
+  fixedRecipientId?: string;
   onConversationCreated: () => void;
 }
 
-export function ModMailComposer({ groupId, onConversationCreated }: ModMailComposerProps) {
+export function ModMailComposer({
+  groupId,
+  fixedRecipientId,
+  onConversationCreated,
+}: ModMailComposerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [subject, setSubject] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -22,7 +29,7 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
     try {
       await createModMailConversation(groupId, {
         subject,
-        recipientId: recipient,
+        recipientId: fixedRecipientId ?? recipient,
         initialMessage: message,
       });
       addToast('Modmail conversation created successfully', 'success');
@@ -31,8 +38,8 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
       setRecipient('');
       setMessage('');
       onConversationCreated();
-    } catch (error) {
-      addToast('Failed to create modmail conversation', 'error');
+    } catch (error: any) {
+      addToast(error?.response?.data?.message || 'Failed to create modmail conversation', 'error');
     }
   };
 
@@ -56,14 +63,16 @@ export function ModMailComposer({ groupId, onConversationCreated }: ModMailCompo
             required
           />
         </div>
-        <div>
-          <Input
-            placeholder="Recipient user ID"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            required
-          />
-        </div>
+        {!fixedRecipientId && (
+          <div>
+            <Input
+              placeholder="Recipient user ID"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              required
+            />
+          </div>
+        )}
         <div>
           <Textarea
             placeholder="Your message..."

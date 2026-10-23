@@ -179,7 +179,22 @@ Each promotion = E2E audit + tests + remove the "Preview" tag. Budget **2 promot
   story viewer loop. Suites: 1870 server unit / 198 HTTP / 6 real-PG / 76.6% coverage;
   429 client tests on Node 20 and 26; Server CI + Client CI success. "Preview" tag removed
   from `ROADMAP.md` §2 tier list, the maturity table, and Phase 6 ledger recorded.
-- Next candidates: groups → reels (still budgeted 2/quarter).
+- **Promoted (2 of budget):** ✅ **Groups → Real, 2026-10-23, commit pending** — second
+  promotion; budget now full for the quarter (2/2). Evidence: end-to-end audit (E1–E14
+  defect sweep); schema integrity migration `1794100000000-GroupsWorkspaceIntegrity`
+  (dedupe + 4 partial unique indexes + 29 FK policy rewrites + 19 FK indexes) proven
+  up→down→up on real Postgres (`groups.db.integration.test.ts`: 23505 duplicates,
+  exact FK catalog, cascade/SET NULL delete behavior, dedupe re-apply);
+  `GroupPrivacyGuard`/`GroupRoleGuard` on every state-changing route (secret groups 404,
+  owner/last-admin demotion protection, broadcast = admins/moderators, admin-only lockdown
+  panel), ParseUUIDPipe ×38, gateway event allowlist; client: real auth context,
+  URL-synced selection, member-gated modmail, `/channels` socket + disconnected poll,
+  error surfacing. Suites: 1971 server unit (role-guard/DTO/gateway specs new) / 227 HTTP
+  (integration 23→43) / 8 real-PG; client 429 tests, lint/typecheck 0 errors both sides.
+  Backlog (honest): APPROVAL lockdown behaves as FULL pending approval workflow,
+  voting-system weighting stored-but-unconsulted, proposals/votes/challenges/calendar-edit/
+  modmail-close UIs out of promotion scope.
+- Next candidates: reels → marketplace (this quarter's 2/2 budget used by stories + groups).
 
 ### Wave 7 — Mobile & offline-first
 
@@ -192,7 +207,7 @@ Each promotion = E2E audit + tests + remove the "Preview" tag. Budget **2 promot
 **Systems 07 Stories · 08 Short video · 09 Long video & live · 10 Articles · 11 Audio & voice ·
 12 Creation studio** (237 modules-worth of features; ~372 features).
 
-- Depends on: Wave 1 (media pipeline), Wave 6 (stories ✅ promoted to Real 2026-10-23; reels/groups still Preview).
+- Depends on: Wave 1 (media pipeline), Wave 6 (stories ✅ and groups ✅ promoted to Real 2026-10-23; reels still Preview).
 - Highlights: stories E2EE-optional & archiving, reels feed + duets/stitches, live
   streaming infra (WebRTC/HLS) + super-chat, long-form editor v2, podcast distribution
   (RSS/Apple/Spotify), voice rooms, studio (templates, scheduling, cross-posting, drafts).

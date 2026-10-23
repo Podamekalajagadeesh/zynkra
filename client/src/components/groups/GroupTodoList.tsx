@@ -34,6 +34,16 @@ interface GroupMember {
   avatar?: string;
 }
 
+interface GroupMemberRow {
+  id: string;
+  user: {
+    id: string;
+    username?: string | null;
+    displayName?: string | null;
+    avatar?: string | null;
+  };
+}
+
 interface GroupTodoListProps {
   groupId: string;
 }
@@ -67,7 +77,17 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
   const loadMembers = async () => {
     try {
       const response = await api.get(`/groups/${groupId}/members`);
-      setMembers(response.data);
+      // The members endpoint returns membership rows; todo assigneeId must be a USER id.
+      const rows: GroupMemberRow[] = response.data;
+      setMembers(
+        rows
+          .filter((row) => row.user?.id)
+          .map((row) => ({
+            id: row.user.id,
+            username: row.user.displayName || row.user.username || row.user.id,
+            avatar: row.user.avatar || undefined,
+          }))
+      );
     } catch (error) {
       console.error('Failed to load group members');
     }
@@ -76,8 +96,11 @@ export function GroupTodoList({ groupId }: GroupTodoListProps) {
   const handleCreateTodo = async () => {
     try {
       await api.post(`/groups/${groupId}/todo-items`, {
-        ...newTodo,
+        title: newTodo.title,
+        description: newTodo.description || undefined,
         dueDate: newTodo.dueDate ? new Date(newTodo.dueDate).toISOString() : undefined,
+        // Empty string is not a valid UUID — omit instead of sending it.
+        assigneeId: newTodo.assigneeId || undefined,
       });
       setIsDialogOpen(false);
       setNewTodo({ title: '', description: '', dueDate: '', assigneeId: '' });

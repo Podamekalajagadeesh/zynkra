@@ -28,8 +28,8 @@ export function ModMailInternalNoteForm({
       setIsOpen(false);
       setNote('');
       onNoteSent();
-    } catch (error) {
-      addToast('Failed to add internal note', 'error');
+    } catch (error: any) {
+      addToast(error?.response?.data?.message || 'Failed to add internal note', 'error');
     }
   };
 

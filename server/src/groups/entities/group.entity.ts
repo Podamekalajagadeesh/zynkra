@@ -10,6 +10,12 @@ import { GroupPrivacy } from '../enums/group-privacy.enum';
 import { VotingSystem } from '../voting-system.enum';
 
 @Entity('groups')
+// The `groups` table also carries four columns this entity deliberately does
+// not map: `tokenGated`, `contractAddress`, `requiredTokenBalance` (written by
+// no code path in this repo — vestigial from an earlier token-gating sketch)
+// and `searchVector` (unused; discovery scans `name` directly). They stay in
+// the DB because dropping them would be a destructive migration for columns
+// that are merely dead, not wrong.
 export class Group {
   @PrimaryGeneratedColumn('uuid')
   id: string;

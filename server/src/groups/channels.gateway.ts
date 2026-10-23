@@ -12,12 +12,35 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Channel } from './entities/channel.entity';
-import { Group } from './entities/group.entity';
 import { GroupMember } from './entities/group-member.entity';
 import { GroupPrivacy } from './enums/group-privacy.enum';
+import { Message } from '../dms/entities/message.entity';
 import { WsAuthService } from '../common/ws-auth/ws-auth.service';
 import { WsRateLimiter } from '../common/ws-auth/ws-rate-limiter';
 import { applyWsCors } from '../common/ws-auth/ws-cors';
+
+/**
+ * The only payload that may cross the wire on `newMessage`. REST responses go
+ * through ClassSerializerInterceptor (`@Exclude()` strips password_hash,
+ * email, phone, …) but socket payloads are JSON.stringify'd verbatim — so the
+ * gateway builds this allowlist itself rather than trusting the entity.
+ */
+export interface ChannelMessageEvent {
+  id: string;
+  content: string;
+  mediaType: string;
+  mediaUrl: string | null;
+  media: Message['media'];
+  voiceNote: Message['voiceNote'];
+  createdAt: Date;
+  channelId: string;
+  sender: {
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    avatar: string | null;
+  };
+}
 
 // CORS is applied in afterInit, not the decorator — see ws-cors.ts.
 @WebSocketGateway({ namespace: '/channels' })
@@ -33,8 +56,6 @@ export class ChannelsGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly rateLimiter: WsRateLimiter,
     @InjectRepository(Channel)
     private readonly channelsRepository: Repository<Channel>,
-    @InjectRepository(Group)
-    private readonly groupsRepository: Repository<Group>,
     @InjectRepository(GroupMember)
     private readonly groupMembersRepository: Repository<GroupMember>
   ) {}
@@ -92,7 +113,47 @@ export class ChannelsGateway implements OnGatewayConnection, OnGatewayDisconnect
     client.emit('leftChannel', channelId);
   }
 
-  sendMessageToChannel(channelId: string, message: any) {
-    this.server.to(channelId).emit('newMessage', message);
+  sendMessageToChannel(channelId: string, message: Message): void {
+    this.server.to(channelId).emit('newMessage', this.toChannelMessageEvent(channelId, message));
+  }
+
+  /**
+   * Drops a user's live sockets out of the given channel rooms — called when
+   * they leave the group. Socket joins are never revalidated on their own, so
+   * without this a leaver would keep receiving private-group traffic (E14).
+   */
+  async kickUserFromGroupRooms(userId: string, roomIds: string[]): Promise<void> {
+    if (roomIds.length === 0 || !this.server) {
+      return;
+    }
+    for (const socket of this.server.sockets.sockets.values()) {
+      if (socket.data.userId !== userId) {
+        continue;
+      }
+      for (const roomId of roomIds) {
+        if (socket.rooms.has(roomId)) {
+          await socket.leave(roomId);
+        }
+      }
+    }
+  }
+
+  private toChannelMessageEvent(channelId: string, message: Message): ChannelMessageEvent {
+    return {
+      id: message.id,
+      content: message.content,
+      mediaType: message.mediaType,
+      mediaUrl: message.mediaUrl ?? null,
+      media: message.media ?? null,
+      voiceNote: message.voiceNote ?? null,
+      createdAt: message.createdAt,
+      channelId,
+      sender: {
+        id: message.sender.id,
+        username: message.sender.username ?? null,
+        displayName: message.sender.displayName ?? null,
+        avatar: message.sender.avatar ?? null,
+      },
+    };
   }
 }

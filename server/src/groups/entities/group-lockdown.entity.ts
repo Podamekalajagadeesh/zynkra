@@ -3,9 +3,15 @@ import { Group } from './group.entity';
 import { User } from '../../users/entities/user.entity';
 
 export enum LockdownMode {
-  APPROVAL = 'approval', // new joins require admin approval
-  MUTE_NEW = 'mute_new', // new members muted for a window
-  FULL = 'full', // approval + mute_new
+  // Joins stay blocked until an admin approves — the approval workflow itself
+  // (pending membership state + approve/reject UI) is backlog; today this mode
+  // behaves exactly like FULL. Kept in the enum so existing rows stay valid.
+  APPROVAL = 'approval',
+  // Joins allowed; members who joined during the window cannot post for
+  // `newMemberMuteHours` (enforced in GroupsService.addMessage).
+  MUTE_NEW = 'mute_new',
+  // Hard lockdown: all joins rejected for the lockdown duration.
+  FULL = 'full',
 }
 
 @Entity('group_lockdowns')

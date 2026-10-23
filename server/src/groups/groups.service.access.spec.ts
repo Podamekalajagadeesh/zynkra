@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { Group } from './entities/group.entity';
 import { Channel, ChannelMember } from './entities/channel.entity';
@@ -27,6 +27,7 @@ const mockRepo = () => ({
   create: jest.fn((input: unknown) => input),
   save: jest.fn(async (input: unknown) => input),
   remove: jest.fn(async (input: unknown) => input),
+  delete: jest.fn(async () => ({ affected: 0 })),
   count: jest.fn(),
 });
 
@@ -65,7 +66,10 @@ describe('GroupsService (membership & channel access)', () => {
         { provide: getRepositoryToken(TodoItem), useValue: mockRepo() },
         { provide: UsersService, useValue: { findOneById: jest.fn() } },
         { provide: ReputationService, useValue: { addReputation: jest.fn() } },
-        { provide: ChannelsGateway, useValue: { sendMessageToChannel: jest.fn() } },
+        {
+          provide: ChannelsGateway,
+          useValue: { sendMessageToChannel: jest.fn(), kickUserFromGroupRooms: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -77,6 +81,7 @@ describe('GroupsService (membership & channel access)', () => {
     lockdownsRepo = module.get(getRepositoryToken(GroupLockdown));
     messagesRepo = module.get(getRepositoryToken(Message));
     messagesRepo.find.mockResolvedValue([]);
+    channelsRepo.find.mockResolvedValue([]);
     gateway = module.get(ChannelsGateway) as typeof gateway;
   });
 
@@ -242,7 +247,7 @@ describe('GroupsService (membership & channel access)', () => {
       channelsRepo.findOne.mockResolvedValue(publicChannel);
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(
+      await expect(service.addMessage('c1', { content: 'hi' }, stranger)).rejects.toBeInstanceOf(
         ForbiddenException
       );
       expect(messagesRepo.save).not.toHaveBeenCalled();
@@ -253,7 +258,7 @@ describe('GroupsService (membership & channel access)', () => {
       groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.MEMBER });
       channelMembersRepo.findOne.mockResolvedValue(null);
 
-      const saved = await service.addMessage('c1', 'hi', user);
+      const saved = await service.addMessage('c1', { content: 'hi' }, user);
 
       expect(saved).toMatchObject({ content: 'hi' });
       expect(channelMembersRepo.save).toHaveBeenCalledWith(
@@ -267,7 +272,7 @@ describe('GroupsService (membership & channel access)', () => {
       groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.MEMBER });
       channelMembersRepo.findOne.mockResolvedValue({ id: 'cm1' });
 
-      await service.addMessage('c1', 'again', user);
+      await service.addMessage('c1', { content: 'again' }, user);
       expect(channelMembersRepo.save).not.toHaveBeenCalled();
       expect(messagesRepo.save).toHaveBeenCalled();
     });
@@ -280,26 +285,65 @@ describe('GroupsService (membership & channel access)', () => {
       });
       groupMembersRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.addMessage('c1', 'hi', stranger)).rejects.toBeInstanceOf(
+      await expect(service.addMessage('c1', { content: 'hi' }, stranger)).rejects.toBeInstanceOf(
         ForbiddenException
       );
     });
 
-    it('requires channel-admin role to post in broadcast channels', async () => {
+    it('blocks plain members from posting in broadcast channels', async () => {
       channelsRepo.findOne.mockResolvedValue(broadcastChannel);
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.MEMBER });
       channelMembersRepo.findOne.mockResolvedValue({ id: 'cm1', role: 'member' });
 
-      await expect(service.addMessage('c2', 'announcement', user)).rejects.toBeInstanceOf(
-        UnauthorizedException
-      );
+      await expect(
+        service.addMessage('c2', { content: 'announcement' }, user)
+      ).rejects.toBeInstanceOf(ForbiddenException);
       expect(messagesRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('blocks non-members from posting in broadcast channels', async () => {
+      channelsRepo.findOne.mockResolvedValue(broadcastChannel);
+      groupMembersRepo.findOne.mockResolvedValue(null);
+      channelMembersRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addMessage('c2', { content: 'announcement' }, stranger)
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(messagesRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('lets group admins post in broadcast channels without channel-admin rows', async () => {
+      channelsRepo.findOne.mockResolvedValue(broadcastChannel);
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.ADMIN });
+      channelMembersRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addMessage('c2', { content: 'announcement' }, user)
+      ).resolves.toMatchObject({
+        content: 'announcement',
+      });
+    });
+
+    it('lets group moderators post in broadcast channels', async () => {
+      channelsRepo.findOne.mockResolvedValue(broadcastChannel);
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.MODERATOR });
+      channelMembersRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.addMessage('c2', { content: 'announcement' }, user)
+      ).resolves.toMatchObject({
+        content: 'announcement',
+      });
     });
 
     it('lets broadcast channel admins post', async () => {
       channelsRepo.findOne.mockResolvedValue(broadcastChannel);
+      groupMembersRepo.findOne.mockResolvedValue({ id: 'm1', user, role: GroupRole.MEMBER });
       channelMembersRepo.findOne.mockResolvedValue({ id: 'cm1', role: 'admin' });
 
-      await expect(service.addMessage('c2', 'announcement', user)).resolves.toMatchObject({
+      await expect(
+        service.addMessage('c2', { content: 'announcement' }, user)
+      ).resolves.toMatchObject({
         content: 'announcement',
       });
     });

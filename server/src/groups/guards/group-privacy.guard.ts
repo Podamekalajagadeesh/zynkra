@@ -18,7 +18,10 @@ export class GroupPrivacyGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const groupId = request.params.groupId;
+    // Resolves params.groupId, or the group behind :challengeId / :proposalId
+    // / :channelId / :eventId / :todoId routes. Without this, guardless-param
+    // routes silently passed and leaked secret-group data (E3).
+    const groupId = await this.groupsService.resolveGroupIdFromParams(request.params);
     const user = request.user;
 
     if (!groupId) {

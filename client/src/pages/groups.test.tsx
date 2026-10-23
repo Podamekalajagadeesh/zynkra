@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../contexts/ToastContext';
+import { AuthContext } from '../contexts/AuthContextDef';
 import { GroupsPage } from './groups';
 
 // vi.mock factories are hoisted above module init — share the fns through
@@ -75,19 +76,35 @@ vi.mock('../lib/api', () => ({
   detectGroupRaid: mockDetectGroupRaid,
 }));
 
+// The page reads the signed-in user from AuthContext (never from localStorage).
+const authValue = {
+  accounts: [],
+  activeAccount: null,
+  user: { id: 'u1', username: 'zoe', email: 'u1@test.com' } as any,
+  token: 'test-token',
+  loading: false,
+  isLoading: false,
+  isLoggedIn: true,
+  switchAccount: vi.fn(),
+  addAccount: vi.fn(),
+  logout: vi.fn(),
+  setUser: vi.fn(),
+};
+
 const renderPage = () =>
   render(
-    <ToastProvider>
-      <MemoryRouter>
-        <GroupsPage />
-      </MemoryRouter>
-    </ToastProvider>
+    <AuthContext.Provider value={authValue}>
+      <ToastProvider>
+        <MemoryRouter>
+          <GroupsPage />
+        </MemoryRouter>
+      </ToastProvider>
+    </AuthContext.Provider>
   );
 
 describe('GroupsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('currentUserId', 'u1');
     mockGetGroups.mockResolvedValue([{ id: 'g1', name: 'My Group', privacy: 'public' }]);
     mockDiscoverGroups.mockResolvedValue([{ id: 'g2', name: 'Open Guild', privacy: 'public' }]);
     mockGetGroupMembers.mockResolvedValue([]);
@@ -144,7 +161,7 @@ describe('GroupsPage', () => {
 
   it('shows moderator tooling and leave for an admin member', async () => {
     mockGetGroupMembers.mockResolvedValue([
-      { id: 'm1', role: 'admin', user: { id: 'u1', email: 'u1@test.com' } },
+      { id: 'm1', role: 'admin', user: { id: 'u1', username: 'zoe', email: 'u1@test.com' } },
     ]);
 
     renderPage();
@@ -155,19 +172,27 @@ describe('GroupsPage', () => {
     expect(screen.getByRole('button', { name: 'Leave group' })).toBeInTheDocument();
     await waitFor(() => expect(mockGetGroupMembers).toHaveBeenCalledWith('g1'));
     // members panel resolves for a selected group even without a :id route param
-    expect(await screen.findByText('u1@test.com')).toBeInTheDocument();
+    expect(await screen.findByText('zoe')).toBeInTheDocument();
+    // admin-only tooling: role dropdown + raid protection panel
+    expect(await screen.findByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText('Raid protection')).toBeInTheDocument();
   });
 
-  it('hides moderator tooling but offers leave for plain members', async () => {
+  it('offers leave and modmail to plain members but hides admin tooling', async () => {
     mockGetGroupMembers.mockResolvedValue([
-      { id: 'm1', role: 'member', user: { id: 'u1', email: 'u1@test.com' } },
+      { id: 'm1', role: 'member', user: { id: 'u1', username: 'zoe', email: 'u1@test.com' } },
     ]);
 
     renderPage();
     fireEvent.click(await screen.findByText('My Group'));
 
     expect(await screen.findByRole('button', { name: 'Leave group' })).toBeInTheDocument();
+    // members can open a modmail thread (server restricts the recipient to self)
+    expect(await screen.findByRole('button', { name: 'New Modmail' })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('Subject')).not.toBeInTheDocument();
+    // no role dropdown, no raid panel for non-admins
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByText('Raid protection')).not.toBeInTheDocument();
   });
 
   it('leaves the group through the workspace toolbar', async () => {

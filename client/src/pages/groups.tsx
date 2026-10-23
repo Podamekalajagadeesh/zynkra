@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { GroupList } from '../components/groups/GroupList';
 import { GroupLockdownPanel } from '../components/groups/GroupLockdownPanel';
 import { ChannelList } from '../components/groups/ChannelList';
@@ -15,11 +15,14 @@ import { getGroupMembers, leaveGroup } from '../lib/api';
 import { GroupCalendar } from '../components/groups/GroupCalendar';
 import { GroupTodoList } from '../components/groups/GroupTodoList';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 import { Conversation } from '../components/dms/ConversationList';
 import { Message } from '../lib/types';
 
 export const GroupsPage = () => {
   const { id: routeGroupId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(routeGroupId);
   const [selectedChannelId, setSelectedChannelId] = useState<string | undefined>();
   const [selectedChannelType, setSelectedChannelType] = useState<
@@ -28,10 +31,12 @@ export const GroupsPage = () => {
   const [selectedModMailConversation, setSelectedModMailConversation] =
     useState<Conversation | null>(null);
   const [isUserModerator, setIsUserModerator] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isCurrentMember, setIsCurrentMember] = useState(false);
   const [groupPanel, setGroupPanel] = useState<'channels' | 'calendar' | 'tasks'>('channels');
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [modMailRefreshKey, setModMailRefreshKey] = useState(0);
+  const [chatRefreshKey, setChatRefreshKey] = useState(0);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const { addToast } = useToast();
 
@@ -42,7 +47,9 @@ export const GroupsPage = () => {
     setSelectedModMailConversation(null);
     setGroupPanel('channels');
     setIsUserModerator(false);
+    setIsAdmin(false);
     setIsCurrentMember(false);
+    if (routeGroupId !== id) navigate(`/groups/${id}`);
   };
 
   useEffect(() => {
@@ -51,13 +58,22 @@ export const GroupsPage = () => {
       setSelectedChannelId(undefined);
       setSelectedChannelType(undefined);
       setSelectedModMailConversation(null);
+    } else if (selectedGroupId) {
+      // Navigated back to /groups (e.g. browser back) — clear the stale selection.
+      setSelectedGroupId(undefined);
+      setSelectedChannelId(undefined);
+      setSelectedChannelType(undefined);
+      setSelectedModMailConversation(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routeGroupId]);
 
-  // Check membership + moderator status for the selected group
+  // Check membership + moderator/admin status for the selected group
   useEffect(() => {
-    if (!selectedGroupId) {
+    const currentUserId = user?.id;
+    if (!selectedGroupId || !currentUserId) {
       setIsUserModerator(false);
+      setIsAdmin(false);
       setIsCurrentMember(false);
       return;
     }
@@ -65,9 +81,9 @@ export const GroupsPage = () => {
     getGroupMembers(selectedGroupId)
       .then((members) => {
         if (cancelled) return;
-        const currentUserId = localStorage.getItem('currentUserId');
         const currentMember = members.find((m: any) => m.user?.id === currentUserId);
         setIsCurrentMember(!!currentMember);
+        setIsAdmin(currentMember?.role === 'admin');
         setIsUserModerator(
           !!currentMember && (currentMember.role === 'admin' || currentMember.role === 'moderator')
         );
@@ -75,12 +91,13 @@ export const GroupsPage = () => {
       .catch(() => {
         if (cancelled) return;
         setIsCurrentMember(false);
+        setIsAdmin(false);
         setIsUserModerator(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [selectedGroupId, listRefreshKey]);
+  }, [selectedGroupId, listRefreshKey, user?.id]);
 
   const handleLeaveGroup = async () => {
     if (!selectedGroupId) return;
@@ -89,7 +106,12 @@ export const GroupsPage = () => {
       addToast('You left the group', 'success');
       setSelectedGroupId(undefined);
       setSelectedChannelId(undefined);
+      setSelectedModMailConversation(null);
+      setIsCurrentMember(false);
+      setIsAdmin(false);
+      setIsUserModerator(false);
       setListRefreshKey((prev) => prev + 1);
+      navigate('/groups');
     } catch (error: any) {
       addToast(error?.response?.data?.message || 'Failed to leave group', 'error');
     }
@@ -165,10 +187,11 @@ export const GroupsPage = () => {
                     selectedId={selectedChannelId}
                     canCreate={isUserModerator}
                   />
-                  {isUserModerator && (
+                  {isCurrentMember && (
                     <>
                       <ModMailComposer
                         groupId={selectedGroupId}
+                        fixedRecipientId={isUserModerator ? undefined : user?.id}
                         onConversationCreated={handleModMailConversationCreated}
                       />
                       <ModMailConversationList
@@ -179,12 +202,12 @@ export const GroupsPage = () => {
                       />
                     </>
                   )}
-                  <GroupMembers groupId={selectedGroupId} />
+                  <GroupMembers groupId={selectedGroupId} canManageRoles={isAdmin} />
                 </>
               )}
               {groupPanel === 'calendar' && <GroupCalendar groupId={selectedGroupId} />}
               {groupPanel === 'tasks' && <GroupTodoList groupId={selectedGroupId} />}
-              {isUserModerator && <GroupLockdownPanel groupId={selectedGroupId} />}
+              {isAdmin && <GroupLockdownPanel groupId={selectedGroupId} />}
             </div>
           )}
           <div className="flex flex-col h-full">
@@ -199,25 +222,29 @@ export const GroupsPage = () => {
                   />
                 ) : (
                   <div className="p-3 border-t border-dark-200 dark:border-dark-700 text-sm text-dark-500">
-                    This is a broadcast channel — only group admins can post.
+                    This is a broadcast channel — only group admins and moderators can post.
                   </div>
                 )}
               </>
             ) : selectedModMailConversation ? (
               <>
-                <MessageList conversationId={selectedModMailConversation.id} onReply={setReplyTo} />
+                <MessageList
+                  key={`${selectedModMailConversation.id}-${chatRefreshKey}`}
+                  conversationId={selectedModMailConversation.id}
+                  onReply={setReplyTo}
+                />
                 {isUserModerator && (
                   <div className="p-3 border-t border-dark-200 dark:border-dark-700">
                     <ModMailInternalNoteForm
                       groupId={selectedGroupId!}
                       conversationId={selectedModMailConversation.id}
-                      onNoteSent={() => {}}
+                      onNoteSent={() => setChatRefreshKey((prev) => prev + 1)}
                     />
                   </div>
                 )}
                 <SendMessageForm
                   conversationId={selectedModMailConversation.id}
-                  onMessageSent={() => {}}
+                  onMessageSent={() => setChatRefreshKey((prev) => prev + 1)}
                   replyTo={replyTo}
                   onClearReply={() => setReplyTo(null)}
                 />

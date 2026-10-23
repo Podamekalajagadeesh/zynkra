@@ -59,8 +59,8 @@ export const GroupLockdownPanel = ({ groupId }: { groupId: string }) => {
       await resolveGroupLockdown(groupId);
       setLockdown(null);
       addToast('Lockdown lifted', 'success');
-    } catch {
-      addToast('Failed to lift lockdown', 'error');
+    } catch (error: any) {
+      addToast(error?.response?.data?.message || 'Failed to lift lockdown', 'error');
     } finally {
       setIsBusy(false);
     }
@@ -109,7 +109,7 @@ export const GroupLockdownPanel = ({ groupId }: { groupId: string }) => {
             disabled={isBusy}
             className="w-full"
           >
-            Approve new joins
+            Block joins (approval mode)
           </Button>
           <Button
             size="sm"

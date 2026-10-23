@@ -1,10 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsEnum, MaxLength } from 'class-validator';
 import { VotingSystem } from '../voting-system.enum';
 import { GroupPrivacy } from '../enums/group-privacy.enum';
 
 export class CreateGroupDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   name: string;
 
   @IsOptional()

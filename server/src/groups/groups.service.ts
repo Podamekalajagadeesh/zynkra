@@ -1,11 +1,11 @@
 import {
   Injectable,
+  BadRequestException,
   NotFoundException,
-  UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { Group } from './entities/group.entity';
 import { GroupPrivacy } from './enums/group-privacy.enum';
 import { Channel, ChannelMember } from './entities/channel.entity';
@@ -40,6 +40,12 @@ import { CreateCalendarEventDto } from './dto/create-calendar-event.dto';
 import { UpdateCalendarEventDto } from './dto/update-calendar-event.dto';
 import { CreateTodoItemDto } from './dto/create-todo-item.dto';
 import { UpdateTodoItemDto } from './dto/update-todo-item.dto';
+
+// List routes were unbounded SELECTs — generous caps for power users, but
+// bounded: an unbounded groups table scan is a DoS surface, not a feature.
+const MESSAGE_FETCH_LIMIT = 500;
+const LIST_FETCH_LIMIT = 200;
+const MEMBER_FETCH_LIMIT = 1000;
 
 @Injectable()
 export class GroupsService {
@@ -111,6 +117,70 @@ export class GroupsService {
     return group;
   }
 
+  // Shared by GroupPrivacyGuard and GroupRoleGuard: routes such as
+  // `GET /groups/challenges/:challengeId` or `PUT /groups/challenges/:id`
+  // are group-scoped but carry no `groupId` param. Resolves the group from
+  // the route's entity id; throws 404 when the id is present but the entity
+  // is not; returns null when the route has no recognizable group context.
+  async resolveGroupIdFromParams(
+    params: Record<string, string | undefined>
+  ): Promise<string | null> {
+    if (params.groupId) {
+      return params.groupId;
+    }
+    if (params.challengeId) {
+      const challenge = await this.challengesRepository.findOne({
+        where: { id: params.challengeId },
+        relations: ['group'],
+      });
+      if (!challenge || !challenge.group) {
+        throw new NotFoundException('Challenge not found');
+      }
+      return challenge.group.id;
+    }
+    if (params.proposalId) {
+      const proposal = await this.proposalsRepository.findOne({
+        where: { id: params.proposalId },
+        relations: ['group'],
+      });
+      if (!proposal || !proposal.group) {
+        throw new NotFoundException('Proposal not found');
+      }
+      return proposal.group.id;
+    }
+    if (params.channelId) {
+      const channel = await this.channelsRepository.findOne({
+        where: { id: params.channelId },
+        relations: ['group'],
+      });
+      if (!channel || !channel.group) {
+        throw new NotFoundException('Channel not found');
+      }
+      return channel.group.id;
+    }
+    if (params.eventId) {
+      const event = await this.calendarEventsRepository.findOne({
+        where: { id: params.eventId },
+        relations: ['group'],
+      });
+      if (!event || !event.group) {
+        throw new NotFoundException('Calendar event not found');
+      }
+      return event.group.id;
+    }
+    if (params.todoId) {
+      const todo = await this.todoItemsRepository.findOne({
+        where: { id: params.todoId },
+        relations: ['group'],
+      });
+      if (!todo || !todo.group) {
+        throw new NotFoundException('Todo item not found');
+      }
+      return todo.group.id;
+    }
+    return null;
+  }
+
   async isMember(userId: string, groupId: string): Promise<boolean> {
     const membership = await this.groupMembersRepository.findOne({
       where: { user: { id: userId }, group: { id: groupId } },
@@ -122,6 +192,7 @@ export class GroupsService {
     const groupMemberships = await this.groupMembersRepository.find({
       where: { user: { id: user.id } },
       relations: ['group'],
+      take: MEMBER_FETCH_LIMIT,
     });
     return groupMemberships.map((gm) => gm.group);
   }
@@ -133,6 +204,7 @@ export class GroupsService {
     const memberships = await this.groupMembersRepository.find({
       where: { user: { id: user.id } },
       relations: ['group'],
+      take: MEMBER_FETCH_LIMIT,
     });
     const joined = new Set(memberships.map((gm) => gm.group.id));
     const candidates = await this.groupsRepository.find({
@@ -157,7 +229,10 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
     const lockdown = await this.getLockdown(groupId);
-    if (lockdown) {
+    // MUTE_NEW lets joins through and mutes the newcomers in addMessage;
+    // FULL and APPROVAL block joins outright (the admin-approval workflow
+    // behind APPROVAL is backlog — see LockdownMode).
+    if (lockdown && lockdown.mode !== LockdownMode.MUTE_NEW) {
       throw new ForbiddenException('This group is in lockdown');
     }
     const member = this.groupMembersRepository.create({
@@ -183,12 +258,31 @@ export class GroupsService {
       throw new ForbiddenException('The group owner cannot leave the group');
     }
     await this.groupMembersRepository.remove(membership);
+
+    // Leaving the group also drops every channel membership inside it —
+    // stale rows would keep granting broadcast post rights (E9) and would
+    // linger as index-bloat on the new unique indexes.
+    const channels = await this.channelsRepository.find({
+      where: { group: { id: groupId } },
+      select: { id: true },
+    });
+    if (channels.length > 0) {
+      const channelIds = channels.map((c) => c.id);
+      await this.channelMembersRepository.delete({
+        user: { id: user.id },
+        channel: In(channelIds),
+      });
+      // Live sockets must stop receiving messages from a group the user just
+      // left — socket rooms are never revalidated on their own (E14).
+      await this.channelsGateway.kickUserFromGroupRooms(user.id, channelIds);
+    }
   }
 
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
     return this.groupMembersRepository.find({
       where: { group: { id: groupId } },
       relations: ['user'],
+      take: MEMBER_FETCH_LIMIT,
     });
   }
 
@@ -199,19 +293,54 @@ export class GroupsService {
     if (!membership) {
       throw new NotFoundException('Group member not found');
     }
+
+    const group = await this.groupsRepository.findOne({
+      where: { id: groupId },
+      relations: ['owner'],
+    });
+    if (group?.owner && group.owner.id === userId) {
+      throw new ForbiddenException('The group owner\u2019s role cannot be changed');
+    }
+    if (membership.role === GroupRole.ADMIN && role !== GroupRole.ADMIN) {
+      const adminCount = await this.groupMembersRepository.count({
+        where: { group: { id: groupId }, role: GroupRole.ADMIN },
+      });
+      if (adminCount <= 1) {
+        throw new ForbiddenException('A group must keep at least one admin');
+      }
+    }
+
+    // Demotion strips broadcast-channel admin rights along with the group
+    // role — channel-admin must not outlive the group role that granted it.
+    if (membership.role !== GroupRole.MEMBER && role === GroupRole.MEMBER) {
+      await this.revokeBroadcastChannelAdmins(groupId, userId);
+    }
+
     membership.role = role;
     return this.groupMembersRepository.save(membership);
   }
 
-  async getChannels(groupId: string): Promise<Channel[]> {
-    const group = await this.groupsRepository.findOne({
-      where: { id: groupId },
-      relations: ['channels'],
+  private async revokeBroadcastChannelAdmins(groupId: string, userId: string): Promise<void> {
+    const broadcastChannels = await this.channelsRepository.find({
+      where: { group: { id: groupId }, type: 'broadcast' },
+      select: { id: true },
     });
-    if (!group) {
-      throw new NotFoundException('Group not found');
+    if (broadcastChannels.length === 0) {
+      return;
     }
-    return group.channels;
+    await this.channelMembersRepository.delete({
+      user: { id: userId },
+      channel: In(broadcastChannels.map((c) => c.id)),
+      role: 'admin',
+    });
+  }
+
+  async getChannels(groupId: string): Promise<Channel[]> {
+    await this.getGroupById(groupId);
+    return this.channelsRepository.find({
+      where: { group: { id: groupId } },
+      take: LIST_FETCH_LIMIT,
+    });
   }
 
   async createChannel(
@@ -233,7 +362,7 @@ export class GroupsService {
     const isAdminOrMod =
       membership &&
       (membership.role === GroupRole.ADMIN || membership.role === GroupRole.MODERATOR);
-    if (!isAdminOrMod && group.owner.id !== user.id) {
+    if (!isAdminOrMod && group.owner?.id !== user.id) {
       throw new ForbiddenException('Only group admins can create channels');
     }
     const channel = this.channelsRepository.create({ name, group, type });
@@ -311,16 +440,39 @@ export class GroupsService {
     await this.channelMembersRepository.remove(member);
   }
 
-  async addMessage(channelId: string, content: string, sender: User): Promise<Message> {
+  async addMessage(
+    channelId: string,
+    payload: {
+      content?: string;
+      media?: Message['media'];
+      voiceNote?: Message['voiceNote'];
+      replyToId?: string;
+      senderPublicKey?: string;
+    },
+    sender: User
+  ): Promise<Message> {
+    const content = payload.content ?? '';
+    if (!content.trim() && !payload.media?.length && !payload.voiceNote) {
+      throw new BadRequestException('Message must contain content, media, or a voice note');
+    }
+
     const channel = await this.assertCanReadChannel(channelId, sender.id);
 
     if (channel.type === 'broadcast') {
-      const member = await this.channelMembersRepository.findOne({
+      // Broadcast posting = group admin/moderator, or the broadcast channel's
+      // own admin (set at channel creation).
+      const groupMembership = await this.groupMembersRepository.findOne({
+        where: { group: { id: channel.group.id }, user: { id: sender.id } },
+      });
+      const isGroupAdminOrMod =
+        !!groupMembership &&
+        (groupMembership.role === GroupRole.ADMIN || groupMembership.role === GroupRole.MODERATOR);
+      const channelMember = await this.channelMembersRepository.findOne({
         where: { channel: { id: channelId }, user: { id: sender.id } },
       });
-      if (!member || member.role !== 'admin') {
-        throw new UnauthorizedException(
-          'You do not have permission to send messages in this channel'
+      if (!isGroupAdminOrMod && channelMember?.role !== 'admin') {
+        throw new ForbiddenException(
+          'Only group admins and moderators can post in this broadcast channel'
         );
       }
     } else {
@@ -331,6 +483,20 @@ export class GroupsService {
       });
       if (!membership) {
         throw new ForbiddenException('Join the group to post in this channel');
+      }
+      // MUTE_NEW lockdown: members who joined during the mute window can read
+      // but not post — the mute window previously had no enforcement at all.
+      const lockdown = await this.getLockdown(channel.group.id);
+      if (lockdown?.mode === LockdownMode.MUTE_NEW && membership.createdAt) {
+        const mutedUntil = new Date(
+          membership.createdAt.getTime() + lockdown.newMemberMuteHours * 60 * 60 * 1000
+        );
+        if (mutedUntil > new Date()) {
+          const hoursLeft = Math.max(1, Math.ceil((mutedUntil.getTime() - Date.now()) / 3_600_000));
+          throw new ForbiddenException(
+            `New members are muted for another ${hoursLeft} hour${hoursLeft === 1 ? '' : 's'}`
+          );
+        }
       }
       // Implicit join keeps channel-member bookkeeping consistent with
       // posting access (the UI never calls joinChannel explicitly).
@@ -352,6 +518,27 @@ export class GroupsService {
     message.content = content;
     message.sender = sender;
     message.channel = channel;
+    // Fields the DTO accepted but the controller used to silently discard.
+    if (payload.media?.length) {
+      message.media = payload.media;
+      message.mediaType = payload.media[0].type;
+      message.mediaUrl = payload.media[0].url;
+    }
+    if (payload.voiceNote) {
+      message.voiceNote = payload.voiceNote;
+    }
+    if (payload.senderPublicKey) {
+      message.senderPublicKey = payload.senderPublicKey;
+    }
+    if (payload.replyToId) {
+      const replyTarget = await this.messagesRepository.findOne({
+        where: { id: payload.replyToId },
+      });
+      if (!replyTarget) {
+        throw new NotFoundException('Reply target not found');
+      }
+      message.replyTo = replyTarget;
+    }
 
     const savedMessage = await this.messagesRepository.save(message);
 
@@ -362,11 +549,14 @@ export class GroupsService {
 
   async getMessages(channelId: string, userId: string): Promise<Message[]> {
     await this.assertCanReadChannel(channelId, userId);
-    return this.messagesRepository.find({
+    // Latest window first (bounded), returned oldest-first for consumers.
+    const recent = await this.messagesRepository.find({
       where: { channel: { id: channelId } },
       relations: ['sender'],
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
+      take: MESSAGE_FETCH_LIMIT,
     });
+    return recent.reverse();
   }
 
   async createProposal(
@@ -379,7 +569,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
     if (!group.isDao) {
-      throw new UnauthorizedException('This group is not a DAO');
+      throw new ForbiddenException('This group is not a DAO');
     }
     const proposal = this.proposalsRepository.create({
       ...createProposalDto,
@@ -391,14 +581,12 @@ export class GroupsService {
   }
 
   async getProposals(groupId: string): Promise<Proposal[]> {
-    const group = await this.groupsRepository.findOne({
-      where: { id: groupId },
-      relations: ['proposals'],
+    await this.getGroupById(groupId);
+    return this.proposalsRepository.find({
+      where: { group: { id: groupId } },
+      order: { createdAt: 'DESC' },
+      take: LIST_FETCH_LIMIT,
     });
-    if (!group) {
-      throw new NotFoundException('Group not found');
-    }
-    return group.proposals;
   }
 
   async vote(proposalId: string, voter: User, createVoteDto: CreateVoteDto): Promise<Vote> {
@@ -410,19 +598,19 @@ export class GroupsService {
       throw new NotFoundException('Proposal not found');
     }
     if (proposal.status !== ProposalStatus.ACTIVE) {
-      throw new UnauthorizedException('This proposal is not active');
+      throw new ForbiddenException('This proposal is not active');
     }
     const member = await this.groupMembersRepository.findOne({
       where: { group: { id: proposal.group.id }, user: { id: voter.id } },
     });
     if (!member) {
-      throw new UnauthorizedException('You are not a member of this group');
+      throw new ForbiddenException('You are not a member of this group');
     }
     const existingVote = await this.votesRepository.findOne({
       where: { proposal: { id: proposalId }, voter: { id: voter.id } },
     });
     if (existingVote) {
-      throw new UnauthorizedException('You have already voted on this proposal');
+      throw new ForbiddenException('You have already voted on this proposal');
     }
 
     const voteWeight = 1;
@@ -456,7 +644,7 @@ export class GroupsService {
       where: { group: { id: group.id }, user: { id: creator.id } },
     });
 
-    if (!membership || (membership.role !== GroupRole.ADMIN && group.owner.id !== creator.id)) {
+    if (!membership || (membership.role !== GroupRole.ADMIN && group.owner?.id !== creator.id)) {
       throw new ForbiddenException('Only group admins can create challenges');
     }
 
@@ -465,8 +653,13 @@ export class GroupsService {
     const currentParticipantCount = createChallengeDto.goalParticipantCount ? 0 : undefined;
     const currentActionCount = createChallengeDto.goalActionCount ? 0 : undefined;
 
+    // DTO dates are ISO strings (the global pipe does not transform) —
+    // convert before the entity sees them.
+    const { startDate, endDate, ...challengeData } = createChallengeDto;
     const challenge = this.challengesRepository.create({
-      ...createChallengeDto,
+      ...challengeData,
+      ...(startDate !== undefined ? { startDate: new Date(startDate) } : null),
+      ...(endDate !== undefined ? { endDate: new Date(endDate) } : null),
       group,
       creator,
       currentAmount,
@@ -487,6 +680,7 @@ export class GroupsService {
       where: { group: { id: groupId } },
       relations: ['creator', 'contributions', 'contributions.user'],
       order: { createdAt: 'DESC' },
+      take: LIST_FETCH_LIMIT,
     });
   }
 
@@ -516,14 +710,35 @@ export class GroupsService {
 
     if (
       !membership ||
-      (membership.role !== GroupRole.ADMIN && challenge.creator.id !== updater.id)
+      (membership.role !== GroupRole.ADMIN && challenge.creator?.id !== updater.id)
     ) {
       throw new ForbiddenException(
         'Only group admins or the challenge creator can update this challenge'
       );
     }
 
-    const updatedChallenge = this.challengesRepository.merge(challenge, updateChallengeDto);
+    // ISO date strings -> Date before merging into the entity.
+    const { startDate, endDate, ...rest } = updateChallengeDto;
+    const payload: Partial<CommunityChallenge> = { ...rest };
+    if (startDate !== undefined) {
+      payload.startDate = new Date(startDate);
+    }
+    if (endDate !== undefined) {
+      payload.endDate = new Date(endDate);
+    }
+
+    return this.persistChallengeUpdate(challenge, payload);
+  }
+
+  // Metric/merge persistence without the per-user auth check — callers
+  // (updateChallenge, addContribution) do authorization themselves. This is
+  // what lets a member's contribution land without an admin re-check that the
+  // contributor would fail.
+  private async persistChallengeUpdate(
+    challenge: CommunityChallenge,
+    updates: Partial<CommunityChallenge>
+  ): Promise<CommunityChallenge> {
+    const updatedChallenge = this.challengesRepository.merge(challenge, updates);
 
     // Auto-mark as completed if goals are reached
     if (
@@ -546,7 +761,7 @@ export class GroupsService {
     const challenge = await this.getChallenge(createContributionDto.challengeId);
 
     if (challenge.status !== ChallengeStatus.ACTIVE) {
-      throw new UnauthorizedException('Cannot contribute to an inactive challenge');
+      throw new ForbiddenException('Cannot contribute to an inactive challenge');
     }
 
     // Check if user is a group member
@@ -568,7 +783,7 @@ export class GroupsService {
         },
       });
       if (existingParticipation) {
-        throw new UnauthorizedException('You have already participated in this challenge');
+        throw new ForbiddenException('You have already participated in this challenge');
       }
     }
 
@@ -600,9 +815,11 @@ export class GroupsService {
       }
     }
 
-    // Check if we need to mark the challenge as completed
+    // Persist metrics directly — going through updateChallenge here would
+    // re-check updater authorization and 403 a plain member after their
+    // contribution row was already written.
     if (Object.keys(updates).length > 0) {
-      const updatedChallenge = await this.updateChallenge(challenge.id, updates, contributor);
+      const updatedChallenge = await this.persistChallengeUpdate(challenge, updates);
       (savedContribution as any).challenge = updatedChallenge;
     }
 
@@ -618,7 +835,7 @@ export class GroupsService {
 
     if (
       !membership ||
-      (membership.role !== GroupRole.ADMIN && challenge.creator.id !== deleter.id)
+      (membership.role !== GroupRole.ADMIN && challenge.creator?.id !== deleter.id)
     ) {
       throw new ForbiddenException(
         'Only group admins or the challenge creator can delete this challenge'
@@ -643,6 +860,10 @@ export class GroupsService {
     if (!membership) {
       throw new ForbiddenException('Only group members can create calendar events');
     }
+
+    // ISO date strings -> Date (the global pipe does not transform).
+    eventData.startTime = new Date(eventData.startTime);
+    eventData.endTime = new Date(eventData.endTime);
 
     const event = this.calendarEventsRepository.create({
       ...eventData,
@@ -669,6 +890,7 @@ export class GroupsService {
       where: { group: { id: groupId } },
       relations: ['creator'],
       order: { startTime: 'ASC' },
+      take: LIST_FETCH_LIMIT,
     });
   }
 
@@ -691,10 +913,16 @@ export class GroupsService {
       where: { group: { id: event.group.id }, user: { id: updater.id } },
     });
 
-    if (!membership || (membership.role !== GroupRole.ADMIN && event.creator.id !== updater.id)) {
+    if (!membership || (membership.role !== GroupRole.ADMIN && event.creator?.id !== updater.id)) {
       throw new ForbiddenException('Only group admins or the event creator can update this event');
     }
 
+    if (updateCalendarEventDto.startTime) {
+      updateCalendarEventDto.startTime = new Date(updateCalendarEventDto.startTime);
+    }
+    if (updateCalendarEventDto.endTime) {
+      updateCalendarEventDto.endTime = new Date(updateCalendarEventDto.endTime);
+    }
     const updatedEvent = this.calendarEventsRepository.merge(event, updateCalendarEventDto);
     return this.calendarEventsRepository.save(updatedEvent);
   }
@@ -714,7 +942,7 @@ export class GroupsService {
       where: { group: { id: event.group.id }, user: { id: deleter.id } },
     });
 
-    if (!membership || (membership.role !== GroupRole.ADMIN && event.creator.id !== deleter.id)) {
+    if (!membership || (membership.role !== GroupRole.ADMIN && event.creator?.id !== deleter.id)) {
       throw new ForbiddenException('Only group admins or the event creator can delete this event');
     }
 
@@ -733,6 +961,11 @@ export class GroupsService {
 
     if (!membership) {
       throw new ForbiddenException('Only group members can create todo items');
+    }
+
+    // ISO date string -> Date before persisting.
+    if (todoData.dueDate) {
+      todoData.dueDate = new Date(todoData.dueDate);
     }
 
     const todo = this.todoItemsRepository.create({
@@ -766,6 +999,7 @@ export class GroupsService {
       where: { group: { id: groupId } },
       relations: ['creator', 'assignee'],
       order: { dueDate: 'ASC', completed: 'ASC' },
+      take: LIST_FETCH_LIMIT,
     });
   }
 
@@ -787,7 +1021,7 @@ export class GroupsService {
     if (
       !membership ||
       (membership.role !== GroupRole.ADMIN &&
-        todo.creator.id !== updater.id &&
+        todo.creator?.id !== updater.id &&
         todo.assignee?.id !== updater.id)
     ) {
       throw new ForbiddenException(
@@ -796,6 +1030,9 @@ export class GroupsService {
     }
 
     const { assigneeId, ...updateData } = updateTodoItemDto;
+    if (updateData.dueDate) {
+      updateData.dueDate = new Date(updateData.dueDate);
+    }
     const updatedTodo = this.todoItemsRepository.merge(todo, updateData);
 
     // If assignee is being updated
@@ -822,7 +1059,7 @@ export class GroupsService {
       where: { group: { id: todo.group.id }, user: { id: deleter.id } },
     });
 
-    if (!membership || (membership.role !== GroupRole.ADMIN && todo.creator.id !== deleter.id)) {
+    if (!membership || (membership.role !== GroupRole.ADMIN && todo.creator?.id !== deleter.id)) {
       throw new ForbiddenException('Only group admins or the todo creator can delete this item');
     }
 
@@ -830,7 +1067,9 @@ export class GroupsService {
   }
 
   // ModMail Methods
-  private async getMemberRole(groupId: string, userId: string): Promise<GroupRole | null> {
+  // Public: GroupRoleGuard uses this for a targeted membership lookup instead
+  // of loading the whole member list per request.
+  async getMemberRole(groupId: string, userId: string): Promise<GroupRole | null> {
     const membership = await this.groupMembersRepository.findOne({
       where: { group: { id: groupId }, user: { id: userId } },
     });
@@ -908,6 +1147,7 @@ export class GroupsService {
           group: { id: groupId },
         },
         relations: ['modmailRecipient', 'owner'],
+        take: LIST_FETCH_LIMIT,
       });
     }
 
@@ -919,6 +1159,7 @@ export class GroupsService {
         modmailRecipient: { id: user.id },
       },
       relations: ['modmailRecipient', 'owner'],
+      take: LIST_FETCH_LIMIT,
     });
   }
 
@@ -949,18 +1190,20 @@ export class GroupsService {
 
     const role = await this.getMemberRole(groupId, user.id);
     const isMod = this.isModRole(role);
-    if (!isMod && conversation.modmailRecipient.id !== user.id) {
+    if (!isMod && conversation.modmailRecipient?.id !== user.id) {
       throw new ForbiddenException('You do not have access to this modmail conversation');
     }
 
-    const messages = await this.messagesRepository.find({
+    const recent = await this.messagesRepository.find({
       where: { conversation: { id: conversationId } },
       relations: ['sender'],
-      order: { createdAt: 'ASC' },
+      order: { createdAt: 'DESC' },
+      take: MESSAGE_FETCH_LIMIT,
     });
+    recent.reverse();
 
     // Internal notes are hidden from the recipient.
-    return isMod ? messages : messages.filter((m) => !m.isInternal);
+    return isMod ? recent : recent.filter((m) => !m.isInternal);
   }
 
   async sendModmailMessage(
@@ -974,7 +1217,7 @@ export class GroupsService {
 
     const role = await this.getMemberRole(groupId, user.id);
     const isMod = this.isModRole(role);
-    if (!isMod && conversation.modmailRecipient.id !== user.id) {
+    if (!isMod && conversation.modmailRecipient?.id !== user.id) {
       throw new ForbiddenException('You do not have access to this modmail conversation');
     }
     if (isInternal && !isMod) {
@@ -1059,12 +1302,9 @@ export class GroupsService {
   // alert threshold, otherwise 0 — callers decide whether to alert admins.
   async detectPotentialRaid(groupId: string): Promise<number> {
     const since = new Date(Date.now() - 10 * 60 * 1000);
-    const recent = await this.groupMembersRepository.find({
-      where: { group: { id: groupId } },
+    const recentCount = await this.groupMembersRepository.count({
+      where: { group: { id: groupId }, createdAt: MoreThanOrEqual(since) },
     });
-    const recentCount = recent.filter(
-      (member) => member.createdAt && member.createdAt >= since
-    ).length;
     return recentCount >= 10 ? recentCount : 0;
   }
 

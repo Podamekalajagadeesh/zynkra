@@ -19,13 +19,20 @@ export class GroupRoleGuard implements CanActivate {
       return true;
     }
     const { user, params } = context.switchToHttp().getRequest();
-    const groupId = params.groupId;
-    const member = await this.groupsService.getGroupMembers(groupId);
-    // JWT payload carries userId (see JwtStrategy.validate), not id.
-    const userMember = member.find((m) => m.user.id === user.userId);
-    if (!userMember) {
+    // Routes like PUT/DELETE /groups/challenges/:challengeId are role-gated
+    // but carry no groupId param — resolve it from the route's entity id
+    // instead of reading an undefined param (which 500ed in getGroupMembers).
+    const groupId = await this.groupsService.resolveGroupIdFromParams(params);
+    if (!groupId) {
       return false;
     }
-    return requiredRoles.some((role) => userMember.role === role);
+    // 404s a nonexistent group (was a 403 existence oracle), then does a
+    // single targeted membership lookup instead of loading every member.
+    await this.groupsService.getGroupById(groupId);
+    const role = await this.groupsService.getMemberRole(groupId, user.userId);
+    if (!role) {
+      return false;
+    }
+    return requiredRoles.some((required) => required === role);
   }
 }

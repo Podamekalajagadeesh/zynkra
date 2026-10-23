@@ -1,8 +1,9 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateModMailConversationDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   subject: string;
 
   @IsUUID()
@@ -10,5 +11,6 @@ export class CreateModMailConversationDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10000)
   initialMessage: string;
 }

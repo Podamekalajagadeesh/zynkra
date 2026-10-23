@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  ParseUUIDPipe,
   UseGuards,
   Request,
   SetMetadata,
@@ -61,14 +62,14 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':groupId/join')
-  async joinGroup(@Request() req, @Param('groupId') groupId: string) {
+  async joinGroup(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.joinGroup(groupId, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':groupId/leave')
-  async leaveGroup(@Request() req, @Param('groupId') groupId: string) {
+  async leaveGroup(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.leaveGroup(groupId, user);
   }
@@ -89,16 +90,16 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/channels')
-  async getChannels(@Param('groupId') groupId: string) {
+  async getChannels(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.getChannels(groupId);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN, GroupRole.MODERATOR])
   @Post(':groupId/channels')
   async createChannel(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() createChannelDto: CreateChannelDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
@@ -112,20 +113,20 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('channels/:channelId/join')
-  async joinChannel(@Request() req, @Param('channelId') channelId: string) {
+  async joinChannel(@Request() req, @Param('channelId', ParseUUIDPipe) channelId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.joinChannel(channelId, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('channels/:channelId/leave')
-  async leaveChannel(@Request() req, @Param('channelId') channelId: string) {
+  async leaveChannel(@Request() req, @Param('channelId', ParseUUIDPipe) channelId: string) {
     return this.groupsService.leaveChannel(channelId, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('channels/:channelId/messages')
-  async getMessages(@Request() req, @Param('channelId') channelId: string) {
+  async getMessages(@Request() req, @Param('channelId', ParseUUIDPipe) channelId: string) {
     return this.groupsService.getMessages(channelId, req.user.userId);
   }
 
@@ -133,21 +134,21 @@ export class GroupsController {
   @Post('channels/:channelId/messages')
   async addMessage(
     @Request() req,
-    @Param('channelId') channelId: string,
+    @Param('channelId', ParseUUIDPipe) channelId: string,
     @Body() sendMessageDto: SendMessageDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
-    return this.groupsService.addMessage(channelId, sendMessageDto.content, user);
+    return this.groupsService.addMessage(channelId, sendMessageDto, user);
   }
 
   // ---- Anti-raid / lockdown -----------------------------------------------
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Post(':groupId/lockdown')
   async enableLockdown(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() dto: CreateLockdownDto
   ) {
     return this.groupsService.enableLockdown(
@@ -159,65 +160,65 @@ export class GroupsController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/lockdown')
-  getLockdown(@Param('groupId') groupId: string) {
+  getLockdown(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.getLockdown(groupId);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Delete(':groupId/lockdown')
-  async resolveLockdown(@Request() req, @Param('groupId') groupId: string) {
+  async resolveLockdown(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.resolveLockdown(groupId, req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Get(':groupId/raid-detection')
-  detectRaid(@Param('groupId') groupId: string) {
+  detectRaid(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.detectPotentialRaid(groupId);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/members')
-  async getGroupMembers(@Param('groupId') groupId: string) {
+  async getGroupMembers(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.getGroupMembers(groupId);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Put(':groupId/members/:userId')
   async updateMemberRole(
-    @Param('groupId') groupId: string,
-    @Param('userId') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @Body() updateMemberRoleDto: UpdateMemberRoleDto
   ) {
     return this.groupsService.updateMemberRole(groupId, userId, updateMemberRoleDto.role);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Post(':groupId/proposals')
   async createProposal(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() createProposalDto: CreateProposalDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.createProposal(groupId, user, createProposalDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/proposals')
-  async getProposals(@Param('groupId') groupId: string) {
+  async getProposals(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.getProposals(groupId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Post('proposals/:proposalId/votes')
   async vote(
     @Request() req,
-    @Param('proposalId') proposalId: string,
+    @Param('proposalId', ParseUUIDPipe) proposalId: string,
     @Body() createVoteDto: CreateVoteDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
@@ -225,12 +226,12 @@ export class GroupsController {
   }
 
   // Community Challenges Endpoints
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Post(':groupId/challenges')
   async createChallenge(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() createChallengeDto: CreateChallengeDto
   ) {
     createChallengeDto.groupId = groupId;
@@ -240,33 +241,33 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/challenges')
-  async getGroupChallenges(@Param('groupId') groupId: string) {
+  async getGroupChallenges(@Param('groupId', ParseUUIDPipe) groupId: string) {
     return this.groupsService.getGroupChallenges(groupId);
   }
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get('challenges/:challengeId')
-  async getChallenge(@Param('challengeId') challengeId: string) {
+  async getChallenge(@Param('challengeId', ParseUUIDPipe) challengeId: string) {
     return this.groupsService.getChallenge(challengeId);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Put('challenges/:challengeId')
   async updateChallenge(
     @Request() req,
-    @Param('challengeId') challengeId: string,
+    @Param('challengeId', ParseUUIDPipe) challengeId: string,
     @Body() updateChallengeDto: UpdateChallengeDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.updateChallenge(challengeId, updateChallengeDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Post('challenges/:challengeId/contributions')
   async addContribution(
     @Request() req,
-    @Param('challengeId') challengeId: string,
+    @Param('challengeId', ParseUUIDPipe) challengeId: string,
     @Body() createContributionDto: CreateContributionDto
   ) {
     createContributionDto.challengeId = challengeId;
@@ -274,20 +275,20 @@ export class GroupsController {
     return this.groupsService.addContribution(createContributionDto, user);
   }
 
-  @UseGuards(JwtAuthGuard, GroupRoleGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard, GroupRoleGuard)
   @SetMetadata('roles', [GroupRole.ADMIN])
   @Delete('challenges/:challengeId')
-  async deleteChallenge(@Request() req, @Param('challengeId') challengeId: string) {
+  async deleteChallenge(@Request() req, @Param('challengeId', ParseUUIDPipe) challengeId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.deleteChallenge(challengeId, user);
   }
 
   // Calendar Events Endpoints
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Post(':groupId/calendar-events')
   async createCalendarEvent(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() createCalendarEventDto: CreateCalendarEventDto
   ) {
     createCalendarEventDto.groupId = groupId;
@@ -297,35 +298,35 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/calendar-events')
-  async getGroupCalendarEvents(@Request() req, @Param('groupId') groupId: string) {
+  async getGroupCalendarEvents(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.getGroupCalendarEvents(groupId, user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Put('calendar-events/:eventId')
   async updateCalendarEvent(
     @Request() req,
-    @Param('eventId') eventId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
     @Body() updateCalendarEventDto: UpdateCalendarEventDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.updateCalendarEvent(eventId, updateCalendarEventDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Delete('calendar-events/:eventId')
-  async deleteCalendarEvent(@Request() req, @Param('eventId') eventId: string) {
+  async deleteCalendarEvent(@Request() req, @Param('eventId', ParseUUIDPipe) eventId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.deleteCalendarEvent(eventId, user);
   }
 
   // Todo Items Endpoints
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Post(':groupId/todo-items')
   async createTodoItem(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() createTodoItemDto: CreateTodoItemDto
   ) {
     createTodoItemDto.groupId = groupId;
@@ -335,25 +336,25 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/todo-items')
-  async getGroupTodoItems(@Request() req, @Param('groupId') groupId: string) {
+  async getGroupTodoItems(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.getGroupTodoItems(groupId, user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Put('todo-items/:todoId')
   async updateTodoItem(
     @Request() req,
-    @Param('todoId') todoId: string,
+    @Param('todoId', ParseUUIDPipe) todoId: string,
     @Body() updateTodoItemDto: UpdateTodoItemDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.updateTodoItem(todoId, updateTodoItemDto, user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Delete('todo-items/:todoId')
-  async deleteTodoItem(@Request() req, @Param('todoId') todoId: string) {
+  async deleteTodoItem(@Request() req, @Param('todoId', ParseUUIDPipe) todoId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.deleteTodoItem(todoId, user);
   }
@@ -363,7 +364,7 @@ export class GroupsController {
   @Post(':groupId/modmail')
   async createModmailConversation(
     @Request() req,
-    @Param('groupId') groupId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() dto: CreateModMailConversationDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
@@ -378,7 +379,7 @@ export class GroupsController {
 
   @UseGuards(JwtAuthGuard, GroupPrivacyGuard)
   @Get(':groupId/modmail')
-  async getModmailConversations(@Request() req, @Param('groupId') groupId: string) {
+  async getModmailConversations(@Request() req, @Param('groupId', ParseUUIDPipe) groupId: string) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.getModmailConversations(groupId, user);
   }
@@ -387,8 +388,8 @@ export class GroupsController {
   @Get(':groupId/modmail/:conversationId/messages')
   async getModmailMessages(
     @Request() req,
-    @Param('groupId') groupId: string,
-    @Param('conversationId') conversationId: string
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('conversationId', ParseUUIDPipe) conversationId: string
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
     return this.groupsService.getModmailMessages(groupId, conversationId, user);
@@ -398,8 +399,8 @@ export class GroupsController {
   @Post(':groupId/modmail/:conversationId/messages')
   async sendModmailMessage(
     @Request() req,
-    @Param('groupId') groupId: string,
-    @Param('conversationId') conversationId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('conversationId', ParseUUIDPipe) conversationId: string,
     @Body() dto: ModMailMessageDto
   ) {
     const user = await this.usersService.findOneById(req.user.userId);
